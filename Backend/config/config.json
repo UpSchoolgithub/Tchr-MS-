@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "upschool_tms_user",
+    "password": "newpassword",
+    "database": "upschool_tms",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "upschool_tms_user",
+    "password": "newpassword",
+    "database": "upschool_tms",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "upschool_tms_user",
+    "password": "newpassword",
+    "database": "upschool_tms",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}

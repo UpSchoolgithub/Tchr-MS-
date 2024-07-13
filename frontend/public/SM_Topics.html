@@ -1,0 +1,276 @@
+Updates to keyboard shortcuts … On Thursday 1 August 2024, Drive keyboard shortcuts will be updated to give you first-letter navigation.Learn more
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Manager Dashboard</title>
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0; 
+        padding: 0;
+    }
+    body {
+        font-family: "Montserrat", sans-serif; 
+        font-size: 12px;
+        overflow-x: hidden;
+    }
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        width: 200px;
+        background-color: #eeeeee;
+        color: white;
+        padding: 20px;
+        position: fixed;
+    }
+    .sidebar div {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar button {
+        color: black;
+        background: none;
+        border: 3px solid transparent;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .sidebar button:hover {
+        background-color: #5A9F68;
+        color: white;
+    }
+    .main-content {
+        margin-left: 200px;
+        padding: 0.1em;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+    .main-header {
+        background-color: #5A9F68;
+        color: white;
+        padding: 30px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 0px);
+    }
+    .search-box input[type="search"] {
+        border: none;
+        padding: 8px;
+        border-radius: 20px;
+    }
+    .search-box input[type="search"]:focus {
+        outline: none;
+    }
+    img {
+        width: 150px;
+        height: auto;
+    }
+     /*topics csss*/
+     .container {
+        width: 80%;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #f4f4f4;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: column;
+    }
+    .input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #ffffff;
+        border: 2px solid #ddd;
+    }
+    label {
+        margin-right: 10px;
+    }
+    input, button {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-right: 5px;
+    }
+    button {
+        background-color: #008CBA;
+        color: white;
+        cursor: pointer;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f0f0f0;
+    }
+
+    
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%; /* Could be more or less, depending on screen size */
+    }
+    
+</style>
+</head>
+<body>
+ 
+<div class="sidebar">
+    <img src="https://www.up.school/wp-content/themes/upschool/img/logo.svg" alt="UpSchool Logo">
+    <div>
+        <button onclick="location.href='dashboard.html'">Dashboard</button>
+        <button onclick="location.href='SM_SchoolCreation.html'">School</button>
+        <button onclick="location.href='SM_CreateManager.html'">Your Manager</button>
+        <button onclick="location.href=''">View Activity</button>
+    </div>
+    <div>
+        <button onclick="location.href='profile.html'">My Profile</button>
+        <button onclick="location.href='signout.html'">Sign Out</button>
+        <button onclick="location.href='help.html'">Help</button>
+    </div>
+</div>
+  
+<div class="main-content">
+    <div class="main-header">
+        <h2>Welcome, Teacher's Name!</h2>
+        <div class="search-box">
+            <input type="search" placeholder="Search" />
+        </div>
+    </div>
+
+     <!-- Content goes here -->
+     <div class="container">
+        <div class="input-group">
+            <label for="sessionNumber">Session Number:</label>
+            <input type="text" id="sessionNumber" placeholder="Enter session number">
+            <label for="sessionTopic">Session Topic:</label>
+            <input type="text" id="sessionTopic" placeholder="Enter session topic">
+            <button onclick="addSession()">Save</button>
+        </div>
+    </div>
+        <table id="sessionList">
+            <thead>
+                <tr>
+                    <th>Session Number</th>
+                    <th>Session Topic</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <p>Are you sure you want to delete this?</p>
+                <button id="deleteConfirm">Delete</button>
+                <button onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div> 
+ 
+    <script>
+        function addSession() {
+            const sessionNumber = document.getElementById('sessionNumber').value;
+            const sessionTopic = document.getElementById('sessionTopic').value;
+    
+            if (!sessionNumber || !sessionTopic) {
+                alert('Please fill in all fields');
+                return;
+            }
+    
+            const table = document.getElementById('sessionList').getElementsByTagName('tbody')[0];
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${sessionNumber}</td>
+                <td>${sessionTopic}</td>
+                <td>
+                    <button class="edit-button" onclick="editRow(this)">Edit</button>
+                    <button class="delete-button" onclick="deleteSession(this)">Delete</button>
+                </td>
+            `;
+            table.appendChild(row);
+    
+            // Optionally clear the input fields after saving
+            document.getElementById('sessionNumber').value = '';
+            document.getElementById('sessionTopic').value = '';
+        }
+    
+        function deleteSession(btn) {
+            var row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    
+        function editRow(btn) {
+            var row = btn.parentNode.parentNode;
+            var cells = row.querySelectorAll('td');
+            var isEditing = btn.textContent === 'Save';
+            if (!isEditing) {
+                // Enable editing
+                cells[0].setAttribute('contentEditable', true);
+                cells[1].setAttribute('contentEditable', true);
+                btn.textContent = 'Save';
+            } else {
+                // Save changes
+                cells[0].setAttribute('contentEditable', false);
+                cells[1].setAttribute('contentEditable', false);
+                btn.textContent = 'Edit';
+            }
+        }
+        function deleteSession(btn) {
+            var modal = document.getElementById('deleteModal');
+            modal.style.display = "block"; // Show the modal
+        
+            var deleteConfirm = document.getElementById('deleteConfirm');
+            deleteConfirm.onclick = function() {
+                var row = btn.parentNode.parentNode;
+                row.parentNode.removeChild(row);
+                modal.style.display = "none"; // Hide the modal
+            }
+        }
+        
+        function closeModal() {
+            var modal = document.getElementById('deleteModal');
+            modal.style.display = "none"; // Hide the modal
+        }
+        
+    
+</script>
+
+</body>
+</html>

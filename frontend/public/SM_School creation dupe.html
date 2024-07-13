@@ -1,0 +1,765 @@
+Updates to keyboard shortcuts … On Thursday 1 August 2024, Drive keyboard shortcuts will be updated to give you first-letter navigation.Learn more
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpSchool Dashboard</title>
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0; 
+        padding: 0;
+    }
+    body {
+        font-family: "Montserrat", sans-serif; 
+        font-size: 12px;
+        overflow-x: hidden;
+    }
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        width: 200px;
+        background-color: #eeeeee;
+        color: white;
+        padding: 20px;
+        position: fixed;
+    }
+    .sidebar div {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar button {
+        color: black;
+        background: none;
+        border: 3px solid transparent;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .sidebar button:hover {
+        background-color: #5A9F68;
+        color: white;
+    }
+    .main-content {
+        margin-left: 200px;
+        padding: 0.1em;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+    .main-header {
+        background-color: #5A9F68;
+        color: white;
+        padding: 30px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 0px);
+    }
+    .search-box input[type="search"] {
+        border: none;
+        padding: 8px;
+        border-radius: 20px;
+    }
+    .search-box input[type="search"]:focus {
+        outline: none;
+    }
+    img {
+        width: 150px;
+        height: auto;
+    }
+
+    /*Main content CSS*/ 
+      /* class*/
+
+.field-container {
+    display: flex;
+    flex-wrap: nowrap; 
+    gap: 10px; 
+    align-items: center; 
+    justify-content: flex-start; 
+    width: 100%; 
+}
+
+/* Individual field styling */
+.field {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; 
+    min-width: 150px;
+}
+
+.field input[type="text"], 
+.field input[type="date"] {
+    width: 90%; 
+    margin-bottom: 3%;
+    padding: 8px; 
+    border: 1px solid #ccc; 
+    border-radius: 5px; 
+}
+
+/* Button styling */
+button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    background-color: #5A9F68;
+    color: black;
+    margin-left: 10px; 
+}
+
+    .field:last-child {
+        border-right: none;
+    }
+    label {
+        margin-bottom: 5px;
+    }
+    button, .modal-button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }
+    .delete-button {
+        background-color: #f44336;
+        color: white;
+    }
+    .edit-button, .sessions-button {
+        background-color: #5A9F68;
+        color: white;
+    }
+    table { 
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f0f0f0;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 30%;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        border-radius: 5px;
+    }
+
+
+    /* styles.css */
+body { font-family: Arial, sans-serif; }
+
+.tabs {
+    overflow: hidden;
+    background-color: #f1f1f1;
+}
+
+.tab-button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+.tab-button:hover {
+    background-color: #ddd;
+}
+
+.tab-button.active {
+    background-color: #ccc;
+}
+
+.tab-content {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+.tab-content h3 {
+    margin-top: 0;
+}
+.info-container {
+    padding: 20px;
+    margin: 20px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* school time table CSS  */
+
+#SchoolTimeTable .info-container {
+    display: flex;
+    flex-direction: column; /* Ensures vertical layout */
+    padding: 20px; /* Adds spacing around the content */
+}
+
+#SchoolTimeTable .input-group {
+    width: 50%; /* Each group takes the full width of its parent */
+    margin-bottom: 10px; /* Adds space between groups */
+}
+
+#SchoolTimeTable .input-group input[type="text"],
+#SchoolTimeTable .input-group input[type="number"],
+#SchoolTimeTable .input-group input[type="time"] {
+    width: 100%; /* Makes the input field take the full width of the input group */
+    padding: 8px; /* Adds padding inside the input fields for better readability */
+    box-sizing: border-box; /* Includes padding and border in the element's total width and height */
+}
+
+#SchoolTimeTable .input-group label {
+    margin-bottom: 5px; /* Adds space below the label */
+}
+
+/*till above here */
+
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 20px;
+}
+
+.input-group:last-child {
+    margin-right: 0; /* Remove margin from the last group */
+}
+
+.input-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.input-group input[type="text"] {
+    width: 40%; /* Fixed width of 200 pixels */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.container {
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+}
+
+.container label,
+.container input,
+.container button {
+    margin: 5px 0;
+}
+
+#memberList {
+    margin: 20px;
+    width: auto;
+    border-collapse: collapse;
+}
+
+#memberList th, #memberList td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+.button-delete, .button-edit {
+    cursor: pointer;
+}
+.tabs{
+    margin-top: 10px;
+}
+    
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="https://www.up.school/wp-content/themes/upschool/img/logo.svg" alt="UpSchool Logo">
+    <div>
+        <button onclick="location.href=''">Dashboard</button>
+        <button onclick="location.href='SM_SchoolCreation.html'">School</button>
+        <button onclick="location.href='SM_CreateManager.html'">Your Manager</button>
+        <button onclick="location.href='activity.html'">View Activity</button>
+    </div>
+    <div>
+        <button onclick="location.href='profile.html'">My Profile</button>
+        <button onclick="location.href='signout.html'">Sign Out</button>
+        <button onclick="location.href='help.html'">Help</button>
+    </div>
+</div>
+  
+<div class="main-content">
+    <div class="main-header">
+        <h2>Welcome, Teacher's Name!</h2>
+        <div class="search-box">
+            <input type="search" placeholder="Search" />
+        </div>
+    </div>
+    <div class="tabs">
+        <button class="tab-button" onclick="openTab(event, 'School')">School</button>
+        <button class="tab-button" onclick="openTab(event, 'SchoolTimeTable')">School TimeTable</button>
+        <button class="tab-button" onclick="openTab(event, 'SchoolCalender')">School Calender</button>
+        <button class="tab-button" onclick="openTab(event, 'Class')">Class </button>
+        <button class="tab-button" onclick="openTab(event, 'Members')">Members</button>
+    </div>
+    
+    <div id="School" class="tab-content">
+        <h3></h3>
+        <p>
+            <div class="info-container">
+                <div class="input-group">
+                    <label for="schoolName">School Name:</label>
+                    <input type="text" id="schoolName" name="schoolName">
+                </div>
+                <div class="input-group">
+                    <label for="uploadLogo">Upload Logo:</label>
+                    <input type="file" id="uploadLogo" name="uploadLogo" accept="image/*">
+                </div>
+                <button onclick="addSchool()">Add</button>
+            </div>
+        </p>
+        <div id="schoolList" class="school-list">
+            <!-- List of schools will appear here -->
+        </div>
+    </div>
+    
+    <div id="SchoolTimeTable" class="tab-content">
+        <div class="info-container">
+            <div class="input-group">
+                <label for="periodsPending">No. of periods per day:</label>
+                <input type="number" id="periodsPending" name="periodsPending">
+            </div>
+            <div class="input-group">
+                <label for="periodDuration">Duration of period:</label>
+                <input type="number" id="periodDuration" name="periodDuration">
+            </div>
+            <div class="input-group">
+                <label for="lunchBreak">Lunch break time:</label>
+                <input type="time" id="lunchBreak" name="lunchBreak">
+            </div>
+            <div class="input-group">
+                <label for="shortBreak">Short break time:</label>
+                <input type="time" id="shortBreak" name="shortBreak">
+            </div>
+            <div class="input-group">
+                <label for="schoolStart">School start time:</label>
+                <input type="time" id="schoolStart" name="schoolStart">
+            </div>
+            <div class="input-group">
+                <label for="schoolEnd">School end time:</label>
+                <input type="time" id="schoolEnd" name="schoolEnd">
+            </div>
+            <div class="input-group">
+                <label for="assemblyTime">Assembly time:</label>
+                <input type="time" id="assemblyTime" name="assemblyTime">
+            </div>
+            <div class="input-group">
+                <label for="resumeDay">Reserve day:</label>
+                <input type="text" id="resumeDay" name="resumeDay">
+            </div>
+            <button>Submit</button>
+        </div>
+    </div>    
+    
+    <div id="Class" class="tab-content">
+        <h3></h3>
+        <p>
+            <div class="info-container">
+                <div class="input-group">
+                    <label for="className">Class Name:</label>
+                    <input type="text" id="className" name="className">
+                </div>
+                <div class="input-group">
+                    <label for="sectionName">Section Name:</label>
+                    <input type="text" id="sectionName" name="sectionName">
+                </div>
+            </div>
+            
+            <div class="field-container">
+                <div class="field">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" placeholder="Enter subject">
+                </div>
+                <div class="field">
+                    <label for="academicStartDate">Academic Start Date</label>
+                    <input type="date" id="academicStartDate">
+                </div>
+                <div class="field">
+                    <label for="academicEndDate">Academic End Date</label>
+                    <input type="date" id="academicEndDate">
+                </div>
+              
+                <div class="field">
+                    <label for="revisionStartDate">Revision Start Date</label>
+                    <input type="date" id="revisionStartDate">
+                </div>
+                <div class="field">
+                    <label for="revisionEndDate">Revision End Date</label>
+                    <input type="date" id="revisionEndDate">
+                </div>
+                <button onclick="saveData()">Save</button>
+            </div>
+            
+        
+        <table id="dataList">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Class</th>
+                    <th>Section</th> 
+                    <th>Subject</th>
+                    <th>Academic Start</th>
+                    <th>Academic End</th>
+                    <th>Revision Start</th>
+                    <th>Revision End</th>
+                    <th>Sessions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+            </tbody>
+        </table>
+    
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <p>Delete Confirmation</p>
+                <p>Are you sure you want to delete this ?</p>
+                <button class="modal-button" id="deleteConfirm">Delete</button>
+                <button class="modal-button" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </p>
+    </div>
+    
+    <div id="Members" class="tab-content">
+        <h3></h3>
+        <p> <div class="container">
+            <label for="memberName">Member Name:</label>
+            <input type="text" id="memberName" required>
+    
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" required>
+    
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+    
+            <button onclick="addMember()">Add</button>
+        </div>
+    
+        <table id="memberList">
+            <thead>
+                <tr>
+                    <th>Member Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Member entries will be added here -->
+            </tbody>
+        </table></p>
+    </div>
+    
+    <div id="SchoolCalender" class="tab-content">
+        <h3></h3>
+        <p></p>
+    </div>
+    </div> 
+</div> 
+    <script>
+        // script.js
+        function openTab(evt, tabName) {
+            var i, tabcontent, tabbuttons;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+    // Click on the first tab by default
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementsByClassName("tab-button")[0].click();
+    });
+    
+    
+    
+    function addSchool() {
+        var nameInput = document.getElementById('schoolName');
+        var logoInput = document.getElementById('uploadLogo');
+        var schoolList = document.getElementById('schoolList');
+    
+        if (nameInput.value.trim() === '' || logoInput.files.length === 0) {
+            alert('Please enter a school name and select a logo.');
+            return;
+        }
+    
+        // Create elements
+        var row = document.createElement('div');
+        var nameCell = document.createElement('div');
+        var logoCell = document.createElement('div');
+        var editButton = document.createElement('button');
+        var deleteButton = document.createElement('button');
+    
+        // Set content and attributes
+        nameCell.textContent = nameInput.value;
+        logoCell.innerHTML = '<img src="' + URL.createObjectURL(logoInput.files[0]) + '" alt="Logo" style="width:50px;">';
+        editButton.textContent = 'Edit';
+        deleteButton.textContent = 'Delete';
+    
+        // Add classes and event listeners
+        row.className = 'info-container';
+        editButton.onclick = function () { editSchool(row); };
+        deleteButton.onclick = function () { deleteSchool(row); };
+    
+        // Append everything
+        row.appendChild(nameCell);
+        row.appendChild(logoCell);
+        row.appendChild(editButton);
+        row.appendChild(deleteButton);
+        schoolList.appendChild(row);
+    
+        // Clear input fields
+        nameInput.value = '';
+        logoInput.value = '';
+    }
+    
+    function editSchool(row) {
+        // Logic to edit an existing entry
+    }
+    
+    function deleteSchool(row) {
+        row.parentNode.removeChild(row);
+    }
+    function addMember() {
+        const name = document.getElementById('memberName').value;
+        const phone = document.getElementById('phone').value;
+        const email = document.getElementById('email').value;
+    
+        if (!name || !phone || !email) {
+            alert('Please fill in all fields');
+            return;
+        }
+    
+        const tableBody = document.querySelector('#memberList tbody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${name}</td>
+            <td>${phone}</td>
+            <td>${email}</td>
+            <td>
+                <button class="button-edit" onclick="editMember(this)">Edit</button>
+                <button class="button-delete" onclick="deleteMember(this)">Delete</button>
+            </td>
+        `;
+    
+        tableBody.appendChild(row);
+    
+        // Clear input fields after adding
+        document.getElementById('memberName').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('email').value = '';
+    }
+    
+    function deleteMember(element) {
+        // Remove the parent row of the delete button
+        element.closest('tr').remove();
+    }
+    
+    function editMember(button) {
+        const row = button.closest('tr');
+        const cells = row.querySelectorAll('td');
+    
+        if (button.textContent === 'Edit') {
+            // Change button text to 'Save'
+            button.textContent = 'Save';
+    
+            // Replace cell text with an input field
+            cells.forEach((cell, idx) => {
+                if (idx < 3) { // Assuming the last cell is for the buttons
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = cell.textContent;
+                    cell.textContent = '';
+                    cell.appendChild(input);
+                }
+            });
+        } else {
+            // Change button text back to 'Edit'
+            button.textContent = 'Edit';
+    
+            // Replace input fields with the updated text
+            cells.forEach((cell, idx) => {
+                if (idx < 3) { // Assuming the last cell is for the buttons
+                    const input = cell.querySelector('input');
+                    cell.textContent = input.value;
+                }
+            });
+        }
+    }
+    
+    //class
+    
+    function saveData() {
+        const subject = document.getElementById('subject').value;
+        const academicStartDate = document.getElementById('academicStartDate').value;
+        const academicEndDate = document.getElementById('academicEndDate').value;
+        const revisionStartDate = document.getElementById('revisionStartDate').value;
+        const revisionEndDate = document.getElementById('revisionEndDate').value;
+        const className = document.getElementById('className').value;
+        const sectionName = document.getElementById('sectionName').value;
+    
+        if (!subject || !academicStartDate || !academicEndDate || !revisionStartDate || !revisionEndDate || !className || !sectionName) {
+            alert('Please fill in all fields before saving.');
+            return; // Stop the function if any field is empty
+        }
+    
+        const tbody = document.getElementById('dataList').getElementsByTagName('tbody')[0];
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="checkbox"></td>
+            <td class="editable">${className}</td>
+            <td class="editable">${sectionName}</td>
+            <td class="editable">${subject}</td>
+            <td class="editable">${academicStartDate}</td>
+            <td class="editable">${academicEndDate}</td>
+            <td class="editable">${revisionStartDate}</td>
+            <td class="editable">${revisionEndDate}</td>
+            <td><button class="sessions-button" onclick="window.open('SM_Chapters.html', '_self')">Sessions</button></td>
+            <td>
+                <button class="edit-button" onclick="editRow(this)">Edit</button>
+                <button class="delete-button" onclick="showModal(this)">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    
+        // Clear input fields after saving
+        document.getElementById('subject').value = '';
+        document.getElementById('academicStartDate').value = '';
+        document.getElementById('academicEndDate').value = '';
+        document.getElementById('revisionStartDate').value = '';
+        document.getElementById('revisionEndDate').value = '';
+        document.getElementById('className').value = '';
+        document.getElementById('sectionName').value = '';
+    }
+    
+    
+    
+    
+    function showModal(button) {
+        var modal = document.getElementById('myModal');
+        modal.style.display = "block";
+        var deleteBtn = document.getElementById('deleteConfirm');
+        deleteBtn.onclick = function() {
+            deleteRow(button);
+            modal.style.display = "none";
+        }
+    }
+    
+    function closeModal() {
+        var modal = document.getElementById('myModal');
+        modal.style.display = "none";
+    }
+    
+    function deleteRow(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+    
+    function editRow(button) {
+        var row = button.parentNode.parentNode;
+        var cells = row.querySelectorAll('.editable');
+        var isEditing = button.textContent === 'Save';
+        if (!isEditing) {
+            // Enable editing
+            for (let cell of cells) {
+                cell.setAttribute('contentEditable', true);
+                cell.style.border = '1px solid #ccc';  // Add border to indicate edit mode
+                cell.style.padding = '5px';            // Optional: Add padding for visual comfort
+                cell.style.background = '#f0f8ff';     // Optional: Change background to indicate editable area
+            }
+            button.textContent = 'Save';
+        } else {
+            // Save changes
+            for (let cell of cells) {
+                cell.setAttribute('contentEditable', false);
+                cell.style.border = 'none';  // Reset border style to none or as per your table design
+                cell.style.padding = '8px';  // Reset padding to match non-editable state
+                cell.style.background = 'none';  // Reset background color
+            }
+            button.textContent = 'Edit';
+        }
+    }
+
+    /*JS related to school calender data keeping it there only */
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Retrieve data when the page loads
+        retrieveData();
+    });
+    
+    function saveDataToLocalStorage() {
+        // Save each field to local storage
+        document.querySelectorAll('.input-group input').forEach(input => {
+            localStorage.setItem(input.id, input.value);
+        });
+    }
+    
+    function retrieveData() {
+        // Retrieve each field from local storage
+        document.querySelectorAll('.input-group input').forEach(input => {
+            if (localStorage.getItem(input.id)) {
+                input.value = localStorage.getItem(input.id);
+            }
+        });
+    }
+    
+    // Add event listeners to save data to local storage whenever an input field is changed
+    document.querySelectorAll('.input-group input').forEach(input => {
+        input.addEventListener('change', saveDataToLocalStorage);
+    });
+    
+    </script> 
+
+</body>
+</html>

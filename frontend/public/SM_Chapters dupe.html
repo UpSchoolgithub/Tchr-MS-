@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Tracker</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border-right: 2px solid #ddd;
+        }
+        .field:last-child {
+            border-right: none;
+        }
+        label {
+            margin-bottom: 5px;
+        }
+        button, .modal-button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .delete-button, .save-button {
+            background-color: #f44336;
+            color: white;
+        }
+        .edit-button {
+            background-color: #008CBA;
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        input[type="file"] {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    
+<div class="container">
+    <div class="field">
+        <label for="chapters">Chapters</label>
+        <input type="text" id="chapters" placeholder="Enter chapters">
+    </div>
+    <div class="field">
+        <label for="sessions">Number of Sessions</label>
+        <input type="text" id="sessions" placeholder="Enter number of sessions">
+    </div>
+    <div class="field">
+        <label for="priority">Priority Number</label>
+        <input type="text" id="priority" placeholder="Enter priority number">
+    </div>
+    <div class="field">
+        <label for="file">Upload File</label>
+        <input type="file" id="file" accept=".pdf">
+    </div>
+    <button onclick="addSession()">Save</button>
+</div>
+
+<table id="sessionList">
+    <thead>
+        <tr>
+            <th>Chapters</th>
+            <th>Number of Sessions</th>
+            <th>Priority Number</th>
+            <th>Files</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <p>Are you sure you want to delete this entry?</p>
+        <button class="modal-button" id="deleteConfirm">Delete</button>
+        <button class="modal-button" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function addSession() {
+        const chapters = document.getElementById('chapters').value;
+        const sessions = document.getElementById('sessions').value;
+        const priority = document.getElementById('priority').value;
+        const fileInput = document.getElementById('file');
+        const file = fileInput.files[0];
+
+        if (!chapters || !sessions || !priority || !file) {
+            alert('Please fill in all fields and upload a file.');
+            return;
+        }
+
+        const tbody = document.getElementById('sessionList').getElementsByTagName('tbody')[0];
+        const fileUrl = URL.createObjectURL(file);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td contenteditable="false">${chapters}</td>
+            <td contenteditable="false">${sessions}</td>
+            <td contenteditable="false">${priority}</td>
+            <td><a href="${fileUrl}" target="_blank">${file.name}</a></td>
+            <td>
+                <button class="edit-button" onclick="toggleEditSave(this, '${file.name}')">Edit</button>
+                <button class="delete-button" onclick="showModal(this)">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+
+        document.getElementById('chapters').value = '';
+        document.getElementById('sessions').value = '';
+        document.getElementById('priority').value = '';
+        fileInput.value = '';
+    }
+
+    function toggleEditSave(button, fileName) {
+        const row = button.parentNode.parentNode;
+        const isEditing = button.textContent === 'Edit';
+        const cells = row.querySelectorAll('td');
+        const fileCell = cells[3];
+
+        if (isEditing) {
+            cells[0].contentEditable = cells[1].contentEditable = cells[2].contentEditable = 'true';
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.pdf';
+            fileInput.onchange = function(event) {
+                if (event.target.files.length > 0) {
+                    const newFile = event.target.files[0];
+                    const newFileUrl = URL.createObjectURL(newFile);
+                    fileCell.querySelector('a').href = newFileUrl;
+                    fileCell.querySelector('a').textContent = newFile.name;
+                }
+            };
+            fileCell.innerHTML = '';
+            fileCell.appendChild(fileInput);
+            button.textContent = 'Save';
+        } else {
+            cells[0].contentEditable = cells[1].contentEditable = cells[2].contentEditable = 'false';
+            if (!fileCell.querySelector('a')) {
+                const newFileLink = document.createElement('a');
+                newFileLink.href = fileCell.querySelector('input').files[0] ? URL.createObjectURL(fileCell.querySelector('input').files[0]) : '#';
+                newFileLink.textContent = fileCell.querySelector('input').files[0] ? fileCell.querySelector('input').files[0].name : fileName;
+                newFileLink.target = '_blank';
+                fileCell.innerHTML = '';
+                fileCell.appendChild(newFileLink);
+            }
+            button.textContent = 'Edit';
+        }
+    }
+
+    function showModal(button) {
+        const modal = document.getElementById('myModal');
+        modal.style.display = "block";
+        const deleteConfirm = document.getElementById('deleteConfirm');
+        deleteConfirm.onclick = function() {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            closeModal();
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('myModal').style.display = "none";
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+/* SessionPlans.css */
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .error {
+    color: red;
+    margin-bottom: 10px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .form-group label {
+    flex: 1;
+  }
+  
+  .form-group input[type="file"] {
+    flex: 2;
+    margin-left: 10px;
+  }
+  
+  .buttons {
+    text-align: right;
+  }
+  
+  .buttons button {
+    margin-left: 10px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  .topic-input {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .topic-input input {
+    flex: 1;
+  }
+  
+  .topic-input button {
+    margin-left: 10px;
+  }
+  
+  /* Styling adjustments for Session Plans table */
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table-container th, .table-container td {
+    border: 1px solid #ddd;
+    padding: 8px; /* Adjust padding to make content less cramped */
+    text-align: left;
+}
+
+.table-container th {
+    background-color: #f2f2f2;
+}
+
+/* Adjust the buttons in the table to be smaller and less obtrusive */
+.table-container .btn {
+    background-color: #f8d7da; /* Light red for less emphasis */
+    color: #721c24; /* Dark red text for readability */
+    padding: 5px 10px; /* Smaller padding for a more compact look */
+    border: none;
+    border-radius: 3px; /* Slightly rounded corners for a softer look */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.table-container .btn:hover {
+    background-color: #f5c6cb; /* Slightly lighter red on hover for subtle feedback */
+}
+
+/* Adding specific styles for Edit and Delete buttons if needed */
+.table-container .edit-btn {
+    background-color: #cce5ff; /* Light blue for edit, softer look */
+    color: #004085; /* Dark blue text */
+}
+
+.table-container .edit-btn:hover {
+    background-color: #b8daff;
+}
+
+.table-container .delete-btn {
+    background-color: #f8d7da; /* Keeping delete button red but soft */
+    color: #721c24;
+}
+
+.table-container .delete-btn:hover {
+    background-color: #f5c6cb;
+}

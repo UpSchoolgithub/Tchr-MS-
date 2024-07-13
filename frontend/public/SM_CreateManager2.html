@@ -1,0 +1,183 @@
+Updates to keyboard shortcuts … On Thursday 1 August 2024, Drive keyboard shortcuts will be updated to give you first-letter navigation.Learn more
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpSchool Dashboard</title>
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0; 
+        padding: 0;
+    }
+    body {
+        font-family: "Montserrat", sans-serif; 
+        font-size: 12px;
+        overflow-x: hidden;
+    }
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        width: 200px;
+        background-color: #eeeeee;
+        color: white;
+        padding: 20px;
+        position: fixed;
+    }
+    .sidebar div {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar button {
+        color: black;
+        background: none;
+        border: 3px solid transparent;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .sidebar button:hover {
+        background-color: #5A9F68;
+        color: white;
+    }
+    .main-content {
+        margin-left: 200px;
+        padding: 0.1em;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+    .main-header {
+        background-color: #5A9F68;
+        color: white;
+        padding: 30px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 0px);
+    }
+    .search-box input[type="search"] {
+        border: none;
+        padding: 8px;
+        border-radius: 20px;
+    }
+    .search-box input[type="search"]:focus {
+        outline: none;
+    }
+    img {
+        width: 150px;
+        height: auto;
+    }
+
+    /*Main Content CSS*/
+
+     .container {
+        width: 500px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin: 65px auto;
+        font-family: Arial, sans-serif;
+      }
+    
+      input[type="text"], input[type="email"], input[type="password"], select {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+    
+      .submitbutton{
+        background-color: #5A9F68; /* Adjust the color to match your design */
+        color: white;
+        padding-top: 5%;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 20px; /* Space after the button */
+        transition: background-color 0.3s;
+        margin-top: 20px;
+        margin-left: 45%;
+        border-radius: 7px; /* Adds rounded corners */
+        
+        
+    } 
+    .submitbutton:hover {
+        background-color: #bcd2e4; /* Green background on hover */    
+    } 
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="https://www.up.school/wp-content/themes/upschool/img/logo.svg" alt="UpSchool Logo">
+    <div>
+        <button onclick="location.href=''">Dashboard</button>
+        <button onclick="location.href='SM_SchoolCreation.html'">School</button>
+        <button onclick="location.href='SM_CreateManager.html'">Your Manager</button>
+        <button onclick="location.href='activity.html'">View Activity</button>
+    </div>
+    <div>
+        <button onclick="location.href='profile.html'">My Profile</button>
+        <button onclick="location.href='signout.html'">Sign Out</button>
+        <button onclick="location.href='help.html'">Help</button>
+    </div>
+</div>
+  
+<div class="main-content">
+    <div class="main-header">
+        <h2>Welcome, Teacher's Name!</h2>
+        <div class="search-box">
+            <input type="search" placeholder="Search" />
+        </div>
+    </div>
+    
+    <div class="container">
+       
+        <form action="/submit-your-form-handler" method="post">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required>
+      
+          <label for="phone">Phone:</label>
+          <input type="text" id="phone" name="phone" required>
+      
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+      
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+      
+          <label for="subjects">Subjects:</label>
+          <input type="text" id="subjects" name="subjects" required>
+      
+          <label for="type">Type:</label>
+          <select id="type" name="type">
+            <option value=""disabled selected>Select</option>   
+            <option value="school_teacher">School Teacher</option>
+            <option value="community_teacher">Community Teacher</option>
+            <option value="both">Both</option>
+          </select>
+      
+          <label for="classes">Classes:</label>
+          <input type="text" id="classes" name="classes" required>
+      
+          <a href="" class="submit">
+            <button class="submitbutton">Submit</button>
+          </a> 
+         
+        </form>
+      </div>
+</div> 
+
+</body>
+</html>

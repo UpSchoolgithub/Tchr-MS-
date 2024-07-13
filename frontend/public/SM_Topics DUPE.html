@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Management</title>
+<style>
+    .container {
+        width: 80%;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #f4f4f4;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: column;
+    }
+    .input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #ffffff;
+        border: 2px solid #ddd;
+    }
+    label {
+        margin-right: 10px;
+    }
+    input, button {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-right: 5px;
+    }
+    button {
+        background-color: #008CBA;
+        color: white;
+        cursor: pointer;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f0f0f0;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="input-group">
+        <label for="sessionNumber">Session Number:</label>
+        <input type="text" id="sessionNumber" placeholder="Enter session number">
+        <label for="sessionTopic">Session Topic:</label>
+        <input type="text" id="sessionTopic" placeholder="Enter session topic">
+        <button onclick="addSession()">Save</button>
+    </div>
+    <table id="sessionList">
+        <thead>
+            <tr>
+                <th>Session Number</th>
+                <th>Session Topic</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function addSession() {
+        const sessionNumber = document.getElementById('sessionNumber').value;
+        const sessionTopic = document.getElementById('sessionTopic').value;
+
+        if (!sessionNumber || !sessionTopic) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        const table = document.getElementById('sessionList').getElementsByTagName('tbody')[0];
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${sessionNumber}</td>
+            <td>${sessionTopic}</td>
+            <td>
+                <button class="edit-button" onclick="editRow(this)">Edit</button>
+                <button class="delete-button" onclick="deleteSession(this)">Delete</button>
+            </td>
+        `;
+        table.appendChild(row);
+
+        // Optionally clear the input fields after saving
+        document.getElementById('sessionNumber').value = '';
+        document.getElementById('sessionTopic').value = '';
+    }
+
+    function deleteSession(btn) {
+        var row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+
+    function editRow(btn) {
+        var row = btn.parentNode.parentNode;
+        var cells = row.querySelectorAll('td');
+        var isEditing = btn.textContent === 'Save';
+        if (!isEditing) {
+            // Enable editing
+            cells[0].setAttribute('contentEditable', true);
+            cells[1].setAttribute('contentEditable', true);
+            btn.textContent = 'Save';
+        } else {
+            // Save changes
+            cells[0].setAttribute('contentEditable', false);
+            cells[1].setAttribute('contentEditable', false);
+            btn.textContent = 'Edit';
+        }
+    }
+</script>
+</body>
+</html>

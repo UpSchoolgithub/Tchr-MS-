@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School List</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<style>
+    /* styles.css */
+body { font-family: Arial, sans-serif; }
+
+.tabs {
+    overflow: hidden;
+    background-color: #f1f1f1;
+}
+
+.tab-button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+.tab-button:hover {
+    background-color: #ddd;
+}
+
+.tab-button.active {
+    background-color: #ccc;
+}
+
+.tab-content {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+.tab-content h3 {
+    margin-top: 0;
+}
+.info-container {
+    padding: 20px;
+    margin: 20px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 20px;
+}
+
+.input-group:last-child {
+    margin-right: 0; /* Remove margin from the last group */
+}
+
+.input-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.input-group input[type="text"] {
+    width: 40%; /* Fixed width of 200 pixels */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.info-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+}
+
+.info-container div {
+    margin-right: 10px;
+}
+
+.info-container img {
+    height: 50px; /* Adjust size as needed */
+}
+#cs{
+    margin-left: 87%;
+    margin-bottom: 3%;
+    margin-top: 1%;
+}
+</style>
+<body>
+<a href="School creation.html">
+    <button id="cs">Create School</button>
+</a>
+
+<div class="tabs">
+    <button class="tab-button" onclick="openTab(event, 'PreLearning')">Schools List</button>
+   
+</div>
+
+<div id="PreLearning" class="tab-content">
+    <h3></h3>
+    <p>
+        <div class="info-container">
+            <div class="input-group">
+                <label for="schoolName">School Name:</label>
+                <input type="text" id="schoolName" name="schoolName">
+            </div>
+            <div class="input-group">
+                <label for="uploadLogo">Upload Logo:</label>
+                <input type="file" id="uploadLogo" name="uploadLogo" accept="image/*">
+            </div>
+            <button onclick="addSchool()">Save</button>
+        </div>
+    </p>
+    <div id="schoolList" class="school-list">
+        <!-- List of schools will appear here -->
+    </div>
+</div>
+
+<div id="PostLearning" class="tab-content">
+    <h3>Post Learning</h3>
+    <p><div class="info-container">
+        <div class="input-group">
+            <label for="className">Class Name:</label>
+            <input type="text" id="className" name="className">
+        </div>
+        <div class="input-group">
+            <label for="sectionName">Section Name:</label>
+            <input type="text" id="sectionName" name="sectionName">
+        </div>
+    </div></p>
+</div>
+
+<div id="ActiveQuiz" class="tab-content">
+    <h3>Active Quiz</h3>
+    <p>Content for Active Quiz.</p>
+</div>
+
+<div id="ArchivedQuiz" class="tab-content">
+    <h3>Archived Quiz</h3>
+    <p>Content for Archived Quiz.</p>
+</div>
+
+<script>
+    // script.js
+function openTab(evt, tabName) {
+    var i, tabcontent, tabbuttons;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tabbuttons = document.getElementsByClassName("tab-button");
+    for (i = 0; i < tabbuttons.length; i++) {
+        tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+// Click on the first tab by default
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementsByClassName("tab-button")[0].click();
+});
+
+
+
+function addSchool() {
+    var nameInput = document.getElementById('schoolName');
+    var logoInput = document.getElementById('uploadLogo');
+    var schoolList = document.getElementById('schoolList');
+
+    if (nameInput.value.trim() === '' || logoInput.files.length === 0) {
+        alert('Please enter a school name and select a logo.');
+        return;
+    }
+
+    // Create elements
+    var row = document.createElement('div');
+    var nameCell = document.createElement('div');
+    var logoCell = document.createElement('div');
+    var editButton = document.createElement('button');
+    var deleteButton = document.createElement('button');
+
+    // Set content and attributes
+    nameCell.textContent = nameInput.value;
+    logoCell.innerHTML = '<img src="' + URL.createObjectURL(logoInput.files[0]) + '" alt="Logo" style="width:50px;">';
+    editButton.textContent = 'Edit';
+    deleteButton.textContent = 'Delete';
+
+    // Add classes and event listeners
+    row.className = 'info-container';
+    editButton.onclick = function () { editSchool(row); };
+    deleteButton.onclick = function () { deleteSchool(row); };
+
+    // Append everything
+    row.appendChild(nameCell);
+    row.appendChild(logoCell);
+    row.appendChild(editButton);
+    row.appendChild(deleteButton);
+    schoolList.appendChild(row);
+
+    // Clear input fields
+    nameInput.value = '';
+    logoInput.value = '';
+}
+
+function editSchool(row) {
+    // Logic to edit an existing entry
+}
+
+function deleteSchool(row) {
+    row.parentNode.removeChild(row);
+}
+
+</script>
+</body>
+</html>

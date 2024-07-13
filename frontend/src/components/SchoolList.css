@@ -1,0 +1,119 @@
+/* General container styling */
+.school-list-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header styling */
+  .school-list-container h3 {
+    margin-bottom: 20px;
+    color: #000;
+    font-weight: normal; /* Remove bold from headings */
+  }
+  
+  /* Sort and search styling */
+  .sort-search {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .sort-search label {
+    font-weight: normal; /* Remove bold from labels */
+  }
+  
+  .sort-search select,
+  .sort-search input {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+  
+  .create-school-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  
+  .create-school-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* School list styling */
+  .school-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .school-item {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    flex: 1 1 calc(33.333% - 20px);
+    box-sizing: border-box;
+  }
+  
+  .school-item h4 {
+    margin: 0 0 10px;
+  }
+  
+  .school-item p {
+    margin: 5px 0;
+  }
+  
+  /* Pagination styling */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .pagination button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .pagination button:hover {
+    background-color: #0056b3;
+  }
+  
+  .pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  /* Schools per page styling */
+  .schools-per-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .schools-per-page label {
+    font-weight: normal; /* Remove bold from labels */
+  }
+  
+  .schools-per-page select {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+  
