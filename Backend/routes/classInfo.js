@@ -118,17 +118,68 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
   }
 });
 
-// Delete class info
+// Delete class info with cascade deletion for sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   try {
-    const classInfo = await ClassInfo.findByPk(req.params.id);
+    const classInfo = await ClassInfo.findByPk(req.params.id, {
+      include: [{ model: Section, include: [Subject] }]
+    });
+
     if (!classInfo) {
       return res.status(404).json({ message: 'Class not found' });
     }
+
+    // Logging for debugging
+    console.log('Class info found:', classInfo);
+
+    // Delete related subjects and sections
+    for (const section of classInfo.Sections) {
+      console.log('Deleting subjects for section:', section.id);
+      await Subject.destroy({ where: { sectionId: section.id } });
+      console.log('Deleting section:', section.id);
+      await Section.destroy({ where: { id: section.id } });
+    }
+
+    console.log('Deleting class info:', req.params.id);
     await classInfo.destroy();
     res.status(204).end();
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting class info', error });
+    console.error('Error deleting class info:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+
+// Get unique class names for a school
+router.get('/schools/:schoolId/uniqueClasses', async (req, res) => {
+  const { schoolId } = req.params;
+  try {
+    const classes = await ClassInfo.findAll({
+      attributes: ['className'],
+      where: { schoolId },
+      group: ['className']
+    });
+    res.status(200).json(classes);
+  } catch (error) {
+    console.error('Error fetching unique classes:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// Get sections for a class name and school
+router.get('/schools/:schoolId/classes/:className/sections', async (req, res) => {
+  const { schoolId, className } = req.params;
+  try {
+    const sections = await Section.findAll({
+      include: [{
+        model: ClassInfo,
+        where: { className, schoolId }
+      }]
+    });
+    res.status(200).json(sections);
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Section, Subject, Session, SessionPlan } = require('../models'); // Ensure the path is correct
+const { Section, ClassInfo, Subject, Session, SessionPlan } = require('../models'); // Ensure the path is correct
 
 // Route to get all sections
 router.get('/sections', async (req, res) => {
@@ -12,6 +12,22 @@ router.get('/sections', async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
+// Route to get sections by classId
+router.get('/classes/:classId/sections', async (req, res) => {
+  const { classId } = req.params;
+  try {
+    const sections = await Section.findAll({ where: { classInfoId: classId } });
+    if (sections.length === 0) {
+      return res.status(404).json({ message: 'No sections found' });
+    }
+    res.status(200).json(sections);
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
 
 // Route to add a new section by replicating an existing section's details
 router.post('/schools/:schoolId/classes/:classId/sections', async (req, res) => {

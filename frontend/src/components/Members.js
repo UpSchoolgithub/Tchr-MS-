@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useOutletContext } from 'react-router-dom';
+import Modal from 'react-modal';
 
 const Members = () => {
   const { schoolId } = useOutletContext(); // Use the context to get schoolId
@@ -10,6 +11,8 @@ const Members = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [location, setLocation] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   useEffect(() => {
     if (schoolId) {
@@ -46,8 +49,15 @@ const Members = () => {
       });
       setMembers([...members, response.data]);
       resetForm();
+      setErrorMessage(''); // Clear any existing error message
     } catch (error) {
+      if (error.response && error.response.data.code === 'ER_DUP_ENTRY') {
+        setErrorMessage(`Member with email ${email} already exists`);
+      } else {
+        setErrorMessage('Error adding member');
+      }
       console.error('Error adding member:', error.response ? error.response.data : error.message);
+      setModalIsOpen(true);
     }
   };
 
@@ -62,8 +72,11 @@ const Members = () => {
       });
       setMembers(members.map(member => (member.id === id ? response.data : member)));
       resetForm();
+      setErrorMessage(''); // Clear any existing error message
     } catch (error) {
+      setErrorMessage('Error updating member');
       console.error('Error updating member:', error.response ? error.response.data : error.message);
+      setModalIsOpen(true);
     }
   };
 
@@ -72,7 +85,9 @@ const Members = () => {
       await axios.delete(`http://localhost:5000/api/members/${id}`);
       setMembers(members.filter(member => member.id !== id));
     } catch (error) {
+      setErrorMessage('Error deleting member');
       console.error('Error deleting member:', error.message);
+      setModalIsOpen(true);
     }
   };
 
@@ -92,9 +107,26 @@ const Members = () => {
     setEditingId(member.id);
   };
 
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
+
   return (
     <div className="members-section">
       <h1>Members</h1>
+      {errorMessage && (
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          contentLabel="Error"
+          className="Modal"
+          overlayClassName="Overlay"
+        >
+          <h2>Error</h2>
+          <div>{errorMessage}</div>
+          <button onClick={closeModal}>Close</button>
+        </Modal>
+      )}
       <form onSubmit={handleSubmit}>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />

@@ -5,6 +5,8 @@ const TimetableSettings = require('../models/timetableSettings');
 const SchoolCalendar = require('../models/SchoolCalendar');
 const ClassInfo = require('../models/ClassInfo');
 
+const authenticateManager = require('../middleware/authenticateManager');
+
 // Get all schools
 router.get('/schools', async (req, res) => {
   try {
@@ -108,4 +110,32 @@ router.put('/schools/:id/timetable', async (req, res) => {
     res.status(500).send({ message: 'Internal server error', error: error.message });
   }
 });
+
+// Fetch schools tagged to the authenticated manager along with classes and sections
+router.get('/manager-schools', authenticateManager, async (req, res) => {
+  try {
+    const managerId = req.managerId; // The ID is set by the authenticateManager middleware
+    const schools = await School.findAll({
+      where: { managerId: managerId }
+    });
+    res.status(200).json(schools);
+  } catch (error) {
+    console.error('Error fetching schools:', error);
+    res.status(500).json({ message: 'Error fetching schools', error });
+  }
+});
+
+
+// Fetch events for a school
+router.get('/schools/:schoolId/calendar', async (req, res) => {
+  const schoolId = req.params.schoolId;
+  try {
+    const events = await SchoolCalendar.findAll({ where: { schoolId } });
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching school calendar:', error);
+    res.status(500).json({ error: 'Error fetching school calendar' });
+  }
+});
+
 module.exports = router;

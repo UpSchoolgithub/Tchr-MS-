@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -28,7 +28,7 @@ function App() {
     }
   }, [token]);
 
-  const ProtectedRoute = ({ element, ...rest }) => {
+  const ProtectedRoute = ({ element }) => {
     return token ? element : <Navigate to="/login" />;
   };
 
@@ -56,11 +56,32 @@ function App() {
             </Route>
             <Route path="/sessions/:sessionId/sessionPlans" element={<ProtectedRoute element={<SessionPlan />} />} />
             <Route path="/add-section" element={<ProtectedRoute element={<AddSection />} />} />
+            {/* Add the logout route */}
+            <Route path="/logout" element={<Logout setToken={setToken} />} />
           </Routes>
         </div>
       </div>
     </Router>
   );
 }
+
+// Define the Logout component
+const Logout = ({ setToken }) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Clear the token
+    setToken(null);
+    // Set a timeout to navigate to login page after 3 seconds
+    const timer = setTimeout(() => {
+      navigate('/login');
+    }, 3000);
+
+    // Cleanup the timeout if the component unmounts before the timer finishes
+    return () => clearTimeout(timer);
+  }, [setToken, navigate]);
+
+  return <div>👋 Thank you! See you back soon.</div>;
+};
 
 export default App;

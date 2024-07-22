@@ -1,0 +1,54 @@
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background-color: #f4f4f4;
+}
+
+.add-icon {
+  color: green;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.ReactModal__Overlay {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.ReactModal__Content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  overflow: auto;
+  border-radius: 4px;
+  outline: none;
+  padding: 20px;
+  width: 300px;
+}
+
+button {
+  margin: 10px;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}

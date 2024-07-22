@@ -1,7 +1,11 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Ensure this path is correct
 
-class Manager extends Model {}
+class Manager extends Model {
+  static associate(models) {
+    this.belongsToMany(models.School, { through: 'ManagerSchools' });
+  }
+}
 
 Manager.init({
   name: {
@@ -24,6 +28,7 @@ Manager.init({
 }, {
   sequelize,
   modelName: 'Manager',
+  tableName: 'managers',
   timestamps: true,
 });
 

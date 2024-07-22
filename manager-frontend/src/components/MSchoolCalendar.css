@@ -1,0 +1,24 @@
+.school-calendar-page {
+    padding: 20px;
+  }
+  
+  .school-calendar {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .calendar ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .calendar li {
+    margin-bottom: 10px;
+  }
+  
+  .error {
+    color: red;
+  }
+  

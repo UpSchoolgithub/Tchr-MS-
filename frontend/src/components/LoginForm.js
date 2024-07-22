@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles.css';
+import './LoginForm.css';
 
 const LoginForm = ({ setToken }) => {
   const [username, setUsername] = useState('');
@@ -35,11 +35,11 @@ const LoginForm = ({ setToken }) => {
   return (
     <div className="login-container">
       <div className="login-form">
-        <h2>WELCOME TO UpSchool</h2>
-        <p>Join our community and learn new things everyday.</p>
+        <img src="/fb976355f9607b5dc27f639fbacd9d5c.gif" alt="Welcome" className="login-gif" />
+        <h3>Welcome to UpSchool!</h3>
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="username">Email</label>
+            <label htmlFor="username">User Name</label>
             <input
               type="text"
               id="username"
@@ -58,10 +58,9 @@ const LoginForm = ({ setToken }) => {
               required
             />
           </div>
-          <button type="submit">LOGIN</button>
+          <button type="submit" className="login-button">LOGIN</button>
           {error && <p className="error">{error}</p>}
         </form>
-        <p className="signup">Don't have an account? <a href="/signup">Sign up</a></p>
       </div>
     </div>
   );

@@ -1,8 +1,13 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path as needed
-const Subject = require('./Subject');
+const sequelize = require('../config/db');
 
-class ClassInfo extends Model {}
+class ClassInfo extends Model {
+  static associate(models) {
+    this.hasMany(models.Section, { foreignKey: 'classInfoId' });
+    this.hasMany(models.Student, { foreignKey: 'classId' });
+    this.belongsTo(models.School, { foreignKey: 'schoolId' });
+  }
+}
 
 ClassInfo.init({
   id: {
@@ -13,14 +18,6 @@ ClassInfo.init({
   className: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
-  section: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  subject: {
-    type: DataTypes.STRING,
-    allowNull: true,
   },
   academicStartDate: {
     type: DataTypes.DATEONLY,
@@ -51,21 +48,6 @@ ClassInfo.init({
   modelName: 'ClassInfo',
   tableName: 'classinfos',
   timestamps: true,
-  hooks: {
-    afterCreate: async (classInfo, options) => {
-      try {
-        await Subject.create({
-          subjectName: classInfo.subject,
-          classInfoId: classInfo.id,
-          sectionId: classInfo.section,
-          schoolId: classInfo.schoolId
-        });
-        console.log(`Subject created for classInfo ID: ${classInfo.id}`);
-      } catch (error) {
-        console.error('Error creating subject:', error.message);
-      }
-    }
-  }
 });
 
 module.exports = ClassInfo;

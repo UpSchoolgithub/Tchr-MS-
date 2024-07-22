@@ -132,7 +132,7 @@ const ClassInfo = () => {
       console.error('Error deleting class section:', error);
     }
   };
-
+  
   const handleSessionsClick = (classInfo) => {
     navigate(`/schools/${schoolId}/classes/${classInfo.id}/sections/${classInfo.section}/sessions`);
   };

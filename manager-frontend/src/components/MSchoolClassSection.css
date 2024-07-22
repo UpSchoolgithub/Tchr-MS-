@@ -1,0 +1,97 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .details {
+    margin-bottom: 20px;
+  }
+  
+  .details p {
+    margin: 5px 0;
+  }
+  
+  .dropdown {
+    margin-bottom: 10px;
+  }
+  
+  .dropdown label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .buttons {
+    margin-bottom: 20px;
+  }
+  
+  .buttons button {
+    margin-right: 10px;
+  }
+  
+  .timetable-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .timetable-table th, .timetable-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .timetable-table th {
+    background-color: #f2f2f2;
+  }
+  
+  .add-icon {
+    cursor: pointer;
+    color: blue;
+    font-weight: bold;
+  }
+  
+  .add-icon:hover {
+    text-decoration: underline;
+  }
+  
+  .modal-content {
+    padding: 20px;
+  }
+  
+  .modal-content h2 {
+    margin-top: 0;
+  }
+  
+  .modal-content form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-content form div {
+    margin-bottom: 10px;
+  }
+  
+  .modal-content form label {
+    margin-bottom: 5px;
+  }
+  
+  .modal-content form select, .modal-content form input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .modal-content form button {
+    padding: 10px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  
+  .modal-content form button:hover {
+    background-color: #45a049;
+  }
+  

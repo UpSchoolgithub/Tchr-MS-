@@ -13,6 +13,15 @@ const memberRoutes = require('./routes/members'); // Import member routes
 const managerRoutes = require('./routes/manager');
 const schoolRoutes = require('./routes/schoolroutes'); // Adjust the path according to your project structure
 const authRoutes = require('./routes/auth');
+const managerAuthRoutes = require('./routes/managerAuth'); // Ensure the correct path
+const classroomRoutes = require('./routes/classroom'); // Import the new classroom routes
+const classroomRouter = require('./routes/classroom'); // Adjust path as necessary
+const sectionRoutes = require('./routes/sectionRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+const calendarRoutes = require('./routes/calendar');
+const timetableRoutes = require('./routes/mtimetable'); // Ensure this line is present
+const subjectRoutes = require('./routes/Msubjects');
+const mteacherRoutes = require('./routes/Mteachers');
 
 const app = express();
 
@@ -412,6 +421,21 @@ app.use('/api/managers', managerRoutes);
 
 // Login route
 app.use('/api/auth', authRoutes);
+app.use('/api/manager/auth', managerAuthRoutes); // Ensure the correct path
+
+app.use('/api/classroom', classroomRouter);
+app.use('/api', classroomRoutes);  // Register the classroom routes
+app.use('/api/classroom', classroomRoutes);
+
+app.use('/api', sectionRoutes);
+app.use('/api/teachers', teacherRoutes);
+app.use('/api', subjectRoutes);
+
+app.use('/api', calendarRoutes);
+
+
+app.use('/api', timetableRoutes); // Ensure this line is present
+app.use('/api', mteacherRoutes);
 
 // Fallback for undefined routes
 app.use((req, res) => {

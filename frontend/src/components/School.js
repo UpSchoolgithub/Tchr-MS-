@@ -22,7 +22,7 @@ const School = () => {
           if (!response.ok) {
             if (response.status === 404) {
               // If the school is not found, redirect to the school list page
-              navigate('/school');
+              navigate('/CreateSchool');
             }
             throw new Error('Error fetching school details');
           }
@@ -36,7 +36,7 @@ const School = () => {
   const handleSchoolSaved = (id) => {
     setIsSchoolSaved(true);
     setSchoolId(id);
-    navigate('/school'); // Redirect to the school list page after saving
+    navigate('/CreateSchool'); // Redirect to the school list page after saving
   };
 
   const handleTabClick = (tab) => {

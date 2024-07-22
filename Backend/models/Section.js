@@ -1,7 +1,12 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path as needed
+const sequelize = require('../config/db');
 
-class Section extends Model {}
+class Section extends Model {
+  static associate(models) {
+    this.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId' });
+    this.belongsToMany(models.Subject, { through: 'SectionSubject', foreignKey: 'sectionId' });
+  }
+}
 
 Section.init({
   id: {
@@ -15,19 +20,12 @@ Section.init({
   },
   classInfoId: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
       model: 'ClassInfos',
       key: 'id',
-    }
+    },
   },
-  schoolId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'schools',
-      key: 'id',
-    }
-  }
 }, {
   sequelize,
   modelName: 'Section',

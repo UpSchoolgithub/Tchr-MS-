@@ -1,0 +1,112 @@
+.manager-container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.manager-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.manager-form {
+    margin-bottom: 40px;
+}
+
+.manager-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.manager-form form div {
+    display: flex;
+    flex-direction: column;
+}
+
+.manager-form label {
+    margin-bottom: 5px;
+}
+
+.manager-form input[type="text"],
+.manager-form input[type="email"],
+.manager-form input[type="tel"],
+.manager-form input[type="password"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.manager-form input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.manager-form p {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.manager-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    color: #0056b3;
+}
+
+.manager-table th,
+.manager-table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+    color: #000000;
+}
+
+.manager-table th {
+    background-color: #f2f2f2;
+}
+
+.pagination-save-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.pagination-buttons button {
+    padding: 5px 10px;
+    border: 1px solid #0012b7;
+    background-color: #0012b7;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.pagination-buttons button:hover {
+    background-color: #0012b7;
+}
+
+.pagination-buttons button:disabled {
+    cursor: not-allowed;
+    background-color: #0012b7;
+}
+
+.save-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.save-button:hover {
+    background-color: #0056b3;
+}

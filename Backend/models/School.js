@@ -1,7 +1,15 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Ensure this path is correct
 
-class School extends Model {}
+class School extends Model {
+  static associate(models) {
+    this.belongsToMany(models.Manager, { through: 'ManagerSchools' });
+    this.belongsToMany(models.Teacher, { through: 'TeacherSchools' });
+    this.hasMany(models.ClassInfo, { foreignKey: 'schoolId' });
+    this.hasMany(models.Section, { foreignKey: 'schoolId' });
+    this.hasMany(models.Subject, { foreignKey: 'schoolId' });
+  }
+}
 
 School.init({
   name: {
@@ -23,7 +31,7 @@ School.init({
   logo: {
     type: DataTypes.STRING,
     allowNull: true,
-  }
+  },
 }, {
   sequelize,
   modelName: 'School',

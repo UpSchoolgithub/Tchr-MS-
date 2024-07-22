@@ -1,0 +1,25 @@
+.logout-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    font-family: 'Arial', sans-serif; /* You can change this to any other font you prefer */
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .logout-container h2 {
+    background: #f0f0f0;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  
+  .waving-hand-icon {
+    width: 50px; /* Adjust the size as needed */
+    height: 50px; /* Adjust the size as needed */
+  }
+  
