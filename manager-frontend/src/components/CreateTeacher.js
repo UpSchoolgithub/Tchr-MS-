@@ -10,6 +10,7 @@ const CreateTeacher = () => {
   const [password, setPassword] = useState('');
   const [selectedSchools, setSelectedSchools] = useState([]);
   const [schools, setSchools] = useState([]);
+  const [error, setError] = useState('');
   const { managerId, token } = useManagerAuth();
   const navigate = useNavigate();
 
@@ -21,6 +22,7 @@ const CreateTeacher = () => {
             'Authorization': `Bearer ${token}`
           }
         });
+        console.log('Fetched schools:', response.data);
         setSchools(response.data);
       } catch (error) {
         console.error('Error fetching schools:', error);
@@ -34,14 +36,16 @@ const CreateTeacher = () => {
 
   const handleCreateTeacher = async (e) => {
     e.preventDefault();
+    const teacherData = {
+      name,
+      email,
+      phone,
+      password,
+      schoolIds: selectedSchools,
+    };
+    console.log('Sending teacher data:', teacherData);
     try {
-      const response = await axiosInstance.post('/teachers', {
-        name,
-        email,
-        phone,
-        password,
-        schoolIds: selectedSchools,
-      }, {
+      const response = await axiosInstance.post('/teachers', teacherData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -50,6 +54,11 @@ const CreateTeacher = () => {
       navigate('/teachers');
     } catch (error) {
       console.error('Error creating teacher:', error);
+      if (error.response && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('An unexpected error occurred.');
+      }
     }
   };
 
@@ -65,6 +74,7 @@ const CreateTeacher = () => {
   return (
     <div>
       <h2>Create Teacher</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleCreateTeacher}>
         <div>
           <label>Name:</label>

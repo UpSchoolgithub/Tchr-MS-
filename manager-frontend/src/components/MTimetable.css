@@ -3,52 +3,62 @@
   border-collapse: collapse;
 }
 
-th, td {
-  border: 1px solid #ddd;
+.timetable-table th, .timetable-table td {
+  border: 1px solid #ccc;
   padding: 8px;
   text-align: center;
 }
 
-th {
+.timetable-table th {
   background-color: #f4f4f4;
 }
 
 .add-icon {
-  color: green;
   cursor: pointer;
-  font-size: 20px;
+  color: #007bff;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 8px;
   font-weight: bold;
 }
 
-.ReactModal__Overlay {
-  background-color: rgba(0, 0, 0, 0.75) !important;
-}
-
-.ReactModal__Content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  right: auto;
-  bottom: auto;
-  margin-right: -50%;
-  transform: translate(-50%, -50%);
-  background: #fff;
-  overflow: auto;
+.form-group select {
+  width: 200px; /* Ensuring the dropdown is wide enough */
+  padding: 8px;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  outline: none;
-  padding: 20px;
-  width: 300px;
 }
 
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-buttons button {
+  padding: 8px 16px;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #45a049;
+.form-buttons button[type="submit"] {
+  background-color: #28a745;
+  color: white;
+}
+
+.form-buttons button[type="button"] {
+  background-color: #dc3545;
+  color: white;
 }

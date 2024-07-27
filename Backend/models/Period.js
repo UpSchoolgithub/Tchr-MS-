@@ -1,11 +1,9 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Teacher = require('./Teacher');
-const Section = require('./Section');
 
-class TimetableEntry extends Model {}
+class Period extends Model {}
 
-TimetableEntry.init({
+Period.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -22,10 +20,6 @@ TimetableEntry.init({
     sectionId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: Section,
-            key: 'id',
-        }
     },
     subjectId: {
         type: DataTypes.INTEGER,
@@ -34,10 +28,6 @@ TimetableEntry.init({
     teacherId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: Teacher,
-            key: 'id',
-        },
     },
     day: {
         type: DataTypes.STRING,
@@ -49,9 +39,9 @@ TimetableEntry.init({
     },
 }, {
     sequelize,
-    modelName: 'TimetableEntry',
-    tableName: 'timetable_entries',
+    modelName: 'Period',
+    tableName: 'periods',
     timestamps: true,
 });
 
-module.exports = TimetableEntry;
+module.exports = Period;

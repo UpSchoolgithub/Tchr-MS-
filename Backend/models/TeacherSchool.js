@@ -1,14 +1,32 @@
-// models/TeacherSchool.js
-const { Model } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this path is correct
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
 
-class TeacherSchool extends Model {}
+class TeacherSchools extends Model {}
 
-TeacherSchool.init({}, {
+TeacherSchools.init({
+  teacherId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'teachers',
+      key: 'id',
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  },
+  schoolId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'schools',
+      key: 'id',
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  },
+}, {
   sequelize,
-  modelName: 'TeacherSchool',
+  modelName: 'TeacherSchools',
   tableName: 'teacher_schools',
-  timestamps: false,
+  timestamps: true,
 });
 
-module.exports = TeacherSchool;
+module.exports = TeacherSchools;

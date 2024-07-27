@@ -1,9 +1,11 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this path is correct
+const sequelize = require('../config/db');
 
 class Teacher extends Model {
   static associate(models) {
-    this.belongsToMany(models.School, { through: 'TeacherSchools' });
+    this.belongsTo(models.Manager, { foreignKey: 'ManagerId' });
+    this.belongsToMany(models.School, { through: 'teacher_schools' });
+    this.hasMany(models.TimetableEntry, { foreignKey: 'teacherId' });
   }
 }
 
@@ -16,17 +18,22 @@ Teacher.init({
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      isEmail: true,
-    },
   },
-  phone: {
+  phoneNumber: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  ManagerId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'managers',
+      key: 'id',
+    },
   },
 }, {
   sequelize,

@@ -19,9 +19,10 @@ const classroomRouter = require('./routes/classroom'); // Adjust path as necessa
 const sectionRoutes = require('./routes/sectionRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const calendarRoutes = require('./routes/calendar');
-const timetableRoutes = require('./routes/mtimetable'); // Ensure this line is present
+//const timetableRoutes = require('./routes/mtimetable'); // Ensure this line is present
 const subjectRoutes = require('./routes/Msubjects');
-const mteacherRoutes = require('./routes/Mteachers');
+const mteacherRoutes = require('./routes/mteacherRoutes');
+const timetableRoutes = require('./routes/timetableRoutes');
 
 const app = express();
 
@@ -432,9 +433,11 @@ app.use('/api/teachers', teacherRoutes);
 app.use('/api', subjectRoutes);
 
 app.use('/api', calendarRoutes);
+app.use('/api', schoolRoutes);
+app.use('/api/schools/timetable', timetableRoutes); // Ensure the correct path
 
 
-app.use('/api', timetableRoutes); // Ensure this line is present
+//app.use('/api', timetableRoutes); // Ensure this line is present
 app.use('/api', mteacherRoutes);
 
 // Fallback for undefined routes

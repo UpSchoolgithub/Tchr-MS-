@@ -80,4 +80,19 @@ router.post('/schools/:schoolId/classes/:classId/sections', async (req, res) => 
   }
 });
 
+
+
+// Get subjects for a section
+router.get('/sections/:sectionId/subjects', async (req, res) => {
+  try {
+    const subjects = await Subject.findAll({
+      where: { sectionId: req.params.sectionId }
+    });
+    res.status(200).json(subjects);
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
+    res.status(500).json({ message: 'Error fetching subjects', error });
+  }
+});
+
 module.exports = router;

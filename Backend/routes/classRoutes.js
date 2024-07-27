@@ -18,4 +18,20 @@ router.get('/classes/:id', async (req, res) => {
   }
 });
 
+// Delete a class by ID
+router.delete('/schools/:schoolId/classes/:classId', async (req, res) => {
+  const { classId } = req.params;
+  try {
+    const result = await ClassInfo.destroy({ where: { id: classId } });
+    if (result) {
+      res.status(200).json({ message: 'Class deleted successfully' });
+    } else {
+      res.status(404).json({ message: 'Class not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting class:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
 module.exports = router;

@@ -1,5 +1,3 @@
-// frontend/src/App.js
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import MSidebar from './components/MSidebar';
@@ -14,15 +12,18 @@ import TeacherList from './components/TeacherList';
 import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import MTimetable from './components/MTimetable';
-import StudentTable from './components/StudentTable'; // Import the new component
+import SectionDetails from './components/SectionDetails';
+import SchoolCalendar from './components/SchoolCalendar';  // Import SchoolCalendar
+
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
+
+const ProtectedRoute = ({ element }) => {
+  const { token } = useManagerAuth();
+  return token ? element : <Navigate to="/mlogin" />;
+};
 
 function App() {
   const { token } = useManagerAuth();
-
-  const ProtectedRoute = ({ element }) => {
-    return token ? element : <Navigate to="/mlogin" />;
-  };
 
   return (
     <ManagerAuthProvider>
@@ -37,12 +38,13 @@ function App() {
               <Route path="/view-teachers" element={<ProtectedRoute element={<MViewTeachers />} />} />
               <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
               <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
-              <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionId" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
+              <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionId" element={<ProtectedRoute element={<SectionDetails />} />} />
               <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
               <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
               <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
               <Route path="/timetable" element={<ProtectedRoute element={<MTimetable />} />} />
-              <Route path="/students" element={<ProtectedRoute element={<StudentTable />} />} /> {/* Add this route */}
+              <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionId/timetable" element={<ProtectedRoute element={<MTimetable />} />} />
+              <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionId/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} /> {/* Ensure calendar route */}
             </Routes>
           </div>
         </div>

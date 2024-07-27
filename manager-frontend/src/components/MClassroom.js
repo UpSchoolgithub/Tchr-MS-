@@ -7,9 +7,10 @@ const MClassroom = () => {
   const { managerId, token } = useManagerAuth();
   const [schools, setSchools] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState(null);
-  const [combinedClassSections, setCombinedClassSections] = useState([]);
-  const [selectedClassSection, setSelectedClassSection] = useState('');
-  const [error, setError] = useState(null);  // State to store error message
+  const [classes, setClasses] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,66 +29,135 @@ const MClassroom = () => {
         setSchools(response.data);
       } catch (error) {
         console.error('Error fetching schools:', error);
-        setError('Failed to fetch schools.');  // Set error message
       }
     };
 
     fetchSchools();
   }, [managerId, token]);
 
-  const fetchCombinedClassSections = async (schoolId) => {
+  const fetchClasses = async (schoolId) => {
     try {
-      const response = await axiosInstance.get(`/schools/${schoolId}/classes-sections-subjects`, {
+      const response = await axiosInstance.get(`/schools/${schoolId}/classes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const uniqueClassSections = {};
-
-      response.data.forEach(item => {
-        const key = `${item.className}-${item.sectionName}`;
-        if (!uniqueClassSections[key]) {
-          uniqueClassSections[key] = {
-            className: item.className,
-            sectionName: item.sectionName
-          };
+      const classesGrouped = response.data.reduce((acc, curr) => {
+        if (!acc[curr.className]) {
+          acc[curr.className] = [];
         }
-      });
+        acc[curr.className].push(curr);
+        return acc;
+      }, {});
+      const processedClasses = Object.keys(classesGrouped).map(className => ({
+        className,
+        classInfo: classesGrouped[className],
+        count: classesGrouped[className].length
+      }));
+      setClasses(processedClasses);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    }
+  };
 
-      const combinedClassSections = Object.values(uniqueClassSections).map(item => ({
-        ...item
+  const fetchSections = async (classInfoList) => {
+    try {
+      const sectionRequests = classInfoList.map(classInfo =>
+        axiosInstance.get(`/classes/${classInfo.id}/sections`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      );
+      const sectionResponses = await Promise.all(sectionRequests);
+      const allSections = sectionResponses.flatMap(response => response.data);
+
+      const sectionsGrouped = allSections.reduce((acc, section) => {
+        if (!acc[section.sectionName]) {
+          acc[section.sectionName] = [];
+        }
+        acc[section.sectionName].push(section);
+        return acc;
+      }, {});
+
+      const fetchSubjects = async (sectionId) => {
+        try {
+          const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          return response.data;
+        } catch (error) {
+          console.error(`Error fetching subjects for section ${sectionId}:`, error);
+          return [];
+        }
+      };
+
+      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
+        const sectionInfo = sectionsGrouped[sectionName];
+        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
+        const combinedSubjects = subjects.flat();
+        return {
+          sectionName,
+          sectionInfo,
+          count: sectionInfo.length,
+          subjects: combinedSubjects
+        };
       }));
 
-      setCombinedClassSections(combinedClassSections);
+      setSections(sectionsWithSubjects);
     } catch (error) {
-      console.error('Error fetching combined classes and sections:', error);
-      setError('Failed to fetch combined classes and sections.');  // Set error message
+      console.error('Error fetching sections:', error);
     }
   };
 
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
-    fetchCombinedClassSections(schoolId);
-    setCombinedClassSections([]);
-    setSelectedClassSection('');
+    fetchClasses(schoolId);
+    setClasses([]);
+    setSections([]);
+    setSelectedClass(null);
+    setSelectedSection(null);
   };
 
-  const handleClassSectionChange = (e) => {
-    setSelectedClassSection(e.target.value);
+  const handleClassChange = (e) => {
+    const className = e.target.value;
+    const classInfoList = classes.find(cls => cls.className === className).classInfo;
+    setSelectedClass(className);
+    fetchSections(classInfoList);
+    setSections([]);
+    setSelectedSection(null);
+  };
+
+  const handleSectionChange = (e) => {
+    setSelectedSection(e.target.value);
   };
 
   const handleSectionSelect = () => {
-    if (selectedSchool && selectedClassSection) {
-      const [selectedClass, selectedSection] = selectedClassSection.split('-');
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSection}`);
+    if (selectedSchool && selectedClass && selectedSection) {
+      const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+      if (selectedSectionInfo) {
+        localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
+      }
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSection}`, {
+        state: {
+          selectedSchool,
+          selectedClass,
+          selectedSection,
+          subjects: selectedSectionInfo ? selectedSectionInfo.subjects : []
+        }
+      });
     }
   };
+  
+
+  const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
 
   return (
     <div>
       <h1>Select School, Class, and Section</h1>
-      {error && <p className="error">{error}</p>}  // Display error message
       <div>
         <label>School:</label>
         <select onChange={handleSchoolChange} value={selectedSchool || ''}>
@@ -98,17 +168,44 @@ const MClassroom = () => {
         </select>
       </div>
       <div>
-        <label>Class & Section:</label>
-        <select onChange={handleClassSectionChange} value={selectedClassSection || ''} disabled={!selectedSchool}>
-          <option value="" disabled>Select Class & Section</option>
-          {combinedClassSections.map((item) => (
-            <option key={`${item.className}-${item.sectionName}`} value={`${item.className}-${item.sectionName}`}>
-              {item.className} - {item.sectionName}
+        <label>Class:</label>
+        <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
+          <option value="" disabled>Select Class</option>
+          {classes.map((cls) => (
+            <option key={cls.className} value={cls.className}>
+              {cls.className} ({cls.count})
             </option>
           ))}
         </select>
       </div>
-      <button onClick={handleSectionSelect} disabled={!selectedClassSection}>Select Section</button>
+      <div>
+        <label>Section:</label>
+        <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
+          <option value="" disabled>Select Section</option>
+          {sections.map((section) => (
+            <option key={section.sectionName} value={section.sectionName}>
+              {section.sectionName} ({section.count})
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <h3>Subjects:</h3>
+        {selectedSectionInfo && (
+          <div>
+            {selectedSectionInfo.subjects.length > 0 ? (
+              selectedSectionInfo.subjects.map(subject => (
+                <div key={subject.id}>
+                  <span>{subject.subjectName || 'No Subject Name'}</span>
+                </div>
+              ))
+            ) : (
+              <p>No subjects found for this section.</p>
+            )}
+          </div>
+        )}
+      </div>
+      <button onClick={handleSectionSelect} disabled={!selectedSection}>Select Section</button>
     </div>
   );
 };

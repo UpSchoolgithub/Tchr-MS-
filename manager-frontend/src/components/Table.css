@@ -1,0 +1,68 @@
+.table-container {
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    border: 1px solid #ccc;
+  }
+  
+  .table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  .table th.sticky,
+  .table td.sticky {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 2;
+    box-shadow: 1px 0 0 #ccc;
+  }
+  
+  .table th.sticky {
+    z-index: 3;
+  }
+  
+  .table th.month-header {
+    background: #f9f9f9;
+    text-align: center;
+  }
+  
+  .table th,
+  .table td {
+    min-width: 60px;
+    font-size: 8px; /* Set default font size */
+  }
+  
+  .table th:first-child,
+  .table td:first-child {
+    min-width: 100px;
+    font-size: 11px; /* Set font size for Roll Number */
+  }
+  
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
+    min-width: 250px; /* Increase this value to give more space for the Student Name column */
+    font-size: 11px; /* Set font size for Student Name */
+  }
+  
+  .table th.total-header,
+  .table td.total-cell {
+    background: #f0f0f0;
+    font-weight: bold;
+  }
+  
+  .table th {
+    background: #f4f4f4;
+  }
+  

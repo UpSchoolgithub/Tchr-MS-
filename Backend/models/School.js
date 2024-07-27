@@ -5,9 +5,6 @@ class School extends Model {
   static associate(models) {
     this.belongsToMany(models.Manager, { through: 'ManagerSchools' });
     this.belongsToMany(models.Teacher, { through: 'TeacherSchools' });
-    this.hasMany(models.ClassInfo, { foreignKey: 'schoolId' });
-    this.hasMany(models.Section, { foreignKey: 'schoolId' });
-    this.hasMany(models.Subject, { foreignKey: 'schoolId' });
   }
 }
 

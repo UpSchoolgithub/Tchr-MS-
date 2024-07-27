@@ -1,4 +1,3 @@
-// ClassInfo.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useOutletContext, useNavigate } from 'react-router-dom';
@@ -16,6 +15,7 @@ const ClassInfo = () => {
   const [revisionEndDate, setRevisionEndDate] = useState('');
   const [showDetailsForm, setShowDetailsForm] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchClassInfos = async () => {
@@ -32,14 +32,12 @@ const ClassInfo = () => {
 
   const handleClassSubmit = async (e) => {
     e.preventDefault();
-    // Check if the class and subject already exist with section A
     const existingClass = classInfos.find(info => info.className === className && info.subject === subject && info.section === 'A');
     if (!existingClass && section !== 'A') {
       alert('You must first add section A for this class and subject.');
       return;
     }
     if (existingClass) {
-      // Add the new section for the existing class without showing details form
       try {
         const newSection = {
           className: className,
@@ -57,7 +55,6 @@ const ClassInfo = () => {
         console.error('Error adding new section:', error);
       }
     } else {
-      // Show details form for new class and subject
       setShowDetailsForm(true);
     }
   };
@@ -125,20 +122,26 @@ const ClassInfo = () => {
   };
 
   const handleDelete = async (id) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this class?');
+    if (!confirmDelete) return;
+  
     try {
       await axios.delete(`http://localhost:5000/api/schools/${schoolId}/classes/${id}`);
       setClassInfos(classInfos.filter(info => info.id !== id));
     } catch (error) {
       console.error('Error deleting class section:', error);
+      setError('Failed to delete class. Please try again.');
     }
   };
   
+
   const handleSessionsClick = (classInfo) => {
     navigate(`/schools/${schoolId}/classes/${classInfo.id}/sections/${classInfo.section}/sessions`);
   };
 
   return (
     <div>
+      {error && <div className="error">{error}</div>}
       <form onSubmit={handleClassSubmit}>
         <div>
           <label>Class Name:</label>

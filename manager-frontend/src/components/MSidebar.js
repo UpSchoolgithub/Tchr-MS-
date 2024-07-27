@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiHome, FiCalendar, FiBook, FiUsers, FiMail, FiActivity, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiBook, FiUsers, FiMail, FiActivity, FiLogOut } from 'react-icons/fi';
 import './MSidebar.css';
 
 const MSidebar = () => {

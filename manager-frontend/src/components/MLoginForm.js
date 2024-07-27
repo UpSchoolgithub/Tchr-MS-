@@ -16,7 +16,7 @@ const MLoginForm = () => {
         email,
         password,
       });
-      const { token } = response.data;
+      const { token, refreshToken } = response.data;
       setAuthToken(token);
       navigate('/dashboard');
     } catch (error) {

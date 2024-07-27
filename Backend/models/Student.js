@@ -1,55 +1,38 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Ensure this path is correct
 
-const Student = sequelize.define('Student', {
-  rollNumber: {
+class Student extends Model {}
+
+Student.init({
+  id: {
     type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  rollNumber: {
+    type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   },
   studentName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  studentEmail: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  studentPhoneNumber: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  parentName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  parentPhoneNumber1: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  parentPhoneNumber2: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  parentEmail: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  schoolId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  classId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
   sectionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'sections',
+      key: 'id',
+    }
+  },
+  personalDetails: {
+    type: DataTypes.JSON,
+    allowNull: true,
   },
 }, {
+  sequelize,
+  modelName: 'Student',
+  tableName: 'students',
   timestamps: true,
 });
 
