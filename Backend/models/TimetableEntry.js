@@ -1,57 +1,60 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Teacher = require('./Teacher');
-const Section = require('./Section');
 
-class TimetableEntry extends Model {}
+class TimetableEntry extends Model {
+  static associate(models) {
+    this.belongsTo(models.Teacher, { foreignKey: 'teacherId' });
+    this.belongsTo(models.Subject, { foreignKey: 'subjectId' });
+  }
+}
 
 TimetableEntry.init({
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  schoolId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  classId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  combinedSectionId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  subjectId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'subjects',
+      key: 'id',
     },
-    schoolId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
+  },
+  teacherId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'teachers',
+      key: 'id',
     },
-    classId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    sectionId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: Section,
-            key: 'id',
-        }
-    },
-    subjectId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    teacherId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: Teacher,
-            key: 'id',
-        },
-    },
-    day: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    period: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
+  },
+  day: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  period: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 }, {
-    sequelize,
-    modelName: 'TimetableEntry',
-    tableName: 'timetable_entries',
-    timestamps: true,
+  sequelize,
+  modelName: 'TimetableEntry',
+  tableName: 'timetable_entries',
+  timestamps: true,
 });
 
 module.exports = TimetableEntry;

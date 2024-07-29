@@ -6,6 +6,6 @@ const router = express.Router();
 router.post('/assign', assignPeriod);
 
 // Define the route for fetching assignments
-router.get('/:schoolId/assignments', getAssignments);
+router.get('/:schoolId/:classId/:sectionName/assignments', getAssignments);
 
 module.exports = router;

@@ -1,4 +1,3 @@
-// src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -15,15 +14,9 @@ Modal.setAppElement(rootElement);
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      <ManagerAuthProvider>
+        <App />
+      </ManagerAuthProvider>
     </AuthProvider>
-  </React.StrictMode>
-);
-
-root.render(
-  <React.StrictMode>
-    <ManagerAuthProvider>
-      <App />
-    </ManagerAuthProvider>
   </React.StrictMode>
 );

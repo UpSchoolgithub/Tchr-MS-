@@ -1,9 +1,9 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this path is correct
+const sequelize = require('../config/db');
 
 class Manager extends Model {
   static associate(models) {
-    this.belongsToMany(models.School, { through: 'ManagerSchools' });
+    this.belongsToMany(models.School, { through: 'ManagerSchools', foreignKey: 'ManagerId' });
   }
 }
 

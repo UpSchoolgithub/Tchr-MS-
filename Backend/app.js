@@ -23,6 +23,10 @@ const calendarRoutes = require('./routes/calendar');
 const subjectRoutes = require('./routes/Msubjects');
 const mteacherRoutes = require('./routes/mteacherRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const assignmentRoutes = require('./routes/assignmentRoutes');
+const testRoutes = require('./routes/testRoutes');
 
 const app = express();
 
@@ -434,8 +438,13 @@ app.use('/api', subjectRoutes);
 
 app.use('/api', calendarRoutes);
 app.use('/api', schoolRoutes);
-app.use('/api/schools/timetable', timetableRoutes); // Ensure the correct path
-
+//app.use('/api/schools/timetable', timetableRoutes); // Ensure the correct path
+app.use('/api/timetable', timetableRoutes); // Base path for timetable routes
+app.use('/api/students', studentRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/tests', testRoutes);
+//app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used in Postman
 
 //app.use('/api', timetableRoutes); // Ensure this line is present
 app.use('/api', mteacherRoutes);

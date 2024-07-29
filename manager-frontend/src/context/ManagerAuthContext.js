@@ -1,3 +1,4 @@
+// src/context/ManagerAuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
@@ -12,17 +13,35 @@ export const ManagerAuthProvider = ({ children }) => {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
-      const decodedToken = jwtDecode(storedToken);
-      setManagerId(decodedToken.id);
-      setToken(storedToken);
+      try {
+        const decodedToken = jwtDecode(storedToken);
+        console.log('Decoded Token:', decodedToken); // Log the decoded token
+        if (decodedToken.id) {
+          setManagerId(decodedToken.id);
+          setToken(storedToken);
+        } else {
+          console.error('Manager ID not found in token');
+        }
+      } catch (error) {
+        console.error('Failed to decode token:', error);
+      }
     }
   }, []);
 
   const setAuthToken = (newToken) => {
-    const decodedToken = jwtDecode(newToken);
-    setManagerId(decodedToken.id);
-    setToken(newToken);
-    localStorage.setItem('token', newToken);
+    try {
+      const decodedToken = jwtDecode(newToken);
+      console.log('Decoded Token:', decodedToken); // Log the decoded token
+      if (decodedToken.id) {
+        setManagerId(decodedToken.id);
+        setToken(newToken);
+        localStorage.setItem('token', newToken);
+      } else {
+        console.error('Manager ID not found in token');
+      }
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+    }
   };
 
   return (

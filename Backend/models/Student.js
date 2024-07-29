@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this path is correct
+const sequelize = require('../config/db');
+const CombinedSection = require('./CombinedSection');
 
 class Student extends Model {}
 
@@ -17,17 +18,36 @@ Student.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  sectionId: {
+  studentEmail: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  studentPhoneNumber: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  parentName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  parentPhoneNumber1: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  parentPhoneNumber2: {
+    type: DataTypes.STRING,
+  },
+  parentEmail: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  combinedSectionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'sections',
+      model: CombinedSection,
       key: 'id',
-    }
-  },
-  personalDetails: {
-    type: DataTypes.JSON,
-    allowNull: true,
+    },
   },
 }, {
   sequelize,

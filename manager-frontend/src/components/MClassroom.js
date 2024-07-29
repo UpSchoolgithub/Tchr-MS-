@@ -98,11 +98,14 @@ const MClassroom = () => {
         const sectionInfo = sectionsGrouped[sectionName];
         const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
         const combinedSubjects = subjects.flat();
+        const combinedSectionId = sectionInfo.map(s => s.id).join('-');
+        console.log(`Combined Section ID for ${sectionName}: ${combinedSectionId}`); // Log combined section ID
         return {
           sectionName,
           sectionInfo,
           count: sectionInfo.length,
-          subjects: combinedSubjects
+          subjects: combinedSubjects,
+          combinedSectionId
         };
       }));
 
@@ -124,11 +127,14 @@ const MClassroom = () => {
 
   const handleClassChange = (e) => {
     const className = e.target.value;
-    const classInfoList = classes.find(cls => cls.className === className).classInfo;
-    setSelectedClass(className);
-    fetchSections(classInfoList);
-    setSections([]);
-    setSelectedSection(null);
+    const classData = classes.find(cls => cls.className === className);
+    if (classData) {
+      const classInfoList = classData.classInfo;
+      setSelectedClass(className);
+      fetchSections(classInfoList);
+      setSections([]);
+      setSelectedSection(null);
+    }
   };
 
   const handleSectionChange = (e) => {
@@ -140,18 +146,19 @@ const MClassroom = () => {
       const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
       if (selectedSectionInfo) {
         localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
+        localStorage.setItem('combinedSectionId', selectedSectionInfo.combinedSectionId); // Store combined section IDs
       }
       navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSection}`, {
         state: {
           selectedSchool,
           selectedClass,
           selectedSection,
-          subjects: selectedSectionInfo ? selectedSectionInfo.subjects : []
+          subjects: selectedSectionInfo ? selectedSectionInfo.subjects : [],
+          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.combinedSectionId : ''
         }
       });
     }
   };
-  
 
   const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
 

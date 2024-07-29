@@ -1,35 +1,51 @@
 // src/context/AuthContext.js
-import React, { createContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Named import
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [managerId, setManagerId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [token, setToken] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       try {
-        const decoded = jwtDecode(storedToken);
-        console.log("Decoded Token:", decoded); // Log the entire decoded token
-        if (decoded.managerId) {
-          setManagerId(decoded.managerId);
+        const decodedToken = jwtDecode(storedToken);
+        console.log('Decoded Token:', decodedToken); // Log the decoded token
+        if (decodedToken.id) {
+          setUserId(decodedToken.id);
+          setToken(storedToken);
         } else {
-          console.error("Manager ID not found in token");
+          console.error('User ID not found in token');
         }
-        setToken(storedToken);
       } catch (error) {
-        console.error("Error decoding token:", error);
+        console.error('Failed to decode token:', error);
       }
-    } else {
-      console.log("No token found in localStorage");
     }
   }, []);
 
+  const setAuthToken = (newToken) => {
+    try {
+      const decodedToken = jwtDecode(newToken);
+      console.log('Decoded Token:', decodedToken); // Log the decoded token
+      if (decodedToken.id) {
+        setUserId(decodedToken.id);
+        setToken(newToken);
+        localStorage.setItem('token', newToken);
+      } else {
+        console.error('User ID not found in token');
+      }
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ managerId, token }}>
+    <AuthContext.Provider value={{ userId, token, setAuthToken }}>
       {children}
     </AuthContext.Provider>
   );

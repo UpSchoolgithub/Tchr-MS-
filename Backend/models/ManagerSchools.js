@@ -1,29 +1,38 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path as needed
+const sequelize = require('../config/db');
 
-class ManagerSchools extends Model {}
+class ManagerSchools extends Model {
+  static associate(models) {
+    this.belongsTo(models.Manager, { foreignKey: 'ManagerId' });
+    this.belongsTo(models.School, { foreignKey: 'SchoolId' });
+  }
+}
 
 ManagerSchools.init({
   ManagerId: {
     type: DataTypes.INTEGER,
+    primaryKey: true,
     references: {
-      model: 'managers', // refers to table name
+      model: 'managers',
       key: 'id',
     },
-    allowNull: false,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   SchoolId: {
     type: DataTypes.INTEGER,
+    primaryKey: true,
     references: {
-      model: 'schools', // refers to table name
+      model: 'schools',
       key: 'id',
     },
-    allowNull: false,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
 }, {
   sequelize,
   modelName: 'ManagerSchools',
-  tableName: 'ManagerSchools',
+  tableName: 'managerschools',
   timestamps: false,
 });
 

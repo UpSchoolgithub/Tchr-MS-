@@ -18,8 +18,8 @@ const ParentComponent = () => {
       <MTimetable
         schoolId={schoolId}
         classId={classId}
-        sectionId={sectionId} // Ensure this is a valid number
-        subjects={subjects}
+        sectionId={sectionId}
+        subjects={subjects} // Pass subjects as a prop
       />
     </div>
   );

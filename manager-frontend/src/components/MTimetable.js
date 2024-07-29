@@ -1,151 +1,153 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import axiosInstance from '../services/axiosInstance';
-import { useManagerAuth } from '../context/ManagerAuthContext';
 
 Modal.setAppElement('#root');
 
-const MTimetable = ({ schoolId, classId, sectionId, subjects }) => {
-  const [timetableSettings, setTimetableSettings] = useState(null);
-  const [days] = useState(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
+const MSchoolClassSection = () => {
+  const { schoolId, classId, sectionId } = useParams();
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [filter, setFilter] = useState('all'); // 'all', 'events', 'holidays'
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showTimetable, setShowTimetable] = useState(false);
   const [teachers, setTeachers] = useState([]);
-  const { token } = useManagerAuth();
+  const [subjects, setSubjects] = useState([]);
+  const [timetableSettings, setTimetableSettings] = useState(null);
+  const [assignedPeriods, setAssignedPeriods] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState({});
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [assignedPeriods, setAssignedPeriods] = useState({});
+  const [selectedPeriod, setSelectedPeriod] = useState({});
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTimetableSettings = async () => {
-      try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
-        setTimetableSettings(response.data);
-      } catch (error) {
-        setError('Error fetching timetable settings.');
-        console.error('Error fetching timetable settings:', error);
-      }
-    };
+    const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
+    if (storedSubjects) {
+      setSubjects(storedSubjects);
+    }
+    fetchCalendarEventsAndHolidays(schoolId);
+    fetchTeachers(schoolId);
+    fetchTimetableSettings(schoolId);
+  }, [schoolId]);
 
-    const fetchTeachers = async () => {
-      try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/teachers`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        setTeachers(response.data);
-      } catch (error) {
-        setError('Error fetching teachers.');
-        console.error('Error fetching teachers:', error);
-      }
-    };
-
-    const fetchAssignments = async () => {
-      try {
-        const response = await axiosInstance.get(`/schools/timetable/${schoolId}/assignments`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const assignments = response.data.reduce((acc, entry) => {
-          acc[`${entry.day}-${entry.period}`] = {
-            teacher: entry.teacherId,
-            subject: entry.subjectId,
-            teacherId: entry.teacherId,
-            subjectId: entry.subjectId
-          };
-          return acc;
-        }, {});
-        setAssignedPeriods(assignments);
-      } catch (error) {
-        setError('Error fetching assignments.');
-        console.error('Error fetching assignments:', error);
-      }
-    };
-
-    if (schoolId) {
-      fetchTimetableSettings();
-      fetchTeachers();
+  useEffect(() => {
+    if (teachers.length > 0 && timetableSettings) {
       fetchAssignments();
     }
-  }, [schoolId, classId, token]);
+  }, [teachers, timetableSettings]);
 
-  const openModal = (day, period) => {
-    if (assignedPeriods[`${day}-${period}`]) {
-      const confirmEdit = window.confirm('This period is already assigned. Are you sure you want to change it?');
-      if (!confirmEdit) return;
-      setSelectedTeacher(assignedPeriods[`${day}-${period}`].teacherId);
-      setSelectedSubject(assignedPeriods[`${day}-${period}`].subjectId);
-    } else {
-      setSelectedTeacher('');
-      setSelectedSubject('');
+  const fetchCalendarEventsAndHolidays = async (schoolId) => {
+    try {
+      const eventsResponse = await axiosInstance.get(`/schools/${schoolId}/calendar`);
+      const holidaysResponse = await axiosInstance.get(`/schools/${schoolId}/holidays`);
+      setCalendarEvents(eventsResponse.data);
+      setHolidays(holidaysResponse.data);
+    } catch (error) {
+      console.error('Error fetching calendar events and holidays:', error);
     }
+  };
+
+  const fetchTeachers = async (schoolId) => {
+    try {
+      const response = await axiosInstance.get(`/schools/${schoolId}/teachers`);
+      setTeachers(response.data);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
+  };
+
+  const fetchTimetableSettings = async (schoolId) => {
+    try {
+      const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
+      setTimetableSettings(response.data);
+    } catch (error) {
+      setError('Error fetching timetable settings.');
+      console.error('Error fetching timetable settings:', error);
+    }
+  };
+
+  const fetchAssignments = async () => {
+    try {
+      const response = await axiosInstance.get(`/schools/timetable/${schoolId}/assignments`);
+      const assignments = response.data.reduce((acc, entry) => {
+        if (entry.sectionId === Number(sectionId)) {
+          const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
+          const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown Subject' };
+          acc[`${entry.day}-${entry.period}`] = {
+            teacher: teacher.name,
+            teacherId: entry.teacherId,
+            subject: subject.subjectName,
+            subjectId: entry.subjectId
+          };
+        }
+        return acc;
+      }, {});
+      setAssignedPeriods(assignments);
+    } catch (error) {
+      setError('Error fetching assignments.');
+      console.error('Error fetching assignments:', error);
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+  };
+
+  const handleShowCalendar = () => {
+    setShowCalendar(true);
+    setShowTimetable(false);
+  };
+
+  const handleShowTimetable = () => {
+    setShowTimetable(true);
+    setShowCalendar(false);
+  };
+
+  const handleOpenModal = (day, period) => {
     setSelectedPeriod({ day, period });
     setIsModalOpen(true);
   };
 
-  const closeModal = () => {
+  const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedTeacher('');
-    setSelectedSubject('');
   };
 
-  const handleAssign = async () => {
+  const handleAssignPeriod = async (e) => {
+    e.preventDefault();
     try {
-      // Ensure sectionId is a valid integer
-      console.log('sectionId received:', sectionId);
-      const parsedSectionId = parseInt(sectionId, 10);
-      console.log('Parsed sectionId:', parsedSectionId);
-      if (isNaN(parsedSectionId)) {
-        throw new Error('Invalid sectionId');
-      }
-
       const requestData = {
         schoolId,
         classId,
-        sectionId: parsedSectionId,
-        subjectId: selectedSubject,
+        sectionId: Number(sectionId), // Ensure sectionId is a number
         teacherId: selectedTeacher,
+        subjectId: selectedSubject,
+        period: selectedPeriod.period,
         day: selectedPeriod.day,
-        period: selectedPeriod.period
       };
-      console.log('Assigning period with requestData:', requestData);
+      console.log('Request Data:', requestData); // Log request data
 
-      await axiosInstance.post('/schools/timetable/assign', requestData);
+      await axiosInstance.post(`/schools/${schoolId}/timetable/assign`, requestData);
 
-      const selectedTeacherObject = teachers.find(teacher => teacher.id === selectedTeacher);
-      const selectedSubjectObject = subjects.find(subject => subject.id === selectedSubject);
-
-      const teacherName = selectedTeacherObject ? selectedTeacherObject.name : 'Unknown Teacher';
-      const subjectName = selectedSubjectObject ? selectedSubjectObject.subjectName || selectedSubjectObject.name : 'Unknown Subject';
+      const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
+      const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
 
       const newAssignedPeriod = {
-        teacher: teacherName,
+        teacher: teacher.name,
         teacherId: selectedTeacher,
-        subject: subjectName,
+        subject: subject.subjectName,
         subjectId: selectedSubject
       };
 
-      const newAssignedPeriods = {
+      setAssignedPeriods({
         ...assignedPeriods,
         [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
-      };
-      setAssignedPeriods(newAssignedPeriods);
+      });
 
-      console.log(`Assigned ${teacherName} to teach ${subjectName} on ${selectedPeriod.day} during period ${selectedPeriod.period}`);
-      closeModal();
+      setIsModalOpen(false);
     } catch (error) {
-      if (error.message === 'Invalid sectionId') {
-        setError('Invalid section ID. Please select a valid section.');
-      } else if (error.response && error.response.status === 404) {
-        setError('The requested resource was not found.');
-      } else if (error.response && error.response.status === 400) {
-        setError(`Bad request. Please check the data you are sending: ${error.response.data}`);
-      } else {
-        setError('Error assigning period.');
-      }
       console.error('Error assigning period:', error.response || error);
     }
   };
@@ -166,11 +168,11 @@ const MTimetable = ({ schoolId, classId, sectionId, subjects }) => {
           </tr>
         </thead>
         <tbody>
-          {days.map(day => (
+          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
             <tr key={day}>
               <td>{day}</td>
               {periods.map(period => (
-                <td key={period} onClick={() => openModal(day, period)}>
+                <td key={period} onClick={() => handleOpenModal(day, period)}>
                   {assignedPeriods[`${day}-${period}`] ? (
                     <>
                       <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
@@ -188,47 +190,107 @@ const MTimetable = ({ schoolId, classId, sectionId, subjects }) => {
     );
   };
 
+  const combinedList = [...calendarEvents, ...holidays].sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
+
+  const filteredList = combinedList.filter((item) => {
+    if (filter === 'events') return item.eventName;
+    if (filter === 'holidays') return item.name;
+    return true;
+  });
+
   return (
     <div>
-      {error && <p className="error-message">{error}</p>}
-      {timetableSettings ? (
-        renderTable()
-      ) : (
-        <p>Loading timetable settings...</p>
+      <h1>Class and Section Details</h1>
+      <div>
+        <p>School ID: {schoolId}</p>
+        <p>Class ID: {classId}</p>
+        <p>Section ID: {sectionId}</p>
+      </div>
+      <div>
+        <h3>Subjects:</h3>
+        {subjects.length > 0 ? (
+          subjects.map(subject => (
+            <div key={subject.id}>
+              <span>{subject.subjectName || 'No Subject Name'}</span>
+            </div>
+          ))
+        ) : (
+          <p>No subjects found for this section.</p>
+        )}
+      </div>
+      <div>
+        <button onClick={handleShowCalendar}>School Calendar</button>
+        <button onClick={handleShowTimetable}>Timetable</button>
+        <button onClick={() => navigate('/students')}>Students</button>
+      </div>
+      {showCalendar && (
+        <div>
+          <h2>School Calendar Events</h2>
+          <label>
+            Filter:
+            <select onChange={handleFilterChange} value={filter}>
+              <option value="all">All</option>
+              <option value="events">Events</option>
+              <option value="holidays">Holidays</option>
+            </select>
+          </label>
+          <div>
+            {filteredList.length > 0 ? (
+              <ul>
+                {filteredList.map((item) => (
+                  <li key={item.id}>
+                    {item.eventName || item.name} - {item.date || `${item.startDate} to ${item.endDate}`}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No events found for this school.</p>
+            )}
+          </div>
+        </div>
       )}
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Assign Subject and Teacher"
-      >
-        <h2>Assign Subject and Teacher</h2>
-        <form onSubmit={(e) => { e.preventDefault(); handleAssign(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label>Subject:</label>
-            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required style={{ width: '200px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}>
-              <option value="" disabled>Select Subject</option>
-              {subjects.length > 0 ? subjects.map(subject => (
-                <option key={subject.id} value={subject.id}>{subject.subjectName || subject.name}</option>
-              )) : <option disabled>No subjects available</option>}
-            </select>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {showTimetable && (
+        <div>
+          <h2>School Timetable</h2>
+          {renderTable()}
+        </div>
+      )}
+
+      <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
+        <h2>Assign Period</h2>
+        <form onSubmit={handleAssignPeriod}>
+          <div>
             <label>Teacher:</label>
-            <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required style={{ width: '200px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}>
-              <option value="" disabled>Select Teacher</option>
-              {teachers.length > 0 ? teachers.map(teacher => (
-                <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
-              )) : <option disabled>No teachers available</option>}
+            <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
+              <option value="">Select a teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}
+                </option>
+              ))}
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button type="submit" style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Assign</button>
-            <button type="button" onClick={closeModal} style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+          <div>
+            <label>Subject:</label>
+            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
+              <option value="">Select a subject</option>
+              {subjects.length > 0 ? (
+                subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.subjectName}
+                  </option>
+                ))
+              ) : (
+                <option disabled>No subjects available</option>
+              )}
+            </select>
           </div>
+          <button type="submit">Assign</button>
+          <button type="button" onClick={handleCloseModal}>Cancel</button>
         </form>
       </Modal>
     </div>
   );
 };
 
-export default MTimetable;
+export default MSchoolClassSection;
