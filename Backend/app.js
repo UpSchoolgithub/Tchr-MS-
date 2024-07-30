@@ -23,11 +23,14 @@ const calendarRoutes = require('./routes/calendar');
 const subjectRoutes = require('./routes/Msubjects');
 const mteacherRoutes = require('./routes/mteacherRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
-const studentRoutes = require('./routes/studentRoutes');
+//const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const testRoutes = require('./routes/testRoutes');
-
+//const studentRoutes = require('./routes/student');
+const studentRoutes = require('./routes/students');
+const sectionsRouter = require('./routes/students');
+const studentsRouter = require('./routes/students')
 const app = express();
 
 app.use(helmet());
@@ -440,14 +443,17 @@ app.use('/api', calendarRoutes);
 app.use('/api', schoolRoutes);
 //app.use('/api/schools/timetable', timetableRoutes); // Ensure the correct path
 app.use('/api/timetable', timetableRoutes); // Base path for timetable routes
-app.use('/api/students', studentRoutes);
+//app.use('/api/students', studentRoutes);
+//app.use('/students', studentRoutes); // Ensure this path matches your frontend API calls
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/tests', testRoutes);
-//app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used in Postman
+app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used in Postman
 
 //app.use('/api', timetableRoutes); // Ensure this line is present
 app.use('/api', mteacherRoutes);
+app.use('/api', sectionsRouter); // Ensure the route is prefixed correctly
+app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
 
 // Fallback for undefined routes
 app.use((req, res) => {

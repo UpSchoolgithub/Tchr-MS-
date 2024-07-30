@@ -1,6 +1,6 @@
+// models/Student.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const CombinedSection = require('./CombinedSection');
 
 class Student extends Model {}
 
@@ -10,44 +10,45 @@ Student.init({
     autoIncrement: true,
     primaryKey: true,
   },
-  rollNumber: {
+  name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  studentName: {
-    type: DataTypes.STRING,
+  rollNumber: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   studentEmail: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   studentPhoneNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   parentName: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
-  parentPhoneNumber1: {
+  parentPhoneNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   parentPhoneNumber2: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   parentEmail: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
-  combinedSectionId: {
+  sectionId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
     references: {
-      model: CombinedSection,
+      model: 'sections',
       key: 'id',
     },
+    allowNull: false,
   },
 }, {
   sequelize,
@@ -55,5 +56,13 @@ Student.init({
   tableName: 'students',
   timestamps: true,
 });
+
+Student.associate = (models) => {
+  Student.belongsTo(models.Section, {
+    foreignKey: 'sectionId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+};
 
 module.exports = Student;

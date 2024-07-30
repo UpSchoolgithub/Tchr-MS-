@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import axiosInstance from '../services/axiosInstance';
-import * as XLSX from 'xlsx';
-import dayjs from 'dayjs';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import './MSchoolClassSection.css';
 
 Modal.setAppElement('#root');
@@ -26,24 +26,20 @@ const MSchoolClassSection = () => {
   const [selectedPeriod, setSelectedPeriod] = useState({});
   const [error, setError] = useState(null);
   const [combinedSectionId, setCombinedSectionId] = useState('');
-  const [students, setStudents] = useState([]);
-  const [showStudents, setShowStudents] = useState(false);
-  const [showPersonalDetails, setShowPersonalDetails] = useState(false);
-  const [showAttendance, setShowAttendance] = useState(false);
-  const [showAssignments, setShowAssignments] = useState(false);
-  const [showTests, setShowTests] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(dayjs().month());
-  const [selectedYear, setSelectedYear] = useState(dayjs().year());
-  const [fileUploaded, setFileUploaded] = useState(false);
-  const [showDetails, setShowDetails] = useState(true);
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false); // Hide details by default
+  const [showSubjects, setShowSubjects] = useState(false); // Hide subjects by default
+
+  const [teacherFilter, setTeacherFilter] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
 
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
     if (storedSubjects) {
       setSubjects(storedSubjects);
     }
-    setCombinedSectionId(`${schoolId}-${classId}-${sectionName}`);
+    const combinedId = `${schoolId}-${classId}-${sectionName}`;
+    setCombinedSectionId(combinedId);
     fetchCalendarEventsAndHolidays(schoolId);
     fetchTeachers(schoolId);
     fetchTimetableSettings(schoolId);
@@ -107,28 +103,6 @@ const MSchoolClassSection = () => {
     }
   };
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-  };
-
-  const handleShowCalendar = () => {
-    setShowCalendar(true);
-    setShowTimetable(false);
-    setShowStudents(false);
-  };
-
-  const handleShowTimetable = () => {
-    setShowTimetable(true);
-    setShowCalendar(false);
-    setShowStudents(false);
-  };
-
-  const handleShowStudents = () => {
-    setShowStudents(true);
-    setShowCalendar(false);
-    setShowTimetable(false);
-  };
-
   const handleOpenModal = (day, period) => {
     const existingAssignment = assignedPeriods[`${day}-${period}`];
     if (existingAssignment) {
@@ -169,24 +143,24 @@ const MSchoolClassSection = () => {
         day: selectedPeriod.day,
       };
       console.log('Request Data:', requestData);
-  
+
       await axiosInstance.post(`/timetable/assign`, requestData);
-  
+
       const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
       const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
-  
+
       const newAssignedPeriod = {
         teacher: teacher.name,
         teacherId: selectedTeacher,
         subject: subject.subjectName,
         subjectId: selectedSubject
       };
-  
+
       setAssignedPeriods({
         ...assignedPeriods,
         [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
       });
-  
+
       setIsModalOpen(false);
       fetchAssignments(); // Refresh assignments after assigning a period
     } catch (error) {
@@ -194,136 +168,36 @@ const MSchoolClassSection = () => {
       setError('Error assigning period');
     }
   };
-  
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: 'binary' });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      const studentsData = data.slice(1).map((row) => ({
-        rollNumber: row[0],
-        studentName: row[1],
-        studentEmail: row[2],
-        studentPhoneNumber: row[3],
-        parentName: row[4],
-        parentPhoneNumber1: row[5],
-        parentPhoneNumber2: row[6],
-        parentEmail: row[7],
-      }));
-      setStudents(studentsData);
-      setFileUploaded(true);
-    };
-    reader.readAsBinaryString(file);
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
   };
 
-  const handleFileSubmit = async () => {
-    const payload = { 
-      students: students, 
-      combinedSectionId, 
-      schoolId,
-      classId,
-      sectionName 
-    };
-    console.log('Submitting payload:', payload);
-    
-    try {
-      const response = await axiosInstance.post(`/students/upload`, payload); // Corrected URL
-      console.log('Students data stored in the database:', response.data);
-    } catch (error) {
-      console.error('Error storing students data in the database:', error);
-    }
+  const handleShowCalendar = () => {
+    setShowCalendar(true);
+    setShowTimetable(false);
   };
 
-  const generateDateColumns = () => {
-    const startOfMonth = dayjs().year(selectedYear).month(selectedMonth).startOf('month');
-    const endOfMonth = dayjs().year(selectedYear).month(selectedMonth).endOf('month');
-    const dates = [];
-    for (let date = startOfMonth; date.isBefore(endOfMonth) || date.isSame(endOfMonth); date = date.add(1, 'day')) {
-      dates.push(date.format('D'));
-    }
-    return dates;
+  const handleShowTimetable = () => {
+    setShowTimetable(true);
+    setShowCalendar(false);
   };
 
-  const renderStudentsTable = () => {
-    let columns = ['Roll Number', 'Student Name'];
-
-    if (showPersonalDetails) {
-      columns = [...columns, 'Student Email', 'Student Phone Number', 'Parent Name', 'Parent Phone Number 1', 'Parent Phone Number 2', 'Parent Email'];
-    } else if (showAttendance || showAssignments || showTests) {
-      columns = [...columns, ...generateDateColumns()];
-    }
-
-    return (
-      <div className="table-container">
-        <table className="students-table">
-          <thead>
-            <tr>
-              {columns.map((col, index) => (
-                <th key={index}>{col}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student, index) => (
-              <tr key={index}>
-                <td>{student.rollNumber}</td>
-                <td>{student.studentName}</td>
-                {showPersonalDetails && <td>{student.studentEmail}</td>}
-                {showPersonalDetails && <td>{student.studentPhoneNumber}</td>}
-                {showPersonalDetails && <td>{student.parentName}</td>}
-                {showPersonalDetails && <td>{student.parentPhoneNumber1}</td>}
-                {showPersonalDetails && <td>{student.parentPhoneNumber2}</td>}
-                {showPersonalDetails && <td>{student.parentEmail}</td>}
-                {(showAttendance || showAssignments || showTests) && generateDateColumns().map((date, idx) => <td key={idx}>-</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
+  const handleTeacherFilterChange = (e) => {
+    setTeacherFilter(e.target.value);
   };
 
-  const renderTable = () => {
-    if (!timetableSettings) return null;
+  const handleSubjectFilterChange = (e) => {
+    setSubjectFilter(e.target.value);
+  };
 
-    const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
-
-    return (
-      <table className="timetable-table">
-        <thead>
-          <tr>
-            <th>Day / Period</th>
-            {periods.map(period => (
-              <th key={period}>{period}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-            <tr key={day}>
-              <td>{day}</td>
-              {periods.map(period => (
-                <td key={period} onClick={() => handleOpenModal(day, period)}>
-                  {assignedPeriods[`${day}-${period}`] ? (
-                    <>
-                      <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
-                      <div>{assignedPeriods[`${day}-${period}`].subject}</div>
-                    </>
-                  ) : (
-                    <span className="add-icon">+</span>
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   const combinedList = [...calendarEvents, ...holidays].sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
@@ -334,12 +208,117 @@ const MSchoolClassSection = () => {
     return true;
   });
 
+  const renderTable = () => {
+    if (!timetableSettings) return null;
+
+    const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
+
+    return (
+      <div>
+        <div className="filters">
+          <label>
+            Filter by Teacher:
+            <select onChange={handleTeacherFilterChange} value={teacherFilter}>
+              <option value="">All</option>
+              {teachers.map(teacher => (
+                <option key={teacher.id} value={teacher.name}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Filter by Subject:
+            <select onChange={handleSubjectFilterChange} value={subjectFilter}>
+              <option value="">All</option>
+              {subjects.map(subject => (
+                <option key={subject.id} value={subject.subjectName}>
+                  {subject.subjectName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
+        </div>
+        <table className="timetable-table">
+          <thead>
+            <tr>
+              <th>Day / Period</th>
+              {periods.map(period => (
+                <th key={period}>{period}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+              <tr key={day}>
+                <td>{day}</td>
+                {periods.map(period => {
+                  const periodAssignment = assignedPeriods[`${day}-${period}`];
+                  const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
+                  const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
+
+                  if (teacherMatch && subjectMatch) {
+                    return (
+                      <td key={period} onClick={() => handleOpenModal(day, period)}>
+                        {periodAssignment ? (
+                          <>
+                            <div>{periodAssignment.teacher}</div>
+                            <div>{periodAssignment.subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )}
+                      </td>
+                    );
+                  }
+                  return <td key={period} />;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const downloadTimetableAsPDF = () => {
+    const doc = new jsPDF();
+
+    const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
+    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+      const row = [day];
+      Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1).forEach(period => {
+        const periodAssignment = assignedPeriods[`${day}-${period}`];
+        const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
+        const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
+
+        if (teacherMatch && subjectMatch) {
+          row.push(periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '');
+        } else {
+          row.push('');
+        }
+      });
+      return row;
+    });
+
+    doc.autoTable({
+      head: [columns],
+      body: rows,
+    });
+
+    doc.save('timetable.pdf');
+  };
+
   return (
     <div className="container">
       <div className="header">
         <h1>Class and Section Details</h1>
         <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
           {showDetails ? 'Hide Details' : 'Show Details'}
+        </button>
+        <button className="details-button" onClick={() => setShowSubjects(!showSubjects)}>
+          {showSubjects ? 'Hide Subjects' : 'Show Subjects'}
         </button>
       </div>
       {showDetails && (
@@ -349,22 +328,23 @@ const MSchoolClassSection = () => {
           <p>Section Name: {sectionName}</p>
         </div>
       )}
-      <div className="subjects">
-        <h3>Subjects:</h3>
-        {subjects.length > 0 ? (
-          subjects.map(subject => (
-            <div key={subject.id} className="subject">
-              <span>{subject.subjectName || 'No Subject Name'}</span>
-            </div>
-          ))
-        ) : (
-          <p>No subjects found for this section.</p>
-        )}
-      </div>
+      {showSubjects && (
+        <div className="subjects">
+          <h3>Subjects:</h3>
+          {subjects.length > 0 ? (
+            subjects.map(subject => (
+              <div key={subject.id} className="subject">
+                <span>{subject.subjectName || 'No Subject Name'}</span>
+              </div>
+            ))
+          ) : (
+            <p>No subjects found for this section.</p>
+          )}
+        </div>
+      )}
       <div className="buttons">
         <button onClick={handleShowCalendar}>School Calendar</button>
         <button onClick={handleShowTimetable}>Timetable</button>
-        <button onClick={handleShowStudents}>Students</button>
       </div>
       {showCalendar && (
         <div className="calendar">
@@ -379,13 +359,22 @@ const MSchoolClassSection = () => {
           </label>
           <div className="events">
             {filteredList.length > 0 ? (
-              <ul>
-                {filteredList.map((item) => (
-                  <li key={item.id}>
-                    {item.eventName || item.name} - {item.date || `${item.startDate} to ${item.endDate}`}
-                  </li>
-                ))}
-              </ul>
+              <table className="calendar-table">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredList.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.eventName || item.name}</td>
+                      <td>{formatDate(item.date || item.startDate)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
               <p>No events found for this school.</p>
             )}
@@ -398,48 +387,8 @@ const MSchoolClassSection = () => {
           {renderTable()}
         </div>
       )}
-      {showStudents && (
-        <div className="students">
-          <h2>
-            Students - {showPersonalDetails && 'Personal Details'}
-            {showAttendance && 'Attendance'}
-            {showAssignments && 'Assignments'}
-            {showTests && 'Tests'}
-          </h2>
-          <div className="view-buttons">
-            <button onClick={() => { setShowPersonalDetails(true); setShowAttendance(false); setShowAssignments(false); setShowTests(false); }}>Personal Details</button>
-            <button onClick={() => { setShowPersonalDetails(false); setShowAttendance(true); setShowAssignments(false); setShowTests(false); }}>Attendance</button>
-            <button onClick={() => { setShowPersonalDetails(false); setShowAttendance(false); setShowAssignments(true); setShowTests(false); }}>Assignments</button>
-            <button onClick={() => { setShowPersonalDetails(false); setShowAttendance(false); setShowAssignments(false); setShowTests(true); }}>Tests</button>
-          </div>
-          {(showAttendance || showAssignments || showTests) && (
-            <div className="month-year">
-              <label>
-                Month:
-                <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i} value={i}>
-                      {dayjs().month(i).format('MMMM')}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Year:
-                <input type="number" value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} />
-              </label>
-            </div>
-          )}
-          <div className="file-upload">
-            <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
-          </div>
-          {fileUploaded && (
-            <button onClick={handleFileSubmit}>Submit</button>
-          )}
-          {renderStudentsTable()}
-        </div>
-      )}
 
+      {/* Modal for assigning period */}
       <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
         <h2>Assign Period</h2>
         <form onSubmit={handleAssignPeriod}>
@@ -474,6 +423,7 @@ const MSchoolClassSection = () => {
         </form>
       </Modal>
 
+      {/* Modal for edit warning */}
       <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
         <h2>Warning</h2>
         <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>

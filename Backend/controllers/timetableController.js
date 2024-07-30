@@ -1,4 +1,4 @@
-const { TimetableEntry } = require('../models');
+const { TimetableEntry, Section } = require('../models');
 
 exports.assignPeriod = async (req, res) => {
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period } = req.body;
@@ -16,6 +16,15 @@ exports.assignPeriod = async (req, res) => {
       teacherId,
       day,
       period
+    });
+
+    // Extract sectionName from combinedSectionId
+    const sectionName = combinedSectionId.split('-').slice(2).join('-');
+
+    // Find or create the section with the combinedSectionId
+    await Section.findOrCreate({
+      where: { schoolId, classInfoId: classId, sectionName },
+      defaults: { combinedSectionId }
     });
 
     res.status(201).json(newEntry);

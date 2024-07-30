@@ -37,9 +37,7 @@ axiosInstance.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         
         if (!refreshToken) {
-          // No refresh token available, prompt for re-authentication
           console.error('No refresh token available. Please log in again.');
-          // Redirect to login page or show login modal here
           return Promise.reject(error);
         }
 
@@ -60,9 +58,6 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (err) {
         console.error('Failed to refresh token:', err);
-
-        // Handle refresh token failure (e.g., redirect to login)
-        // Redirect to login page or show login modal here
       }
     }
     

@@ -1,5 +1,6 @@
+// models/Section.js
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path as needed
+const sequelize = require('../config/db');
 
 class Section extends Model {}
 
@@ -24,9 +25,13 @@ Section.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'schools',
+      model: 'Schools',
       key: 'id',
     }
+  },
+  combinedSectionId: {
+    type: DataTypes.STRING,
+    allowNull: true, // Allow null initially, will be set during timetable creation
   }
 }, {
   sequelize,

@@ -1,4 +1,4 @@
-const { Student, CombinedSection } = require('../models');
+const { Student, Section } = require('../models');
 
 exports.uploadStudents = async (req, res) => {
   try {
@@ -8,10 +8,14 @@ exports.uploadStudents = async (req, res) => {
       return res.status(400).json({ error: 'Students data and combinedSectionId are required.' });
     }
 
-    // Ensure combinedSectionId exists
-    const sectionExists = await CombinedSection.findByPk(combinedSectionId);
-    if (!sectionExists) {
-      return res.status(400).json({ error: 'Invalid combinedSectionId.' });
+    // Validate the combined section ID
+    const sectionIds = combinedSectionId.split('-').slice(0, 3); // Assuming the format is "schoolId-classId-sectionName"
+    const sectionsExist = await Section.findAll({
+      where: { id: sectionIds }
+    });
+
+    if (sectionsExist.length !== sectionIds.length) {
+      return res.status(400).json({ error: 'Invalid sectionId(s).' });
     }
 
     const studentData = students.map(student => ({
