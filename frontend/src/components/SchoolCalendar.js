@@ -26,7 +26,7 @@ const SchoolCalendar = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}/calendar`);
+      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/calendar`);
       setEvents(response.data);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -35,7 +35,7 @@ const SchoolCalendar = () => {
 
   const fetchHolidays = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}/holidays`);
+      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/holidays`);
       setHolidays(response.data);
     } catch (error) {
       console.error('Error fetching holidays:', error);
@@ -115,7 +115,7 @@ const SchoolCalendar = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/schools/${schoolId}/holidays/${holidayId}`);
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/holidays/${holidayId}`);
       setHolidays(holidays.filter(h => h.id !== holidayId));
     } catch (error) {
       console.error('Error deleting holiday:', error);
@@ -127,7 +127,7 @@ const SchoolCalendar = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/schools/${schoolId}/calendar/${eventId}`);
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/calendar/${eventId}`);
       setEvents(events.filter(event => event.id !== eventId));
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -157,7 +157,7 @@ const SchoolCalendar = () => {
         ? { eventName, startDate, endDate, dateType }
         : { eventName, dateType, variableDates: selectedDates };
 
-      const response = await axios.post(`http://localhost:5000/api/schools/${schoolId}/calendar`, eventDetails);
+      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/calendar`, eventDetails);
       setEvents(sortItemsByDate([...events, response.data]));
       setEventName('');
       setSelectedDates([]);
@@ -185,7 +185,7 @@ const SchoolCalendar = () => {
     try {
       const holidayDetails = { name: holidayName, date: holidayDate, day: holidayDay };
 
-      const response = await axios.post(`http://localhost:5000/api/schools/${schoolId}/holidays`, holidayDetails);
+      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/holidays`, holidayDetails);
       setHolidays(sortItemsByDate([...holidays, response.data]));
       setHolidayName('');
       setHolidayDate('');

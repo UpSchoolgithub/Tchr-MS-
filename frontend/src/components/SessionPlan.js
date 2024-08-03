@@ -16,10 +16,10 @@ const SessionPlans = () => {
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
-        const sessionResponse = await axios.get(`http://localhost:5000/api/sessions/${sessionId}`);
+        const sessionResponse = await axios.get(`https://tms.up.school/api/sessions/${sessionId}`);
         setNumberOfSessions(sessionResponse.data.numberOfSessions);
 
-        const response = await axios.get(`http://localhost:5000/api/sessions/${sessionId}/sessionPlans`);
+        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
         console.log('Session Plans Response:', response.data);
 
         response.data.forEach(plan => {
@@ -82,7 +82,7 @@ const SessionPlans = () => {
   const handleSaveTopic = async (sessionPlanId, sessionNumber) => {
     try {
       const planDetails = JSON.stringify(topics[sessionNumber]);
-      const response = await axios.put(`http://localhost:5000/api/sessionPlans/${sessionPlanId}`, { planDetails });
+      const response = await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
       console.log('Response:', response.data);
       setSessionPlans(prevState => {
         const newState = prevState.map(plan => {
@@ -101,7 +101,7 @@ const SessionPlans = () => {
 
   const handleDeleteSessionPlan = async (planId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/sessionPlans/${planId}`);
+      await axios.delete(`https://tms.up.school/api/sessionPlans/${planId}`);
       setSessionPlans(sessionPlans.filter(plan => plan.id !== planId));
     } catch (error) {
       console.error('Error deleting topic:', error);
@@ -111,7 +111,7 @@ const SessionPlans = () => {
   const handleDeleteAllSessionPlans = async () => {
     if (window.confirm('Are you sure you want to delete all session plans?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/sessions/${sessionId}/sessionPlans`);
+        await axios.delete(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
         setSessionPlans([]);
         setTopics({});
         setUploadDisabled(false);
@@ -142,13 +142,13 @@ const SessionPlans = () => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await axios.post(`http://localhost:5000/api/sessions/${sessionId}/sessionPlans/upload`, formData, {
+      await axios.post(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
       setFile(null);
-      const response = await axios.get(`http://localhost:5000/api/sessions/${sessionId}/sessionPlans`);
+      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
       console.log('Uploaded Session Plans:', response.data);
       setSessionPlans(response.data);
       setUploadDisabled(true);

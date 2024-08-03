@@ -14,7 +14,7 @@ const CreateSchool = () => {
   useEffect(() => {
     const fetchSchools = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/schools');
+        const response = await axios.get('https://tms.up.school/api/schools');
         console.log('Fetched schools:', response.data);
         setSchools(response.data);
       } catch (error) {

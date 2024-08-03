@@ -22,7 +22,7 @@ const Members = () => {
 
   const fetchMembers = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/members?schoolId=${schoolId}`);
+      const response = await axios.get(`https://tms.up.school/api/members?schoolId=${schoolId}`);
       setMembers(response.data);
     } catch (error) {
       console.error('Error fetching members:', error.message);
@@ -40,7 +40,7 @@ const Members = () => {
 
   const addMember = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/members', {
+      const response = await axios.post('https://tms.up.school/api/members', {
         name,
         email,
         phoneNumber,
@@ -63,7 +63,7 @@ const Members = () => {
 
   const updateMember = async (id) => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/members/${id}`, {
+      const response = await axios.put(`https://tms.up.school/api/members/${id}`, {
         name,
         email,
         phoneNumber,
@@ -82,7 +82,7 @@ const Members = () => {
 
   const deleteMember = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/members/${id}`);
+      await axios.delete(`https://tms.up.school/api/members/${id}`);
       setMembers(members.filter(member => member.id !== id));
     } catch (error) {
       setErrorMessage('Error deleting member');

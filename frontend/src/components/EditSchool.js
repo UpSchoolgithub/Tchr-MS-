@@ -17,7 +17,7 @@ const EditSchool = () => {
   useEffect(() => {
     const fetchSchoolDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/schools/${id}`);
+        const response = await axios.get(`https://tms.up.school/api/schools/${id}`);
         setSchool({
           name: response.data.name || '',
           email: response.data.email || '',
@@ -47,14 +47,14 @@ const EditSchool = () => {
     e.preventDefault();
     try {
       if (id) {
-        await axios.put(`http://localhost:5000/api/schools/${id}`, school);
+        await axios.put(`https://tms.up.school/api/schools/${id}`, school);
         alert('School updated successfully!');
       } else {
-        const response = await axios.post('http://localhost:5000/api/schools', school);
+        const response = await axios.post('https://tms.up.school/api/schools', school);
         const newSchoolId = response.data.newSchool.id;
 
         // Create related entries
-        await axios.post(`http://localhost:5000/api/schools/${newSchoolId}/timetable`, {
+        await axios.post(`https://tms.up.school/api/schools/${newSchoolId}/timetable`, {
           schoolId: newSchoolId,
           periodsPerDay: 8,
           durationPerPeriod: 45,

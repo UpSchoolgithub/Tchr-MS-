@@ -87,3 +87,11 @@
 .signup a:hover {
   text-decoration: underline;
 }
+.login-logo {
+  margin-top: 20px; /* Add space between button and logo */
+  max-width: 100px; /* Adjust size as needed */
+  height: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

@@ -16,7 +16,7 @@ const SessionManagement = () => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
         console.log("Fetched Sessions: ", response.data); // Debugging log
         setSessions(response.data);
       } catch (error) {
@@ -32,7 +32,7 @@ const SessionManagement = () => {
     setError('');
 
     try {
-      const response = await axios.post(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`, {
+      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`, {
         chapterName,
         numberOfSessions,
         priorityNumber
@@ -53,7 +53,7 @@ const SessionManagement = () => {
     setError('');
 
     try {
-      const response = await axios.put(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
+      const response = await axios.put(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
         numberOfSessions: editingNumberOfSessions,
         priorityNumber: editingPriorityNumber
       });
@@ -61,7 +61,7 @@ const SessionManagement = () => {
       setEditingSessionId(null); // Exit editing mode after saving
 
       // Update the number of session plans
-      await axios.put(`http://localhost:5000/api/sessions/${sessionId}/sessionPlans`, {
+      await axios.put(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`, {
         numberOfSessions: editingNumberOfSessions
       });
 
@@ -75,7 +75,7 @@ const SessionManagement = () => {
 
   const handleSessionDelete = async (sessionId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
       setSessions(sessions.filter(session => session.id !== sessionId));
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -84,7 +84,7 @@ const SessionManagement = () => {
 
   const handleDeleteAll = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
       setSessions([]); // Clear all sessions from state
     } catch (error) {
       console.error('Error deleting all sessions:', error);
@@ -113,13 +113,13 @@ const SessionManagement = () => {
     formData.append('file', file);
 
     try {
-      await axios.post(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`, formData, {
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       alert('File uploaded and sessions created successfully!');
-      const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
       console.log("Sessions after upload: ", response.data); // Debugging log
       setSessions(response.data);
     } catch (error) {

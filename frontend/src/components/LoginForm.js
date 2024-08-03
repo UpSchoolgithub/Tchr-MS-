@@ -61,6 +61,7 @@ const LoginForm = ({ setToken }) => {
           <button type="submit" className="login-button">LOGIN</button>
           {error && <p className="error">{error}</p>}
         </form>
+        <img src="/Upschool_2x.png" alt="UpSchool Logo" className="login-logo" /> {/* Add logo here */}
       </div>
     </div>
   );

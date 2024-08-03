@@ -20,7 +20,7 @@ const ClassInfo = () => {
   useEffect(() => {
     const fetchClassInfos = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}/classes`);
+        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
         setClassInfos(response.data);
       } catch (error) {
         console.error('Error fetching class sections:', error);
@@ -48,7 +48,7 @@ const ClassInfo = () => {
           revisionStartDate: existingClass.revisionStartDate,
           revisionEndDate: existingClass.revisionEndDate
         };
-        const response = await axios.post(`http://localhost:5000/api/schools/${schoolId}/classes`, newSection);
+        const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, newSection);
         setClassInfos([...classInfos, response.data]);
         resetForm();
       } catch (error) {
@@ -72,11 +72,11 @@ const ClassInfo = () => {
         revisionEndDate
       };
       if (editingClass) {
-        await axios.put(`http://localhost:5000/api/schools/${schoolId}/classes/${editingClass.id}`, classDetails);
+        await axios.put(`https://tms.up.school/api/schools/${schoolId}/classes/${editingClass.id}`, classDetails);
         setClassInfos(classInfos.map(info => (info.id === editingClass.id ? { ...info, ...classDetails } : info)));
         setEditingClass(null);
       } else {
-        const response = await axios.post(`http://localhost:5000/api/schools/${schoolId}/classes`, classDetails);
+        const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, classDetails);
         setClassInfos([...classInfos, response.data]);
       }
       setShowDetailsForm(false);
@@ -113,7 +113,7 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate
       };
-      await axios.put(`http://localhost:5000/api/schools/${schoolId}/classes/${classInfo.id}`, updatedClassInfo);
+      await axios.put(`https://tms.up.school/api/schools/${schoolId}/classes/${classInfo.id}`, updatedClassInfo);
       setClassInfos(classInfos.map(info => (info.id === classInfo.id ? updatedClassInfo : info)));
       setEditingClass(null);
     } catch (error) {
@@ -126,7 +126,7 @@ const ClassInfo = () => {
     if (!confirmDelete) return;
   
     try {
-      await axios.delete(`http://localhost:5000/api/schools/${schoolId}/classes/${id}`);
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${id}`);
       setClassInfos(classInfos.filter(info => info.id !== id));
     } catch (error) {
       console.error('Error deleting class section:', error);

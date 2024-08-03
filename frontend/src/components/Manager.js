@@ -22,7 +22,7 @@ const Manager = () => {
 
   const fetchManagers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/managers');
+      const response = await axios.get('https://tms.up.school/api/managers');
       setManagers(response.data);
     } catch (error) {
       console.error('Error fetching managers:', error.message);
@@ -31,7 +31,7 @@ const Manager = () => {
 
   const fetchSchools = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/managers/schools');
+      const response = await axios.get('https://tms.up.school/api/managers/schools');
       setSchools(response.data);
     } catch (error) {
       console.error('Error fetching schools:', error.message);
@@ -42,9 +42,9 @@ const Manager = () => {
     e.preventDefault();
     try {
       if (editingManager) {
-        await axios.put(`http://localhost:5000/api/managers/${editingManager.id}`, { name, email, phoneNumber, password, schoolIds });
+        await axios.put(`https://tms.up.school/api/managers/${editingManager.id}`, { name, email, phoneNumber, password, schoolIds });
       } else {
-        await axios.post('http://localhost:5000/api/managers', { name, email, phoneNumber, password, schoolIds });
+        await axios.post('https://tms.up.school/api/managers', { name, email, phoneNumber, password, schoolIds });
       }
       fetchManagers(); // Refresh the list of managers
       resetForm();
@@ -81,7 +81,7 @@ const Manager = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this manager?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/managers/${id}`);
+        await axios.delete(`https://tms.up.school/api/managers/${id}`);
         fetchManagers(); // Refresh the list of managers
       } catch (error) {
         console.error('Error deleting manager:', error.message);

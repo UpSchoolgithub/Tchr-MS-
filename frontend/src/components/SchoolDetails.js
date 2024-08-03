@@ -16,7 +16,7 @@ const SchoolDetails = ({ onSave }) => {
   useEffect(() => {
     const fetchSchoolDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}`);
+        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}`);
         setSchool(response.data || {
           name: '',
           email: '',
@@ -45,9 +45,9 @@ const SchoolDetails = ({ onSave }) => {
     e.preventDefault();
     try {
       if (schoolId) {
-        await axios.put(`http://localhost:5000/api/schools/${schoolId}`, school);
+        await axios.put(`https://tms.up.school/api/schools/${schoolId}`, school);
       } else {
-        const response = await axios.post('http://localhost:5000/api/schools', school);
+        const response = await axios.post('https://tms.up.school/api/schools', school);
         onSave(response.data.id);
         navigate(`/edit-school/${response.data.id}/details`);
       }

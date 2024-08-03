@@ -29,7 +29,7 @@ const TimetableSettings = () => {
   useEffect(() => {
     const fetchTimetable = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/schools/${schoolId}/timetable`);
+        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
         const data = response.data;
 
         if (data.reserveDay) {
@@ -107,7 +107,7 @@ const TimetableSettings = () => {
         ...settings,
         reserveDay: JSON.stringify(updatedReserveDay),
       };
-      await axios.put(`http://localhost:5000/api/schools/${schoolId}/timetable`, settingsToSave);
+      await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');
     } catch (error) {
       console.error('Error saving timetable settings:', error);
