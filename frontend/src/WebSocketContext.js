@@ -8,35 +8,36 @@ export const WebSocketProvider = ({ children, token }) => {
 
   useEffect(() => {
     if (token) {
-      // Establish WebSocket connection
-      const webSocket = new WebSocket('wss://sm.up.school:3000/ws');
+      // Use non-secure WebSocket for testing
+      const webSocket = new WebSocket('ws://sm.up.school:3000/ws');
       setWs(webSocket);
-
+  
       webSocket.onopen = () => {
         console.log('WebSocket connected');
         // Optionally send the token to authenticate the WebSocket connection
         webSocket.send(JSON.stringify({ type: 'AUTHENTICATE', token }));
       };
-
+  
       webSocket.onmessage = (event) => {
         console.log('Message from server: ', event.data);
         // Handle incoming messages here
       };
-
+  
       webSocket.onerror = (error) => {
         console.error('WebSocket error: ', error);
       };
-
+  
       webSocket.onclose = (event) => {
         console.log('WebSocket is closed now.', event.reason);
       };
-
+  
       // Cleanup function to close WebSocket on component unmount
       return () => {
         webSocket.close();
       };
     }
   }, [token]);
+  
 
   return (
     <WebSocketContext.Provider value={ws}>
