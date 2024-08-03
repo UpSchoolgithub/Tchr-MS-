@@ -11,7 +11,7 @@ const LoginForm = ({ setToken }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://sm.up.school/api/auth/login', {
+      const response = await fetch('https://tms.up.school/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
