@@ -34,7 +34,13 @@ const studentsRouter = require('./routes/students')
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: 'https://sm.up.school', // Replace with the allowed origin
+  methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
