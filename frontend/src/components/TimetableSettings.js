@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import './TimetableSettings.css';  // Import the CSS file
+import './TimetableSettings.css';
 
 const TimetableSettings = () => {
   const { schoolId } = useOutletContext();
@@ -63,7 +63,6 @@ const TimetableSettings = () => {
         const updatedDaySettings = { ...prevSettings.reserveDay[day], [field || 'open']: type === 'checkbox' ? checked : value };
         
         if (type === 'checkbox' && !checked) {
-          // Clear the start and end time if the checkbox is unchecked
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
         }
@@ -89,8 +88,60 @@ const TimetableSettings = () => {
     }
   };
 
+  const validateTimetable = () => {
+    const {
+      schoolStartTime,
+      schoolEndTime,
+      assemblyStartTime,
+      assemblyEndTime,
+      lunchStartTime,
+      lunchEndTime,
+      shortBreak1StartTime,
+      shortBreak1EndTime,
+      shortBreak2StartTime,
+      shortBreak2EndTime,
+    } = settings;
+
+    const timeOrderValid = (start, end) => {
+      if (start && end) {
+        return new Date(`1970-01-01T${start}:00`) < new Date(`1970-01-01T${end}:00`);
+      }
+      return true;
+    };
+
+    if (!timeOrderValid(schoolStartTime, schoolEndTime)) {
+      return 'School Start Time should be earlier than School End Time.';
+    }
+    if (!timeOrderValid(assemblyStartTime, assemblyEndTime)) {
+      return 'Assembly Start Time should be earlier than Assembly End Time.';
+    }
+    if (!timeOrderValid(lunchStartTime, lunchEndTime)) {
+      return 'Lunch Break Start Time should be earlier than Lunch Break End Time.';
+    }
+    if (!timeOrderValid(shortBreak1StartTime, shortBreak1EndTime)) {
+      return 'Short Break 1 Start Time should be earlier than Short Break 1 End Time.';
+    }
+    if (!timeOrderValid(shortBreak2StartTime, shortBreak2EndTime)) {
+      return 'Short Break 2 Start Time should be earlier than Short Break 2 End Time.';
+    }
+    if (schoolEndTime && (new Date(`1970-01-01T${assemblyEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
+      new Date(`1970-01-01T${lunchEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
+      new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
+      new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
+      return 'All activities should end before School End Time.';
+    }
+
+    return '';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationError = validateTimetable();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     const updatedReserveDay = { ...settings.reserveDay };
     if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {

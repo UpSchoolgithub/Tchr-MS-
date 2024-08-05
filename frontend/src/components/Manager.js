@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import './Manager.css';
+import './CreateManager.css';
 
 const Manager = () => {
   const [managers, setManagers] = useState([]);
-  const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchManagers();
@@ -22,7 +19,7 @@ const Manager = () => {
   };
 
   const handleEdit = (manager) => {
-    navigate(`/managers/${manager.id}/edit`, { state: { manager } });
+    // Handle edit logic
   };
 
   const handleDelete = async (id) => {
@@ -38,36 +35,35 @@ const Manager = () => {
 
   return (
     <div className="manager-container">
-      <h2>Managers</h2>
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-      <button onClick={() => navigate('/create-manager')} className="create-button">
-        Create Manager
-      </button>
-      <table className="manager-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-            <th>Schools</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {managers.map((manager) => (
-            <tr key={manager.id}>
-              <td>{manager.name}</td>
-              <td>{manager.email}</td>
-              <td>{manager.phoneNumber}</td>
-              <td>{manager.Schools.map(school => school.name).join(', ')}</td>
-              <td>
-                <button onClick={() => handleEdit(manager)}>Edit</button>
-                <button onClick={() => handleDelete(manager.id)}>Delete</button>
-              </td>
+      <div className="manager-list">
+        <h2>Managers</h2>
+        <button className="save-button">Create Manager</button>
+        <table className="manager-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone Number</th>
+              <th>Schools</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {managers.map((manager) => (
+              <tr key={manager.id}>
+                <td>{manager.name}</td>
+                <td>{manager.email}</td>
+                <td>{manager.phoneNumber}</td>
+                <td>{manager.Schools.map(school => school.name).join(', ')}</td>
+                <td>
+                  <button className="edit" onClick={() => handleEdit(manager)}>Edit</button>
+                  <button className="delete" onClick={() => handleDelete(manager.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

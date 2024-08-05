@@ -1,75 +1,116 @@
-/* Basic layout and container styling */
-.create-manager-container {
-    display: flex;
-    flex-direction: column;
-    max-width: 600px;
+.manager-container {
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f9f9f9;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
   
-  /* Form element styling */
-  .create-manager-container form {
-    display: flex;
-    flex-direction: column;
+  .manager-form, .manager-list {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
   
-  .create-manager-container label {
-    margin-bottom: 8px;
+  .manager-form h2, .manager-list h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .manager-form form div, .manager-list table {
+    margin-bottom: 15px;
+  }
+  
+  .manager-form label {
+    display: block;
     font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
   }
   
-  .create-manager-container input[type="text"],
-  .create-manager-container input[type="email"],
-  .create-manager-container input[type="password"],
-  .create-manager-container input[type="tel"] {
+  .manager-form input[type="text"], .manager-form input[type="email"], .manager-form input[type="tel"], .manager-form input[type="password"], .manager-form select {
+    width: 100%;
     padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 16px;
-  }
-  
-  /* Checkbox and label styling */
-  .create-manager-container .checkbox-container {
-    display: flex;
-    align-items: center;
     margin-bottom: 15px;
   }
   
-  .create-manager-container .checkbox-container input {
-    margin-right: 8px;
+  .manager-form table {
+    width: 100%;
+    border-collapse: collapse;
   }
   
-  /* Button styling */
-  .create-manager-container .save-button {
-    padding: 12px;
+  .manager-form th, .manager-form td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .pagination-save-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .pagination-buttons button {
     background-color: #007bff;
     color: white;
     border: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .pagination-buttons button:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+  }
+  
+  .save-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .manager-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .manager-table th, .manager-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .manager-table th {
+    background-color: #f4f4f4;
+    color: #333;
+  }
+  
+  .manager-table td button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
   }
   
-  .create-manager-container .save-button:hover {
-    background-color: #0056b3;
+  .manager-table td button.edit {
+    background-color: #007bff;
+    color: white;
   }
   
-  /* Error message styling */
-  .create-manager-container .error-message {
-    color: red;
-    margin-bottom: 15px;
-    font-size: 14px;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 600px) {
-    .create-manager-container {
-      padding: 15px;
-    }
+  .manager-table td button.delete {
+    background-color: #dc3545;
+    color: white;
   }
   
