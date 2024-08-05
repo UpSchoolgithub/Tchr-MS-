@@ -129,18 +129,12 @@ router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
       return res.status(404).json({ message: 'Class not found' });
     }
 
-    // Logging for debugging
-    console.log('Class info found:', classInfo);
-
     // Delete related subjects and sections
     for (const section of classInfo.Sections) {
-      console.log('Deleting subjects for section:', section.id);
       await Subject.destroy({ where: { sectionId: section.id } });
-      console.log('Deleting section:', section.id);
       await Section.destroy({ where: { id: section.id } });
     }
 
-    console.log('Deleting class info:', req.params.id);
     await classInfo.destroy();
     res.status(204).end();
   } catch (error) {
@@ -148,8 +142,5 @@ router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
-
-
-
 
 module.exports = router;

@@ -146,7 +146,6 @@ const ClassInfo = () => {
       setError('Failed to delete class. Please try again.');
     }
   };
-  
 
   const handleSessionsClick = (classInfo) => {
     navigate(`/schools/${schoolId}/classes/${classInfo.id}/sections/${classInfo.section}/sessions`);
