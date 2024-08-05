@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './CreateManager.css';
 
 const Manager = () => {
   const [managers, setManagers] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchManagers();
@@ -18,12 +20,16 @@ const Manager = () => {
     }
   };
 
-  const handleEdit = (manager) => {
-    // Handle edit logic
+  const handleEdit = (managerId) => {
+    navigate(`/edit-manager/${managerId}`);  // Navigate to EditManager component with managerId
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this manager?')) {
+  const handleDelete = async (id, schoolCount) => {
+    const message = schoolCount > 0 
+      ? 'This manager is tagged to a school. Are you sure you want to delete this manager?' 
+      : 'Are you sure you want to delete this manager?';
+
+    if (window.confirm(message)) {
       try {
         await axios.delete(`https://tms.up.school/api/managers/${id}`);
         fetchManagers(); // Refresh the list of managers
@@ -33,11 +39,15 @@ const Manager = () => {
     }
   };
 
+  const handleCreateManager = () => {
+    navigate('/create-manager');  // Navigate to CreateManager component
+  };
+
   return (
     <div className="manager-container">
       <div className="manager-list">
         <h2>Managers</h2>
-        <button className="save-button">Create Manager</button>
+        <button className="save-button" onClick={handleCreateManager}>Create Manager</button>
         <table className="manager-table">
           <thead>
             <tr>
@@ -56,8 +66,8 @@ const Manager = () => {
                 <td>{manager.phoneNumber}</td>
                 <td>{manager.Schools.map(school => school.name).join(', ')}</td>
                 <td>
-                  <button className="edit" onClick={() => handleEdit(manager)}>Edit</button>
-                  <button className="delete" onClick={() => handleDelete(manager.id)}>Delete</button>
+                  <button className="edit" onClick={() => handleEdit(manager.id)}>Edit</button>
+                  <button className="delete" onClick={() => handleDelete(manager.id, manager.Schools.length)}>Delete</button>
                 </td>
               </tr>
             ))}

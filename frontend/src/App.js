@@ -62,6 +62,8 @@ function App() {
                 <Route path="/logout" element={<Logout setToken={setToken} />} />
                 <Route path="/managers" element={<ProtectedRoute element={<Manager />} />} />  {/* Consistent with the above Manager route */}
                 <Route path="/create-manager" element={<ProtectedRoute element={<CreateManager />} />} />
+                <Route path="/edit-manager/:managerId" element={<EditManager />} />
+
               </Routes>
           </div>
         </div>
