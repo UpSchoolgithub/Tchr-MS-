@@ -1,0 +1,75 @@
+/* Basic layout and container styling */
+.create-manager-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Form element styling */
+  .create-manager-container form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .create-manager-container label {
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+  
+  .create-manager-container input[type="text"],
+  .create-manager-container input[type="email"],
+  .create-manager-container input[type="password"],
+  .create-manager-container input[type="tel"] {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  /* Checkbox and label styling */
+  .create-manager-container .checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .create-manager-container .checkbox-container input {
+    margin-right: 8px;
+  }
+  
+  /* Button styling */
+  .create-manager-container .save-button {
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .create-manager-container .save-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Error message styling */
+  .create-manager-container .error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-size: 14px;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .create-manager-container {
+      padding: 15px;
+    }
+  }
+  
