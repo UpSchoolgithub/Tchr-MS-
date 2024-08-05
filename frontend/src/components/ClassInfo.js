@@ -74,6 +74,21 @@ const ClassInfo = () => {
 
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
+
+    // Validation of date inputs
+    if (new Date(academicStartDate) >= new Date(academicEndDate)) {
+      alert('Academic Start Date must be earlier than Academic End Date.');
+      return;
+    }
+    if (new Date(academicEndDate) >= new Date(revisionStartDate)) {
+      alert('Academic End Date must be earlier than Revision Start Date.');
+      return;
+    }
+    if (new Date(revisionStartDate) >= new Date(revisionEndDate)) {
+      alert('Revision Start Date must be earlier than Revision End Date.');
+      return;
+    }
+
     try {
       const classDetails = {
         className,
