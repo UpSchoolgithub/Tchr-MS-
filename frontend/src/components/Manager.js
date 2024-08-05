@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import './CreateManager.css';
 
 const Manager = () => {
   const [managers, setManagers] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchManagers();
@@ -21,7 +19,7 @@ const Manager = () => {
   };
 
   const handleEdit = (manager) => {
-    navigate('/create-manager', { state: { manager } });
+    // Handle edit logic
   };
 
   const handleDelete = async (id) => {
@@ -35,15 +33,11 @@ const Manager = () => {
     }
   };
 
-  const handleCreateManager = () => {
-    navigate('/create-manager');
-  };
-
   return (
     <div className="manager-container">
       <div className="manager-list">
         <h2>Managers</h2>
-        <button className="create-button" onClick={handleCreateManager}>Create Manager</button>
+        <button className="save-button">Create Manager</button>
         <table className="manager-table">
           <thead>
             <tr>
