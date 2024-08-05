@@ -35,10 +35,15 @@ const Manager = () => {
     }
   };
 
+  const handleCreateManager = () => {
+    navigate('/create-manager');
+  };
+
   return (
     <div className="manager-container">
       <div className="manager-list">
         <h2>Managers</h2>
+        <button className="create-button" onClick={handleCreateManager}>Create Manager</button>
         <table className="manager-table">
           <thead>
             <tr>
