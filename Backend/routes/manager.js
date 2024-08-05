@@ -16,7 +16,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Fetch a specific manager by ID
+// Fetch all schools
+router.get('/schools', async (req, res) => {
+  try {
+    const schools = await School.findAll();
+    res.json(schools);
+  } catch (error) {
+    console.error('Error fetching schools:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// Fetch specific manager by ID
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -30,18 +41,6 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
-
-// Fetch all schools
-router.get('/schools', async (req, res) => {
-  try {
-    const schools = await School.findAll();
-    res.json(schools);
-  } catch (error) {
-    console.error('Error fetching schools:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-
 
 // Create a new manager
 router.post('/', async (req, res) => {
@@ -102,10 +101,6 @@ router.delete('/:id', async (req, res) => {
     const manager = await Manager.findByPk(id);
     if (!manager) {
       return res.status(404).json({ message: 'Manager not found' });
-    }
-    const schools = await manager.getSchools();
-    if (schools.length > 0) {
-      return res.status(400).json({ message: 'Cannot delete manager because they are tagged to a school.' });
     }
     await manager.destroy();
     res.json({ message: 'Manager deleted successfully' });

@@ -25,6 +25,7 @@ const CreateManager = () => {
       setSchools(response.data);
     } catch (error) {
       console.error('Error fetching schools:', error.message);
+      setErrorMessage('Error fetching schools.');
     }
   };
 
@@ -52,14 +53,6 @@ const CreateManager = () => {
         setSchoolIds(schoolIds.filter(id => id !== value));
       }
     }
-  };
-
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPhoneNumber('');
-    setPassword('');
-    setSchoolIds([]);
   };
 
   const indexOfLastSchool = currentPage * schoolsPerPage;
@@ -97,7 +90,7 @@ const CreateManager = () => {
         </div>
         <div>
           <label>Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         <div>
           <label>Schools</label>

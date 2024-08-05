@@ -32,7 +32,7 @@ const EditManager = () => {
       });
     } catch (error) {
       console.error('Error fetching manager details:', error.message);
-      setErrorMessage('Failed to fetch manager details. Please try again.');
+      setErrorMessage('Error fetching manager details.');
     }
   };
 
@@ -42,6 +42,7 @@ const EditManager = () => {
       setSchools(response.data);
     } catch (error) {
       console.error('Error fetching schools:', error.message);
+      setErrorMessage('Error fetching schools.');
     }
   };
 
@@ -90,7 +91,6 @@ const EditManager = () => {
         navigate('/managers'); // Redirect back to manager list after deletion
       } catch (error) {
         console.error('Error deleting manager:', error.message);
-        alert(error.response.data.message || 'Failed to delete manager');
       }
     }
   };
