@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './CreateManager.css';
 
 const CreateManager = () => {
@@ -14,10 +14,19 @@ const CreateManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const schoolsPerPage = 10;
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingManager = location.state?.manager || null;
 
   useEffect(() => {
     fetchSchools();
-  }, []);
+
+    if (editingManager) {
+      setName(editingManager.name);
+      setEmail(editingManager.email);
+      setPhoneNumber(editingManager.phoneNumber);
+      setSchoolIds(editingManager.Schools.map(school => school.id));
+    }
+  }, [editingManager]);
 
   const fetchSchools = async () => {
     try {
@@ -30,14 +39,23 @@ const CreateManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await axios.post('https://tms.up.school/api/managers', { name, email, phoneNumber, password, schoolIds });
-      navigate('/managers'); // Redirect back to manager list
-    } catch (error) {
-      if (error.response && error.response.data) {
-        setErrorMessage(error.response.data.errors.join(', '));
-      } else {
-        console.error('Error saving manager account:', error.message);
+
+    const managerData = { name, email, phoneNumber, schoolIds };
+
+    if (editingManager) {
+      // Update existing manager
+      try {
+        await axios.put(`https://tms.up.school/api/managers/${editingManager.id}`, managerData);
+        navigate('/managers'); // Redirect back to manager list
+      } catch (error) {
+        setErrorMessage('An error occurred while updating the manager account.');
+      }
+    } else {
+      // Create new manager
+      try {
+        await axios.post('https://tms.up.school/api/managers', managerData);
+        navigate('/managers'); // Redirect back to manager list
+      } catch (error) {
         setErrorMessage('An error occurred while saving the manager account.');
       }
     }
@@ -48,39 +66,13 @@ const CreateManager = () => {
     if (e.target.checked) {
       setSchoolIds([...schoolIds, value]);
     } else {
-      if (window.confirm('Are you sure you want to remove this school from the manager?')) {
-        setSchoolIds(schoolIds.filter(id => id !== value));
-      }
-    }
-  };
-
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPhoneNumber('');
-    setPassword('');
-    setSchoolIds([]);
-  };
-
-  const indexOfLastSchool = currentPage * schoolsPerPage;
-  const indexOfFirstSchool = indexOfLastSchool - schoolsPerPage;
-  const currentSchools = schools.slice(indexOfFirstSchool, indexOfLastSchool);
-
-  const nextPage = () => {
-    if (currentPage < Math.ceil(schools.length / schoolsPerPage)) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      setSchoolIds(schoolIds.filter(id => id !== value));
     }
   };
 
   return (
     <div className="create-manager-container">
-      <h2>Create Manager Account</h2>
+      <h2>{editingManager ? 'Edit Manager Account' : 'Create Manager Account'}</h2>
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <form onSubmit={handleSubmit}>
         <div>
@@ -95,10 +87,12 @@ const CreateManager = () => {
           <label>Phone Number</label>
           <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required />
         </div>
-        <div>
-          <label>Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
+        {!editingManager && (
+          <div>
+            <label>Password</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+        )}
         <div>
           <label>Schools</label>
           <table className="manager-table">
@@ -109,7 +103,7 @@ const CreateManager = () => {
               </tr>
             </thead>
             <tbody>
-              {currentSchools.map((school) => (
+              {schools.slice((currentPage - 1) * schoolsPerPage, currentPage * schoolsPerPage).map((school) => (
                 <tr key={school.id}>
                   <td>
                     <input
@@ -127,10 +121,14 @@ const CreateManager = () => {
         </div>
         <div className="pagination-save-container">
           <div className="pagination-buttons">
-            <button type="button" onClick={prevPage} disabled={currentPage === 1}>&lt;</button>
-            <button type="button" onClick={nextPage} disabled={currentPage === Math.ceil(schools.length / schoolsPerPage)}>&gt;</button>
+            <button type="button" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+              &lt;
+            </button>
+            <button type="button" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(schools.length / schoolsPerPage)}>
+              &gt;
+            </button>
           </div>
-          <button type="submit" className="save-button">Save</button>
+          <button type="submit" className="save-button">{editingManager ? 'Update' : 'Create'} Manager</button>
         </div>
       </form>
     </div>
