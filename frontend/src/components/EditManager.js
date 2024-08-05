@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './EditManager.css';
 
 const EditManager = () => {
   const { managerId } = useParams();
   const navigate = useNavigate();
-  const [managerData, setManagerData] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phoneNumber: '',
-    schoolIds: [],
+    schoolIds: []
   });
   const [schools, setSchools] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -18,20 +18,20 @@ const EditManager = () => {
   useEffect(() => {
     fetchManagerDetails();
     fetchSchools();
-  }, []);
+  }, [managerId]);
 
   const fetchManagerDetails = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/managers/${managerId}`);
-      const manager = response.data;
-      setManagerData({
-        name: manager.name,
-        email: manager.email,
-        phoneNumber: manager.phoneNumber,
-        schoolIds: manager.Schools.map(school => school.id),
+      const managerData = response.data;
+      setFormData({
+        name: managerData.name,
+        email: managerData.email,
+        phoneNumber: managerData.phoneNumber,
+        schoolIds: managerData.Schools.map(school => school.id) // Assuming Schools is an array of associated schools
       });
     } catch (error) {
-      console.error('Error fetching manager details:', error);
+      console.error('Error fetching manager details:', error.message);
     }
   };
 
@@ -46,23 +46,23 @@ const EditManager = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setManagerData(prevData => ({
-      ...prevData,
-      [name]: value,
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
     }));
   };
 
   const handleSchoolChange = (e) => {
     const value = parseInt(e.target.value);
     if (e.target.checked) {
-      setManagerData(prevData => ({
-        ...prevData,
-        schoolIds: [...prevData.schoolIds, value],
+      setFormData(prevState => ({
+        ...prevState,
+        schoolIds: [...prevState.schoolIds, value]
       }));
     } else {
-      setManagerData(prevData => ({
-        ...prevData,
-        schoolIds: prevData.schoolIds.filter(id => id !== value),
+      setFormData(prevState => ({
+        ...prevState,
+        schoolIds: prevState.schoolIds.filter(id => id !== value)
       }));
     }
   };
@@ -70,12 +70,15 @@ const EditManager = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`https://tms.up.school/api/managers/${managerId}`, managerData);
-      alert('Manager updated successfully');
-      navigate('/managers');
+      await axios.put(`https://tms.up.school/api/managers/${managerId}`, formData);
+      navigate('/managers'); // Redirect back to manager list after update
     } catch (error) {
-      console.error('Error updating manager:', error);
-      setErrorMessage('An error occurred while updating the manager account.');
+      if (error.response && error.response.data) {
+        setErrorMessage(error.response.data.errors.join(', '));
+      } else {
+        console.error('Error updating manager account:', error.message);
+        setErrorMessage('An error occurred while updating the manager account.');
+      }
     }
   };
 
@@ -83,11 +86,9 @@ const EditManager = () => {
     if (window.confirm('Are you sure you want to delete this manager?')) {
       try {
         await axios.delete(`https://tms.up.school/api/managers/${managerId}`);
-        alert('Manager deleted successfully');
-        navigate('/managers');
+        navigate('/managers'); // Redirect back to manager list after deletion
       } catch (error) {
         console.error('Error deleting manager:', error.message);
-        setErrorMessage('Failed to delete the manager.');
       }
     }
   };
@@ -95,37 +96,19 @@ const EditManager = () => {
   return (
     <div className="edit-manager-container">
       <h2>Edit Manager Account</h2>
-      {errorMessage && <p className="error">{errorMessage}</p>}
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <form onSubmit={handleFormSubmit}>
         <div>
           <label>Name</label>
-          <input
-            type="text"
-            name="name"
-            value={managerData.name}
-            onChange={handleInputChange}
-            required
-          />
+          <input type="text" name="name" value={formData.name} onChange={handleInputChange} required />
         </div>
         <div>
           <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={managerData.email}
-            onChange={handleInputChange}
-            required
-          />
+          <input type="email" name="email" value={formData.email} onChange={handleInputChange} required />
         </div>
         <div>
           <label>Phone Number</label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={managerData.phoneNumber}
-            onChange={handleInputChange}
-            required
-          />
+          <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required />
         </div>
         <div>
           <label>Schools</label>
@@ -135,7 +118,7 @@ const EditManager = () => {
                 <input
                   type="checkbox"
                   value={school.id}
-                  checked={managerData.schoolIds.includes(school.id)}
+                  checked={formData.schoolIds.includes(school.id)}
                   onChange={handleSchoolChange}
                 />
                 <label>{school.name}</label>
