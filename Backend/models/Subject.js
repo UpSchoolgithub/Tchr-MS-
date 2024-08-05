@@ -51,4 +51,22 @@ Subject.init({
   tableName: 'subjects',
 });
 
+Subject.associate = (models) => {
+  Subject.belongsTo(models.Section, {
+    foreignKey: 'sectionId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+  Subject.belongsTo(models.ClassInfo, {
+    foreignKey: 'classInfoId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+  Subject.belongsTo(models.School, {
+    foreignKey: 'schoolId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+};
+
 module.exports = Subject;
