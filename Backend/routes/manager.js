@@ -42,6 +42,7 @@ router.get('/schools', async (req, res) => {
   }
 });
 
+
 // Create a new manager
 router.post('/', async (req, res) => {
   const { name, email, phoneNumber, password, schoolIds } = req.body;

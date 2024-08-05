@@ -14,13 +14,13 @@ const CreateSchool = () => {
   useEffect(() => {
     const fetchSchools = async () => {
       try {
-        const response = await axios.get('https://tms.up.school/api/schools');
-        console.log('Fetched schools:', response.data);
+        const response = await axios.get('https://tms.up.school/api/managers/schools');
         setSchools(response.data);
       } catch (error) {
-        console.error('Error fetching schools:', error);
+        console.error('Error fetching schools:', error.message);
       }
     };
+    
 
     fetchSchools();
   }, []);
