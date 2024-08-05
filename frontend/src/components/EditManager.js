@@ -32,6 +32,7 @@ const EditManager = () => {
       });
     } catch (error) {
       console.error('Error fetching manager details:', error.message);
+      setErrorMessage('Failed to fetch manager details. Please try again.');
     }
   };
 
@@ -89,6 +90,7 @@ const EditManager = () => {
         navigate('/managers'); // Redirect back to manager list after deletion
       } catch (error) {
         console.error('Error deleting manager:', error.message);
+        alert(error.response.data.message || 'Failed to delete manager');
       }
     }
   };
