@@ -18,6 +18,7 @@ import SessionManagement from './components/SessionManagement';
 import SessionPlan from './components/SessionPlan';
 import AddSection from './components/AddSection';
 import CreateManager from './components/CreateManager';
+import EditManager from './EditManager';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
