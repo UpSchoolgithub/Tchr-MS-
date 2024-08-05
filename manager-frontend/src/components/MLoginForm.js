@@ -12,7 +12,7 @@ const MLoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/manager/auth/login', {
+      const response = await axios.post('https://tms.up.school/api/manager/auth/login', {
         email,
         password,
       });
