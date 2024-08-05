@@ -32,6 +32,19 @@ const ClassInfo = () => {
 
   const handleClassSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if the same className, section, and subject combination already exists
+    const duplicateClass = classInfos.find(info => 
+        info.className === className && 
+        info.section === section && 
+        info.subject === subject
+    );
+
+    if (duplicateClass) {
+        alert('This class section and subject combination already exists.');
+        return;
+    }
+
     const existingClass = classInfos.find(info => info.className === className && info.subject === subject && info.section === 'A');
     if (!existingClass && section !== 'A') {
       alert('You must first add section A for this class and subject.');
