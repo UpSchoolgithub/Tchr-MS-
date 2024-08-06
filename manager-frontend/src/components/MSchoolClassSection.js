@@ -144,7 +144,8 @@ const MSchoolClassSection = () => {
       };
       console.log('Request Data:', requestData);
 
-      await axiosInstance.post(`/timetable/assign`, requestData);
+      const response = await axiosInstance.post(`/timetable/assign`, requestData);
+      console.log('Assignment response:', response);
 
       const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
       const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
