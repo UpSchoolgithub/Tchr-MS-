@@ -163,7 +163,20 @@ const MSchoolClassSection = () => {
 
     doc.save('timetable.pdf');
   };
-
+  const fetchSubjects = async () => {
+    try {
+      const response = await axiosInstance.get(`/schools/${schoolId}/subjects`);
+      setSubjects(response.data); // Make sure this matches the structure of your response
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      setError('Failed to load subjects');
+    }
+  };
+  
+  useEffect(() => {
+    fetchSubjects();
+  }, [schoolId]); // Dependency array should contain variables that trigger refetching when changed
+  
   const combinedList = [...calendarEvents, ...holidays].sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
 
   const filteredList = combinedList.filter((item) => {
