@@ -5,7 +5,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     const errorElement = document.getElementById('error');
 
     try {
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch('https://tms.up.school/api/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -79,7 +79,7 @@ const SchoolList = () => {
             <h4>{school.name}</h4>
             <p>{school.email}</p>
             <p>{school.website}</p>
-            {school.logo && <img src={`http://localhost:5000/${school.logo}`} alt={`${school.name} logo`} style={{ width: '100px' }} />}
+            {school.logo && <img src={`https://tms.up.school/${school.logo}`} alt={`${school.name} logo`} style={{ width: '100px' }} />}
             <p>Created At: {new Date(school.createdAt).toLocaleDateString()}</p>
           </div>
         ))}

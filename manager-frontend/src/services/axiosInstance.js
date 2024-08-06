@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://tms.up.school/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,7 +41,7 @@ axiosInstance.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const response = await axios.post('http://localhost:5000/api/manager/auth/refresh-token', {
+        const response = await axios.post('https://tms.up.school/api/manager/auth/refresh-token', {
           refreshToken,
         });
 
