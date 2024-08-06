@@ -5,7 +5,6 @@ import axiosInstance from '../services/axiosInstance';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './MSchoolClassSection.css';
-import PeriodAssignmentForm from './PeriodAssignmentForm';
 
 Modal.setAppElement('#root');
 
@@ -14,6 +13,9 @@ const MSchoolClassSection = () => {
   const navigate = useNavigate();
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showTimetable, setShowTimetable] = useState(false);
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [timetableSettings, setTimetableSettings] = useState(null);
@@ -22,41 +24,34 @@ const MSchoolClassSection = () => {
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState({});
-  const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
   const [error, setError] = useState(null);
-  const [showCalendar, setShowCalendar] = useState(false); // Initialize showCalendar state
-  const [showTimetable, setShowTimetable] = useState(false); // Initialize showTimetable state
-  const [showDetails, setShowDetails] = useState(false);
-  const [showSubjects, setShowSubjects] = useState(false);
+  const [combinedSectionId, setCombinedSectionId] = useState('');
+  const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false); // Hide details by default
+  const [showSubjects, setShowSubjects] = useState(false); // Hide subjects by default
+
   const [teacherFilter, setTeacherFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
-  const [filter, setFilter] = useState('all'); // Initialize filter state
 
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
     if (storedSubjects) {
       setSubjects(storedSubjects);
     }
-    fetchInitialData();
-  }, [schoolId, classId, sectionName]);
+    const combinedId = `${schoolId}-${classId}-${sectionName}`;
+    setCombinedSectionId(combinedId);
+    fetchCalendarEventsAndHolidays(schoolId);
+    fetchTeachers(schoolId);
+    fetchTimetableSettings(schoolId);
+  }, [schoolId, sectionName]);
 
   useEffect(() => {
     if (teachers.length > 0 && timetableSettings) {
       fetchAssignments();
     }
-  }, [teachers, timetableSettings, schoolId, classId, sectionName]);
+  }, [teachers, timetableSettings, combinedSectionId]);
 
-  const fetchInitialData = async () => {
-    try {
-      await fetchCalendarEventsAndHolidays();
-      await fetchTeachers();
-      await fetchTimetableSettings();
-    } catch (error) {
-      console.error('Error fetching initial data:', error);
-    }
-  };
-
-  const fetchCalendarEventsAndHolidays = async () => {
+  const fetchCalendarEventsAndHolidays = async (schoolId) => {
     try {
       const eventsResponse = await axiosInstance.get(`/schools/${schoolId}/calendar`);
       const holidaysResponse = await axiosInstance.get(`/schools/${schoolId}/holidays`);
@@ -67,7 +62,7 @@ const MSchoolClassSection = () => {
     }
   };
 
-  const fetchTeachers = async () => {
+  const fetchTeachers = async (schoolId) => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/teachers`);
       setTeachers(response.data);
@@ -76,45 +71,63 @@ const MSchoolClassSection = () => {
     }
   };
 
-  const fetchTimetableSettings = async () => {
+  const fetchTimetableSettings = async (schoolId) => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
-      console.log('Timetable Settings:', response.data); // Log response
       setTimetableSettings(response.data);
     } catch (error) {
+      setError('Error fetching timetable settings.');
       console.error('Error fetching timetable settings:', error);
     }
   };
-  
+
   const fetchAssignments = async () => {
     try {
+      console.log(`Fetching assignments for Combined Section ID: ${combinedSectionId}`);
       const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionName}/assignments`);
-      console.log('Assignments:', response.data); // Log response
-      const assignments = processAssignments(response.data);
+      const assignments = response.data.reduce((acc, entry) => {
+        const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
+        const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown Subject' };
+        acc[`${entry.day}-${entry.period}`] = {
+          teacher: teacher.name,
+          teacherId: entry.teacherId,
+          subject: subject.subjectName,
+          subjectId: entry.subjectId
+        };
+        return acc;
+      }, {});
       setAssignedPeriods(assignments);
     } catch (error) {
+      setError('Error fetching assignments.');
       console.error('Error fetching assignments:', error);
     }
   };
-  
-
-  const processAssignments = (data) => {
-    return data.reduce((acc, entry) => {
-      const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown' };
-      const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown' };
-      acc[`${entry.day}-${entry.period}`] = {
-        teacher: teacher.name,
-        teacherId: entry.teacherId,
-        subject: subject.subjectName,
-        subjectId: entry.subjectId
-      };
-      return acc;
-    }, {});
-  };
 
   const handleOpenModal = (day, period) => {
-    setSelectedPeriod({ day, period });
+    const existingAssignment = assignedPeriods[`${day}-${period}`];
+    if (existingAssignment) {
+      setSelectedTeacher(existingAssignment.teacherId);
+      setSelectedSubject(existingAssignment.subjectId);
+      setIsEditWarningOpen(true);
+    } else {
+      setSelectedPeriod({ day, period });
+      setSelectedTeacher('');
+      setSelectedSubject('');
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCloseEditWarning = () => {
+    setIsEditWarningOpen(false);
+  };
+
+  const handleEditConfirmed = () => {
     setIsModalOpen(true);
+    setIsEditWarningOpen(false);
   };
 
   const handleAssignPeriod = async (e) => {
@@ -123,60 +136,70 @@ const MSchoolClassSection = () => {
       const requestData = {
         schoolId,
         classId,
-        sectionName,
-        day: selectedPeriod.day,
-        period: selectedPeriod.period,
+        combinedSectionId,
         teacherId: selectedTeacher,
+        subjectId: selectedSubject,
+        period: selectedPeriod.period,
+        day: selectedPeriod.day,
+      };
+      console.log('Request Data:', requestData);
+
+      await axiosInstance.post(`/timetable/assign`, requestData);
+
+      const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
+      const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
+
+      const newAssignedPeriod = {
+        teacher: teacher.name,
+        teacherId: selectedTeacher,
+        subject: subject.subjectName,
         subjectId: selectedSubject
       };
-      await axiosInstance.post('/timetable/assign', requestData);
-      fetchAssignments();
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error assigning period:', error);
-    }
-  };
 
-  const downloadTimetableAsPDF = () => {
-    const doc = new jsPDF();
-    const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
-    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
-      const row = [day];
-      Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1).forEach(period => {
-        const periodAssignment = assignedPeriods[`${day}-${period}`];
-        const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
-        const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
-
-        if (teacherMatch && subjectMatch) {
-          row.push(periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '');
-        } else {
-          row.push('');
-        }
+      setAssignedPeriods({
+        ...assignedPeriods,
+        [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
       });
-      return row;
-    });
 
-    doc.autoTable({
-      head: [columns],
-      body: rows,
-    });
-
-    doc.save('timetable.pdf');
-  };
-  const fetchSubjects = async () => {
-    try {
-      const response = await axiosInstance.get(`/schools/${schoolId}/subjects`);
-      setSubjects(response.data); // Make sure this matches the structure of your response
+      setIsModalOpen(false);
+      fetchAssignments(); // Refresh assignments after assigning a period
     } catch (error) {
-      console.error('Error fetching subjects:', error);
-      setError('Failed to load subjects');
+      console.error('Error assigning period:', error.response || error);
+      setError('Error assigning period');
     }
   };
-  
-  useEffect(() => {
-    fetchSubjects();
-  }, [schoolId]); // Dependency array should contain variables that trigger refetching when changed
-  
+
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+  };
+
+  const handleShowCalendar = () => {
+    setShowCalendar(true);
+    setShowTimetable(false);
+  };
+
+  const handleShowTimetable = () => {
+    setShowTimetable(true);
+    setShowCalendar(false);
+  };
+
+  const handleTeacherFilterChange = (e) => {
+    setTeacherFilter(e.target.value);
+  };
+
+  const handleSubjectFilterChange = (e) => {
+    setSubjectFilter(e.target.value);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   const combinedList = [...calendarEvents, ...holidays].sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
 
   const filteredList = combinedList.filter((item) => {
@@ -195,7 +218,7 @@ const MSchoolClassSection = () => {
         <div className="filters">
           <label>
             Filter by Teacher:
-            <select onChange={(e) => setTeacherFilter(e.target.value)} value={teacherFilter}>
+            <select onChange={handleTeacherFilterChange} value={teacherFilter}>
               <option value="">All</option>
               {teachers.map(teacher => (
                 <option key={teacher.id} value={teacher.name}>
@@ -206,7 +229,7 @@ const MSchoolClassSection = () => {
           </label>
           <label>
             Filter by Subject:
-            <select onChange={(e) => setSubjectFilter(e.target.value)} value={subjectFilter}>
+            <select onChange={handleSubjectFilterChange} value={subjectFilter}>
               <option value="">All</option>
               {subjects.map(subject => (
                 <option key={subject.id} value={subject.subjectName}>
@@ -259,6 +282,34 @@ const MSchoolClassSection = () => {
     );
   };
 
+  const downloadTimetableAsPDF = () => {
+    const doc = new jsPDF();
+
+    const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
+    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+      const row = [day];
+      Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1).forEach(period => {
+        const periodAssignment = assignedPeriods[`${day}-${period}`];
+        const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
+        const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
+
+        if (teacherMatch && subjectMatch) {
+          row.push(periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '');
+        } else {
+          row.push('');
+        }
+      });
+      return row;
+    });
+
+    doc.autoTable({
+      head: [columns],
+      body: rows,
+    });
+
+    doc.save('timetable.pdf');
+  };
+
   return (
     <div className="container">
       <div className="header">
@@ -292,22 +343,22 @@ const MSchoolClassSection = () => {
         </div>
       )}
       <div className="buttons">
-        <button onClick={() => setShowCalendar(true)}>School Calendar</button>
-        <button onClick={() => setShowTimetable(true)}>Timetable</button>
+        <button onClick={handleShowCalendar}>School Calendar</button>
+        <button onClick={handleShowTimetable}>Timetable</button>
       </div>
       {showCalendar && (
         <div className="calendar">
           <h2>School Calendar Events</h2>
           <label>
             Filter:
-            <select onChange={(e) => setFilter(e.target.value)} value={filter}>
+            <select onChange={handleFilterChange} value={filter}>
               <option value="all">All</option>
               <option value="events">Events</option>
               <option value="holidays">Holidays</option>
             </select>
           </label>
           <div className="events">
-            {calendarEvents.length > 0 || holidays.length > 0 ? (
+            {filteredList.length > 0 ? (
               <table className="calendar-table">
                 <thead>
                   <tr>
@@ -316,10 +367,10 @@ const MSchoolClassSection = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...calendarEvents, ...holidays].map((item) => (
+                  {filteredList.map((item) => (
                     <tr key={item.id}>
                       <td>{item.eventName || item.name}</td>
-                      <td>{new Date(item.date || item.startDate).toLocaleDateString()}</td>
+                      <td>{formatDate(item.date || item.startDate)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -336,17 +387,48 @@ const MSchoolClassSection = () => {
           {renderTable()}
         </div>
       )}
-      <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
+
+      {/* Modal for assigning period */}
+      <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
         <h2>Assign Period</h2>
-        <PeriodAssignmentForm
-          teachers={teachers}
-          subjects={subjects}
-          onAssign={handleAssignPeriod}
-          selectedTeacher={selectedTeacher}
-          setSelectedTeacher={setSelectedTeacher}
-          selectedSubject={selectedSubject}
-          setSelectedSubject={setSelectedSubject}
-        />
+        <form onSubmit={handleAssignPeriod}>
+          <div>
+            <label>Teacher:</label>
+            <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
+              <option value="">Select a teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>Subject:</label>
+            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
+              <option value="">Select a subject</option>
+              {subjects.length > 0 ? (
+                subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.subjectName}
+                  </option>
+                ))
+              ) : (
+                <option disabled>No subjects available</option>
+              )}
+            </select>
+          </div>
+          <button type="submit">Assign</button>
+          <button type="button" onClick={handleCloseModal}>Cancel</button>
+        </form>
+      </Modal>
+
+      {/* Modal for edit warning */}
+      <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
+        <h2>Warning</h2>
+        <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
+        <button onClick={handleEditConfirmed}>Yes</button>
+        <button onClick={handleCloseEditWarning}>No</button>
       </Modal>
     </div>
   );
