@@ -110,4 +110,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Fetch schools tagged to a specific manager
+router.get('/:id/schools', authenticateManager, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const manager = await Manager.findByPk(id, { include: School });
+    if (!manager) {
+      return res.status(404).json({ message: 'Manager not found' });
+    }
+    res.json(manager.Schools);
+  } catch (error) {
+    console.error('Error fetching schools for manager:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
 module.exports = router;
