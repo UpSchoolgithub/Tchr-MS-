@@ -9,7 +9,7 @@ export const WebSocketProvider = ({ children, token }) => {
   useEffect(() => {
     if (token) {
       // Use non-secure WebSocket for testing
-      const webSocket = new WebSocket('wss://www.tms.up.school/ws'); // Use 'ws://' if your backend is not using HTTPS
+      const webSocket = new WebSocket('wss://www.tms.up.school:3001/ws'); // Use 'ws://' if your backend is not using HTTPS
       setWs(webSocket);
   
       webSocket.onopen = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { WebSocketProvider } from './WebSocketContext'; // Import the WebSocket context
 import MSidebar from './components/MSidebar';
 import MLoginForm from './components/MLoginForm';
@@ -27,6 +27,8 @@ function App() {
             {token && <MSidebar />}
             <div className="main-content">
               <Routes>
+                {/* Redirect root path to dashboard */}
+                <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="/mlogin" element={<MLoginForm />} />
                 <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
                 <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
@@ -38,6 +40,8 @@ function App() {
                 <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
                 <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
                 <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
+                {/* Redirect all unknown paths to dashboard */}
+                <Route path="*" element={<Navigate to="/dashboard" />} />
               </Routes>
             </div>
           </div>
