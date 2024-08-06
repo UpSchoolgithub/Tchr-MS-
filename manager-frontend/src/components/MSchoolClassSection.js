@@ -5,7 +5,7 @@ import axiosInstance from '../services/axiosInstance';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './MSchoolClassSection.css';
-import PeriodAssignmentForm from './PeriodAssignmentForm'; // Ensure this component is correctly implemented
+import PeriodAssignmentForm from './PeriodAssignmentForm';
 
 Modal.setAppElement('#root');
 
@@ -24,10 +24,13 @@ const MSchoolClassSection = () => {
   const [selectedPeriod, setSelectedPeriod] = useState({});
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
   const [error, setError] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false); // Initialize showCalendar state
+  const [showTimetable, setShowTimetable] = useState(false); // Initialize showTimetable state
   const [showDetails, setShowDetails] = useState(false);
   const [showSubjects, setShowSubjects] = useState(false);
   const [teacherFilter, setTeacherFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
+  const [filter, setFilter] = useState('all'); // Initialize filter state
 
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
@@ -156,6 +159,88 @@ const MSchoolClassSection = () => {
     });
 
     doc.save('timetable.pdf');
+  };
+
+  const combinedList = [...calendarEvents, ...holidays].sort((a, b) => new Date(a.date || a.startDate) - new Date(b.date || b.startDate));
+
+  const filteredList = combinedList.filter((item) => {
+    if (filter === 'events') return item.eventName;
+    if (filter === 'holidays') return item.name;
+    return true;
+  });
+
+  const renderTable = () => {
+    if (!timetableSettings) return null;
+
+    const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
+
+    return (
+      <div>
+        <div className="filters">
+          <label>
+            Filter by Teacher:
+            <select onChange={(e) => setTeacherFilter(e.target.value)} value={teacherFilter}>
+              <option value="">All</option>
+              {teachers.map(teacher => (
+                <option key={teacher.id} value={teacher.name}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Filter by Subject:
+            <select onChange={(e) => setSubjectFilter(e.target.value)} value={subjectFilter}>
+              <option value="">All</option>
+              {subjects.map(subject => (
+                <option key={subject.id} value={subject.subjectName}>
+                  {subject.subjectName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
+        </div>
+        <table className="timetable-table">
+          <thead>
+            <tr>
+              <th>Day / Period</th>
+              {periods.map(period => (
+                <th key={period}>{period}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+              <tr key={day}>
+                <td>{day}</td>
+                {periods.map(period => {
+                  const periodAssignment = assignedPeriods[`${day}-${period}`];
+                  const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
+                  const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
+
+                  if (teacherMatch && subjectMatch) {
+                    return (
+                      <td key={period} onClick={() => handleOpenModal(day, period)}>
+                        {periodAssignment ? (
+                          <>
+                            <div>{periodAssignment.teacher}</div>
+                            <div>{periodAssignment.subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )}
+                      </td>
+                    );
+                  }
+                  return <td key={period} />;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   };
 
   return (
