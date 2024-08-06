@@ -34,13 +34,41 @@ const studentsRouter = require('./routes/students')
 const app = express();
 
 app.use(helmet());
-app.use(cors({
-  origin: 'https://sm.up.school', // Replace with the allowed origin
-  methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-  allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
-}));
+//app.use(cors({
+//  origin: 'https://sm.up.school', // Replace with the allowed origin
+ // methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
+  //credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  //allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
+//}));
 
+// List of allowed origins
+const allowedOrigins = [
+  'https://sm.up.school',
+  'https://teachermanager.up.school'
+];
+
+// CORS options setup
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Check if the incoming origin is allowed
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true); // Allow the request if origin is in the allowed list or not present (non-CORS requests)
+    } else {
+      callback(new Error('Not allowed by CORS')); // Disallow the request for other origins
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+  credentials: true, // Allow credentials (cookies, authorization headers with HTTPS)
+  allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers
+};
+
+// Apply CORS middleware to all incoming requests
+app.use(cors(corsOptions));
+
+// Your existing route definitions
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
