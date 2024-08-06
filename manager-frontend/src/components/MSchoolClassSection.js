@@ -79,21 +79,24 @@ const MSchoolClassSection = () => {
   const fetchTimetableSettings = async () => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
+      console.log('Timetable Settings:', response.data); // Log response
       setTimetableSettings(response.data);
     } catch (error) {
       console.error('Error fetching timetable settings:', error);
     }
   };
-
+  
   const fetchAssignments = async () => {
     try {
       const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionName}/assignments`);
+      console.log('Assignments:', response.data); // Log response
       const assignments = processAssignments(response.data);
       setAssignedPeriods(assignments);
     } catch (error) {
       console.error('Error fetching assignments:', error);
     }
   };
+  
 
   const processAssignments = (data) => {
     return data.reduce((acc, entry) => {
