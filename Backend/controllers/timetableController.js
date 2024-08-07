@@ -10,6 +10,35 @@ exports.assignPeriod = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
+    console.log('Starting transaction for period assignment');
+
+    const sectionName = combinedSectionId.split('-').slice(2).join('-');
+    console.log('Section Name:', sectionName);
+
+    // Check if the section already exists
+    const existingSection = await Section.findOne({
+      where: { schoolId, classInfoId: classId, sectionName },
+      transaction
+    });
+
+    let sectionId;
+    if (existingSection) {
+      sectionId = existingSection.id;
+      console.log('Existing section found with ID:', sectionId);
+    } else {
+      // Insert new section if it doesn't exist
+      const newSection = await Section.create({
+        schoolId,
+        classInfoId: classId,
+        sectionName,
+        combinedSectionId
+      }, { transaction });
+
+      sectionId = newSection.id;
+      console.log('New section created with ID:', sectionId);
+    }
+
+    // Insert the timetable entry
     const newEntry = await TimetableEntry.create({
       schoolId,
       classId,
@@ -20,35 +49,12 @@ exports.assignPeriod = async (req, res) => {
       period
     }, { transaction });
 
-    // Extract sectionName from combinedSectionId
-    const sectionName = combinedSectionId.split('-').slice(2).join('-');
-
-    // Find or create the section with the combinedSectionId
-    await Section.findOrCreate({
-      where: { schoolId, classInfoId: classId, sectionName },
-      defaults: { combinedSectionId },
-      transaction
-    });
-
     await transaction.commit();
-
+    console.log('Transaction committed successfully');
     res.status(201).json(newEntry);
   } catch (error) {
     await transaction.rollback();
-    console.error('Error creating timetable entry:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-exports.getAssignments = async (req, res) => {
-  const { schoolId, classId, sectionName } = req.params;
-  const combinedSectionId = `${schoolId}-${classId}-${sectionName}`;
-
-  try {
-    const assignments = await TimetableEntry.findAll({ where: { combinedSectionId } });
-    res.status(200).json(assignments);
-  } catch (error) {
-    console.error('Error fetching assignments:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error during period assignment transaction:', error.message);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 };
