@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import { useManagerAuth } from '../context/ManagerAuthContext';
+import './MClassroom.css'; // Import the CSS file for styling
 
 const MClassroom = () => {
   const { managerId, token } = useManagerAuth();
@@ -163,9 +164,9 @@ const MClassroom = () => {
   const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
 
   return (
-    <div>
+    <div className="classroom-container">
       <h1>Select School, Class, and Section</h1>
-      <div>
+      <div className="form-group">
         <label>School:</label>
         <select onChange={handleSchoolChange} value={selectedSchool || ''}>
           <option value="" disabled>Select School</option>
@@ -174,7 +175,7 @@ const MClassroom = () => {
           ))}
         </select>
       </div>
-      <div>
+      <div className="form-group">
         <label>Class:</label>
         <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
           <option value="" disabled>Select Class</option>
@@ -185,7 +186,7 @@ const MClassroom = () => {
           ))}
         </select>
       </div>
-      <div>
+      <div className="form-group">
         <label>Section:</label>
         <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
           <option value="" disabled>Select Section</option>
@@ -199,10 +200,10 @@ const MClassroom = () => {
       <div>
         <h3>Subjects:</h3>
         {selectedSectionInfo && (
-          <div>
+          <div className="subjects-container">
             {selectedSectionInfo.subjects.length > 0 ? (
               selectedSectionInfo.subjects.map(subject => (
-                <div key={subject.id}>
+                <div key={subject.id} className="subject-item">
                   <span>{subject.subjectName || 'No Subject Name'}</span>
                 </div>
               ))
@@ -212,7 +213,13 @@ const MClassroom = () => {
           </div>
         )}
       </div>
-      <button onClick={handleSectionSelect} disabled={!selectedSection}>Select Section</button>
+      <button 
+        onClick={handleSectionSelect} 
+        disabled={!selectedSection} 
+        className="select-button"
+      >
+        Select Section
+      </button>
     </div>
   );
 };

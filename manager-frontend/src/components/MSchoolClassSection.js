@@ -166,12 +166,7 @@ const MSchoolClassSection = () => {
       setIsModalOpen(false);
       setSuccessMessage('Assignment added successfully!');
       
-      // Navigate back to the previous page after a short delay, if needed
-      setTimeout(() => {
-        navigate(-1); // Redirect to the previous page
-      }, 2000);
-
-      // Alternatively, you can reload the assignments without navigating
+      // Optionally reload the assignments if needed, but the state update should suffice
       // fetchAssignments();
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
