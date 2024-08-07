@@ -1,4 +1,4 @@
-const { TimetableEntry, Section } = require('../models');
+const { TimetableEntry, Section, sequelize } = require('../models');
 
 exports.assignPeriod = async (req, res) => {
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period } = req.body;
@@ -6,6 +6,8 @@ exports.assignPeriod = async (req, res) => {
   if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
+
+  const transaction = await sequelize.transaction();
 
   try {
     const newEntry = await TimetableEntry.create({
@@ -16,7 +18,7 @@ exports.assignPeriod = async (req, res) => {
       teacherId,
       day,
       period
-    });
+    }, { transaction });
 
     // Extract sectionName from combinedSectionId
     const sectionName = combinedSectionId.split('-').slice(2).join('-');
@@ -24,11 +26,15 @@ exports.assignPeriod = async (req, res) => {
     // Find or create the section with the combinedSectionId
     await Section.findOrCreate({
       where: { schoolId, classInfoId: classId, sectionName },
-      defaults: { combinedSectionId }
+      defaults: { combinedSectionId },
+      transaction
     });
+
+    await transaction.commit();
 
     res.status(201).json(newEntry);
   } catch (error) {
+    await transaction.rollback();
     console.error('Error creating timetable entry:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

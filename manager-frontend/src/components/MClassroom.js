@@ -164,62 +164,64 @@ const MClassroom = () => {
   const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
 
   return (
-    <div className="classroom-container">
-      <h1>Select School, Class, and Section</h1>
-      <div className="form-group">
-        <label>School:</label>
-        <select onChange={handleSchoolChange} value={selectedSchool || ''}>
-          <option value="" disabled>Select School</option>
-          {schools.map((school) => (
-            <option key={school.id} value={school.id}>{school.name}</option>
-          ))}
-        </select>
+    <div className="container">
+      <div className="classroom-container">
+        <h1>Select School, Class, and Section</h1>
+        <div className="form-group">
+          <label>School:</label>
+          <select onChange={handleSchoolChange} value={selectedSchool || ''}>
+            <option value="" disabled>Select School</option>
+            {schools.map((school) => (
+              <option key={school.id} value={school.id}>{school.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Class:</label>
+          <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
+            <option value="" disabled>Select Class</option>
+            {classes.map((cls) => (
+              <option key={cls.className} value={cls.className}>
+                {cls.className} ({cls.count})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Section:</label>
+          <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
+            <option value="" disabled>Select Section</option>
+            {sections.map((section) => (
+              <option key={section.sectionName} value={section.sectionName}>
+                {section.sectionName} ({section.count})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <h3>Subjects:</h3>
+          {selectedSectionInfo && (
+            <div className="subjects-container">
+              {selectedSectionInfo.subjects.length > 0 ? (
+                selectedSectionInfo.subjects.map(subject => (
+                  <div key={subject.id} className="subject-item">
+                    <span>{subject.subjectName || 'No Subject Name'}</span>
+                  </div>
+                ))
+              ) : (
+                <p>No subjects found for this section.</p>
+              )}
+            </div>
+          )}
+        </div>
+        <button 
+          onClick={handleSectionSelect} 
+          disabled={!selectedSection} 
+          className="select-button"
+        >
+          Select Section
+        </button>
       </div>
-      <div className="form-group">
-        <label>Class:</label>
-        <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
-          <option value="" disabled>Select Class</option>
-          {classes.map((cls) => (
-            <option key={cls.className} value={cls.className}>
-              {cls.className} ({cls.count})
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="form-group">
-        <label>Section:</label>
-        <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
-          <option value="" disabled>Select Section</option>
-          {sections.map((section) => (
-            <option key={section.sectionName} value={section.sectionName}>
-              {section.sectionName} ({section.count})
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <h3>Subjects:</h3>
-        {selectedSectionInfo && (
-          <div className="subjects-container">
-            {selectedSectionInfo.subjects.length > 0 ? (
-              selectedSectionInfo.subjects.map(subject => (
-                <div key={subject.id} className="subject-item">
-                  <span>{subject.subjectName || 'No Subject Name'}</span>
-                </div>
-              ))
-            ) : (
-              <p>No subjects found for this section.</p>
-            )}
-          </div>
-        )}
-      </div>
-      <button 
-        onClick={handleSectionSelect} 
-        disabled={!selectedSection} 
-        className="select-button"
-      >
-        Select Section
-      </button>
     </div>
   );
 };
