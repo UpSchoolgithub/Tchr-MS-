@@ -24,6 +24,7 @@ const MSchoolClassSection = () => {
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState(null);
   const [combinedSectionId, setCombinedSectionId] = useState('');
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
@@ -163,7 +164,15 @@ const MSchoolClassSection = () => {
       });
 
       setIsModalOpen(false);
-      fetchAssignments(); // Refresh assignments after assigning a period
+      setSuccessMessage('Assignment added successfully!');
+      
+      // Navigate back to the previous page after a short delay, if needed
+      setTimeout(() => {
+        navigate(-1); // Redirect to the previous page
+      }, 2000);
+
+      // Alternatively, you can reload the assignments without navigating
+      // fetchAssignments();
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
       setError('Error assigning period');
@@ -347,6 +356,8 @@ const MSchoolClassSection = () => {
         <button onClick={handleShowCalendar}>School Calendar</button>
         <button onClick={handleShowTimetable}>Timetable</button>
       </div>
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      {error && <div className="error-message">{error}</div>}
       {showCalendar && (
         <div className="calendar">
           <h2>School Calendar Events</h2>
