@@ -7,11 +7,11 @@ import './MClassroom.css'; // Import the CSS file for styling
 const MClassroom = () => {
   const { managerId, token } = useManagerAuth();
   const [schools, setSchools] = useState([]);
-  const [selectedSchool, setSelectedSchool] = useState(null);
+  const [selectedSchool, setSelectedSchool] = useState(localStorage.getItem('selectedSchool') || null);
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(localStorage.getItem('selectedClass') || null);
+  const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +35,21 @@ const MClassroom = () => {
 
     fetchSchools();
   }, [managerId, token]);
+
+  useEffect(() => {
+    if (selectedSchool) {
+      fetchClasses(selectedSchool);
+    }
+  }, [selectedSchool]);
+
+  useEffect(() => {
+    if (selectedClass) {
+      const classData = classes.find(cls => cls.className === selectedClass);
+      if (classData) {
+        fetchSections(classData.classInfo);
+      }
+    }
+  }, [selectedClass, classes]);
 
   const fetchClasses = async (schoolId) => {
     try {
@@ -119,11 +134,14 @@ const MClassroom = () => {
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
+    localStorage.setItem('selectedSchool', schoolId);
     fetchClasses(schoolId);
     setClasses([]);
     setSections([]);
     setSelectedClass(null);
     setSelectedSection(null);
+    localStorage.removeItem('selectedClass');
+    localStorage.removeItem('selectedSection');
   };
 
   const handleClassChange = (e) => {
@@ -132,14 +150,17 @@ const MClassroom = () => {
     if (classData) {
       const classInfoList = classData.classInfo;
       setSelectedClass(className);
+      localStorage.setItem('selectedClass', className);
       fetchSections(classInfoList);
       setSections([]);
       setSelectedSection(null);
+      localStorage.removeItem('selectedSection');
     }
   };
 
   const handleSectionChange = (e) => {
     setSelectedSection(e.target.value);
+    localStorage.setItem('selectedSection', e.target.value);
   };
 
   const handleSectionSelect = () => {
