@@ -57,9 +57,7 @@ const TimetableSettings = () => {
   }, [schoolId]);
 
   useEffect(() => {
-    if (settings.schoolEndTime && settings.assemblyEndTime && settings.durationPerPeriod) {
-      calculatePeriodTimings();
-    }
+    calculatePeriodTimings();
   }, [settings]);
 
   const calculatePeriodTimings = () => {
@@ -73,76 +71,55 @@ const TimetableSettings = () => {
       shortBreak1EndTime,
       shortBreak2StartTime,
       shortBreak2EndTime,
-      schoolEndTime,
-      reserveTimeStart,
-      reserveTimeEnd
+      schoolEndTime
     } = settings;
-  
+
     let currentStartTime = assemblyEndTime;
     const timings = [];
-  
+
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-  
-      // Check if the period exceeds school end time
-      if (convertToAmPm(nextStartTime) > convertToAmPm(schoolEndTime)) {
+
+      if (new Date(`1970-01-01T${nextStartTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`)) {
         alert('The periods exceed the school end time.');
         break;
       }
-  
-      // Adjust for lunch break overlap
+
+      // Check for overlaps with breaks or lunch
       if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
-        timings.push({ period: 'Lunch Break', start: lunchStartTime, end: lunchEndTime });
         currentStartTime = lunchEndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      }
-  
-      // Adjust for short break 1 overlap
-      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
-        timings.push({ period: 'Short Break 1', start: shortBreak1StartTime, end: shortBreak1EndTime });
+      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
         currentStartTime = shortBreak1EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      }
-  
-      // Adjust for short break 2 overlap
-      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
-        timings.push({ period: 'Short Break 2', start: shortBreak2StartTime, end: shortBreak2EndTime });
+      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
         currentStartTime = shortBreak2EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       }
-  
-      // Add the period to the timetable
-      timings.push({ period: i, start: currentStartTime, end: nextStartTime });
+
+      timings.push({ period: i, start: formatTime(currentStartTime), end: formatTime(nextStartTime) });
       currentStartTime = nextStartTime;
     }
-  
-    // Include the reserve time if set
-    if (reserveTimeStart && reserveTimeEnd) {
-      timings.push({ period: 'Reserve', start: reserveTimeStart, end: reserveTimeEnd });
-    }
-  
+
     setPeriodTimings(timings);
   };
-  
-  
 
   const addMinutes = (time, minutes) => {
     const [hour, minute] = time.split(':').map(Number);
     const date = new Date(0, 0, 0, hour, minute);
     date.setMinutes(date.getMinutes() + minutes);
-    return convertToAmPm(date.toTimeString().slice(0, 5));
+    return date.toTimeString().slice(0, 5);
   };
-  
 
-  const convertToAmPm = (time) => {
-    const [hour, minute] = time.split(':').map(Number);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const adjustedHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-    return `${adjustedHour}:${minute < 10 ? '0' + minute : minute} ${ampm}`;
-  };
-  
   const isOverlapping = (start1, end1, start2, end2) => {
     return start1 < end2 && end1 > start2;
+  };
+
+  const formatTime = (time) => {
+    let [hour, minute] = time.split(':').map(Number);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12; // Convert 24hr time to 12hr format
+    return `${hour}:${minute < 10 ? '0' + minute : minute} ${ampm}`;
   };
 
   const handleChange = (e) => {
