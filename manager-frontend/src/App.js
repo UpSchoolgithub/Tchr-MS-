@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { WebSocketProvider } from './WebSocketContext'; // Import the WebSocket context
 import MSidebar from './components/MSidebar';
 import MLoginForm from './components/MLoginForm';
@@ -18,6 +18,15 @@ import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContex
 
 function App() {
   const { token } = useManagerAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If the user is authenticated and is on the root path, redirect to dashboard
+    if (token && location.pathname === '/') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [token, location.pathname, navigate]);
 
   return (
     <ManagerAuthProvider>
@@ -27,7 +36,7 @@ function App() {
             {token && <MSidebar />}
             <div className="main-content">
               <Routes>
-                {/* Redirect root path to dashboard */}
+                {/* Redirect root path to dashboard if not on a specific route */}
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="/mlogin" element={<MLoginForm />} />
                 <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
@@ -40,8 +49,7 @@ function App() {
                 <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
                 <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
                 <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-                {/* Redirect all unknown paths to dashboard */}
-                <Route path="*" element={<Navigate to="/dashboard" />} />
+                {/* Removed the wildcard route to prevent unnecessary redirection */}
               </Routes>
             </div>
           </div>

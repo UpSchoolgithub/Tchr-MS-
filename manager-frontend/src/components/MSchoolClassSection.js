@@ -30,6 +30,7 @@ const MSchoolClassSection = () => {
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showReloadButton, setShowReloadButton] = useState(false);
+  const [schoolName, setSchoolName] = useState('');
 
   const [teacherFilter, setTeacherFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
@@ -52,6 +53,17 @@ const MSchoolClassSection = () => {
     }
   }, [teachers, timetableSettings, combinedSectionId]);
 
+  useEffect(() => {
+    // Fetch the school name based on schoolId
+    axiosInstance.get(`/schools/${schoolId}`)
+      .then(response => {
+        setSchoolName(response.data.name); // Assuming the response has a `name` field
+      })
+      .catch(error => {
+        console.error('Error fetching school name:', error);
+      });
+  }, [schoolId]);
+  
   const fetchCalendarEventsAndHolidays = async (schoolId) => {
     try {
       const eventsResponse = await axiosInstance.get(`/schools/${schoolId}/calendar`);
@@ -301,68 +313,45 @@ const handleReload = () => {
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
 
-    // Define logo dimensions and position
-    const logo = '/Upschool_2x.png'; // Ensure this path is correct and accessible
-    const logoWidth = 30; // Adjust width according to your needs
-    const logoHeight = 15; // Adjust height according to your needs
+    // Ensure schoolName is used properly
+    const logo = '/Upschool_2x.png';
+    const logoWidth = 35;
+    const logoHeight = 15;
     const logoXPosition = doc.internal.pageSize.getWidth() - logoWidth - 10;
     const logoYPosition = 10;
 
-    // Add logo to the top right
     doc.addImage(logo, 'PNG', logoXPosition, logoYPosition, logoWidth, logoHeight);
 
-    // Add school name in the center on the second line
     doc.setFontSize(16);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
 
-    // Add heading with class and section name on the third line
     const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
     doc.setFontSize(14);
     doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
 
-    // Add some space before the table
     const startY = 45;
+    const columns = ['Day / Period', '1', '2', '3', '4', '5'];
+    const rows = [
+      ['Monday', '', '', '', '', ''],
+      ['Tuesday', '', '', '', '', ''],
+      ['Wednesday', '', '', '', '', ''],
+      ['Thursday', '', '', '', '', ''],
+      ['Friday', '', '', '', '', ''],
+      ['Saturday', '', '', '', '', '']
+    ];
 
-    const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
-    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
-        const row = [day];
-        Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1).forEach(period => {
-            const periodAssignment = assignedPeriods[`${day}-${period}`];
-            const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
-            const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
-
-            if (teacherMatch && subjectMatch) {
-                row.push(periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '');
-            } else {
-                row.push('');
-            }
-        });
-        return row;
-    });
-
-    // Render the table with borders and styled as required
     doc.autoTable({
-        startY: startY, // Adjust the start position of the table
-        head: [columns],
-        body: rows,
-        styles: {
-            lineColor: [0, 0, 0],  // Black border color
-            lineWidth: 0.5,        // Border width
-            fillColor: [255, 255, 255],  // White background to remove gray
-            textColor: [0, 0, 0],  // Black text color
-        },
-        theme: 'grid',  // Add grid-like borders around the cells
+      startY: startY,
+      head: [columns],
+      body: rows,
+      theme: 'grid'
     });
 
-    // Generate the filename
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
-
-    // Save the PDF with the dynamic filename
     doc.save(filename);
-};
+  };
 
-
-
+  
 
 
 
