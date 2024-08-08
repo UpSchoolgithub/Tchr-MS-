@@ -29,7 +29,6 @@ const TimetableSettings = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch settings from API or use default settings
     const fetchTimetable = async () => {
       try {
         const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
@@ -302,97 +301,117 @@ const TimetableSettings = () => {
           <div className="form-group-row">
             <div className="form-group">
               <label>School Start Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'schoolStartTime')}
-                value={settings.schoolStartTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'schoolStartTime')}
+                  value={settings.schoolStartTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>School End Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'schoolEndTime')}
-                value={settings.schoolEndTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'schoolEndTime')}
+                  value={settings.schoolEndTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Assembly Start Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'assemblyStartTime')}
-                value={settings.assemblyStartTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'assemblyStartTime')}
+                  value={settings.assemblyStartTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Assembly End Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'assemblyEndTime')}
-                value={settings.assemblyEndTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'assemblyEndTime')}
+                  value={settings.assemblyEndTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
           </div>
           <div className="form-group-row">
             <div className="form-group">
               <label>Lunch Break Start Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'lunchStartTime')}
-                value={settings.lunchStartTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'lunchStartTime')}
+                  value={settings.lunchStartTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Lunch Break End Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'lunchEndTime')}
-                value={settings.lunchEndTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'lunchEndTime')}
+                  value={settings.lunchEndTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
           </div>
           <div className="form-group-row">
             <div className="form-group">
               <label>Short Break 1 Start Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'shortBreak1StartTime')}
-                value={settings.shortBreak1StartTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'shortBreak1StartTime')}
+                  value={settings.shortBreak1StartTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Short Break 1 End Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'shortBreak1EndTime')}
-                value={settings.shortBreak1EndTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'shortBreak1EndTime')}
+                  value={settings.shortBreak1EndTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Short Break 2 Start Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'shortBreak2StartTime')}
-                value={settings.shortBreak2StartTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'shortBreak2StartTime')}
+                  value={settings.shortBreak2StartTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Short Break 2 End Time:</label>
-              <TimePicker
-                onChange={(value) => handleChangeTime(value, 'shortBreak2EndTime')}
-                value={settings.shortBreak2EndTime}
-                format="h:mm a"
-                disableClock
-              />
+              <div className="time-picker-wrapper">
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'shortBreak2EndTime')}
+                  value={settings.shortBreak2EndTime}
+                  format="h:mm a"
+                  disableClock
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -430,19 +449,23 @@ const TimetableSettings = () => {
                     </label>
                     {settings.reserveDay[day]?.open && (
                       <div className="day-time-group">
-                        <TimePicker
-                          onChange={(value) => handleChangeTime(value, `reserveDay-${day}-start`)}
-                          value={settings.reserveDay[day]?.start || ''}
-                          format="h:mm a"
-                          disableClock
-                        />
+                        <div className="time-picker-wrapper">
+                          <TimePicker
+                            onChange={(value) => handleChangeTime(value, `reserveDay-${day}-start`)}
+                            value={settings.reserveDay[day]?.start || ''}
+                            format="h:mm a"
+                            disableClock
+                          />
+                        </div>
                         <span>to</span>
-                        <TimePicker
-                          onChange={(value) => handleChangeTime(value, `reserveDay-${day}-end`)}
-                          value={settings.reserveDay[day]?.end || ''}
-                          format="h:mm a"
-                          disableClock
-                        />
+                        <div className="time-picker-wrapper">
+                          <TimePicker
+                            onChange={(value) => handleChangeTime(value, `reserveDay-${day}-end`)}
+                            value={settings.reserveDay[day]?.end || ''}
+                            format="h:mm a"
+                            disableClock
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -460,19 +483,23 @@ const TimetableSettings = () => {
                 </label>
                 {settings.applyToAll && (
                   <div className="day-time-group">
-                    <TimePicker
-                      onChange={(value) => handleChangeTime(value, 'reserveTimeStart')}
-                      value={settings.reserveTimeStart}
-                      format="h:mm a"
-                      disableClock
-                    />
+                    <div className="time-picker-wrapper">
+                      <TimePicker
+                        onChange={(value) => handleChangeTime(value, 'reserveTimeStart')}
+                        value={settings.reserveTimeStart}
+                        format="h:mm a"
+                        disableClock
+                      />
+                    </div>
                     <span>to</span>
-                    <TimePicker
-                      onChange={(value) => handleChangeTime(value, 'reserveTimeEnd')}
-                      value={settings.reserveTimeEnd}
-                      format="h:mm a"
-                      disableClock
-                    />
+                    <div className="time-picker-wrapper">
+                      <TimePicker
+                        onChange={(value) => handleChangeTime(value, 'reserveTimeEnd')}
+                        value={settings.reserveTimeEnd}
+                        format="h:mm a"
+                        disableClock
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -482,21 +509,25 @@ const TimetableSettings = () => {
             <>
               <div className="form-group">
                 <label>Reserve Time Start:</label>
-                <TimePicker
-                  onChange={(value) => handleChangeTime(value, 'reserveTimeStart')}
-                  value={settings.reserveTimeStart}
-                  format="h:mm a"
-                  disableClock
-                />
+                <div className="time-picker-wrapper">
+                  <TimePicker
+                    onChange={(value) => handleChangeTime(value, 'reserveTimeStart')}
+                    value={settings.reserveTimeStart}
+                    format="h:mm a"
+                    disableClock
+                  />
+                </div>
               </div>
               <div className="form-group">
                 <label>Reserve Time End:</label>
-                <TimePicker
-                  onChange={(value) => handleChangeTime(value, 'reserveTimeEnd')}
-                  value={settings.reserveTimeEnd}
-                  format="h:mm a"
-                  disableClock
-                />
+                <div className="time-picker-wrapper">
+                  <TimePicker
+                    onChange={(value) => handleChangeTime(value, 'reserveTimeEnd')}
+                    value={settings.reserveTimeEnd}
+                    format="h:mm a"
+                    disableClock
+                  />
+                </div>
               </div>
             </>
           )}
@@ -508,4 +539,3 @@ const TimetableSettings = () => {
 };
 
 export default TimetableSettings;
-
