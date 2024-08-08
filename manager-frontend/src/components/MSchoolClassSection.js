@@ -238,12 +238,13 @@ const handleReload = () => {
 
   const renderTable = () => {
     if (!timetableSettings) return null;
-
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
-
+  
     return (
       <div>
         <div className="filters">
+          {/* Filters for Teacher and Subject */}
           <label>
             Filter by Teacher:
             <select onChange={handleTeacherFilterChange} value={teacherFilter}>
@@ -285,7 +286,7 @@ const handleReload = () => {
                   const periodAssignment = assignedPeriods[`${day}-${period}`];
                   const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
                   const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
-
+  
                   if (teacherMatch && subjectMatch) {
                     return (
                       <td key={period} onClick={() => handleOpenModal(day, period)}>
@@ -309,48 +310,45 @@ const handleReload = () => {
       </div>
     );
   };
-
+  
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
-
-    // Ensure schoolName is used properly
-    const logo = '/Upschool_2x.png';
-    const logoWidth = 35;
-    const logoHeight = 15;
-    const logoXPosition = doc.internal.pageSize.getWidth() - logoWidth - 10;
-    const logoYPosition = 10;
-
-    doc.addImage(logo, 'PNG', logoXPosition, logoYPosition, logoWidth, logoHeight);
-
+  
+    const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => (i + 1).toString());
+  
+    // Prepare table rows dynamically based on periods
+    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+      const row = [day];
+      periods.forEach(period => {
+        const periodAssignment = assignedPeriods[`${day}-${period}`];
+        const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+        row.push(entry);
+      });
+      return row;
+    });
+  
+    // Header for periods
+    const columns = ['Day / Period', ...periods];
+  
+    // Generate the PDF
     doc.setFontSize(16);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
-
+  
     const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
     doc.setFontSize(14);
     doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
-
-    const startY = 45;
-    const columns = ['Day / Period', '1', '2', '3', '4', '5'];
-    const rows = [
-      ['Monday', '', '', '', '', ''],
-      ['Tuesday', '', '', '', '', ''],
-      ['Wednesday', '', '', '', '', ''],
-      ['Thursday', '', '', '', '', ''],
-      ['Friday', '', '', '', '', ''],
-      ['Saturday', '', '', '', '', '']
-    ];
-
+  
     doc.autoTable({
-      startY: startY,
+      startY: 45,
       head: [columns],
       body: rows,
       theme: 'grid'
     });
-
+  
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
-
+  
   
 
 
