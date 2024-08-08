@@ -28,8 +28,7 @@ const MSchoolClassSection = () => {
   const [error, setError] = useState(null);
   const [combinedSectionId, setCombinedSectionId] = useState('');
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
-  const [showDetails, setShowDetails] = useState(false); // Hide details by default
-  const [showSubjects, setShowSubjects] = useState(false); // Hide subjects by default
+  const [showDetails, setShowDetails] = useState(false);
 
   const [teacherFilter, setTeacherFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
@@ -84,7 +83,6 @@ const MSchoolClassSection = () => {
 
   const fetchAssignments = async () => {
     try {
-      console.log(`Fetching assignments for Combined Section ID: ${combinedSectionId}`);
       const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionName}/assignments`);
       const assignments = response.data.reduce((acc, entry) => {
         const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
@@ -144,7 +142,7 @@ const MSchoolClassSection = () => {
             day: selectedPeriod.day,
         };
 
-        const response = await axiosInstance.post(`/timetable/assign`, requestData);
+        await axiosInstance.post(`/timetable/assign`, requestData);
 
         const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
         const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
@@ -156,7 +154,6 @@ const MSchoolClassSection = () => {
             subjectId: selectedSubject
         };
 
-        // Update state immediately after assignment
         setAssignedPeriods(prevAssignedPeriods => ({
             ...prevAssignedPeriods,
             [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
@@ -168,7 +165,7 @@ const MSchoolClassSection = () => {
         console.error('Error assigning period:', error.response || error);
         setError('Error assigning period');
     }
-};
+  };
 
 
   const handleFilterChange = (e) => {
@@ -286,62 +283,81 @@ const MSchoolClassSection = () => {
 
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
+    const logo = 'path_to_your_logo_image_or_url'; // Replace with your logo path or URL
+
+    // Add logo
+    doc.addImage(logo, 'PNG', 10, 10, 50, 20);
+
+    // Add heading with class and section name
+    doc.setFontSize(18);
+    doc.text(`Timetable of Class: ${classId}, Section: ${sectionName}`, 105, 20, null, null, 'center');
+
+    // Add some space before the table
+    doc.setFontSize(12);
+    doc.text(`School ID: ${schoolId}`, 105, 30, null, null, 'center');
 
     const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
     const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
-      const row = [day];
-      Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1).forEach(period => {
-        const periodAssignment = assignedPeriods[`${day}-${period}`];
-        const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
-        const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
+        const row = [day];
+        Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1).forEach(period => {
+            const periodAssignment = assignedPeriods[`${day}-${period}`];
+            const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
+            const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
 
-        if (teacherMatch && subjectMatch) {
-          row.push(periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '');
-        } else {
-          row.push('');
-        }
-      });
-      return row;
+            if (teacherMatch && subjectMatch) {
+                row.push(periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '');
+            } else {
+                row.push('');
+            }
+        });
+        return row;
     });
 
+    // Render the table with borders
     doc.autoTable({
-      head: [columns],
-      body: rows,
+        head: [columns],
+        body: rows,
+        styles: {
+            lineColor: [0, 0, 0],  // Black border color
+            lineWidth: 0.5,        // Border width
+            fillColor: [255, 255, 255],  // White background to remove gray
+            textColor: [0, 0, 0],  // Black text color
+        },
+        theme: 'grid',  // Add grid-like borders around the cells
     });
 
+    // Save the PDF
     doc.save('timetable.pdf');
-  };
+};
+
 
   return (
     <div className="container">
       <div className="header">
-        <h1>Class and Section Details</h1>
-        <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
-          {showDetails ? 'Hide Details' : 'Show Details'}
-        </button>
-        <button className="details-button" onClick={() => setShowSubjects(!showSubjects)}>
-          {showSubjects ? 'Hide Subjects' : 'Show Subjects'}
+        <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
+          {showDetails ? 'Hide Details' : 'More Details'}
         </button>
       </div>
       {showDetails && (
-        <div className="details">
-          <p>School ID: {schoolId}</p>
-          <p>Class ID: {classId}</p>
-          <p>Section Name: {sectionName}</p>
-        </div>
-      )}
-      {showSubjects && (
-        <div className="subjects">
-          <h3>Subjects:</h3>
-          {subjects.length > 0 ? (
-            subjects.map(subject => (
-              <div key={subject.id} className="subject">
-                <span>{subject.subjectName || 'No Subject Name'}</span>
-              </div>
-            ))
-          ) : (
-            <p>No subjects found for this section.</p>
-          )}
+        <div className="details-section">
+          <div className="details">
+            <h3>Class and Section Details</h3>
+            <p>School ID: {schoolId}</p>
+            <p>Class ID: {classId}</p>
+            <p>Section Name: {sectionName}</p>
+          </div>
+          <div className="subjects">
+            <h3>Subjects:</h3>
+            {subjects.length > 0 ? (
+              subjects.map(subject => (
+                <div key={subject.id} className="subject">
+                  <span>{subject.subjectName || 'No Subject Name'}</span>
+                </div>
+              ))
+            ) : (
+              <p>No subjects found for this section.</p>
+            )}
+          </div>
         </div>
       )}
       <div className="buttons">
