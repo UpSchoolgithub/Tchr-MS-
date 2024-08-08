@@ -5,7 +5,7 @@ import { useManagerAuth } from './context/ManagerAuthContext';
 
 const ProtectedRoute = ({ element }) => {
   const { token } = useManagerAuth();
-  return token ? element : <Navigate to="/login" />;
+  return token ? element : <Navigate to="/mlogin" />;
 };
 
 export default ProtectedRoute;

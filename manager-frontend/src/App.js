@@ -40,7 +40,7 @@ function AppContent() {
     }
     // Redirect to login if not authenticated
     if (!token && location.pathname !== '/login') {
-      navigate('/login', { replace: true });
+      navigate('/mlogin', { replace: true });
     }
   }, [token, location.pathname, navigate]);
 
