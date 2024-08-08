@@ -29,17 +29,21 @@ function App() {
 }
 
 function AppContent() {
-  const { token } = useManagerAuth();
+  const { token, setAuthToken } = useManagerAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If the user is authenticated and is on the root path, redirect to dashboard
-    if (token && location.pathname === '/') {
-      navigate('/dashboard', { replace: true });
+    // Load token from local storage to maintain session
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+      setAuthToken(storedToken);
     }
-    // Redirect to login if not authenticated
-    if (!token && location.pathname !== '/login') {
+  }, [setAuthToken]);
+
+  useEffect(() => {
+    // Redirect to mlogin if not authenticated and not already on login page
+    if (!token && location.pathname !== '/mlogin') {
       navigate('/mlogin', { replace: true });
     }
   }, [token, location.pathname, navigate]);
@@ -49,8 +53,7 @@ function AppContent() {
       {token && <MSidebar />}
       <div className="main-content">
         <Routes>
-          {/* Redirect root path to dashboard if not on a specific route */}
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/" element={<Navigate to={token ? '/dashboard' : '/mlogin'} replace />} />
           <Route path="/mlogin" element={<MLoginForm />} />
           <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
           <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
@@ -62,7 +65,8 @@ function AppContent() {
           <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
           <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
           <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-          {/* Removed the wildcard route to prevent unnecessary redirection */}
+          {/* Optionally, add a 404 page */}
+          <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
       </div>
     </div>
