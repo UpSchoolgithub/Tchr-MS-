@@ -56,10 +56,9 @@ const MSchoolClassSection = () => {
   }, [teachers, timetableSettings, combinedSectionId]);
 
   useEffect(() => {
-    // Fetch the school name based on schoolId
     axiosInstance.get(`/schools/${schoolId}`)
       .then(response => {
-        setSchoolName(response.data.name); // Assuming the response has a `name` field
+        setSchoolName(response.data.name);
       })
       .catch(error => {
         console.error('Error fetching school name:', error);
@@ -67,7 +66,6 @@ const MSchoolClassSection = () => {
   }, [schoolId]);
   
   useEffect(() => {
-    // Save the state of the timetable view in local storage
     localStorage.setItem('showTimetable', JSON.stringify(showTimetable));
   }, [showTimetable]);
 
@@ -181,7 +179,7 @@ const MSchoolClassSection = () => {
   
       setIsModalOpen(false);
       setSuccessMessage('Assignment added successfully!');
-      setShowReloadButton(true); // Show the reload button
+      setShowReloadButton(true);
   
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
@@ -195,7 +193,7 @@ const MSchoolClassSection = () => {
   };
 
   const handleReload = () => {
-    navigate(0); // Reloads the current route without redirecting to the dashboard
+    navigate(0);
   };
 
   const handleFilterChange = (e) => {
@@ -258,17 +256,17 @@ const MSchoolClassSection = () => {
             <tr key={day}>
               <td>{day}</td>
               {periods.map(period => {
-                if (timetableSettings.breaks.includes(period)) {
+                if (timetableSettings.breaks && timetableSettings.breaks.includes(period)) {
                   return (
-                    <td key={period} className="break">Short Break 1</td>
+                    <td key={period} className="break">Short Break</td>
                   );
                 }
-                if (timetableSettings.lunch === period) {
+                if (timetableSettings.lunch && timetableSettings.lunch === period) {
                   return (
                     <td key={period} className="lunch">Lunch</td>
                   );
                 }
-                if (timetableSettings.reservedTime === period) {
+                if (timetableSettings.reservedTime && timetableSettings.reservedTime === period) {
                   return (
                     <td key={period} className="reserved">Reserved Time</td>
                   );
@@ -294,19 +292,17 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
-  
+
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => (i + 1).toString());
     
-    // Prepare table rows dynamically based on periods
-    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
       const row = [day];
       periods.forEach(period => {
         if (timetableSettings.breaks && timetableSettings.breaks.includes(period)) {
-          row.push('Short Break 1');
+          row.push('Short Break');
         } else if (timetableSettings.lunch === period) {
           row.push('Lunch');
         } else if (timetableSettings.reservedTime === period) {
@@ -320,10 +316,8 @@ const MSchoolClassSection = () => {
       return row;
     });
   
-    // Header for periods
     const columns = ['Day / Period', ...periods];
   
-    // Generate the PDF
     doc.setFontSize(16);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
   
@@ -341,8 +335,6 @@ const MSchoolClassSection = () => {
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
-  
-  
   
   return (
     <div className="container">
@@ -376,6 +368,7 @@ const MSchoolClassSection = () => {
       <div className="buttons">
         <button onClick={handleShowCalendar}>School Calendar</button>
         <button onClick={handleShowTimetable}>Timetable</button>
+        <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
       </div>
       {successMessage && <div className="success-message">{successMessage}</div>}
       {error && <div className="error-message">{error}</div>}
@@ -421,7 +414,6 @@ const MSchoolClassSection = () => {
         </div>
       )}
   
-      {/* Modal for assigning period */}
       <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
         <h2>Assign Period</h2>
         <form onSubmit={handleAssignPeriod}>
@@ -455,7 +447,6 @@ const MSchoolClassSection = () => {
           <button type="button" onClick={handleCloseModal}>Cancel</button>
         </form>
   
-        {/* Reload Button */}
         {showReloadButton && (
           <button onClick={handleReload} className="reload-button">
             Reload Page
@@ -463,7 +454,6 @@ const MSchoolClassSection = () => {
         )}
       </Modal>
   
-      {/* Modal for edit warning */}
       <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
         <h2>Warning</h2>
         <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
