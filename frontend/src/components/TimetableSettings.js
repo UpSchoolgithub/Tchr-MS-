@@ -80,7 +80,7 @@ const TimetableSettings = () => {
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
 
-      if (new Date(`1970-01-01T${nextStartTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`)) {
+      if (convertTo24Hour(nextStartTime) > convertTo24Hour(schoolEndTime)) {
         alert('The periods exceed the school end time.');
         break;
       }
@@ -97,7 +97,7 @@ const TimetableSettings = () => {
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       }
 
-      timings.push({ period: i, start: formatTime(currentStartTime), end: formatTime(nextStartTime) });
+      timings.push({ period: i, start: currentStartTime, end: nextStartTime });
       currentStartTime = nextStartTime;
     }
 
@@ -105,21 +105,32 @@ const TimetableSettings = () => {
   };
 
   const addMinutes = (time, minutes) => {
-    const [hour, minute] = time.split(':').map(Number);
-    const date = new Date(0, 0, 0, hour, minute);
+    const date = new Date(`1970-01-01T${convertTo24Hour(time)}:00`);
     date.setMinutes(date.getMinutes() + minutes);
-    return date.toTimeString().slice(0, 5);
+    return formatTime(date);
   };
 
   const isOverlapping = (start1, end1, start2, end2) => {
-    return start1 < end2 && end1 > start2;
+    return convertTo24Hour(start1) < convertTo24Hour(end2) && convertTo24Hour(end1) > convertTo24Hour(start2);
   };
 
-  const formatTime = (time) => {
-    let [hour, minute] = time.split(':').map(Number);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12; // Convert 24hr time to 12hr format
-    return `${hour}:${minute < 10 ? '0' + minute : minute} ${ampm}`;
+  const convertTo24Hour = (time) => {
+    let [hours, minutes] = time.split(/[: ]/);
+    const ampm = time.slice(-2).toUpperCase();
+    if (ampm === 'PM' && hours !== '12') {
+      hours = parseInt(hours, 10) + 12;
+    } else if (ampm === 'AM' && hours === '12') {
+      hours = '00';
+    }
+    return `${hours}:${minutes}`;
+  };
+
+  const formatTime = (date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // Convert 24hr time to 12hr format
+    return `${hours}:${minutes} ${ampm}`;
   };
 
   const handleChange = (e) => {
@@ -171,7 +182,7 @@ const TimetableSettings = () => {
 
     const timeOrderValid = (start, end) => {
       if (start && end) {
-        return new Date(`1970-01-01T${start}:00`) < new Date(`1970-01-01T${end}:00`);
+        return new Date(`1970-01-01T${convertTo24Hour(start)}:00`) < new Date(`1970-01-01T${convertTo24Hour(end)}:00`);
       }
       return true;
     };
@@ -191,10 +202,11 @@ const TimetableSettings = () => {
     if (!timeOrderValid(shortBreak2StartTime, shortBreak2EndTime)) {
       return 'Short Break 2 Start Time should be earlier than Short Break 2 End Time.';
     }
-    if (schoolEndTime && (new Date(`1970-01-01T${assemblyEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${lunchEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
+    if (new Date(`1970-01-01T${convertTo24Hour(schoolEndTime)}:00`) <
+      new Date(`1970-01-01T${convertTo24Hour(assemblyEndTime)}:00`) ||
+      new Date(`1970-01-01T${convertTo24Hour(lunchEndTime)}:00`) > new Date(`1970-01-01T${convertTo24Hour(schoolEndTime)}:00`) ||
+      new Date(`1970-01-01T${convertTo24Hour(shortBreak1EndTime)}:00`) > new Date(`1970-01-01T${convertTo24Hour(schoolEndTime)}:00`) ||
+      new Date(`1970-01-01T${convertTo24Hour(shortBreak2EndTime)}:00`) > new Date(`1970-01-01T${convertTo24Hour(schoolEndTime)}:00`)) {
       return 'All activities should end before School End Time.';
     }
 
@@ -266,7 +278,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>School Start Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="08:30 AM"
                 name="schoolStartTime"
                 value={settings.schoolStartTime}
                 onChange={handleChange}
@@ -276,7 +289,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>School End Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="03:45 PM"
                 name="schoolEndTime"
                 value={settings.schoolEndTime}
                 onChange={handleChange}
@@ -286,7 +300,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Assembly Start Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="08:30 AM"
                 name="assemblyStartTime"
                 value={settings.assemblyStartTime}
                 onChange={handleChange}
@@ -295,7 +310,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Assembly End Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="08:45 AM"
                 name="assemblyEndTime"
                 value={settings.assemblyEndTime}
                 onChange={handleChange}
@@ -306,7 +322,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Lunch Break Start Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="12:00 PM"
                 name="lunchStartTime"
                 value={settings.lunchStartTime}
                 onChange={handleChange}
@@ -315,7 +332,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Lunch Break End Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="12:30 PM"
                 name="lunchEndTime"
                 value={settings.lunchEndTime}
                 onChange={handleChange}
@@ -326,7 +344,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Short Break 1 Start Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="10:15 AM"
                 name="shortBreak1StartTime"
                 value={settings.shortBreak1StartTime}
                 onChange={handleChange}
@@ -335,7 +354,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Short Break 1 End Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="10:30 AM"
                 name="shortBreak1EndTime"
                 value={settings.shortBreak1EndTime}
                 onChange={handleChange}
@@ -344,7 +364,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Short Break 2 Start Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="02:00 PM"
                 name="shortBreak2StartTime"
                 value={settings.shortBreak2StartTime}
                 onChange={handleChange}
@@ -353,7 +374,8 @@ const TimetableSettings = () => {
             <div className="form-group">
               <label>Short Break 2 End Time:</label>
               <input
-                type="time"
+                type="text"
+                placeholder="02:15 PM"
                 name="shortBreak2EndTime"
                 value={settings.shortBreak2EndTime}
                 onChange={handleChange}
@@ -396,14 +418,16 @@ const TimetableSettings = () => {
                     {settings.reserveDay[day]?.open && (
                       <div className="day-time-group">
                         <input
-                          type="time"
+                          type="text"
+                          placeholder="03:00 PM"
                           name={`reserveDay-${day}-start`}
                           value={settings.reserveDay[day]?.start || ''}
                           onChange={handleChange}
                         />
                         <span>to</span>
                         <input
-                          type="time"
+                          type="text"
+                          placeholder="04:00 PM"
                           name={`reserveDay-${day}-end`}
                           value={settings.reserveDay[day]?.end || ''}
                           onChange={handleChange}
@@ -426,14 +450,16 @@ const TimetableSettings = () => {
                 {settings.applyToAll && (
                   <div className="day-time-group">
                     <input
-                      type="time"
+                      type="text"
+                      placeholder="03:00 PM"
                       name="reserveTimeStart"
                       value={settings.reserveTimeStart}
                       onChange={handleChange}
                     />
                     <span>to</span>
                     <input
-                      type="time"
+                      type="text"
+                      placeholder="04:00 PM"
                       name="reserveTimeEnd"
                       value={settings.reserveTimeEnd}
                       onChange={handleChange}
@@ -448,7 +474,8 @@ const TimetableSettings = () => {
               <div className="form-group">
                 <label>Reserve Time Start:</label>
                 <input
-                  type="time"
+                  type="text"
+                  placeholder="03:00 PM"
                   name="reserveTimeStart"
                   value={settings.reserveTimeStart}
                   onChange={handleChange}
@@ -457,7 +484,8 @@ const TimetableSettings = () => {
               <div className="form-group">
                 <label>Reserve Time End:</label>
                 <input
-                  type="time"
+                  type="text"
+                  placeholder="04:00 PM"
                   name="reserveTimeEnd"
                   value={settings.reserveTimeEnd}
                   onChange={handleChange}
