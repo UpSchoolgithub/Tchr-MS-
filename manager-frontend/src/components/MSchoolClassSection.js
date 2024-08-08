@@ -15,7 +15,9 @@ const MSchoolClassSection = () => {
   const [holidays, setHolidays] = useState([]);
   const [filter, setFilter] = useState('all');
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showTimetable, setShowTimetable] = useState(false);
+  const [showTimetable, setShowTimetable] = useState(
+    () => JSON.parse(localStorage.getItem('showTimetable')) || false
+  );
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [timetableSettings, setTimetableSettings] = useState(null);
@@ -64,6 +66,11 @@ const MSchoolClassSection = () => {
       });
   }, [schoolId]);
   
+  useEffect(() => {
+    // Save the state of the timetable view in local storage
+    localStorage.setItem('showTimetable', JSON.stringify(showTimetable));
+  }, [showTimetable]);
+
   const fetchCalendarEventsAndHolidays = async (schoolId) => {
     try {
       const eventsResponse = await axiosInstance.get(`/schools/${schoolId}/calendar`);
@@ -174,11 +181,11 @@ const MSchoolClassSection = () => {
   
       setIsModalOpen(false);
       setSuccessMessage('Assignment added successfully!');
+      setShowReloadButton(true); // Show the reload button
   
       // Re-fetch assignments to update the table (if necessary)
       fetchAssignments();
   
-      // No full reload needed
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
       if (error.response) {
@@ -190,13 +197,9 @@ const MSchoolClassSection = () => {
     }
   };
 
-  
   const handleReload = () => {
     navigate(0); // Reloads the current route without redirecting to the dashboard
   };
-  
-
-
 
   const handleFilterChange = (e) => {
     setFilter(e.target.value);
@@ -350,138 +353,134 @@ const MSchoolClassSection = () => {
     doc.save(filename);
   };
   
-  
-
-
-
-return (
-  <div className="container">
-    <div className="header">
-      <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
-        {showDetails ? 'Hide Details' : 'More Details'}
-      </button>
-    </div>
-    {showDetails && (
-      <div className="details-section">
-        <div className="details">
-          <h3>Class and Section Details</h3>
-          <p>School ID: {schoolId}</p>
-          <p>Class ID: {classId}</p>
-          <p>Section Name: {sectionName}</p>
-        </div>
-        <div className="subjects">
-          <h3>Subjects:</h3>
-          {subjects.length > 0 ? (
-            subjects.map(subject => (
-              <div key={subject.id} className="subject">
-                <span>{subject.subjectName || 'No Subject Name'}</span>
-              </div>
-            ))
-          ) : (
-            <p>No subjects found for this section.</p>
-          )}
-        </div>
+  return (
+    <div className="container">
+      <div className="header">
+        <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
+          {showDetails ? 'Hide Details' : 'More Details'}
+        </button>
       </div>
-    )}
-    <div className="buttons">
-      <button onClick={handleShowCalendar}>School Calendar</button>
-      <button onClick={handleShowTimetable}>Timetable</button>
-    </div>
-    {successMessage && <div className="success-message">{successMessage}</div>}
-    {error && <div className="error-message">{error}</div>}
-    {showCalendar && (
-      <div className="calendar">
-        <h2>School Calendar Events</h2>
-        <label>
-          Filter:
-          <select onChange={handleFilterChange} value={filter}>
-            <option value="all">All</option>
-            <option value="events">Events</option>
-            <option value="holidays">Holidays</option>
-          </select>
-        </label>
-        <div className="events">
-          {filteredList.length > 0 ? (
-            <table className="calendar-table">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredList.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.eventName || item.name}</td>
-                    <td>{formatDate(item.date || item.startDate)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No events found for this school.</p>
-          )}
-        </div>
-      </div>
-    )}
-    {showTimetable && (
-      <div className="timetable">
-        <h2>School Timetable</h2>
-        {renderTable()}
-      </div>
-    )}
-
-    {/* Modal for assigning period */}
-    <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
-      <h2>Assign Period</h2>
-      <form onSubmit={handleAssignPeriod}>
-        <div>
-          <label>Teacher:</label>
-          <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
-            <option value="">Select a teacher</option>
-            {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
-                {teacher.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Subject:</label>
-          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
-            <option value="">Select a subject</option>
+      {showDetails && (
+        <div className="details-section">
+          <div className="details">
+            <h3>Class and Section Details</h3>
+            <p>School ID: {schoolId}</p>
+            <p>Class ID: {classId}</p>
+            <p>Section Name: {sectionName}</p>
+          </div>
+          <div className="subjects">
+            <h3>Subjects:</h3>
             {subjects.length > 0 ? (
-              subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.subjectName}
-                </option>
+              subjects.map(subject => (
+                <div key={subject.id} className="subject">
+                  <span>{subject.subjectName || 'No Subject Name'}</span>
+                </div>
               ))
             ) : (
-              <option disabled>No subjects available</option>
+              <p>No subjects found for this section.</p>
             )}
-          </select>
+          </div>
         </div>
-        <button type="submit">Assign</button>
-        <button type="button" onClick={handleCloseModal}>Cancel</button>
-      </form>
-      
-      {/* Reload Button */}
-      {showReloadButton && (
-        <button onClick={handleReload} className="reload-button">
-          Reload Page
-        </button>
       )}
-    </Modal>
-
-    {/* Modal for edit warning */}
-    <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
-      <h2>Warning</h2>
-      <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
-      <button onClick={handleEditConfirmed}>Yes</button>
-      <button onClick={handleCloseEditWarning}>No</button>
-    </Modal>
-  </div>
-);
+      <div className="buttons">
+        <button onClick={handleShowCalendar}>School Calendar</button>
+        <button onClick={handleShowTimetable}>Timetable</button>
+      </div>
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      {error && <div className="error-message">{error}</div>}
+      {showCalendar && (
+        <div className="calendar">
+          <h2>School Calendar Events</h2>
+          <label>
+            Filter:
+            <select onChange={handleFilterChange} value={filter}>
+              <option value="all">All</option>
+              <option value="events">Events</option>
+              <option value="holidays">Holidays</option>
+            </select>
+          </label>
+          <div className="events">
+            {filteredList.length > 0 ? (
+              <table className="calendar-table">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredList.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.eventName || item.name}</td>
+                      <td>{formatDate(item.date || item.startDate)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No events found for this school.</p>
+            )}
+          </div>
+        </div>
+      )}
+      {showTimetable && (
+        <div className="timetable">
+          <h2>School Timetable</h2>
+          {renderTable()}
+        </div>
+      )}
+  
+      {/* Modal for assigning period */}
+      <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
+        <h2>Assign Period</h2>
+        <form onSubmit={handleAssignPeriod}>
+          <div>
+            <label>Teacher:</label>
+            <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
+              <option value="">Select a teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>Subject:</label>
+            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
+              <option value="">Select a subject</option>
+              {subjects.length > 0 ? (
+                subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.subjectName}
+                  </option>
+                ))
+              ) : (
+                <option disabled>No subjects available</option>
+              )}
+            </select>
+          </div>
+          <button type="submit">Assign</button>
+          <button type="button" onClick={handleCloseModal}>Cancel</button>
+        </form>
+        
+        {/* Reload Button */}
+        {showReloadButton && (
+          <button onClick={handleReload} className="reload-button">
+            Reload Page
+          </button>
+        )}
+      </Modal>
+  
+      {/* Modal for edit warning */}
+      <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
+        <h2>Warning</h2>
+        <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
+        <button onClick={handleEditConfirmed}>Yes</button>
+        <button onClick={handleCloseEditWarning}>No</button>
+      </Modal>
+    </div>
+  );
 };
 
 export default MSchoolClassSection;
