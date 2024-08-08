@@ -1,56 +1,213 @@
-.school-calendar-page, .school-calendar, .timetable {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  align-items: flex-start;
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
   margin-bottom: 20px;
 }
 
-.calendar ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.calendar li {
-  margin-bottom: 10px;
-}
-
-.error {
-  color: red;
-  margin-top: 10px;
-}
-
-.button-container {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.button-container button {
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.button-container .more-details-button {
+.more-details-button {
   background-color: #007bff;
   color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
-.button-container .more-details-button:hover {
+.more-details-button:hover {
   background-color: #0056b3;
 }
 
-.button-container .calendar-button,
-.button-container .timetable-button {
-  background-color: #28a745;
-  color: #fff;
+.details-section {
+  background-color: #f7f9fc;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  width: 100%;
 }
 
-.button-container .calendar-button:hover,
-.button-container .timetable-button:hover {
+.details,
+.subjects {
+  margin-bottom: 10px;
+}
+
+.subjects .subject {
+  padding: 8px;
+  background-color: #e0e7ff;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+.buttons {
+  margin-bottom: 20px;
+}
+
+.buttons button {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-right: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.buttons button:hover {
   background-color: #218838;
+}
+
+.calendar,
+.timetable {
+  width: 100%;
+}
+
+.calendar h2,
+.timetable h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.filters {
+  margin-bottom: 15px;
+}
+
+.filters label {
+  margin-right: 20px;
+  font-size: 14px;
+  color: #333;
+}
+
+.filters select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+.calendar-table,
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-table th,
+.timetable-table th,
+.calendar-table td,
+.timetable-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.calendar-table th,
+.timetable-table th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.timetable-table td .add-icon {
+  color: #007bff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.timetable-table td {
+  cursor: pointer;
+}
+
+.success-message {
+  color: #28a745;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+.reload-button {
+  background-color: #ffc107;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.reload-button:hover {
+  background-color: #e0a800;
+}
+
+.modal-content {
+  padding: 20px;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content form div {
+  margin-bottom: 10px;
+}
+
+.modal-content form label {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.modal-content form select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.modal-content form button {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.modal-content form button:hover {
+  background-color: #0056b3;
+}
+
+.modal-content form button[type='button'] {
+  background-color: #dc3545;
+  margin-left: 10px;
+}
+
+.modal-content form button[type='button']:hover {
+  background-color: #c82333;
 }
