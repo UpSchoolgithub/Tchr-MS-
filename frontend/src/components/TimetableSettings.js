@@ -24,7 +24,6 @@ const TimetableSettings = () => {
     reserveTimeEnd: '',
     applyToAll: false,
   });
-  const [periodTimings, setPeriodTimings] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -55,68 +54,6 @@ const TimetableSettings = () => {
       fetchTimetable();
     }
   }, [schoolId]);
-
-  useEffect(() => {
-    calculatePeriodTimings();
-  }, [settings]);
-
-  const calculatePeriodTimings = () => {
-    const {
-      periodsPerDay,
-      durationPerPeriod,
-      assemblyEndTime,
-      lunchStartTime,
-      lunchEndTime,
-      shortBreak1StartTime,
-      shortBreak1EndTime,
-      shortBreak2StartTime,
-      shortBreak2EndTime,
-      schoolEndTime
-    } = settings;
-
-    let currentStartTime = assemblyEndTime;
-    const timings = [];
-
-    for (let i = 1; i <= periodsPerDay; i++) {
-      let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-
-      if (nextStartTime > schoolEndTime) {
-        alert('The periods exceed the school end time.');
-        break;
-      }
-
-      // Check for overlaps with breaks or lunch
-      if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
-        alert('A period is overlapping with lunch. Adjusting period to start after lunch.');
-        currentStartTime = lunchEndTime;
-        nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
-        alert('A period is overlapping with Short Break 1. Adjusting period to start after the break.');
-        currentStartTime = shortBreak1EndTime;
-        nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
-        alert('A period is overlapping with Short Break 2. Adjusting period to start after the break.');
-        currentStartTime = shortBreak2EndTime;
-        nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      }
-
-      timings.push({ period: i, start: currentStartTime, end: nextStartTime });
-      currentStartTime = nextStartTime;
-    }
-
-    setPeriodTimings(timings);
-  };
-
-  const addMinutes = (time, minutes) => {
-    const [hour, minute] = time.split(':').map(Number);
-    const date = new Date(0, 0, 0, hour, minute);
-    date.setMinutes(date.getMinutes() + minutes);
-    return date.toTimeString().slice(0, 5);
-  };
-
-  const isOverlapping = (start1, end1, start2, end2) => {
-    return start1 < end2 && end1 > start2;
-  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -356,15 +293,6 @@ const TimetableSettings = () => {
               />
             </div>
           </div>
-        </div>
-        <h3>Period Timings</h3>
-        <div className="period-timings">
-          {periodTimings.map((timing, index) => (
-            <div key={index} className="period-timing">
-              <span>Period {timing.period}: </span>
-              <span>{timing.start} - {timing.end}</span>
-            </div>
-          ))}
         </div>
         <h3>Reserve Type</h3>
         <div className="form-section">
