@@ -7,38 +7,66 @@ import './MLoginForm.css';
 const MLoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { setAuthToken } = useManagerAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
     try {
       const response = await axios.post('https://tms.up.school/api/manager/auth/login', {
         email,
         password,
       });
-      const { token, refreshToken } = response.data;
+
+      const { token } = response.data;
       setAuthToken(token);
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please check your credentials and try again.');
+
+      if (error.response && error.response.status === 401) {
+        setError('Invalid credentials. Please try again.');
+      } else {
+        setError('An error occurred. Please try again later.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
+    <div className="login-form-container">
       <h2>Manager Login</h2>
       <form onSubmit={handleLogin}>
-        <div>
-          <label>Email:</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <div className="form-group">
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-        <div>
-          <label>Password:</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
-        <button type="submit">Login</button>
+        {error && <div className="error-message">{error}</div>}
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
     </div>
   );
