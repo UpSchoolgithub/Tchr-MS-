@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import jwtDecode from 'jwt-decode'; // Default import
+import * as jwtDecodeModule from 'jwt-decode'; // Import as module
+const jwtDecode = jwtDecodeModule.default || jwtDecodeModule;
 
 const ManagerAuthContext = createContext();
 
