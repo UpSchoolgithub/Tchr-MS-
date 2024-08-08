@@ -4,51 +4,41 @@ const router = express.Router();
 
 // Define the route for assigning a period
 router.post('/assign', async (req, res) => {
-  const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period } = req.body;
-
-  // Validate required fields
-  if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period) {
-    return res.status(400).json({ error: 'All fields are required.' });
-  }
-
-  try {
-    // Check for existing timetable entry to avoid duplicates
-    const existingEntry = await TimetableEntry.findOne({
-      where: { schoolId, classId, combinedSectionId, day, period }
-    });
-
-    if (existingEntry) {
-      return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
+    const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period } = req.body;
+  
+    if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period) {
+      return res.status(400).json({ error: 'All fields are required.' });
     }
-
-    // Create new timetable entry
-    const newEntry = await TimetableEntry.create({
-      schoolId,
-      classId,
-      combinedSectionId,
-      subjectId,
-      teacherId,
-      day,
-      period
-    });
-
-    // Extract sectionName from combinedSectionId
-    const sectionName = combinedSectionId.split('-').slice(2).join('-');
-
-    // Find or create the section based on combinedSectionId
-    await Section.findOrCreate({
-      where: { schoolId, classInfoId: classId, sectionName },
-      defaults: { combinedSectionId }
-    });
-
-    // Respond with the newly created entry
-    res.status(201).json(newEntry);
-  } catch (error) {
-    // Log the error and respond with a 500 status
-    console.error('Error creating timetable entry:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+  
+    try {
+      const existingEntry = await TimetableEntry.findOne({
+        where: { schoolId, classId, combinedSectionId, day, period }
+      });
+  
+      if (existingEntry) {
+        return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
+      }
+  
+      const newEntry = await TimetableEntry.create({
+        schoolId, classId, combinedSectionId, subjectId, teacherId, day, period
+      });
+  
+      const sectionName = combinedSectionId.split('-').slice(2).join('-');
+  
+      const [section, created] = await Section.findOrCreate({
+        where: { schoolId, classInfoId: classId, sectionName },
+        defaults: { combinedSectionId }
+      });
+  
+      console.log('New section created:', created); // Logs if a new section was created
+  
+      res.status(201).json(newEntry);
+    } catch (error) {
+      console.error('Error creating timetable entry:', error);
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+  });
+  
 
 // Define the route for fetching assignments
 router.get('/:schoolId/:classId/:sectionName/assignments', async (req, res) => {
