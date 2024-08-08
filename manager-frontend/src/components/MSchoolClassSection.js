@@ -56,10 +56,9 @@ const MSchoolClassSection = () => {
   }, [teachers, timetableSettings, combinedSectionId]);
 
   useEffect(() => {
-    // Fetch the school name based on schoolId
     axiosInstance.get(`/schools/${schoolId}`)
       .then(response => {
-        setSchoolName(response.data.name); // Assuming the response has a `name` field
+        setSchoolName(response.data.name);
       })
       .catch(error => {
         console.error('Error fetching school name:', error);
@@ -67,7 +66,6 @@ const MSchoolClassSection = () => {
   }, [schoolId]);
   
   useEffect(() => {
-    // Save the state of the timetable view in local storage
     localStorage.setItem('showTimetable', JSON.stringify(showTimetable));
   }, [showTimetable]);
 
@@ -181,7 +179,7 @@ const MSchoolClassSection = () => {
   
       setIsModalOpen(false);
       setSuccessMessage('Assignment added successfully!');
-      setShowReloadButton(true); // Show the reload button
+      setShowReloadButton(true);
   
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
@@ -195,7 +193,7 @@ const MSchoolClassSection = () => {
   };
 
   const handleReload = () => {
-    navigate(0); // Reloads the current route without redirecting to the dashboard
+    navigate(0);
   };
 
   const handleFilterChange = (e) => {
@@ -239,10 +237,10 @@ const MSchoolClassSection = () => {
 
   const renderTable = () => {
     if (!timetableSettings) return null;
-  
+
     const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  
+
     return (
       <table className="timetable-table">
         <thead>
@@ -258,22 +256,24 @@ const MSchoolClassSection = () => {
             <tr key={day}>
               <td>{day}</td>
               {periods.map(period => {
-                if (timetableSettings.breaks.includes(period)) {
-                  return (
-                    <td key={period} className="break">Short Break 1</td>
-                  );
+                // Calculate the start and end times for each period
+                const startTimes = timetableSettings.startTimes || [];
+                const endTimes = timetableSettings.endTimes || [];
+                const startTime = startTimes[period - 1] || '';
+                const endTime = endTimes[period - 1] || '';
+
+                if (startTime && endTime) {
+                  if (startTime >= timetableSettings.shortBreak1StartTime && endTime <= timetableSettings.shortBreak1EndTime) {
+                    return <td key={period} className="break">Short Break 1</td>;
+                  }
+                  if (startTime >= timetableSettings.lunchStartTime && endTime <= timetableSettings.lunchEndTime) {
+                    return <td key={period} className="lunch">Lunch</td>;
+                  }
+                  if (startTime >= timetableSettings.shortBreak2StartTime && endTime <= timetableSettings.shortBreak2EndTime) {
+                    return <td key={period} className="break">Short Break 2</td>;
+                  }
                 }
-                if (timetableSettings.lunch === period) {
-                  return (
-                    <td key={period} className="lunch">Lunch</td>
-                  );
-                }
-                if (timetableSettings.reservedTime === period) {
-                  return (
-                    <td key={period} className="reserved">Reserved Time</td>
-                  );
-                }
-  
+
                 const periodAssignment = assignedPeriods[`${day}-${period}`];
                 return (
                   <td key={period} onClick={() => handleOpenModal(day, period)}>
@@ -294,55 +294,56 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
-  
+
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
-  
+
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => (i + 1).toString());
     
-    // Prepare table rows dynamically based on periods
-    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
       const row = [day];
       periods.forEach(period => {
-        if (timetableSettings.breaks && timetableSettings.breaks.includes(period)) {
-          row.push('Short Break 1');
-        } else if (timetableSettings.lunch === period) {
-          row.push('Lunch');
-        } else if (timetableSettings.reservedTime === period) {
-          row.push('Reserved Time');
-        } else {
-          const periodAssignment = assignedPeriods[`${day}-${period}`];
-          const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-          row.push(entry);
+        const startTimes = timetableSettings.startTimes || [];
+        const endTimes = timetableSettings.endTimes || [];
+        const startTime = startTimes[period - 1] || '';
+        const endTime = endTimes[period - 1] || '';
+
+        if (startTime && endTime) {
+          if (startTime >= timetableSettings.shortBreak1StartTime && endTime <= timetableSettings.shortBreak1EndTime) {
+            row.push('Short Break 1');
+          } else if (startTime >= timetableSettings.lunchStartTime && endTime <= timetableSettings.lunchEndTime) {
+            row.push('Lunch');
+          } else if (startTime >= timetableSettings.shortBreak2StartTime && endTime <= timetableSettings.shortBreak2EndTime) {
+            row.push('Short Break 2');
+          } else {
+            const periodAssignment = assignedPeriods[`${day}-${period}`];
+            const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+            row.push(entry);
+          }
         }
       });
       return row;
     });
-  
-    // Header for periods
+
     const columns = ['Day / Period', ...periods];
-  
-    // Generate the PDF
+
     doc.setFontSize(16);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
-  
+
     const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
     doc.setFontSize(14);
     doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
-  
+
     doc.autoTable({
       startY: 45,
       head: [columns],
       body: rows,
       theme: 'grid'
     });
-  
+
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
-  
-  
   
   return (
     <div className="container">
@@ -376,6 +377,7 @@ const MSchoolClassSection = () => {
       <div className="buttons">
         <button onClick={handleShowCalendar}>School Calendar</button>
         <button onClick={handleShowTimetable}>Timetable</button>
+        <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
       </div>
       {successMessage && <div className="success-message">{successMessage}</div>}
       {error && <div className="error-message">{error}</div>}
@@ -421,7 +423,6 @@ const MSchoolClassSection = () => {
         </div>
       )}
   
-      {/* Modal for assigning period */}
       <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
         <h2>Assign Period</h2>
         <form onSubmit={handleAssignPeriod}>
@@ -455,7 +456,6 @@ const MSchoolClassSection = () => {
           <button type="button" onClick={handleCloseModal}>Cancel</button>
         </form>
   
-        {/* Reload Button */}
         {showReloadButton && (
           <button onClick={handleReload} className="reload-button">
             Reload Page
@@ -463,7 +463,6 @@ const MSchoolClassSection = () => {
         )}
       </Modal>
   
-      {/* Modal for edit warning */}
       <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
         <h2>Warning</h2>
         <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
