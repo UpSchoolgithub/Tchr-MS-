@@ -134,45 +134,42 @@ const MSchoolClassSection = () => {
   const handleAssignPeriod = async (e) => {
     e.preventDefault();
     try {
-      const requestData = {
-        schoolId,
-        classId,
-        combinedSectionId,
-        teacherId: selectedTeacher,
-        subjectId: selectedSubject,
-        period: selectedPeriod.period,
-        day: selectedPeriod.day,
-      };
-      console.log('Request Data:', requestData);
+        const requestData = {
+            schoolId,
+            classId,
+            combinedSectionId,
+            teacherId: selectedTeacher,
+            subjectId: selectedSubject,
+            period: selectedPeriod.period,
+            day: selectedPeriod.day,
+        };
 
-      const response = await axiosInstance.post(`/timetable/assign`, requestData);
-      console.log('Assignment response:', response);
+        const response = await axiosInstance.post(`/timetable/assign`, requestData);
 
-      const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
-      const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
+        const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
+        const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
 
-      const newAssignedPeriod = {
-        teacher: teacher.name,
-        teacherId: selectedTeacher,
-        subject: subject.subjectName,
-        subjectId: selectedSubject
-      };
+        const newAssignedPeriod = {
+            teacher: teacher.name,
+            teacherId: selectedTeacher,
+            subject: subject.subjectName,
+            subjectId: selectedSubject
+        };
 
-      setAssignedPeriods({
-        ...assignedPeriods,
-        [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
-      });
+        // Update state immediately after assignment
+        setAssignedPeriods(prevAssignedPeriods => ({
+            ...prevAssignedPeriods,
+            [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
+        }));
 
-      setIsModalOpen(false);
-      setSuccessMessage('Assignment added successfully!');
-      
-      // Optionally reload the assignments if needed, but the state update should suffice
-      // fetchAssignments();
+        setIsModalOpen(false);
+        setSuccessMessage('Assignment added successfully!');
     } catch (error) {
-      console.error('Error assigning period:', error.response || error);
-      setError('Error assigning period');
+        console.error('Error assigning period:', error.response || error);
+        setError('Error assigning period');
     }
-  };
+};
+
 
   const handleFilterChange = (e) => {
     setFilter(e.target.value);
