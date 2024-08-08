@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import TimePicker from 'react-time-picker'; // Importing react-time-picker
+import TimePicker from 'react-time-picker';
 import './TimetableSettings.css';
 
 const TimetableSettings = () => {
   const { schoolId } = useOutletContext();
   const [settings, setSettings] = useState({
-    periodsPerDay: '',
-    durationPerPeriod: '',
-    schoolStartTime: '',
-    schoolEndTime: '',
-    assemblyStartTime: '',
-    assemblyEndTime: '',
-    lunchStartTime: '',
-    lunchEndTime: '',
-    shortBreak1StartTime: '',
-    shortBreak1EndTime: '',
-    shortBreak2StartTime: '',
-    shortBreak2EndTime: '',
+    periodsPerDay: 8,
+    durationPerPeriod: 45,
+    schoolStartTime: '08:00 AM',
+    schoolEndTime: '04:00 PM',
+    assemblyStartTime: '08:00 AM',
+    assemblyEndTime: '08:15 AM',
+    lunchStartTime: '12:00 PM',
+    lunchEndTime: '12:45 PM',
+    shortBreak1StartTime: '10:00 AM',
+    shortBreak1EndTime: '10:10 AM',
+    shortBreak2StartTime: '02:15 PM',
+    shortBreak2EndTime: '02:25 PM',
     reserveType: 'time',
     reserveDay: {},
     reserveTimeStart: '',
@@ -29,6 +29,7 @@ const TimetableSettings = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Fetch settings from API or use default settings
     const fetchTimetable = async () => {
       try {
         const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
@@ -54,6 +55,8 @@ const TimetableSettings = () => {
 
     if (schoolId) {
       fetchTimetable();
+    } else {
+      calculateDefaultTimetable();
     }
   }, [schoolId]);
 
@@ -62,6 +65,11 @@ const TimetableSettings = () => {
       calculatePeriodTimings();
     }
   }, [settings.periodsPerDay, settings.durationPerPeriod, settings.assemblyEndTime]);
+
+  const calculateDefaultTimetable = () => {
+    const defaultTimings = calculatePeriodTimings();
+    setPeriodTimings(defaultTimings);
+  };
 
   const calculatePeriodTimings = () => {
     const {
@@ -75,8 +83,6 @@ const TimetableSettings = () => {
       shortBreak2StartTime,
       shortBreak2EndTime,
       schoolEndTime,
-      reserveTimeStart,
-      reserveTimeEnd
     } = settings;
 
     let currentStartTime = assemblyEndTime;
@@ -85,44 +91,31 @@ const TimetableSettings = () => {
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
 
-      // Check if the period exceeds school end time
       if (convertToAmPm(nextStartTime) > convertToAmPm(schoolEndTime)) {
         alert('The periods exceed the school end time.');
         break;
       }
 
-      // Adjust for lunch break overlap
       if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
         timings.push({ period: 'Lunch Break', start: lunchStartTime, end: lunchEndTime });
         currentStartTime = lunchEndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      }
-
-      // Adjust for short break 1 overlap
-      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
+      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
         timings.push({ period: 'Short Break 1', start: shortBreak1StartTime, end: shortBreak1EndTime });
         currentStartTime = shortBreak1EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      }
-
-      // Adjust for short break 2 overlap
-      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
+      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
         timings.push({ period: 'Short Break 2', start: shortBreak2StartTime, end: shortBreak2EndTime });
         currentStartTime = shortBreak2EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       }
 
-      // Add the period to the timetable
       timings.push({ period: i, start: currentStartTime, end: nextStartTime });
       currentStartTime = nextStartTime;
     }
 
-    // Include the reserve time if set
-    if (reserveTimeStart && reserveTimeEnd) {
-      timings.push({ period: 'Reserve', start: reserveTimeStart, end: reserveTimeEnd });
-    }
-
     setPeriodTimings(timings);
+    return timings;
   };
 
   const addMinutes = (time, minutes) => {
@@ -135,7 +128,7 @@ const TimetableSettings = () => {
   const convertToAmPm = (time) => {
     const [hour, minute] = time.split(':').map(Number);
     const ampm = hour >= 12 ? 'PM' : 'AM';
-    const adjustedHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    const adjustedHour = hour % 12 || 12;
     return `${adjustedHour}:${minute < 10 ? '0' + minute : minute} ${ampm}`;
   };
 
@@ -227,9 +220,11 @@ const TimetableSettings = () => {
       return 'Short Break 2 Start Time should be earlier than Short Break 2 End Time.';
     }
     if (schoolEndTime && (new Date(`1970-01-01T${assemblyEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${lunchEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
+    new Date(`1970-01-01T${lunchEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
+    new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
+    new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
+    new Date(`1970-01-01T${periodEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
+    
       return 'All activities should end before School End Time.';
     }
 
@@ -513,3 +508,4 @@ const TimetableSettings = () => {
 };
 
 export default TimetableSettings;
+
