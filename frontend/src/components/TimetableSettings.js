@@ -84,26 +84,39 @@ const TimetableSettings = () => {
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
   
+      // Check if the period exceeds school end time
       if (convertToAmPm(nextStartTime) > convertToAmPm(schoolEndTime)) {
         alert('The periods exceed the school end time.');
         break;
       }
   
+      // Adjust for lunch break overlap
       if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
+        timings.push({ period: 'Lunch Break', start: lunchStartTime, end: lunchEndTime });
         currentStartTime = lunchEndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
+      }
+  
+      // Adjust for short break 1 overlap
+      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
+        timings.push({ period: 'Short Break 1', start: shortBreak1StartTime, end: shortBreak1EndTime });
         currentStartTime = shortBreak1EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-      } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
+      }
+  
+      // Adjust for short break 2 overlap
+      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
+        timings.push({ period: 'Short Break 2', start: shortBreak2StartTime, end: shortBreak2EndTime });
         currentStartTime = shortBreak2EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       }
   
+      // Add the period to the timetable
       timings.push({ period: i, start: currentStartTime, end: nextStartTime });
       currentStartTime = nextStartTime;
     }
   
+    // Include the reserve time if set
     if (reserveTimeStart && reserveTimeEnd) {
       timings.push({ period: 'Reserve', start: reserveTimeStart, end: reserveTimeEnd });
     }
