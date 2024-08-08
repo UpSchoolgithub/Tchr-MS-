@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { WebSocketProvider } from './WebSocketContext'; // Import the WebSocket context
 import MSidebar from './components/MSidebar';
@@ -32,6 +32,7 @@ function AppContent() {
   const { token, setAuthToken } = useManagerAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load token from local storage to maintain session
@@ -39,14 +40,19 @@ function AppContent() {
     if (storedToken) {
       setAuthToken(storedToken);
     }
+    setLoading(false); // Set loading to false after checking token
   }, [setAuthToken]);
 
   useEffect(() => {
     // Redirect to mlogin if not authenticated and not already on login page
-    if (!token && location.pathname !== '/mlogin') {
+    if (!token && !loading && location.pathname !== '/mlogin') {
       navigate('/mlogin', { replace: true });
     }
-  }, [token, location.pathname, navigate]);
+  }, [token, loading, location.pathname, navigate]);
+
+  if (loading) {
+    return <div>Loading...</div>; // Display loading state until token is checked
+  }
 
   return (
     <div className="app">
