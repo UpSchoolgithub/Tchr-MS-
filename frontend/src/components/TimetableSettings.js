@@ -57,7 +57,9 @@ const TimetableSettings = () => {
   }, [schoolId]);
 
   useEffect(() => {
-    calculatePeriodTimings();
+    if (settings.schoolEndTime && settings.assemblyEndTime && settings.durationPerPeriod) {
+      calculatePeriodTimings();
+    }
   }, [settings]);
 
   const calculatePeriodTimings = () => {
@@ -80,24 +82,28 @@ const TimetableSettings = () => {
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
 
+      // Check if period exceeds school end time
       if (nextStartTime > schoolEndTime) {
-        alert('The periods exceed the school end time.');
+        alert(`Period ${i} exceeds the school end time. Adjust the period duration or start time.`);
         break;
       }
 
       // Check for overlaps with breaks or lunch
       if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
-        alert('A period is overlapping with lunch. Adjusting period to start after lunch.');
         currentStartTime = lunchEndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
-        alert('A period is overlapping with Short Break 1. Adjusting period to start after the break.');
         currentStartTime = shortBreak1EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
-        alert('A period is overlapping with Short Break 2. Adjusting period to start after the break.');
         currentStartTime = shortBreak2EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
+      }
+
+      // Ensure periods do not overlap with school end time
+      if (nextStartTime > schoolEndTime) {
+        alert(`Period ${i} overlaps with school end time. Adjust period settings.`);
+        break;
       }
 
       timings.push({ period: i, start: currentStartTime, end: nextStartTime });
