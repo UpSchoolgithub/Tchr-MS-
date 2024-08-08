@@ -178,11 +178,22 @@ const MSchoolClassSection = () => {
         // Optionally, you can trigger a function to fetch all assignments again if necessary,
         // or just update the local state as shown above.
 
-    } catch (error) {
-        console.error('Error assigning period:', error.response || error);
-        setError('Failed to assign period. Please try again.');
-        // Optionally update or reset some states here if needed
-    }
+    } 
+    catch (error) {
+      console.error('Error assigning period:', error.response || error);
+      setError('Failed to assign period. Please check details and try again.');
+  
+      // Log detailed error for debugging
+      if (error.response) {
+          console.log('Response Data:', error.response.data);
+          console.log('Response Status:', error.response.status);
+          console.log('Response Headers:', error.response.headers);
+      }
+  
+      // Optionally, show a more detailed error message to the user
+      setSuccessMessage('Assignment might be added, but verify due to server error.');
+  }
+  
 };
 
 
