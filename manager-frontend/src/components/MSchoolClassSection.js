@@ -142,6 +142,9 @@ const MSchoolClassSection = () => {
             day: selectedPeriod.day,
         };
 
+        // Log the request data for debugging
+        console.log('Request Data:', requestData);
+
         await axiosInstance.post(`/timetable/assign`, requestData);
 
         const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
@@ -175,6 +178,7 @@ const MSchoolClassSection = () => {
         }
     }
 };
+
 
 
 
@@ -293,18 +297,24 @@ const MSchoolClassSection = () => {
 
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
-    const logo = "/Upschool_2x.png"; 
 
-    // Add logo
-    doc.addImage(logo, 'PNG', 10, 10, 50, 20);
+    // Define logo dimensions and position
+    const logo = '/Upschool_2x.png'; // Ensure this path is correct and accessible
+    const logoWidth = 30; // Adjust width according to your needs
+    const logoHeight = 15; // Adjust height according to your needs
+    const logoXPosition = doc.internal.pageSize.getWidth() - logoWidth - 10;
+    const logoYPosition = 10;
 
-    // Add heading with class and section name
+    // Add logo to the top right
+    doc.addImage(logo, 'PNG', logoXPosition, logoYPosition, logoWidth, logoHeight);
+
+    // Add heading with class and section name on the top left
     doc.setFontSize(18);
-    doc.text(`Timetable of Class: ${classId}, Section: ${sectionName}`, 105, 20, null, null, 'center');
+    doc.text(`Timetable of Class: ${classId}, Section: ${sectionName}`, 10, 20);
 
     // Add some space before the table
     doc.setFontSize(12);
-    doc.text(`School ID: ${schoolId}`, 105, 30, null, null, 'center');
+    doc.text(`School ID: ${schoolId}`, 10, 30);
 
     const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
     const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
@@ -323,8 +333,9 @@ const MSchoolClassSection = () => {
         return row;
     });
 
-    // Render the table with borders
+    // Render the table with borders and styled as required
     doc.autoTable({
+        startY: 40, // Adjust the start position of the table
         head: [columns],
         body: rows,
         styles: {
@@ -339,6 +350,7 @@ const MSchoolClassSection = () => {
     // Save the PDF
     doc.save('timetable.pdf');
 };
+
 
 
   return (
