@@ -175,26 +175,21 @@ const MSchoolClassSection = () => {
         setIsModalOpen(false);
         setSuccessMessage('Assignment added successfully!');
 
-        // Display reload button
-        setShowReloadButton(true);
+        // Optionally, you can trigger a function to fetch all assignments again if necessary,
+        // or just update the local state as shown above.
 
     } catch (error) {
         console.error('Error assigning period:', error.response || error);
-
-        if (error.response) {
-            console.log('Response Data:', error.response.data);
-            console.log('Response Status:', error.response.status);
-            console.log('Response Headers:', error.response.headers);
-        }
-
-        // Display reload button even on error since data is saved in DB
-        setShowReloadButton(true);
+        setError('Failed to assign period. Please try again.');
+        // Optionally update or reset some states here if needed
     }
 };
-const handleReload = () => {
-  window.location.reload();
-};
 
+
+const handleReload = () => {
+  // Reset specific states or fetch data again if needed
+  fetchAssignments(); // Example function to re-fetch timetable data
+};
 
 
   const handleFilterChange = (e) => {
