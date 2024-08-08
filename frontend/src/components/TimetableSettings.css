@@ -1,34 +1,151 @@
-.time-picker-wrapper {
-    width: 100%;
+.timetable-settings-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   }
   
-  .react-time-picker {
+  .timetable-settings-form h3 {
+    margin-top: 20px;
+    color: #4a90e2;
+    font-size: 1.4em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+  }
+  
+  .form-section {
+    margin-top: 20px;
+  }
+  
+  .form-group-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    flex: 1;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .time-picker-wrapper {
     width: 100%;
   }
   
   .react-time-picker__wrapper {
     display: flex;
+    align-items: center;
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 4px;
   }
   
-  .react-time-picker__inputGroup {
-    display: flex;
-    align-items: center;
-    font-size: 1em;
-  }
-  
   .react-time-picker__inputGroup__input {
     width: 2em;
     text-align: center;
+    font-size: 1em;
+    color: #333; /* Ensure text is visible */
+    background-color: #fff; /* Light background */
+    border: 1px solid #ccc; /* Border for better visibility */
+    border-radius: 4px;
   }
   
-  .react-time-picker__clock {
-    display: none;
-  }
-  
+  .react-time-picker__clock,
   .react-time-picker__clear-button {
     display: none;
+  }
+  
+  .period-timings {
+    margin-top: 20px;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  
+  .period-timing {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .period-timing span {
+    font-size: 1.1em;
+    color: #555;
+  }
+  
+  .period-timing span:first-child {
+    font-weight: bold;
+  }
+  
+  .save-button {
+    background-color: #4a90e2;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+  }
+  
+  .save-button:hover {
+    background-color: #357abd;
+  }
+  
+  .error {
+    color: #ff4c4c;
+    background-color: #ffecec;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  
+  .reserve-day-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .reserve-day-group {
+    flex: 1;
+  }
+  
+  .day-label {
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .day-time-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .day-time-group span {
+    font-weight: bold;
+  }
+  
+  .time-picker-wrapper {
+    width: 100%;
+  }
+  
+  .time-picker-wrapper .react-time-picker__inputGroup__input {
+    width: 100%;
   }
   

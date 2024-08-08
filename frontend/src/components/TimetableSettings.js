@@ -275,29 +275,6 @@ const TimetableSettings = () => {
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit} className="timetable-settings-form">
         <div className="form-section">
-          <div className="form-group">
-            <label>Periods Per Day:</label>
-            <input
-              type="number"
-              name="periodsPerDay"
-              value={settings.periodsPerDay}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Duration of Period (minutes):</label>
-            <input
-              type="number"
-              name="durationPerPeriod"
-              value={settings.durationPerPeriod}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-        <h3>School Timings</h3>
-        <div className="form-section">
           <div className="form-group-row">
             <div className="form-group">
               <label>School Start Time:</label>
@@ -321,6 +298,9 @@ const TimetableSettings = () => {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="form-group-row">
             <div className="form-group">
               <label>Assembly Start Time:</label>
               <div className="time-picker-wrapper">
@@ -344,6 +324,7 @@ const TimetableSettings = () => {
               </div>
             </div>
           </div>
+
           <div className="form-group-row">
             <div className="form-group">
               <label>Lunch Break Start Time:</label>
@@ -368,6 +349,7 @@ const TimetableSettings = () => {
               </div>
             </div>
           </div>
+
           <div className="form-group-row">
             <div className="form-group">
               <label>Short Break 1 Start Time:</label>
@@ -391,6 +373,9 @@ const TimetableSettings = () => {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="form-group-row">
             <div className="form-group">
               <label>Short Break 2 Start Time:</label>
               <div className="time-picker-wrapper">
@@ -415,6 +400,7 @@ const TimetableSettings = () => {
             </div>
           </div>
         </div>
+
         <h3>Period Timings</h3>
         <div className="period-timings">
           {periodTimings.map((timing, index) => (
@@ -424,6 +410,7 @@ const TimetableSettings = () => {
             </div>
           ))}
         </div>
+
         <h3>Reserve Type</h3>
         <div className="form-section">
           <div className="form-group">
