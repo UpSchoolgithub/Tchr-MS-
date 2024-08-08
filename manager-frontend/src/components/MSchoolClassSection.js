@@ -300,7 +300,7 @@ const MSchoolClassSection = () => {
 
     // Define logo dimensions and position
     const logo = '/Upschool_2x.png'; // Ensure this path is correct and accessible
-    const logoWidth = 30; // Adjust width according to your needs
+    const logoWidth = 34; // Adjust width according to your needs
     const logoHeight = 15; // Adjust height according to your needs
     const logoXPosition = doc.internal.pageSize.getWidth() - logoWidth - 10;
     const logoYPosition = 10;
@@ -308,13 +308,18 @@ const MSchoolClassSection = () => {
     // Add logo to the top right
     doc.addImage(logo, 'PNG', logoXPosition, logoYPosition, logoWidth, logoHeight);
 
-    // Add heading with class and section name on the top left
-    doc.setFontSize(18);
-    doc.text(`Timetable of Class: ${classId}, Section: ${sectionName}`, 10, 20);
+    // Add school name in the center on the second line
+    const schoolName = 'Your School Name'; // Replace with actual school name
+    doc.setFontSize(16);
+    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+
+    // Add heading with class and section name on the third line
+    const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
+    doc.setFontSize(14);
+    doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
 
     // Add some space before the table
-    doc.setFontSize(12);
-    doc.text(`School ID: ${schoolId}`, 10, 30);
+    const startY = 45;
 
     const columns = ['Day / Period', ...Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1)];
     const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
@@ -335,7 +340,7 @@ const MSchoolClassSection = () => {
 
     // Render the table with borders and styled as required
     doc.autoTable({
-        startY: 40, // Adjust the start position of the table
+        startY: startY, // Adjust the start position of the table
         head: [columns],
         body: rows,
         styles: {
@@ -350,6 +355,7 @@ const MSchoolClassSection = () => {
     // Save the PDF
     doc.save('timetable.pdf');
 };
+
 
 
 
