@@ -71,6 +71,7 @@ const TimetableSettings = () => {
       shortBreak1EndTime,
       shortBreak2StartTime,
       shortBreak2EndTime,
+      schoolEndTime
     } = settings;
 
     let currentStartTime = assemblyEndTime;
@@ -79,14 +80,22 @@ const TimetableSettings = () => {
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
 
-      // Check for overlaps with lunch or breaks
+      if (nextStartTime > schoolEndTime) {
+        alert('The periods exceed the school end time.');
+        break;
+      }
+
+      // Check for overlaps with breaks or lunch
       if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
+        alert('A period is overlapping with lunch. Adjusting period to start after lunch.');
         currentStartTime = lunchEndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
+        alert('A period is overlapping with Short Break 1. Adjusting period to start after the break.');
         currentStartTime = shortBreak1EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       } else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
+        alert('A period is overlapping with Short Break 2. Adjusting period to start after the break.');
         currentStartTime = shortBreak2EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       }
@@ -106,9 +115,7 @@ const TimetableSettings = () => {
   };
 
   const isOverlapping = (start1, end1, start2, end2) => {
-    return (
-      (start1 < end2 && end1 > start2) || (start2 < end1 && end2 > start1)
-    );
+    return start1 < end2 && end1 > start2;
   };
 
   const handleChange = (e) => {
