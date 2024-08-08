@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as jwtDecodeModule from 'jwt-decode'; // Import as module
-const jwtDecode = jwtDecodeModule.default || jwtDecodeModule;
+import { jwtDecode } from 'jwt-decode'; // Using named import
 
 const ManagerAuthContext = createContext();
 
@@ -45,7 +44,6 @@ export const ManagerAuthProvider = ({ children }) => {
         localStorage.setItem('token', newToken);
       } else {
         console.error('Token is invalid or expired');
-        handleLogout();
       }
     } catch (error) {
       console.error('Failed to decode token:', error);
