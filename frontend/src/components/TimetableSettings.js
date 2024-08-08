@@ -73,22 +73,22 @@ const TimetableSettings = () => {
       shortBreak1EndTime,
       shortBreak2StartTime,
       shortBreak2EndTime,
-      schoolEndTime
+      schoolEndTime,
+      reserveTimeStart,
+      reserveTimeEnd
     } = settings;
-
+  
     let currentStartTime = assemblyEndTime;
     const timings = [];
-
+  
     for (let i = 1; i <= periodsPerDay; i++) {
       let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-
-      // Check if period exceeds school end time
-      if (nextStartTime > schoolEndTime) {
-        alert(`Period ${i} exceeds the school end time. Adjust the period duration or start time.`);
+  
+      if (convertToAmPm(nextStartTime) > convertToAmPm(schoolEndTime)) {
+        alert('The periods exceed the school end time.');
         break;
       }
-
-      // Check for overlaps with breaks or lunch
+  
       if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
         currentStartTime = lunchEndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
@@ -99,27 +99,35 @@ const TimetableSettings = () => {
         currentStartTime = shortBreak2EndTime;
         nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
       }
-
-      // Ensure periods do not overlap with school end time
-      if (nextStartTime > schoolEndTime) {
-        alert(`Period ${i} overlaps with school end time. Adjust period settings.`);
-        break;
-      }
-
+  
       timings.push({ period: i, start: currentStartTime, end: nextStartTime });
       currentStartTime = nextStartTime;
     }
-
+  
+    if (reserveTimeStart && reserveTimeEnd) {
+      timings.push({ period: 'Reserve', start: reserveTimeStart, end: reserveTimeEnd });
+    }
+  
     setPeriodTimings(timings);
   };
+  
+  
 
   const addMinutes = (time, minutes) => {
     const [hour, minute] = time.split(':').map(Number);
     const date = new Date(0, 0, 0, hour, minute);
     date.setMinutes(date.getMinutes() + minutes);
-    return date.toTimeString().slice(0, 5);
+    return convertToAmPm(date.toTimeString().slice(0, 5));
   };
+  
 
+  const convertToAmPm = (time) => {
+    const [hour, minute] = time.split(':').map(Number);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const adjustedHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    return `${adjustedHour}:${minute < 10 ? '0' + minute : minute} ${ampm}`;
+  };
+  
   const isOverlapping = (start1, end1, start2, end2) => {
     return start1 < end2 && end1 > start2;
   };
