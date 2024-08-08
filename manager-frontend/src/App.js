@@ -38,6 +38,10 @@ function AppContent() {
     if (token && location.pathname === '/') {
       navigate('/dashboard', { replace: true });
     }
+    // Redirect to login if not authenticated
+    if (!token && location.pathname !== '/login') {
+      navigate('/login', { replace: true });
+    }
   }, [token, location.pathname, navigate]);
 
   return (
