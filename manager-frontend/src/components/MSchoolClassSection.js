@@ -236,9 +236,11 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
-    if (!timetableSettings) return null;
-
-    const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
+    if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
+      return <p>No timetable settings available</p>; // Handle empty or undefined timetable settings
+    }
+  
+    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   
     return (
@@ -246,9 +248,10 @@ const MSchoolClassSection = () => {
         <thead>
           <tr>
             <th>Day / Period</th>
-            {periods.map(period => (
+            {periods.map((period, index) => (
               <th key={period}>
-                {`Period ${period} (${timetableSettings.periodTimings[period - 1]})`}
+                Period {period} <br /> 
+                {timetableSettings.periodTimings[index] || ''} {/* Add timings if available */}
               </th>
             ))}
           </tr>
@@ -257,25 +260,28 @@ const MSchoolClassSection = () => {
           {days.map(day => (
             <tr key={day}>
               <td>{day}</td>
-              {periods.map(period => {
-                const startEndTime = timetableSettings.periodTimings[period - 1];
+              {periods.map((period, index) => {
+                const startEndTime = timetableSettings.periodTimings ? timetableSettings.periodTimings[index] : undefined;
                 if (startEndTime) {
                   const [start, end] = startEndTime.split(' - ');
-                  if (new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
-                    new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
+                  if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
+                      new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
+                      new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
                     return <td key={period} className="break">Short Break 1</td>;
                   }
-                  if (new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
-                    new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
+                  if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
+                      new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
+                      new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
                     return <td key={period} className="break">Short Break 2</td>;
                   }
-                  if (new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
-                    new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
+                  if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
+                      new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
+                      new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
                     return <td key={period} className="lunch">Lunch Break</td>;
                   }
                 }
-
-                const periodAssignment = assignedPeriods[`${day}-${period}`];
+  
+                const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                 return (
                   <td key={period} onClick={() => handleOpenModal(day, period)}>
                     {periodAssignment ? (
@@ -295,58 +301,7 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-
-  const downloadTimetableAsPDF = () => {
-    const doc = new jsPDF();
   
-    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => (i + 1).toString());
-    
-    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
-      const row = [day];
-      periods.forEach((period, index) => {
-        const startEndTime = timetableSettings.periodTimings[index];
-        if (startEndTime) {
-          const [start, end] = startEndTime.split(' - ');
-          if (new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
-            new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
-            row.push('Short Break 1');
-          } else if (new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
-            new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
-            row.push('Short Break 2');
-          } else if (new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
-            new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
-            row.push('Lunch Break');
-          } else {
-            const periodAssignment = assignedPeriods[`${day}-${period}`];
-            const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-            row.push(entry);
-          }
-        } else {
-          row.push('');
-        }
-      });
-      return row;
-    });
-  
-    const columns = ['Day / Period', ...periods.map((period, index) => `Period ${period} (${timetableSettings.periodTimings[index]})`)];
-
-    doc.setFontSize(16);
-    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
-
-    const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
-    doc.setFontSize(14);
-    doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
-
-    doc.autoTable({
-      startY: 45,
-      head: [columns],
-      body: rows,
-      theme: 'grid'
-    });
-
-    const filename = `Timetable_${classId}_${sectionName}.pdf`;
-    doc.save(filename);
-  };
 
   return (
     <div className="container">
