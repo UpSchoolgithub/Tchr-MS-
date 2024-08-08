@@ -256,22 +256,20 @@ const MSchoolClassSection = () => {
             <tr key={day}>
               <td>{day}</td>
               {periods.map(period => {
-                const startTimes = timetableSettings.startTimes || [];
-                const endTimes = timetableSettings.endTimes || [];
-                
-                const startTime = startTimes[period - 1] || '';
-                const endTime = endTimes[period - 1] || '';
-                
-                if (startTime && endTime) {
-                  if (startTime >= timetableSettings.shortBreak1StartTime && endTime <= timetableSettings.shortBreak1EndTime) {
-                    return <td key={period} className="break">Short Break 1</td>;
-                  }
-                  if (startTime >= timetableSettings.lunchStartTime && endTime <= timetableSettings.lunchEndTime) {
-                    return <td key={period} className="lunch">Lunch</td>;
-                  }
-                  if (startTime >= timetableSettings.shortBreak2StartTime && endTime <= timetableSettings.shortBreak2EndTime) {
-                    return <td key={period} className="break">Short Break 2</td>;
-                  }
+                if (timetableSettings.breaks && timetableSettings.breaks.includes(period)) {
+                  return (
+                    <td key={period} className="break">Short Break</td>
+                  );
+                }
+                if (timetableSettings.lunch && timetableSettings.lunch === period) {
+                  return (
+                    <td key={period} className="lunch">Lunch</td>
+                  );
+                }
+                if (timetableSettings.reservedTime && timetableSettings.reservedTime === period) {
+                  return (
+                    <td key={period} className="reserved">Reserved Time</td>
+                  );
                 }
   
                 const periodAssignment = assignedPeriods[`${day}-${period}`];
@@ -294,7 +292,7 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
+
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
   
@@ -303,24 +301,16 @@ const MSchoolClassSection = () => {
     const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
       const row = [day];
       periods.forEach(period => {
-        const startTimes = timetableSettings.startTimes || [];
-        const endTimes = timetableSettings.endTimes || [];
-        
-        const startTime = startTimes[period - 1] || '';
-        const endTime = endTimes[period - 1] || '';
-  
-        if (startTime && endTime) {
-          if (startTime >= timetableSettings.shortBreak1StartTime && endTime <= timetableSettings.shortBreak1EndTime) {
-            row.push('Short Break 1');
-          } else if (startTime >= timetableSettings.lunchStartTime && endTime <= timetableSettings.lunchEndTime) {
-            row.push('Lunch');
-          } else if (startTime >= timetableSettings.shortBreak2StartTime && endTime <= timetableSettings.shortBreak2EndTime) {
-            row.push('Short Break 2');
-          } else {
-            const periodAssignment = assignedPeriods[`${day}-${period}`];
-            const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-            row.push(entry);
-          }
+        if (timetableSettings.breaks && timetableSettings.breaks.includes(period)) {
+          row.push('Short Break');
+        } else if (timetableSettings.lunch === period) {
+          row.push('Lunch');
+        } else if (timetableSettings.reservedTime === period) {
+          row.push('Reserved Time');
+        } else {
+          const periodAssignment = assignedPeriods[`${day}-${period}`];
+          const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+          row.push(entry);
         }
       });
       return row;
