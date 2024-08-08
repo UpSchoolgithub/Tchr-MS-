@@ -299,13 +299,13 @@ const MSchoolClassSection = () => {
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
   
-    const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => (i + 1).toString());
+    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => (i + 1).toString());
     
     // Prepare table rows dynamically based on periods
     const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
       const row = [day];
       periods.forEach(period => {
-        if (timetableSettings.breaks.includes(period)) {
+        if (timetableSettings.breaks && timetableSettings.breaks.includes(period)) {
           row.push('Short Break 1');
         } else if (timetableSettings.lunch === period) {
           row.push('Lunch');
@@ -341,6 +341,7 @@ const MSchoolClassSection = () => {
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
+  
   
   
   return (
