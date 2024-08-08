@@ -161,11 +161,21 @@ const MSchoolClassSection = () => {
 
         setIsModalOpen(false);
         setSuccessMessage('Assignment added successfully!');
+        
+        // Redirect to the previous page after successful assignment
+        navigate(-1);
     } catch (error) {
         console.error('Error assigning period:', error.response || error);
-        setError('Error assigning period');
+
+        // Additional logging of error details
+        if (error.response) {
+            console.log('Response Data:', error.response.data);
+            console.log('Response Status:', error.response.status);
+            console.log('Response Headers:', error.response.headers);
+        }
     }
-  };
+};
+
 
 
   const handleFilterChange = (e) => {
@@ -283,7 +293,7 @@ const MSchoolClassSection = () => {
 
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
-    const logo = 'path_to_your_logo_image_or_url'; // Replace with your logo path or URL
+    const logo = "/Upschool_2x.png"; 
 
     // Add logo
     doc.addImage(logo, 'PNG', 10, 10, 50, 20);
