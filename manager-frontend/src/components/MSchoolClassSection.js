@@ -145,55 +145,56 @@ const MSchoolClassSection = () => {
   const handleAssignPeriod = async (e) => {
     e.preventDefault();
     try {
-        const requestData = {
-            schoolId,
-            classId,
-            combinedSectionId,
-            teacherId: selectedTeacher,
-            subjectId: selectedSubject,
-            period: selectedPeriod.period,
-            day: selectedPeriod.day,
-        };
-
-        await axiosInstance.post(`/timetable/assign`, requestData);
-
-        const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
-        const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
-
-        const newAssignedPeriod = {
-            teacher: teacher.name,
-            teacherId: selectedTeacher,
-            subject: subject.subjectName,
-            subjectId: selectedSubject
-        };
-
-        setAssignedPeriods(prevAssignedPeriods => ({
-            ...prevAssignedPeriods,
-            [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
-        }));
-
-        setIsModalOpen(false);
-        setSuccessMessage('Assignment added successfully!');
-
-        // Display reload button
-        setShowReloadButton(true);
-
+      const requestData = {
+        schoolId,
+        classId,
+        combinedSectionId,
+        teacherId: selectedTeacher,
+        subjectId: selectedSubject,
+        period: selectedPeriod.period,
+        day: selectedPeriod.day,
+      };
+  
+      await axiosInstance.post(`/timetable/assign`, requestData);
+  
+      const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
+      const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
+  
+      const newAssignedPeriod = {
+        teacher: teacher.name,
+        teacherId: selectedTeacher,
+        subject: subject.subjectName,
+        subjectId: selectedSubject
+      };
+  
+      setAssignedPeriods(prevAssignedPeriods => ({
+        ...prevAssignedPeriods,
+        [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
+      }));
+  
+      setIsModalOpen(false);
+      setSuccessMessage('Assignment added successfully!');
+  
+      // Re-fetch assignments to update the table (if necessary)
+      fetchAssignments();
+  
+      // No full reload needed
     } catch (error) {
-        console.error('Error assigning period:', error.response || error);
-
-        if (error.response) {
-            console.log('Response Data:', error.response.data);
-            console.log('Response Status:', error.response.status);
-            console.log('Response Headers:', error.response.headers);
-        }
-
-        // Display reload button even on error since data is saved in DB
-        setShowReloadButton(true);
+      console.error('Error assigning period:', error.response || error);
+      if (error.response) {
+        console.log('Response Data:', error.response.data);
+        console.log('Response Status:', error.response.status);
+        console.log('Response Headers:', error.response.headers);
+      }
+      setError('Failed to assign period. Please try again.');
     }
-};
-const handleReload = () => {
-  window.location.reload();
-};
+  };
+
+  
+  const handleReload = () => {
+    navigate(0); // Reloads the current route without redirecting to the dashboard
+  };
+  
 
 
 
