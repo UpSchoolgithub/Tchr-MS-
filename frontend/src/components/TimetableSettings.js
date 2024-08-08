@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
+import TimePicker from 'react-time-picker'; // Importing react-time-picker
 import './TimetableSettings.css';
 
 const TimetableSettings = () => {
@@ -60,71 +61,69 @@ const TimetableSettings = () => {
     if (settings.schoolEndTime && settings.assemblyEndTime && settings.durationPerPeriod) {
       calculatePeriodTimings();
     }
-  }, [settings]);
+  }, [settings.periodsPerDay, settings.durationPerPeriod, settings.assemblyEndTime]);
 
   const calculatePeriodTimings = () => {
-  const {
-    periodsPerDay,
-    durationPerPeriod,
-    assemblyEndTime,
-    lunchStartTime,
-    lunchEndTime,
-    shortBreak1StartTime,
-    shortBreak1EndTime,
-    shortBreak2StartTime,
-    shortBreak2EndTime,
-    schoolEndTime,
-    reserveTimeStart,
-    reserveTimeEnd
-  } = settings;
+    const {
+      periodsPerDay,
+      durationPerPeriod,
+      assemblyEndTime,
+      lunchStartTime,
+      lunchEndTime,
+      shortBreak1StartTime,
+      shortBreak1EndTime,
+      shortBreak2StartTime,
+      shortBreak2EndTime,
+      schoolEndTime,
+      reserveTimeStart,
+      reserveTimeEnd
+    } = settings;
 
-  let currentStartTime = assemblyEndTime;
-  const timings = [];
+    let currentStartTime = assemblyEndTime;
+    const timings = [];
 
-  for (let i = 1; i <= periodsPerDay; i++) {
-    let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
+    for (let i = 1; i <= periodsPerDay; i++) {
+      let nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
 
-    // Check if the period exceeds school end time
-    if (convertToAmPm(nextStartTime) > convertToAmPm(schoolEndTime)) {
-      alert('The periods exceed the school end time.');
-      break;
+      // Check if the period exceeds school end time
+      if (convertToAmPm(nextStartTime) > convertToAmPm(schoolEndTime)) {
+        alert('The periods exceed the school end time.');
+        break;
+      }
+
+      // Adjust for lunch break overlap
+      if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
+        timings.push({ period: 'Lunch Break', start: lunchStartTime, end: lunchEndTime });
+        currentStartTime = lunchEndTime;
+        nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
+      }
+
+      // Adjust for short break 1 overlap
+      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
+        timings.push({ period: 'Short Break 1', start: shortBreak1StartTime, end: shortBreak1EndTime });
+        currentStartTime = shortBreak1EndTime;
+        nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
+      }
+
+      // Adjust for short break 2 overlap
+      else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
+        timings.push({ period: 'Short Break 2', start: shortBreak2StartTime, end: shortBreak2EndTime });
+        currentStartTime = shortBreak2EndTime;
+        nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
+      }
+
+      // Add the period to the timetable
+      timings.push({ period: i, start: currentStartTime, end: nextStartTime });
+      currentStartTime = nextStartTime;
     }
 
-    // Adjust for lunch break overlap
-    if (isOverlapping(currentStartTime, nextStartTime, lunchStartTime, lunchEndTime)) {
-      timings.push({ period: 'Lunch Break', start: lunchStartTime, end: lunchEndTime });
-      currentStartTime = lunchEndTime;
-      nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
+    // Include the reserve time if set
+    if (reserveTimeStart && reserveTimeEnd) {
+      timings.push({ period: 'Reserve', start: reserveTimeStart, end: reserveTimeEnd });
     }
 
-    // Adjust for short break 1 overlap
-    else if (isOverlapping(currentStartTime, nextStartTime, shortBreak1StartTime, shortBreak1EndTime)) {
-      timings.push({ period: 'Short Break 1', start: shortBreak1StartTime, end: shortBreak1EndTime });
-      currentStartTime = shortBreak1EndTime;
-      nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-    }
-
-    // Adjust for short break 2 overlap
-    else if (isOverlapping(currentStartTime, nextStartTime, shortBreak2StartTime, shortBreak2EndTime)) {
-      timings.push({ period: 'Short Break 2', start: shortBreak2StartTime, end: shortBreak2EndTime });
-      currentStartTime = shortBreak2EndTime;
-      nextStartTime = addMinutes(currentStartTime, durationPerPeriod);
-    }
-
-    // Add the period to the timetable
-    timings.push({ period: i, start: currentStartTime, end: nextStartTime });
-    currentStartTime = nextStartTime;
-  }
-
-  // Include the reserve time if set
-  if (reserveTimeStart && reserveTimeEnd) {
-    timings.push({ period: 'Reserve', start: reserveTimeStart, end: reserveTimeEnd });
-  }
-
-  setPeriodTimings(timings);
-};
-
-  
+    setPeriodTimings(timings);
+  };
 
   const addMinutes = (time, minutes) => {
     const [hour, minute] = time.split(':').map(Number);
@@ -132,7 +131,6 @@ const TimetableSettings = () => {
     date.setMinutes(date.getMinutes() + minutes);
     return convertToAmPm(date.toTimeString().slice(0, 5));
   };
-  
 
   const convertToAmPm = (time) => {
     const [hour, minute] = time.split(':').map(Number);
@@ -140,7 +138,7 @@ const TimetableSettings = () => {
     const adjustedHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
     return `${adjustedHour}:${minute < 10 ? '0' + minute : minute} ${ampm}`;
   };
-  
+
   const isOverlapping = (start1, end1, start2, end2) => {
     return start1 < end2 && end1 > start2;
   };
@@ -151,7 +149,7 @@ const TimetableSettings = () => {
       const [_, day, field] = name.split('-');
       setSettings((prevSettings) => {
         const updatedDaySettings = { ...prevSettings.reserveDay[day], [field || 'open']: type === 'checkbox' ? checked : value };
-        
+
         if (type === 'checkbox' && !checked) {
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
@@ -176,6 +174,20 @@ const TimetableSettings = () => {
         [name]: value,
       }));
     }
+  };
+
+  const handleChangeTime = (value, field) => {
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      [field]: value,
+    }));
+  };
+
+  const isWithinSchoolHours = (startTime, endTime) => {
+    return (
+      convertToAmPm(startTime) >= convertToAmPm(settings.schoolStartTime) &&
+      convertToAmPm(endTime) <= convertToAmPm(settings.schoolEndTime)
+    );
   };
 
   const validateTimetable = () => {
@@ -219,6 +231,13 @@ const TimetableSettings = () => {
       new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
       new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
       return 'All activities should end before School End Time.';
+    }
+
+    // Check reserve time
+    if (settings.reserveTimeStart && settings.reserveTimeEnd) {
+      if (!isWithinSchoolHours(settings.reserveTimeStart, settings.reserveTimeEnd)) {
+        return 'Reserve time should be within or after school hours.';
+      }
     }
 
     return '';
@@ -288,98 +307,96 @@ const TimetableSettings = () => {
           <div className="form-group-row">
             <div className="form-group">
               <label>School Start Time:</label>
-              <input
-                type="time"
-                name="schoolStartTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'schoolStartTime')}
                 value={settings.schoolStartTime}
-                onChange={handleChange}
-                required
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>School End Time:</label>
-              <input
-                type="time"
-                name="schoolEndTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'schoolEndTime')}
                 value={settings.schoolEndTime}
-                onChange={handleChange}
-                required
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>Assembly Start Time:</label>
-              <input
-                type="time"
-                name="assemblyStartTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'assemblyStartTime')}
                 value={settings.assemblyStartTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>Assembly End Time:</label>
-              <input
-                type="time"
-                name="assemblyEndTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'assemblyEndTime')}
                 value={settings.assemblyEndTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
           </div>
           <div className="form-group-row">
             <div className="form-group">
               <label>Lunch Break Start Time:</label>
-              <input
-                type="time"
-                name="lunchStartTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'lunchStartTime')}
                 value={settings.lunchStartTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>Lunch Break End Time:</label>
-              <input
-                type="time"
-                name="lunchEndTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'lunchEndTime')}
                 value={settings.lunchEndTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
           </div>
           <div className="form-group-row">
             <div className="form-group">
               <label>Short Break 1 Start Time:</label>
-              <input
-                type="time"
-                name="shortBreak1StartTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'shortBreak1StartTime')}
                 value={settings.shortBreak1StartTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>Short Break 1 End Time:</label>
-              <input
-                type="time"
-                name="shortBreak1EndTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'shortBreak1EndTime')}
                 value={settings.shortBreak1EndTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>Short Break 2 Start Time:</label>
-              <input
-                type="time"
-                name="shortBreak2StartTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'shortBreak2StartTime')}
                 value={settings.shortBreak2StartTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
             <div className="form-group">
               <label>Short Break 2 End Time:</label>
-              <input
-                type="time"
-                name="shortBreak2EndTime"
+              <TimePicker
+                onChange={(value) => handleChangeTime(value, 'shortBreak2EndTime')}
                 value={settings.shortBreak2EndTime}
-                onChange={handleChange}
+                format="h:mm a"
+                disableClock
               />
             </div>
           </div>
@@ -418,18 +435,18 @@ const TimetableSettings = () => {
                     </label>
                     {settings.reserveDay[day]?.open && (
                       <div className="day-time-group">
-                        <input
-                          type="time"
-                          name={`reserveDay-${day}-start`}
+                        <TimePicker
+                          onChange={(value) => handleChangeTime(value, `reserveDay-${day}-start`)}
                           value={settings.reserveDay[day]?.start || ''}
-                          onChange={handleChange}
+                          format="h:mm a"
+                          disableClock
                         />
                         <span>to</span>
-                        <input
-                          type="time"
-                          name={`reserveDay-${day}-end`}
+                        <TimePicker
+                          onChange={(value) => handleChangeTime(value, `reserveDay-${day}-end`)}
                           value={settings.reserveDay[day]?.end || ''}
-                          onChange={handleChange}
+                          format="h:mm a"
+                          disableClock
                         />
                       </div>
                     )}
@@ -448,18 +465,18 @@ const TimetableSettings = () => {
                 </label>
                 {settings.applyToAll && (
                   <div className="day-time-group">
-                    <input
-                      type="time"
-                      name="reserveTimeStart"
+                    <TimePicker
+                      onChange={(value) => handleChangeTime(value, 'reserveTimeStart')}
                       value={settings.reserveTimeStart}
-                      onChange={handleChange}
+                      format="h:mm a"
+                      disableClock
                     />
                     <span>to</span>
-                    <input
-                      type="time"
-                      name="reserveTimeEnd"
+                    <TimePicker
+                      onChange={(value) => handleChangeTime(value, 'reserveTimeEnd')}
                       value={settings.reserveTimeEnd}
-                      onChange={handleChange}
+                      format="h:mm a"
+                      disableClock
                     />
                   </div>
                 )}
@@ -470,20 +487,20 @@ const TimetableSettings = () => {
             <>
               <div className="form-group">
                 <label>Reserve Time Start:</label>
-                <input
-                  type="time"
-                  name="reserveTimeStart"
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'reserveTimeStart')}
                   value={settings.reserveTimeStart}
-                  onChange={handleChange}
+                  format="h:mm a"
+                  disableClock
                 />
               </div>
               <div className="form-group">
                 <label>Reserve Time End:</label>
-                <input
-                  type="time"
-                  name="reserveTimeEnd"
+                <TimePicker
+                  onChange={(value) => handleChangeTime(value, 'reserveTimeEnd')}
                   value={settings.reserveTimeEnd}
-                  onChange={handleChange}
+                  format="h:mm a"
+                  disableClock
                 />
               </div>
             </>
