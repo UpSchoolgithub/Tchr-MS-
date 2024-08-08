@@ -183,9 +183,6 @@ const MSchoolClassSection = () => {
       setSuccessMessage('Assignment added successfully!');
       setShowReloadButton(true); // Show the reload button
   
-      // Re-fetch assignments to update the table (if necessary)
-      fetchAssignments();
-  
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
       if (error.response) {
@@ -463,7 +460,7 @@ const MSchoolClassSection = () => {
           <button type="submit">Assign</button>
           <button type="button" onClick={handleCloseModal}>Cancel</button>
         </form>
-        
+  
         {/* Reload Button */}
         {showReloadButton && (
           <button onClick={handleReload} className="reload-button">
