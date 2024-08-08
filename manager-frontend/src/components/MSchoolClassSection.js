@@ -241,89 +241,81 @@ const MSchoolClassSection = () => {
     if (!timetableSettings) return null;
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => i + 1);
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   
     return (
-      <div>
-        <div className="filters">
-          {/* Filters for Teacher and Subject */}
-          <label>
-            Filter by Teacher:
-            <select onChange={handleTeacherFilterChange} value={teacherFilter}>
-              <option value="">All</option>
-              {teachers.map(teacher => (
-                <option key={teacher.id} value={teacher.name}>
-                  {teacher.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Filter by Subject:
-            <select onChange={handleSubjectFilterChange} value={subjectFilter}>
-              <option value="">All</option>
-              {subjects.map(subject => (
-                <option key={subject.id} value={subject.subjectName}>
-                  {subject.subjectName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
-        </div>
-        <table className="timetable-table">
-          <thead>
-            <tr>
-              <th>Day / Period</th>
-              {periods.map(period => (
-                <th key={period}>{period}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-              <tr key={day}>
-                <td>{day}</td>
-                {periods.map(period => {
-                  const periodAssignment = assignedPeriods[`${day}-${period}`];
-                  const teacherMatch = teacherFilter ? periodAssignment?.teacher === teacherFilter : true;
-                  const subjectMatch = subjectFilter ? periodAssignment?.subject === subjectFilter : true;
-  
-                  if (teacherMatch && subjectMatch) {
-                    return (
-                      <td key={period} onClick={() => handleOpenModal(day, period)}>
-                        {periodAssignment ? (
-                          <>
-                            <div>{periodAssignment.teacher}</div>
-                            <div>{periodAssignment.subject}</div>
-                          </>
-                        ) : (
-                          <span className="add-icon">+</span>
-                        )}
-                      </td>
-                    );
-                  }
-                  return <td key={period} />;
-                })}
-              </tr>
+      <table className="timetable-table">
+        <thead>
+          <tr>
+            <th>Day / Period</th>
+            {periods.map(period => (
+              <th key={period}>{period}</th>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </tr>
+        </thead>
+        <tbody>
+          {days.map(day => (
+            <tr key={day}>
+              <td>{day}</td>
+              {periods.map(period => {
+                if (timetableSettings.breaks.includes(period)) {
+                  return (
+                    <td key={period} className="break">Short Break 1</td>
+                  );
+                }
+                if (timetableSettings.lunch === period) {
+                  return (
+                    <td key={period} className="lunch">Lunch</td>
+                  );
+                }
+                if (timetableSettings.reservedTime === period) {
+                  return (
+                    <td key={period} className="reserved">Reserved Time</td>
+                  );
+                }
+  
+                const periodAssignment = assignedPeriods[`${day}-${period}`];
+                return (
+                  <td key={period} onClick={() => handleOpenModal(day, period)}>
+                    {periodAssignment ? (
+                      <>
+                        <div>{periodAssignment.teacher}</div>
+                        <div>{periodAssignment.subject}</div>
+                      </>
+                    ) : (
+                      <span className="add-icon">+</span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     );
   };
+  
   
   const downloadTimetableAsPDF = () => {
     const doc = new jsPDF();
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay }, (_, i) => (i + 1).toString());
-  
+    
     // Prepare table rows dynamically based on periods
     const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
       const row = [day];
       periods.forEach(period => {
-        const periodAssignment = assignedPeriods[`${day}-${period}`];
-        const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-        row.push(entry);
+        if (timetableSettings.breaks.includes(period)) {
+          row.push('Short Break 1');
+        } else if (timetableSettings.lunch === period) {
+          row.push('Lunch');
+        } else if (timetableSettings.reservedTime === period) {
+          row.push('Reserved Time');
+        } else {
+          const periodAssignment = assignedPeriods[`${day}-${period}`];
+          const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+          row.push(entry);
+        }
       });
       return row;
     });
@@ -349,6 +341,7 @@ const MSchoolClassSection = () => {
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
+  
   
   return (
     <div className="container">
