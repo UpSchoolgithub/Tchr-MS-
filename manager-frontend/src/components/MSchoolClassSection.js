@@ -264,66 +264,81 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
-    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
 
-    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const rows = [];
+
+    // Function to add a row with the proper timings
+    const addPeriodOrBreak = (label, time, isBreak = false) => {
+      const row = { label, time, isBreak };
+      days.forEach(day => {
+        row[day] = ''; // Initialize each day's cell
+      });
+      rows.push(row);
+    };
+
+    // Adding periods, breaks, and lunch in order based on timing
+    timetableSettings.periodTimings.forEach((periodTiming, index) => {
+      const [start, end] = periodTiming.split(' - ');
+
+      // Check if a break or lunch comes before this period starts
+      if (timetableSettings.shortBreak1StartTime && new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) >= new Date(`1970-01-01T${start}:00`)) {
+        addPeriodOrBreak('SHORT BREAK 1', `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`, true);
+        timetableSettings.shortBreak1StartTime = null; // Nullify to avoid re-adding it
+      }
+      if (timetableSettings.lunchStartTime && new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) >= new Date(`1970-01-01T${start}:00`)) {
+        addPeriodOrBreak('LUNCH', `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`, true);
+        timetableSettings.lunchStartTime = null;
+      }
+      if (timetableSettings.shortBreak2StartTime && new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) >= new Date(`1970-01-01T${start}:00`)) {
+        addPeriodOrBreak('SHORT BREAK 2', `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`, true);
+        timetableSettings.shortBreak2StartTime = null;
+      }
+
+      // Add the period itself
+      addPeriodOrBreak(`Period ${index + 1}`, periodTiming);
+    });
+
+    // Check if any breaks/lunch are left and add them at the end
+    if (timetableSettings.shortBreak1StartTime) {
+      addPeriodOrBreak('SHORT BREAK 1', `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`, true);
+    }
+    if (timetableSettings.lunchStartTime) {
+      addPeriodOrBreak('LUNCH', `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`, true);
+    }
+    if (timetableSettings.shortBreak2StartTime) {
+      addPeriodOrBreak('SHORT BREAK 2', `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`, true);
+    }
 
     return (
       <table className="timetable-table">
         <thead>
           <tr>
-            <th>Day / Period</th>
-            {periods.map((period, index) => (
-              <th key={period}>
-                Period {period} <br /> 
-                {timetableSettings.periodTimings[index] || ''}
-              </th>
+            <th>Period / Time</th>
+            {days.map(day => (
+              <th key={day}>{day}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {days.map(day => (
-            <tr key={day}>
-              <td>{day}</td>
-              {periods.map((period, index) => {
-                const startEndTime = timetableSettings.periodTimings ? timetableSettings.periodTimings[index] : undefined;
-                if (startEndTime) {
-                  const [start, end] = startEndTime.split(' - ');
-                  if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
-                      new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
-                      new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
-                    return <td key={period} className="break">Short Break 1</td>;
-                  }
-                  if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
-                      new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
-                      new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
-                    return <td key={period} className="break">Short Break 2</td>;
-                  }
-                  if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
-                      new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
-                      new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
-                    return <td key={period} className="lunch">Lunch Break</td>;
-                  }
-                }
-
-                const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                return (
-                  <td key={period} onClick={() => handleOpenModal(day, period)}>
-                    {periodAssignment ? (
-                      <>
-                        <div>{periodAssignment.teacher}</div>
-                        <div>{periodAssignment.subject}</div>
-                      </>
-                    ) : (
-                      <span className="add-icon">+</span>
-                    )}
-                  </td>
-                );
-              })}
+          {rows.map((row, index) => (
+            <tr key={index}>
+              <td>{row.label} <br /> {row.time}</td>
+              {days.map(day => (
+                <td key={day} className={row.isBreak ? 'break' : ''}>
+                  {row[day] ? (
+                    <>
+                      <div>{row[day].teacher}</div>
+                      <div>{row[day].subject}</div>
+                    </>
+                  ) : (
+                    !row.isBreak && <span className="add-icon">+</span>
+                  )}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

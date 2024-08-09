@@ -23,6 +23,7 @@ const TimetableSettings = () => {
     reserveTimeStart: '',
     reserveTimeEnd: '',
     applyToAll: false,
+    periodTimings: [], // New state to store period timings
   });
   const [error, setError] = useState('');
 
@@ -38,7 +39,15 @@ const TimetableSettings = () => {
           data.reserveDay = {};
         }
 
-        setSettings(data);
+        // If period timings are already available, set them
+        if (data.periodTimings) {
+          setSettings({
+            ...data,
+            periodTimings: data.periodTimings,
+          });
+        } else {
+          setSettings(data);
+        }
       } catch (error) {
         if (error.response && error.response.status === 404) {
           console.error('Timetable settings not found for this school.');
@@ -57,11 +66,28 @@ const TimetableSettings = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name.startsWith('reserveDay')) {
+
+    if (name.startsWith('periodTiming')) {
+      const [_, periodIndex, field] = name.split('-');
+      const index = parseInt(periodIndex, 10);
+
+      setSettings((prevSettings) => {
+        const updatedPeriodTimings = [...prevSettings.periodTimings];
+        updatedPeriodTimings[index] = {
+          ...updatedPeriodTimings[index],
+          [field]: value,
+        };
+
+        return {
+          ...prevSettings,
+          periodTimings: updatedPeriodTimings,
+        };
+      });
+    } else if (name.startsWith('reserveDay')) {
       const [_, day, field] = name.split('-');
       setSettings((prevSettings) => {
         const updatedDaySettings = { ...prevSettings.reserveDay[day], [field || 'open']: type === 'checkbox' ? checked : value };
-        
+
         if (type === 'checkbox' && !checked) {
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
@@ -178,7 +204,13 @@ const TimetableSettings = () => {
               type="number"
               name="periodsPerDay"
               value={settings.periodsPerDay}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e);
+                setSettings((prevSettings) => ({
+                  ...prevSettings,
+                  periodTimings: Array.from({ length: e.target.value }, (_, i) => ({ start: '', end: '' })),
+                }));
+              }}
               required
             />
           </div>
@@ -193,6 +225,35 @@ const TimetableSettings = () => {
             />
           </div>
         </div>
+
+        <div className="form-section">
+          <h3>Period Timings</h3>
+          {settings.periodTimings.map((timing, index) => (
+            <div key={index} className="form-group-row">
+              <div className="form-group">
+                <label>Period {index + 1} Start Time:</label>
+                <input
+                  type="time"
+                  name={`periodTiming-${index}-start`}
+                  value={timing.start}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Period {index + 1} End Time:</label>
+                <input
+                  type="time"
+                  name={`periodTiming-${index}-end`}
+                  value={timing.end}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
         <h3>School Timings</h3>
         <div className="form-section">
           <div className="form-group-row">
@@ -294,6 +355,7 @@ const TimetableSettings = () => {
             </div>
           </div>
         </div>
+
         <h3>Reserve Type</h3>
         <div className="form-section">
           <div className="form-group">
