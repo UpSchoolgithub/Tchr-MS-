@@ -141,39 +141,46 @@ const TimetableSettings = () => {
       shortBreak2StartTime,
       shortBreak2EndTime,
     } = settings;
-
+  
     const timeOrderValid = (start, end) => {
       if (start && end) {
         return new Date(`1970-01-01T${start}:00`) < new Date(`1970-01-01T${end}:00`);
       }
       return true;
     };
-
+  
+    // Check if the school start time is earlier than the end time
     if (!timeOrderValid(schoolStartTime, schoolEndTime)) {
       return 'School Start Time should be earlier than School End Time.';
     }
-    if (!timeOrderValid(assemblyStartTime, assemblyEndTime)) {
-      return 'Assembly Start Time should be earlier than Assembly End Time.';
+    
+    // Assembly time should be within school timings
+    if (!timeOrderValid(assemblyStartTime, assemblyEndTime) || 
+        !timeOrderValid(schoolStartTime, assemblyStartTime) || 
+        !timeOrderValid(assemblyEndTime, schoolEndTime)) {
+      return 'Assembly times should be within the school timings and should be ordered correctly.';
     }
-    if (!timeOrderValid(lunchStartTime, lunchEndTime)) {
-      return 'Lunch Break Start Time should be earlier than Lunch Break End Time.';
+  
+    // Lunch time should be within school timings
+    if (!timeOrderValid(lunchStartTime, lunchEndTime) || 
+        !timeOrderValid(schoolStartTime, lunchStartTime) || 
+        !timeOrderValid(lunchEndTime, schoolEndTime)) {
+      return 'Lunch times should be within the school timings and should be ordered correctly.';
     }
-    if (!timeOrderValid(shortBreak1StartTime, shortBreak1EndTime)) {
-      return 'Short Break 1 Start Time should be earlier than Short Break 1 End Time.';
+  
+    // Short Breaks time should be within school timings
+    if (!timeOrderValid(shortBreak1StartTime, shortBreak1EndTime) || 
+        !timeOrderValid(shortBreak2StartTime, shortBreak2EndTime) || 
+        !timeOrderValid(schoolStartTime, shortBreak1StartTime) || 
+        !timeOrderValid(shortBreak1EndTime, schoolEndTime) || 
+        !timeOrderValid(schoolStartTime, shortBreak2StartTime) || 
+        !timeOrderValid(shortBreak2EndTime, schoolEndTime)) {
+      return 'Short Break times should be within the school timings and should be ordered correctly.';
     }
-    if (!timeOrderValid(shortBreak2StartTime, shortBreak2EndTime)) {
-      return 'Short Break 2 Start Time should be earlier than Short Break 2 End Time.';
-    }
-    if (schoolEndTime && (new Date(`1970-01-01T${assemblyEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${lunchEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
-      return 'All activities should end before School End Time.';
-    }
-
+  
     return '';
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
