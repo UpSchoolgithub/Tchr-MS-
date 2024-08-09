@@ -366,59 +366,56 @@ const MSchoolClassSection = () => {
   
     const rows = [];
   
-    // Combine periods and breaks/lunches into a single timeline array
-    const timeline = [];
-
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime) {
-        const [start, end] = startEndTime.split(' - ');
-
-        // Insert Short Break 1 if it falls between periods
-        if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) >= new Date(`1970-01-01T${start}:00`) &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`) <= new Date(`1970-01-01T${end}:00`)) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
+      const row = [`Period ${period} (${startEndTime})`];
+  
+      days.forEach(day => {
+        if (startEndTime) {
+          const [start, end] = startEndTime.split(' - ');
+  
+          if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
+              new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
+              new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
+            row.push('SHORT BREAK 1');
+          } else if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
+                     new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
+                     new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
+            row.push('SHORT BREAK 2');
+          } else if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
+                     new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
+                     new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
+            row.push('LUNCH');
+          } else {
+            const periodAssignment = assignedPeriods[`${day}-${period}`];
+            const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+            row.push(entry);
+          }
         }
-
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: startEndTime });
-
-        // Insert Lunch if it falls between periods
-        if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
-          new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) >= new Date(`1970-01-01T${start}:00`) &&
-          new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`) <= new Date(`1970-01-01T${end}:00`)) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
+      });
+  
+      rows.push(row);
+  
+      // Check and add breaks or reserved time in the appropriate order
+      if (index < periods.length - 1) {
+        const nextPeriodStart = new Date(`1970-01-01T${timetableSettings.periodTimings[index + 1].split(' - ')[0]}:00`);
+        if (timetableSettings.shortBreak1StartTime && new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) < nextPeriodStart) {
+          rows.push(['SHORT BREAK 1', '', '', '', '', '']);
         }
-
-        // Insert Short Break 2 if it falls between periods
-        if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) >= new Date(`1970-01-01T${start}:00`) &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`) <= new Date(`1970-01-01T${end}:00`)) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
+        if (timetableSettings.lunchStartTime && new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) < nextPeriodStart) {
+          rows.push(['LUNCH', '', '', '', '', '']);
+        }
+        if (timetableSettings.shortBreak2StartTime && new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) < nextPeriodStart) {
+          rows.push(['SHORT BREAK 2', '', '', '', '', '']);
         }
       }
     });
-
-    // Insert reserved time if set and it falls after all periods
+  
+    // Add reserved time if applicable
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
+      rows.push([`RESERVED TIME (${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd})`, '', '', '', '', '']);
     }
-
-    timeline.forEach(entry => {
-      const row = [`${entry.type === 'period' ? `Period ${entry.period}` : entry.label} (${entry.time})`];
-      days.forEach(day => {
-        if (entry.type === 'period') {
-          const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
-          const entryData = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-          row.push(entryData);
-        } else {
-          row.push('');
-        }
-      });
-      rows.push(row);
-    });
-
+  
     const columns = ['Period / Time', ...days];
   
     // Set up custom styles
@@ -461,7 +458,16 @@ const MSchoolClassSection = () => {
       rowPageBreak: 'avoid',
       willDrawCell: function (data) {
         // Apply styles for breaks
-        if (data.row.raw[0].includes('SHORT BREAK') || data.row.raw[0].includes('LUNCH') || data.row.raw[0].includes('RESERVED TIME')) {
+        if (data.row.index === rows.length - 4 && timetableSettings.shortBreak1StartTime) {
+          data.cell.styles = breakStyles;
+        }
+        if (data.row.index === rows.length - 3 && timetableSettings.lunchStartTime) {
+          data.cell.styles = breakStyles;
+        }
+        if (data.row.index === rows.length - 2 && timetableSettings.shortBreak2StartTime) {
+          data.cell.styles = breakStyles;
+        }
+        if (data.row.index === rows.length - 1) {
           data.cell.styles = breakStyles;
         }
       },
@@ -470,6 +476,7 @@ const MSchoolClassSection = () => {
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
+  
   
   return (
     <div className="container">

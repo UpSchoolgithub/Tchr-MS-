@@ -40,15 +40,12 @@ const TimetableSettings = () => {
           data.reserveDay = {};
         }
 
-        // Ensure periodTimings is an array of objects with start and end times
-        const initializedPeriodTimings = Array.from({ length: data.periodsPerDay }, (_, index) => ({
-          start: data.periodTimings ? data.periodTimings[index]?.start || '' : '',
-          end: data.periodTimings ? data.periodTimings[index]?.end || '' : ''
-        }));
-
         setSettings({
           ...data,
-          periodTimings: initializedPeriodTimings
+          periodTimings: Array.from({ length: data.periodsPerDay }, (_, index) => ({
+            start: data.periodTimings ? data.periodTimings[index]?.start || '' : '',
+            end: data.periodTimings ? data.periodTimings[index]?.end || '' : ''
+          }))
         });
         setShowPeriodSettings(true); // Show period settings if periods are already defined
       } catch (error) {
@@ -118,6 +115,17 @@ const TimetableSettings = () => {
         [name]: value,
       }));
     }
+  };
+
+  const handleSavePeriodSettings = () => {
+    setShowPeriodSettings(true);
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      periodTimings: Array.from({ length: prevSettings.periodsPerDay }, () => ({
+        start: '',
+        end: ''
+      }))
+    }));
   };
 
   const validateTimetable = () => {
@@ -192,7 +200,6 @@ const TimetableSettings = () => {
       };
       await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');
-      setShowPeriodSettings(true); // Show period settings after saving
     } catch (error) {
       console.error('Error saving timetable settings:', error);
       alert('Failed to save timetable settings.');
@@ -204,6 +211,32 @@ const TimetableSettings = () => {
       <h2>Timetable Settings</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit} className="timetable-settings-form">
+        <div className="form-section">
+          <div className="form-group">
+            <label>Periods Per Day:</label>
+            <input
+              type="number"
+              name="periodsPerDay"
+              value={settings.periodsPerDay}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Duration of Period (minutes):</label>
+            <input
+              type="number"
+              name="durationPerPeriod"
+              value={settings.durationPerPeriod}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button type="button" onClick={handleSavePeriodSettings} className="save-button">
+            Save Period Settings
+          </button>
+        </div>
+
         <h3>School Timings</h3>
         <div className="form-section">
           <div className="form-group-row">
@@ -305,31 +338,6 @@ const TimetableSettings = () => {
             </div>
           </div>
         </div>
-
-        <div className="form-section">
-          <div className="form-group">
-            <label>Periods Per Day:</label>
-            <input
-              type="number"
-              name="periodsPerDay"
-              value={settings.periodsPerDay}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Duration of Period (minutes):</label>
-            <input
-              type="number"
-              name="durationPerPeriod"
-              value={settings.durationPerPeriod}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-        
-        <button type="submit" className="save-button">Save Timetable Settings</button>
 
         {showPeriodSettings && (
           <>
@@ -459,6 +467,7 @@ const TimetableSettings = () => {
             </>
           )}
         </div>
+        <button type="submit" className="save-button">Save Timetable Settings</button>
       </form>
     </div>
   );
