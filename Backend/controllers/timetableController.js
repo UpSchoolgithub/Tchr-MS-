@@ -63,3 +63,18 @@ exports.getAssignments = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+exports.getTimetableSettings = async (req, res) => {
+  const { schoolId } = req.params;
+  try {
+    const timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
+    console.log('Timetable Settings from DB:', timetableSettings); // Log the data
+    if (!timetableSettings) {
+      return res.status(404).json({ error: 'Timetable settings not found.' });
+    }
+    res.status(200).json(timetableSettings);
+  } catch (error) {
+    console.error('Error fetching timetable settings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -92,6 +92,7 @@ const MSchoolClassSection = () => {
   const fetchTimetableSettings = async (schoolId) => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
+      console.log('Timetable Settings Response:', response.data); // Log the response
       setTimetableSettings(response.data);
     } catch (error) {
       setError('Error fetching timetable settings.');
@@ -236,6 +237,7 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
+    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
