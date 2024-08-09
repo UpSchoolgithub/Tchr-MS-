@@ -354,7 +354,7 @@ const MSchoolClassSection = () => {
       return;
     }
   
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4'); // Adjust PDF size and orientation
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -424,16 +424,21 @@ const MSchoolClassSection = () => {
     };
   
     // Add school name
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
   
-    const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
+    // Add the timetable heading
+    doc.setFontSize(16);
+    doc.text('Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+  
+    // Add class and section details
     doc.setFontSize(14);
-    doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+    const classSectionText = `Class: ${classId}, Section: ${sectionName}`;
+    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
   
     // Create the table
     doc.autoTable({
-      startY: 40,
+      startY: 50, // Adjust the Y position
       head: [columns],
       body: rows,
       theme: 'grid',
@@ -448,16 +453,7 @@ const MSchoolClassSection = () => {
       rowPageBreak: 'avoid',
       willDrawCell: function (data) {
         // Apply styles for breaks
-        if (data.row.index === rows.length - 4 && timetableSettings.shortBreak1StartTime) {
-          data.cell.styles = breakStyles;
-        }
-        if (data.row.index === rows.length - 3 && timetableSettings.lunchStartTime) {
-          data.cell.styles = breakStyles;
-        }
-        if (data.row.index === rows.length - 2 && timetableSettings.shortBreak2StartTime) {
-          data.cell.styles = breakStyles;
-        }
-        if (data.row.index === rows.length - 1) {
+        if (data.row.raw[0].includes('SHORT BREAK 1') || data.row.raw[0].includes('LUNCH') || data.row.raw[0].includes('SHORT BREAK 2') || data.row.raw[0].includes('RESERVED TIME')) {
           data.cell.styles = breakStyles;
         }
       },
@@ -466,6 +462,7 @@ const MSchoolClassSection = () => {
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
+  
   
   
   
