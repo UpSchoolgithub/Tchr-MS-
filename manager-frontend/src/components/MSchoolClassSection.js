@@ -268,54 +268,48 @@ const MSchoolClassSection = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
-
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-
+  
     // Combine periods and breaks/lunches into a single timeline array
     const timeline = [];
-
+  
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
       if (startEndTime) {
         const [start, end] = startEndTime.split(' - ');
-
-        // Insert Short Break 1 if it falls between periods
-        if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) >= new Date(`1970-01-01T${start}:00`) &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`) <= new Date(`1970-01-01T${end}:00`)) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
-
+  
         // Insert the period itself
         timeline.push({ type: 'period', period, time: startEndTime });
-
-        // Insert Lunch if it falls between periods
-        if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
-          new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) >= new Date(`1970-01-01T${start}:00`) &&
-          new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`) <= new Date(`1970-01-01T${end}:00`)) {
+  
+        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
+        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
+        }
+  
+        // Insert Lunch Break if it's supposed to be between periods 4 and 5
+        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
           timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
         }
-
-        // Insert Short Break 2 if it falls between periods
-        if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) >= new Date(`1970-01-01T${start}:00`) &&
-          new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`) <= new Date(`1970-01-01T${end}:00`)) {
+  
+        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
+        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
           timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
         }
       }
     });
-
+  
     // Insert reserved time if set and it falls after all periods
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
-
+  
     return (
       <table className="timetable-table">
         <thead>
           <tr>
-            <th>Period / Time</th>
+            <th>Time</th>
             {days.map(day => (
               <th key={day}>{day}</th>
             ))}
@@ -352,6 +346,7 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
+  
 
   const downloadTimetableAsPDF = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
@@ -365,56 +360,51 @@ const MSchoolClassSection = () => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   
     const rows = [];
+    const timeline = [];
   
+    // Build the timeline with periods and breaks
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
-      const row = [`Period ${period} (${startEndTime})`];
+      if (startEndTime) {
+        // Insert the period itself
+        timeline.push({ type: 'period', period, time: startEndTime });
   
-      days.forEach(day => {
-        if (startEndTime) {
-          const [start, end] = startEndTime.split(' - ');
-  
-          if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
-              new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
-              new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
-            row.push('SHORT BREAK 1');
-          } else if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
-                     new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
-                     new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
-            row.push('SHORT BREAK 2');
-          } else if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
-                     new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
-                     new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
-            row.push('LUNCH');
-          } else {
-            const periodAssignment = assignedPeriods[`${day}-${period}`];
-            const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-            row.push(entry);
-          }
+        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
+        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
         }
-      });
   
-      rows.push(row);
+        // Insert Lunch Break if it's supposed to be between periods 4 and 5
+        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
+          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
+        }
   
-      // Check and add breaks or reserved time in the appropriate order
-      if (index < periods.length - 1) {
-        const nextPeriodStart = new Date(`1970-01-01T${timetableSettings.periodTimings[index + 1].split(' - ')[0]}:00`);
-        if (timetableSettings.shortBreak1StartTime && new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) < nextPeriodStart) {
-          rows.push(['SHORT BREAK 1', '', '', '', '', '']);
-        }
-        if (timetableSettings.lunchStartTime && new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) < nextPeriodStart) {
-          rows.push(['LUNCH', '', '', '', '', '']);
-        }
-        if (timetableSettings.shortBreak2StartTime && new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) < nextPeriodStart) {
-          rows.push(['SHORT BREAK 2', '', '', '', '', '']);
+        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
+        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
         }
       }
     });
   
-    // Add reserved time if applicable
+    // Insert reserved time if set and it falls after all periods
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      rows.push([`RESERVED TIME (${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd})`, '', '', '', '', '']);
+      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
+  
+    // Build rows for the PDF
+    timeline.forEach(entry => {
+      const row = [`${entry.type === 'period' ? `Period ${entry.period}` : entry.label} (${entry.time})`];
+      days.forEach(day => {
+        if (entry.type === 'period') {
+          const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
+          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+          row.push(entryText);
+        } else {
+          row.push(entry.label);
+        }
+      });
+      rows.push(row);
+    });
   
     const columns = ['Period / Time', ...days];
   
@@ -476,6 +466,7 @@ const MSchoolClassSection = () => {
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
+  
   
   
   return (
