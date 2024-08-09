@@ -32,7 +32,7 @@ const MDashboard = () => {
   return (
     <div className="dashboard-container">
       <div className="gif-container">
-        <img src="/f841ac2befaedda240c55a06b23b33ec" alt="Welcome" className="full-page-gif" />
+        <img src="/f841ac2befaedda240c55a06b23b33ec.gif" alt="Welcome" className="full-page-gif" />
         
       </div>
       {!isLoading && (
