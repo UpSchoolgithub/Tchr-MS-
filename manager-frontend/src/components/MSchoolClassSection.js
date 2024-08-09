@@ -357,7 +357,7 @@ const MSchoolClassSection = () => {
     const doc = new jsPDF('p', 'mm', 'a4'); // Portrait mode with A4 size
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5']; // Rename days as per the provided layout
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']; // Days names as in the webpage
   
     const rows = [];
     const timeline = [];
@@ -397,7 +397,7 @@ const MSchoolClassSection = () => {
       if (entry.type === 'period') {
         days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
-          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '+';
           row.push(entryText);
         });
       } else {
@@ -417,7 +417,7 @@ const MSchoolClassSection = () => {
     };
   
     const breakStyles = {
-      fillColor: [189, 195, 199],
+      fillColor: [245, 245, 245],
       textColor: [0, 0, 0],
       fontStyle: 'bold',
       halign: 'center',
@@ -429,24 +429,13 @@ const MSchoolClassSection = () => {
   
     // Add the timetable heading
     doc.setFontSize(14);
-    doc.text('Time Table', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
+    doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
   
-    // Add class and section details formatted like in the image
-    const classLabelWidth = doc.getTextWidth('Class :');
-    const sectionLabelWidth = doc.getTextWidth('Section :');
-  
-    // Position and draw class and section labels
-    const labelsYPosition = 36;
-    const valuesYPosition = 36;
-  
+    // Add class and section details
+    const classSectionText = `Class: ${classId}    Section: ${sectionName}`;
     doc.setFontSize(12);
-    doc.text('Class :', 80, labelsYPosition, { align: 'left' });
-    doc.text(classId.toString(), 80 + classLabelWidth + 5, valuesYPosition, { align: 'left' });
-    doc.line(80 + classLabelWidth + 5 + doc.getTextWidth(classId.toString()) + 2, valuesYPosition + 2, 120, valuesYPosition + 2); // line under class
-  
-    doc.text('Section :', 130, labelsYPosition, { align: 'left' });
-    doc.text(sectionName, 130 + sectionLabelWidth + 5, valuesYPosition, { align: 'left' });
-    doc.line(130 + sectionLabelWidth + 5 + doc.getTextWidth(sectionName) + 2, valuesYPosition + 2, 160, valuesYPosition + 2); // line under section
+    const classSectionTextWidth = doc.getTextWidth(classSectionText);
+    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
   
     // Create the table with merged cells for breaks, lunch, and reserved time
     doc.autoTable({
@@ -468,7 +457,7 @@ const MSchoolClassSection = () => {
         if (data.column.index === 0 && ['SHORT BREAK 1', 'LUNCH', 'SHORT BREAK 2', 'RESERVED TIME'].includes(data.cell.raw)) {
           // Merge cells for break/lunch/reserved time labels
           const label = data.cell.raw;
-          doc.setFillColor(189, 195, 199); // Grey background
+          doc.setFillColor(245, 245, 245); // Grey background
           doc.rect(data.cell.x, data.cell.y, data.cell.width * columns.length, data.cell.height, 'F');
           doc.text(label, data.cell.x + data.cell.width * columns.length / 2, data.cell.y + data.cell.height / 2, {
             align: 'center',
@@ -478,7 +467,7 @@ const MSchoolClassSection = () => {
       },
       willDrawCell: function (data) {
         if (data.column.index > 0 && ['SHORT BREAK 1', 'LUNCH', 'SHORT BREAK 2', 'RESERVED TIME'].includes(data.cell.raw)) {
-          data.cell.styles.fillColor = [189, 195, 199]; // Set background color for merged cells
+          data.cell.styles.fillColor = [245, 245, 245]; // Set background color for merged cells
         }
       },
     });
