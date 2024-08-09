@@ -26,6 +26,7 @@ const TimetableSettings = () => {
     periodTimings: [] // Ensure this is always initialized as an array
   });
   const [error, setError] = useState('');
+  const [showPeriodSettings, setShowPeriodSettings] = useState(false); // New state variable
 
   useEffect(() => {
     const fetchTimetable = async () => {
@@ -49,6 +50,7 @@ const TimetableSettings = () => {
           ...data,
           periodTimings: initializedPeriodTimings
         });
+        setShowPeriodSettings(true); // Show period settings if periods are already defined
       } catch (error) {
         if (error.response && error.response.status === 404) {
           console.error('Timetable settings not found for this school.');
@@ -190,6 +192,7 @@ const TimetableSettings = () => {
       };
       await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');
+      setShowPeriodSettings(true); // Show period settings after saving
     } catch (error) {
       console.error('Error saving timetable settings:', error);
       alert('Failed to save timetable settings.');
@@ -201,55 +204,6 @@ const TimetableSettings = () => {
       <h2>Timetable Settings</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit} className="timetable-settings-form">
-        <div className="form-section">
-          <div className="form-group">
-            <label>Periods Per Day:</label>
-            <input
-              type="number"
-              name="periodsPerDay"
-              value={settings.periodsPerDay}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Duration of Period (minutes):</label>
-            <input
-              type="number"
-              name="durationPerPeriod"
-              value={settings.durationPerPeriod}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-        <h3>Period Timings</h3>
-        <div className="form-section">
-          {settings.periodTimings.map((_, index) => (
-            <div key={index} className="form-group-row">
-              <div className="form-group">
-                <label>Period {index + 1} Start Time:</label>
-                <input
-                  type="time"
-                  name={`periodStart-${index}`}
-                  value={settings.periodTimings[index].start}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Period {index + 1} End Time:</label>
-                <input
-                  type="time"
-                  name={`periodEnd-${index}`}
-                  value={settings.periodTimings[index].end}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-          ))}
-        </div>
         <h3>School Timings</h3>
         <div className="form-section">
           <div className="form-group-row">
@@ -351,6 +305,64 @@ const TimetableSettings = () => {
             </div>
           </div>
         </div>
+
+        <div className="form-section">
+          <div className="form-group">
+            <label>Periods Per Day:</label>
+            <input
+              type="number"
+              name="periodsPerDay"
+              value={settings.periodsPerDay}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Duration of Period (minutes):</label>
+            <input
+              type="number"
+              name="durationPerPeriod"
+              value={settings.durationPerPeriod}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+        
+        <button type="submit" className="save-button">Save Timetable Settings</button>
+
+        {showPeriodSettings && (
+          <>
+            <h3>Period Timings</h3>
+            <div className="form-section">
+              {settings.periodTimings.map((_, index) => (
+                <div key={index} className="form-group-row">
+                  <div className="form-group">
+                    <label>Period {index + 1} Start Time:</label>
+                    <input
+                      type="time"
+                      name={`periodStart-${index}`}
+                      value={settings.periodTimings[index].start}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Period {index + 1} End Time:</label>
+                    <input
+                      type="time"
+                      name={`periodEnd-${index}`}
+                      value={settings.periodTimings[index].end}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         <h3>Reserve Type</h3>
         <div className="form-section">
           <div className="form-group">
@@ -447,7 +459,6 @@ const TimetableSettings = () => {
             </>
           )}
         </div>
-        <button type="submit" className="save-button">Save Timetable Settings</button>
       </form>
     </div>
   );
