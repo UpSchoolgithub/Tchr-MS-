@@ -436,7 +436,7 @@ const MSchoolClassSection = () => {
     doc.setFontSize(12);
     doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 36, { align: 'center' });
   
-    // Create the table
+    // Create the table with merged cells for breaks, lunch, and reserved time
     doc.autoTable({
       startY: 45, // Adjust the Y position to leave space for headings
       head: [columns],
@@ -452,10 +452,14 @@ const MSchoolClassSection = () => {
         fillColor: [245, 245, 245],
       },
       rowPageBreak: 'avoid',
-      willDrawCell: function (data) {
-        // Apply styles for breaks
-        if (data.row.raw[0].includes('SHORT BREAK 1') || data.row.raw[0].includes('LUNCH') || data.row.raw[0].includes('SHORT BREAK 2') || data.row.raw[0].includes('RESERVED TIME')) {
-          data.cell.styles = breakStyles;
+      didDrawCell: function (data) {
+        // Merging cells for breaks and reserved time
+        if (data.column.index > 0 && (data.cell.raw === 'SHORT BREAK 1' || data.cell.raw === 'LUNCH' || data.cell.raw === 'SHORT BREAK 2' || data.cell.raw === 'RESERVED TIME')) {
+          doc.rect(data.cell.x, data.cell.y, data.cell.width * columns.length, data.cell.height, 'F');
+          doc.text(data.cell.raw, data.cell.x + data.cell.width * columns.length / 2, data.cell.y + data.cell.height / 2, {
+            align: 'center',
+            baseline: 'middle'
+          });
         }
       },
     });
