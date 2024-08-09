@@ -23,7 +23,7 @@ const TimetableSettings = () => {
     reserveTimeStart: '',
     reserveTimeEnd: '',
     applyToAll: false,
-    periodTimings: [] // Ensure this is always initialized as an array
+    periodTimings: []
   });
   const [error, setError] = useState('');
 
@@ -39,24 +39,16 @@ const TimetableSettings = () => {
           data.reserveDay = {};
         }
 
-        // Ensure periodTimings is an array of objects with start and end times
-        const initializedPeriodTimings = Array.from({ length: data.periodsPerDay }, (_, index) => ({
-          start: data.periodTimings ? data.periodTimings[index]?.start || '' : '',
-          end: data.periodTimings ? data.periodTimings[index]?.end || '' : ''
-        }));
+        // Generate period timings based on the number of periods and their duration
+        const periodTimings = generatePeriodTimings(data.periodsPerDay, data.durationPerPeriod, data.schoolStartTime);
 
         setSettings({
           ...data,
-          periodTimings: initializedPeriodTimings
+          periodTimings
         });
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error('Timetable settings not found for this school.');
-          setError('Timetable settings not found.');
-        } else {
-          console.error('Failed to fetch timetable settings:', error);
-          setError('Failed to fetch timetable settings.');
-        }
+        console.error('Failed to fetch timetable settings:', error);
+        setError('Failed to fetch timetable settings.');
       }
     };
 
@@ -71,7 +63,7 @@ const TimetableSettings = () => {
       const [_, day, field] = name.split('-');
       setSettings((prevSettings) => {
         const updatedDaySettings = { ...prevSettings.reserveDay[day], [field || 'open']: type === 'checkbox' ? checked : value };
-        
+
         if (type === 'checkbox' && !checked) {
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
@@ -90,26 +82,6 @@ const TimetableSettings = () => {
         ...prevSettings,
         applyToAll: checked,
       }));
-    } else if (name.startsWith('periodStart-')) {
-      const index = parseInt(name.split('-')[1]);
-      setSettings((prevSettings) => {
-        const periodTimings = [...prevSettings.periodTimings];
-        periodTimings[index] = {
-          ...periodTimings[index],
-          start: value
-        };
-        return { ...prevSettings, periodTimings };
-      });
-    } else if (name.startsWith('periodEnd-')) {
-      const index = parseInt(name.split('-')[1]);
-      setSettings((prevSettings) => {
-        const periodTimings = [...prevSettings.periodTimings];
-        periodTimings[index] = {
-          ...periodTimings[index],
-          end: value
-        };
-        return { ...prevSettings, periodTimings };
-      });
     } else {
       setSettings((prevSettings) => ({
         ...prevSettings,
@@ -119,18 +91,7 @@ const TimetableSettings = () => {
   };
 
   const validateTimetable = () => {
-    const {
-      schoolStartTime,
-      schoolEndTime,
-      assemblyStartTime,
-      assemblyEndTime,
-      lunchStartTime,
-      lunchEndTime,
-      shortBreak1StartTime,
-      shortBreak1EndTime,
-      shortBreak2StartTime,
-      shortBreak2EndTime,
-    } = settings;
+    const { schoolStartTime, schoolEndTime } = settings;
 
     const timeOrderValid = (start, end) => {
       if (start && end) {
@@ -141,24 +102,6 @@ const TimetableSettings = () => {
 
     if (!timeOrderValid(schoolStartTime, schoolEndTime)) {
       return 'School Start Time should be earlier than School End Time.';
-    }
-    if (!timeOrderValid(assemblyStartTime, assemblyEndTime)) {
-      return 'Assembly Start Time should be earlier than Assembly End Time.';
-    }
-    if (!timeOrderValid(lunchStartTime, lunchEndTime)) {
-      return 'Lunch Break Start Time should be earlier than Lunch Break End Time.';
-    }
-    if (!timeOrderValid(shortBreak1StartTime, shortBreak1EndTime)) {
-      return 'Short Break 1 Start Time should be earlier than Short Break 1 End Time.';
-    }
-    if (!timeOrderValid(shortBreak2StartTime, shortBreak2EndTime)) {
-      return 'Short Break 2 Start Time should be earlier than Short Break 2 End Time.';
-    }
-    if (schoolEndTime && (new Date(`1970-01-01T${assemblyEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${lunchEndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak1EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`) ||
-      new Date(`1970-01-01T${shortBreak2EndTime}:00`) > new Date(`1970-01-01T${schoolEndTime}:00`))) {
-      return 'All activities should end before School End Time.';
     }
 
     return '';
@@ -196,11 +139,55 @@ const TimetableSettings = () => {
     }
   };
 
+  const generatePeriodTimings = (periodsPerDay, durationPerPeriod, schoolStartTime) => {
+    const periodTimings = [];
+    let startTime = new Date(`1970-01-01T${schoolStartTime}:00`);
+
+    for (let i = 0; i < periodsPerDay; i++) {
+      const endTime = new Date(startTime.getTime() + durationPerPeriod * 60000);
+      periodTimings.push({
+        start: formatTime(startTime),
+        end: formatTime(endTime),
+      });
+      startTime = endTime;
+    }
+
+    return periodTimings;
+  };
+
+  const formatTime = (date) => {
+    return date.toTimeString().split(' ')[0].substring(0, 5);
+  };
+
   return (
     <div className="timetable-settings-container">
       <h2>Timetable Settings</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit} className="timetable-settings-form">
+        <h3>School Timings</h3>
+        <div className="form-section">
+          <div className="form-group">
+            <label>School Start Time:</label>
+            <input
+              type="time"
+              name="schoolStartTime"
+              value={settings.schoolStartTime}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>School End Time:</label>
+            <input
+              type="time"
+              name="schoolEndTime"
+              value={settings.schoolEndTime}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+        <h3>Period Timings</h3>
         <div className="form-section">
           <div className="form-group">
             <label>Periods Per Day:</label>
@@ -208,7 +195,18 @@ const TimetableSettings = () => {
               type="number"
               name="periodsPerDay"
               value={settings.periodsPerDay}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e);
+                const newPeriodTimings = generatePeriodTimings(
+                  e.target.value,
+                  settings.durationPerPeriod,
+                  settings.schoolStartTime
+                );
+                setSettings((prevSettings) => ({
+                  ...prevSettings,
+                  periodTimings: newPeriodTimings,
+                }));
+              }}
               required
             />
           </div>
@@ -218,21 +216,29 @@ const TimetableSettings = () => {
               type="number"
               name="durationPerPeriod"
               value={settings.durationPerPeriod}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e);
+                const newPeriodTimings = generatePeriodTimings(
+                  settings.periodsPerDay,
+                  e.target.value,
+                  settings.schoolStartTime
+                );
+                setSettings((prevSettings) => ({
+                  ...prevSettings,
+                  periodTimings: newPeriodTimings,
+                }));
+              }}
               required
             />
           </div>
-        </div>
-        <h3>Period Timings</h3>
-        <div className="form-section">
-          {settings.periodTimings.map((_, index) => (
+          {settings.periodTimings.map((timing, index) => (
             <div key={index} className="form-group-row">
               <div className="form-group">
                 <label>Period {index + 1} Start Time:</label>
                 <input
                   type="time"
                   name={`periodStart-${index}`}
-                  value={settings.periodTimings[index].start}
+                  value={timing.start}
                   onChange={handleChange}
                   required
                 />
@@ -242,114 +248,13 @@ const TimetableSettings = () => {
                 <input
                   type="time"
                   name={`periodEnd-${index}`}
-                  value={settings.periodTimings[index].end}
+                  value={timing.end}
                   onChange={handleChange}
                   required
                 />
               </div>
             </div>
           ))}
-        </div>
-        <h3>School Timings</h3>
-        <div className="form-section">
-          <div className="form-group-row">
-            <div className="form-group">
-              <label>School Start Time:</label>
-              <input
-                type="time"
-                name="schoolStartTime"
-                value={settings.schoolStartTime}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>School End Time:</label>
-              <input
-                type="time"
-                name="schoolEndTime"
-                value={settings.schoolEndTime}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Assembly Start Time:</label>
-              <input
-                type="time"
-                name="assemblyStartTime"
-                value={settings.assemblyStartTime}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Assembly End Time:</label>
-              <input
-                type="time"
-                name="assemblyEndTime"
-                value={settings.assemblyEndTime}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          <div className="form-group-row">
-            <div className="form-group">
-              <label>Lunch Break Start Time:</label>
-              <input
-                type="time"
-                name="lunchStartTime"
-                value={settings.lunchStartTime}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Lunch Break End Time:</label>
-              <input
-                type="time"
-                name="lunchEndTime"
-                value={settings.lunchEndTime}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          <div className="form-group-row">
-            <div className="form-group">
-              <label>Short Break 1 Start Time:</label>
-              <input
-                type="time"
-                name="shortBreak1StartTime"
-                value={settings.shortBreak1StartTime}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Short Break 1 End Time:</label>
-              <input
-                type="time"
-                name="shortBreak1EndTime"
-                value={settings.shortBreak1EndTime}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Short Break 2 Start Time:</label>
-              <input
-                type="time"
-                name="shortBreak2StartTime"
-                value={settings.shortBreak2StartTime}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Short Break 2 End Time:</label>
-              <input
-                type="time"
-                name="shortBreak2EndTime"
-                value={settings.shortBreak2EndTime}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
         </div>
         <h3>Reserve Type</h3>
         <div className="form-section">
