@@ -336,67 +336,132 @@ const MSchoolClassSection = () => {
       alert('No timetable settings available to download.');
       return;
     }
-
+  
     const doc = new jsPDF();
-
-    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => (i + 1).toString());
-
-    const rows = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
-      const row = [day];
-      periods.forEach((period, index) => {
-        const startEndTime = timetableSettings.periodTimings[index];
+  
+    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  
+    const rows = [];
+  
+    periods.forEach((period, index) => {
+      const startEndTime = timetableSettings.periodTimings[index];
+      const row = [`Period ${period} (${startEndTime})`];
+  
+      days.forEach(day => {
         if (startEndTime) {
           const [start, end] = startEndTime.split(' - ');
+  
           if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime &&
               new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak1StartTime}:00`) &&
               new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak1EndTime}:00`)) {
-            row.push('Short Break 1');
-            return;
-          }
-          if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
-              new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
-              new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
-            row.push('Short Break 2');
-            return;
-          }
-          if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
-              new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
-              new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
-            row.push('Lunch Break');
-            return;
+            row.push('SHORT BREAK 1');
+          } else if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime &&
+                     new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.shortBreak2StartTime}:00`) &&
+                     new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.shortBreak2EndTime}:00`)) {
+            row.push('SHORT BREAK 2');
+          } else if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime &&
+                     new Date(`1970-01-01T${start}:00`) >= new Date(`1970-01-01T${timetableSettings.lunchStartTime}:00`) &&
+                     new Date(`1970-01-01T${end}:00`) <= new Date(`1970-01-01T${timetableSettings.lunchEndTime}:00`)) {
+            row.push('LUNCH');
+          } else {
+            const periodAssignment = assignedPeriods[`${day}-${period}`];
+            const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+            row.push(entry);
           }
         }
-
-        const periodAssignment = assignedPeriods[`${day}-${period}`];
-        const entry = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-        row.push(entry);
       });
-      return row;
+  
+      rows.push(row);
     });
-
-    const columns = ['Day / Period', ...periods.map((p, index) => `Period ${p} (${timetableSettings.periodTimings[index] || ''})`)];
-
+  
+    // Add rows for breaks and reserved time
+    if (timetableSettings.shortBreak1StartTime) {
+      rows.push(['SHORT BREAK 1', '', '', '', '', '']);
+    }
+    if (timetableSettings.lunchStartTime) {
+      rows.push(['LUNCH', '', '', '', '', '']);
+    }
+    if (timetableSettings.shortBreak2StartTime) {
+      rows.push(['SHORT BREAK 2', '', '', '', '', '']);
+    }
+    rows.push(['RESERVED TIME', '', '', '', '', '']);
+  
+    const columns = ['Period / Time', ...days];
+  
+    // Set up custom styles
+    const headerStyles = {
+      fillColor: [22, 160, 133],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    };
+  
+    const breakStyles = {
+      fillColor: [189, 195, 199],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      halign: 'center',
+    };
+  
+    // Add school name
     doc.setFontSize(16);
-    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
-
+    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+  
     const headingText = `Timetable of Class: ${classId}, Section: ${sectionName}`;
     doc.setFontSize(14);
-    doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
-
+    doc.text(headingText, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+  
+    // Create the table
     doc.autoTable({
-      startY: 45,
+      startY: 40,
       head: [columns],
       body: rows,
-      theme: 'grid'
+      theme: 'grid',
+      styles: {
+        halign: 'center',
+        valign: 'middle',
+      },
+      headStyles: headerStyles,
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      rowPageBreak: 'avoid',
+      willDrawCell: function (data) {
+        // Apply styles for breaks
+        if (data.row.index === rows.length - 4 && timetableSettings.shortBreak1StartTime) {
+          data.cell.styles = breakStyles;
+        }
+        if (data.row.index === rows.length - 3 && timetableSettings.lunchStartTime) {
+          data.cell.styles = breakStyles;
+        }
+        if (data.row.index === rows.length - 2 && timetableSettings.shortBreak2StartTime) {
+          data.cell.styles = breakStyles;
+        }
+        if (data.row.index === rows.length - 1) {
+          data.cell.styles = breakStyles;
+        }
+      },
     });
-
+  
     const filename = `Timetable_${classId}_${sectionName}.pdf`;
     doc.save(filename);
   };
-
+  
   return (
     <div className="container">
       <div className="header">
+        <div className="school-info">
+          <div className="class-info">
+            <span className="label">Class :</span>
+            <span className="line"></span>
+          </div>
+          <div className="section-info">
+            <span className="label">Section :</span>
+            <span className="line"></span>
+          </div>
+        </div>
+        <h1>{schoolName}</h1>
         <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
           {showDetails ? 'Hide Details' : 'More Details'}
         </button>
