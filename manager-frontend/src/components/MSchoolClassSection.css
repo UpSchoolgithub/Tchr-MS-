@@ -1,156 +1,303 @@
 .container {
   display: flex;
-  justify-content: center; /* Center align the main container */
-  align-items: center;
-  height: 100vh;
-  width: 100%;
-  box-sizing: border-box;
-  background-color: #f7f9fc; /* Background color as per the screenshot */
-}
-
-.classroom-container {
-  width: 100%;
-  max-width: 1200px; /* Adjusted width for better visibility */
+  flex-direction: column;
+  justify-content: left;
+  align-items: flex-start;
   padding: 20px;
-  background-color: #fff; /* White background for the container */
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-}
-
-h1 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #333; /* Dark grey color for text */
-  text-align: left; /* Align the title to the left */
-}
-
-.form-group {
-  margin-bottom: 15px;
-  text-align: left;
-}
-
-.form-group label {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 5px;
-  display: block;
-}
-
-.form-group input, .form-group select {
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
+  max-width: 1000px;
+  margin: 0 auto;
   box-sizing: border-box;
+  font-family: Arial, sans-serif;
 }
 
-.subjects-container {
-  margin-top: 20px;
-  text-align: left;
-}
-
-.subject-item {
-  padding: 8px 12px;
-  margin-bottom: 5px;
-  background-color: #e0e7ff; /* Light blue background for subject items */
-  border-radius: 4px;
-  color: #333;
-  font-size: 14px;
-}
-
-.select-button {
+.header {
+  display: flex;
+  justify-content: space-between;
   width: 100%;
-  padding: 12px;
-  background-color: #4CAF50; /* Green background as per the save button in the image */
+  margin-bottom: 20px;
+}
+
+.more-details-button {
+  background-color: #007bff;
   color: #fff;
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
   border: none;
+  padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 20px;
+  font-size: 14px;
   transition: background-color 0.3s ease;
 }
 
-.select-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+.more-details-button:hover {
+  background-color: #0056b3;
 }
 
-.select-button:hover:not(:disabled) {
-  background-color: #45a049; /* Darker green on hover */
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-    justify-content: center;
-    padding: 10px;
-  }
-  .classroom-container {
-    width: 100%;
-    padding: 15px;
-  }
-  h1 {
-    font-size: 20px;
-  }
-}
-
-/* Focus states for accessibility */
-.form-group input:focus, .form-group select:focus,
-.select-button:focus {
-  box-shadow: 0 0 0 2px #0056b3; /* Custom focus ring */
-}
-
-/* Hover effects for dropdown options */
-.form-group input:hover, .form-group select:hover {
-  border-color: #007bff; /* Change border color on hover */
-}
-
-/* Placeholder styling */
-.form-group input::placeholder, .form-group select::placeholder {
-  color: #aaa;
-}
-
-/* Hover effect for buttons */
-.select-button:hover:not(:disabled) {
-  background-color: #0062cc; /* Slightly darker shade for better contrast */
-}
-/* General table styling for calendar and timetable */
-.table {
+.details-section {
+  background-color: #f7f9fc;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
   width: 100%;
-  border-collapse: collapse; /* Ensures that the borders are neat */
-  margin-top: 20px; /* Space above the table */
 }
 
-.table th, .table td {
-  padding: 8px; /* Padding inside each cell */
-  text-align: left; /* Align text to the left */
-  border-bottom: 1px solid #ccc; /* Light grey line below each row */
+.details,
+.subjects {
+  margin-bottom: 10px;
 }
 
-.table th {
-  background-color: #f1f1f1; /* Light grey background for header cells */
-  color: #333; /* Dark grey text for contrast */
+.subjects .subject {
+  padding: 8px;
+  background-color: #e0e7ff;
+  border-radius: 4px;
+  margin-bottom: 5px;
 }
 
-.table td {
-  background-color: #fff; /* White background for cells */
-  color: #333; /* Dark grey text for readability */
+.buttons {
+  margin-bottom: 20px;
 }
 
-/* Specific IDs or classes for calendar and timetable tables if available */
-#calendarTable, #timetableTable {
-  background-color: #fff; /* Ensures the whole table has a white background */
+.buttons button {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-right: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
-/* If tables are within specific containers, target those for more precision */
-.calendar-container .table,
-.timetable-container .table {
+.buttons button:hover {
+  background-color: #218838;
+}
+
+.calendar,
+.timetable {
+  width: 100%;
+}
+
+.calendar h2,
+.timetable h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.filters {
+  margin-bottom: 15px;
+}
+
+.filters label {
+  margin-right: 20px;
+  font-size: 14px;
+  color: #333;
+}
+
+.filters select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
   background-color: #fff;
+}
+
+.calendar-table,
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-table th,
+.timetable-table th,
+.calendar-table td,
+.timetable-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.calendar-table th,
+.timetable-table th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.timetable-table td .add-icon {
+  color: #007bff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.timetable-table td {
+  cursor: pointer;
+}
+
+.success-message {
+  color: #28a745;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+.reload-button {
+  background-color: #ffc107;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.reload-button:hover {
+  background-color: #e0a800;
+}
+
+.modal-content {
+  padding: 20px;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content form div {
+  margin-bottom: 10px;
+}
+
+.modal-content form label {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.modal-content form select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.modal-content form button {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.modal-content form button:hover {
+  background-color: #0056b3;
+}
+
+.modal-content form button[type='button'] {
+  background-color: #dc3545;
+  margin-left: 10px;
+}
+
+.modal-content form button[type='button']:hover {
+  background-color: #c82333;
+}
+.reload-button {
+  background-color: #ffc107;
+  color: #333;
+  border: 2px solid red; /* Add this for visibility */
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+/* Add these styles to your CSS file */
+
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.timetable-table th,
+.timetable-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.timetable-table th {
+  background-color: #333;
+  color: #fff;
+}
+
+.timetable-table td.break,
+.timetable-table td.lunch,
+.timetable-table td.reserved {
+  background-color: #f2f2f2;
+  color: #333;
+  font-weight: bold;
+  cursor: default;
+}
+
+.timetable-table td.reserved {
+  background-color: #333;
+  color: #fff;
+}
+.timetable-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.school-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.class-info,
+.section-info {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+
+.label {
+  background-color: #555;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+.line {
+  display: inline-block;
+  border-bottom: 1px solid #555;
+  width: 100px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  text-transform: uppercase;
 }
