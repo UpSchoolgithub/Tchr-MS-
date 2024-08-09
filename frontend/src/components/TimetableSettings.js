@@ -23,7 +23,7 @@ const TimetableSettings = () => {
     reserveTimeStart: '',
     reserveTimeEnd: '',
     applyToAll: false,
-    periodTimings: [], // New state to store period timings
+    periodTimings: []
   });
   const [error, setError] = useState('');
 
@@ -39,15 +39,7 @@ const TimetableSettings = () => {
           data.reserveDay = {};
         }
 
-        // If period timings are already available, set them
-        if (data.periodTimings) {
-          setSettings({
-            ...data,
-            periodTimings: data.periodTimings,
-          });
-        } else {
-          setSettings(data);
-        }
+        setSettings(data);
       } catch (error) {
         if (error.response && error.response.status === 404) {
           console.error('Timetable settings not found for this school.');
@@ -66,28 +58,11 @@ const TimetableSettings = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    if (name.startsWith('periodTiming')) {
-      const [_, periodIndex, field] = name.split('-');
-      const index = parseInt(periodIndex, 10);
-
-      setSettings((prevSettings) => {
-        const updatedPeriodTimings = [...prevSettings.periodTimings];
-        updatedPeriodTimings[index] = {
-          ...updatedPeriodTimings[index],
-          [field]: value,
-        };
-
-        return {
-          ...prevSettings,
-          periodTimings: updatedPeriodTimings,
-        };
-      });
-    } else if (name.startsWith('reserveDay')) {
+    if (name.startsWith('reserveDay')) {
       const [_, day, field] = name.split('-');
       setSettings((prevSettings) => {
         const updatedDaySettings = { ...prevSettings.reserveDay[day], [field || 'open']: type === 'checkbox' ? checked : value };
-
+        
         if (type === 'checkbox' && !checked) {
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
@@ -106,6 +81,26 @@ const TimetableSettings = () => {
         ...prevSettings,
         applyToAll: checked,
       }));
+    } else if (name.startsWith('periodStart-')) {
+      const index = parseInt(name.split('-')[1]);
+      setSettings((prevSettings) => {
+        const periodTimings = [...prevSettings.periodTimings];
+        periodTimings[index] = {
+          ...periodTimings[index],
+          start: value
+        };
+        return { ...prevSettings, periodTimings };
+      });
+    } else if (name.startsWith('periodEnd-')) {
+      const index = parseInt(name.split('-')[1]);
+      setSettings((prevSettings) => {
+        const periodTimings = [...prevSettings.periodTimings];
+        periodTimings[index] = {
+          ...periodTimings[index],
+          end: value
+        };
+        return { ...prevSettings, periodTimings };
+      });
     } else {
       setSettings((prevSettings) => ({
         ...prevSettings,
@@ -204,13 +199,7 @@ const TimetableSettings = () => {
               type="number"
               name="periodsPerDay"
               value={settings.periodsPerDay}
-              onChange={(e) => {
-                handleChange(e);
-                setSettings((prevSettings) => ({
-                  ...prevSettings,
-                  periodTimings: Array.from({ length: e.target.value }, (_, i) => ({ start: '', end: '' })),
-                }));
-              }}
+              onChange={handleChange}
               required
             />
           </div>
@@ -225,17 +214,16 @@ const TimetableSettings = () => {
             />
           </div>
         </div>
-
+        <h3>Period Timings</h3>
         <div className="form-section">
-          <h3>Period Timings</h3>
-          {settings.periodTimings.map((timing, index) => (
+          {Array.from({ length: settings.periodsPerDay }).map((_, index) => (
             <div key={index} className="form-group-row">
               <div className="form-group">
                 <label>Period {index + 1} Start Time:</label>
                 <input
                   type="time"
-                  name={`periodTiming-${index}-start`}
-                  value={timing.start}
+                  name={`periodStart-${index}`}
+                  value={settings.periodTimings[index]?.start || ''}
                   onChange={handleChange}
                   required
                 />
@@ -244,8 +232,8 @@ const TimetableSettings = () => {
                 <label>Period {index + 1} End Time:</label>
                 <input
                   type="time"
-                  name={`periodTiming-${index}-end`}
-                  value={timing.end}
+                  name={`periodEnd-${index}`}
+                  value={settings.periodTimings[index]?.end || ''}
                   onChange={handleChange}
                   required
                 />
@@ -253,7 +241,6 @@ const TimetableSettings = () => {
             </div>
           ))}
         </div>
-
         <h3>School Timings</h3>
         <div className="form-section">
           <div className="form-group-row">
@@ -355,7 +342,6 @@ const TimetableSettings = () => {
             </div>
           </div>
         </div>
-
         <h3>Reserve Type</h3>
         <div className="form-section">
           <div className="form-group">
