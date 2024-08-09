@@ -128,68 +128,10 @@ const TimetableSettings = () => {
     }));
   };
 
-  const validateTimetable = () => {
-    const {
-      schoolStartTime,
-      schoolEndTime,
-      assemblyStartTime,
-      assemblyEndTime,
-      lunchStartTime,
-      lunchEndTime,
-      shortBreak1StartTime,
-      shortBreak1EndTime,
-      shortBreak2StartTime,
-      shortBreak2EndTime,
-    } = settings;
-  
-    const timeOrderValid = (start, end) => {
-      if (start && end) {
-        return new Date(`1970-01-01T${start}:00`) < new Date(`1970-01-01T${end}:00`);
-      }
-      return true;
-    };
-  
-    // Check if the school start time is earlier than the end time
-    if (!timeOrderValid(schoolStartTime, schoolEndTime)) {
-      return 'School Start Time should be earlier than School End Time.';
-    }
-    
-    // Assembly time should be within school timings
-    if (!timeOrderValid(assemblyStartTime, assemblyEndTime) || 
-        !timeOrderValid(schoolStartTime, assemblyStartTime) || 
-        !timeOrderValid(assemblyEndTime, schoolEndTime)) {
-      return 'Assembly times should be within the school timings and should be ordered correctly.';
-    }
-  
-    // Lunch time should be within school timings
-    if (!timeOrderValid(lunchStartTime, lunchEndTime) || 
-        !timeOrderValid(schoolStartTime, lunchStartTime) || 
-        !timeOrderValid(lunchEndTime, schoolEndTime)) {
-      return 'Lunch times should be within the school timings and should be ordered correctly.';
-    }
-  
-    // Short Breaks time should be within school timings
-    if (!timeOrderValid(shortBreak1StartTime, shortBreak1EndTime) || 
-        !timeOrderValid(shortBreak2StartTime, shortBreak2EndTime) || 
-        !timeOrderValid(schoolStartTime, shortBreak1StartTime) || 
-        !timeOrderValid(shortBreak1EndTime, schoolEndTime) || 
-        !timeOrderValid(schoolStartTime, shortBreak2StartTime) || 
-        !timeOrderValid(shortBreak2EndTime, schoolEndTime)) {
-      return 'Short Break times should be within the school timings and should be ordered correctly.';
-    }
-  
-    return '';
-  };
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationError = validateTimetable();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
+    // Removed validation check
     const updatedReserveDay = { ...settings.reserveDay };
     if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
       for (const day in updatedReserveDay) {
