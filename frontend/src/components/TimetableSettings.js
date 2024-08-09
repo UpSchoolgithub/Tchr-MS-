@@ -23,7 +23,7 @@ const TimetableSettings = () => {
     reserveTimeStart: '',
     reserveTimeEnd: '',
     applyToAll: false,
-    periodTimings: []
+    periodTimings: [] // Ensure this is always initialized as an array
   });
   const [error, setError] = useState('');
 
@@ -39,7 +39,16 @@ const TimetableSettings = () => {
           data.reserveDay = {};
         }
 
-        setSettings(data);
+        // Ensure periodTimings is an array of objects with start and end times
+        const initializedPeriodTimings = Array.from({ length: data.periodsPerDay }, (_, index) => ({
+          start: data.periodTimings ? data.periodTimings[index]?.start || '' : '',
+          end: data.periodTimings ? data.periodTimings[index]?.end || '' : ''
+        }));
+
+        setSettings({
+          ...data,
+          periodTimings: initializedPeriodTimings
+        });
       } catch (error) {
         if (error.response && error.response.status === 404) {
           console.error('Timetable settings not found for this school.');
@@ -216,14 +225,14 @@ const TimetableSettings = () => {
         </div>
         <h3>Period Timings</h3>
         <div className="form-section">
-          {Array.from({ length: settings.periodsPerDay }).map((_, index) => (
+          {settings.periodTimings.map((_, index) => (
             <div key={index} className="form-group-row">
               <div className="form-group">
                 <label>Period {index + 1} Start Time:</label>
                 <input
                   type="time"
                   name={`periodStart-${index}`}
-                  value={settings.periodTimings[index]?.start || ''}
+                  value={settings.periodTimings[index].start}
                   onChange={handleChange}
                   required
                 />
@@ -233,7 +242,7 @@ const TimetableSettings = () => {
                 <input
                   type="time"
                   name={`periodEnd-${index}`}
-                  value={settings.periodTimings[index]?.end || ''}
+                  value={settings.periodTimings[index].end}
                   onChange={handleChange}
                   required
                 />
