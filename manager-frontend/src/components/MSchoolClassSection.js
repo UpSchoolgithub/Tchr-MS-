@@ -354,10 +354,10 @@ const MSchoolClassSection = () => {
       return;
     }
   
-    const doc = new jsPDF('p', 'mm', 'a4'); // Adjust PDF size and orientation
+    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait mode with A4 size
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5']; // Rename days as per the provided layout
   
     const rows = [];
     const timeline = [];
@@ -393,7 +393,7 @@ const MSchoolClassSection = () => {
   
     // Build rows for the PDF
     timeline.forEach(entry => {
-      const row = [`${entry.type === 'period' ? `Period ${entry.period}` : entry.label} (${entry.time})`];
+      const row = [`${entry.time}`];
       days.forEach(day => {
         if (entry.type === 'period') {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
@@ -406,11 +406,11 @@ const MSchoolClassSection = () => {
       rows.push(row);
     });
   
-    const columns = ['Period / Time', ...days];
+    const columns = ['Time', ...days];
   
     // Set up custom styles
     const headerStyles = {
-      fillColor: [22, 160, 133],
+      fillColor: [0, 0, 0],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
@@ -428,23 +428,24 @@ const MSchoolClassSection = () => {
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
   
     // Add the timetable heading
-    doc.setFontSize(16);
-    doc.text('Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Time Table', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
   
     // Add class and section details
-    doc.setFontSize(14);
-    const classSectionText = `Class: ${classId}, Section: ${sectionName}`;
-    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+    const classSectionText = `Class: ${classId}  Section: ${sectionName}`;
+    doc.setFontSize(12);
+    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 36, { align: 'center' });
   
     // Create the table
     doc.autoTable({
-      startY: 50, // Adjust the Y position
+      startY: 45, // Adjust the Y position to leave space for headings
       head: [columns],
       body: rows,
       theme: 'grid',
       styles: {
         halign: 'center',
         valign: 'middle',
+        lineWidth: 0.1,
       },
       headStyles: headerStyles,
       alternateRowStyles: {
