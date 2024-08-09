@@ -1,6 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
+  background-color: #f8f9fa;
   justify-content: left;
   align-items: flex-start;
   padding: 20px;
@@ -48,7 +49,7 @@
 
 .subjects .subject {
   padding: 8px;
-  background-color: #e0e7ff;
+  background-color: #f8f9fa;
   border-radius: 4px;
   margin-bottom: 5px;
 }
@@ -118,7 +119,7 @@
 
 .calendar-table th,
 .timetable-table th {
-  background-color: #f2f2f2;
+  background-color: #f8f9fa;
   color: #333;
 }
 
@@ -244,7 +245,7 @@
 .timetable-table td.break,
 .timetable-table td.lunch,
 .timetable-table td.reserved {
-  background-color: #f2f2f2;
+  background-color: #ffffff;
   color: #333;
   font-weight: bold;
   cursor: default;
