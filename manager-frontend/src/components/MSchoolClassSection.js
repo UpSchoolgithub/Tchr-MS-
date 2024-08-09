@@ -394,15 +394,15 @@ const MSchoolClassSection = () => {
     // Build rows for the PDF
     timeline.forEach(entry => {
       const row = [`${entry.time}`];
-      days.forEach(day => {
-        if (entry.type === 'period') {
+      if (entry.type === 'period') {
+        days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
           const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
           row.push(entryText);
-        } else {
-          row.push(entry.label);
-        }
-      });
+        });
+      } else {
+        row.push(entry.label); // For breaks and reserved time
+      }
       rows.push(row);
     });
   
@@ -431,10 +431,22 @@ const MSchoolClassSection = () => {
     doc.setFontSize(14);
     doc.text('Time Table', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
   
-    // Add class and section details
-    const classSectionText = `Class: ${classId}  Section: ${sectionName}`;
+    // Add class and section details formatted like in the image
+    const classLabelWidth = doc.getTextWidth('Class :');
+    const sectionLabelWidth = doc.getTextWidth('Section :');
+  
+    // Position and draw class and section labels
+    const labelsYPosition = 36;
+    const valuesYPosition = 36;
+  
     doc.setFontSize(12);
-    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 36, { align: 'center' });
+    doc.text('Class :', 80, labelsYPosition, { align: 'left' });
+    doc.text(classId.toString(), 80 + classLabelWidth + 5, valuesYPosition, { align: 'left' });
+    doc.line(80 + classLabelWidth + 5 + doc.getTextWidth(classId.toString()) + 2, valuesYPosition + 2, 120, valuesYPosition + 2); // line under class
+  
+    doc.text('Section :', 130, labelsYPosition, { align: 'left' });
+    doc.text(sectionName, 130 + sectionLabelWidth + 5, valuesYPosition, { align: 'left' });
+    doc.line(130 + sectionLabelWidth + 5 + doc.getTextWidth(sectionName) + 2, valuesYPosition + 2, 160, valuesYPosition + 2); // line under section
   
     // Create the table with merged cells for breaks, lunch, and reserved time
     doc.autoTable({
@@ -453,13 +465,20 @@ const MSchoolClassSection = () => {
       },
       rowPageBreak: 'avoid',
       didDrawCell: function (data) {
-        // Merging cells for breaks and reserved time
-        if (data.column.index > 0 && (data.cell.raw === 'SHORT BREAK 1' || data.cell.raw === 'LUNCH' || data.cell.raw === 'SHORT BREAK 2' || data.cell.raw === 'RESERVED TIME')) {
+        if (data.column.index === 0 && ['SHORT BREAK 1', 'LUNCH', 'SHORT BREAK 2', 'RESERVED TIME'].includes(data.cell.raw)) {
+          // Merge cells for break/lunch/reserved time labels
+          const label = data.cell.raw;
+          doc.setFillColor(189, 195, 199); // Grey background
           doc.rect(data.cell.x, data.cell.y, data.cell.width * columns.length, data.cell.height, 'F');
-          doc.text(data.cell.raw, data.cell.x + data.cell.width * columns.length / 2, data.cell.y + data.cell.height / 2, {
+          doc.text(label, data.cell.x + data.cell.width * columns.length / 2, data.cell.y + data.cell.height / 2, {
             align: 'center',
             baseline: 'middle'
           });
+        }
+      },
+      willDrawCell: function (data) {
+        if (data.column.index > 0 && ['SHORT BREAK 1', 'LUNCH', 'SHORT BREAK 2', 'RESERVED TIME'].includes(data.cell.raw)) {
+          data.cell.styles.fillColor = [189, 195, 199]; // Set background color for merged cells
         }
       },
     });
