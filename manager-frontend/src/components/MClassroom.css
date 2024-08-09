@@ -1,27 +1,27 @@
 .container {
   display: flex;
-  justify-content: left;
+  justify-content: center; /* Center align the main container */
   align-items: center;
   height: 100vh;
   width: 100%;
   box-sizing: border-box;
-  background-color: #f7f9fc; /* Optional: Add a background color */
+  background-color: #f7f9fc; /* Background color as per the screenshot */
 }
 
 .classroom-container {
   width: 100%;
-  max-width: 600px; /* Set a max-width to prevent it from being too wide */
+  max-width: 1200px; /* Adjusted width for better visibility */
   padding: 20px;
-  background-color: #fff;
+  background-color: #fff; /* White background for the container */
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
 }
 
 h1 {
   font-size: 24px;
   margin-bottom: 20px;
-  color: #333;
-  text-align: center;
+  color: #333; /* Dark grey color for text */
+  text-align: left; /* Align the title to the left */
 }
 
 .form-group {
@@ -36,7 +36,7 @@ h1 {
   display: block;
 }
 
-.form-group select {
+.form-group input, .form-group select {
   width: 100%;
   padding: 10px;
   font-size: 14px;
@@ -55,7 +55,7 @@ h1 {
 .subject-item {
   padding: 8px 12px;
   margin-bottom: 5px;
-  background-color: #e0e7ff;
+  background-color: #e0e7ff; /* Light blue background for subject items */
   border-radius: 4px;
   color: #333;
   font-size: 14px;
@@ -64,7 +64,7 @@ h1 {
 .select-button {
   width: 100%;
   padding: 12px;
-  background-color: #007bff;
+  background-color: #4CAF50; /* Green background as per the save button in the image */
   color: #fff;
   font-size: 16px;
   font-weight: bold;
@@ -82,5 +82,42 @@ h1 {
 }
 
 .select-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: #45a049; /* Darker green on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px;
+  }
+  .classroom-container {
+    width: 100%;
+    padding: 15px;
+  }
+  h1 {
+    font-size: 20px;
+  }
+}
+
+/* Focus states for accessibility */
+.form-group input:focus, .form-group select:focus,
+.select-button:focus {
+  box-shadow: 0 0 0 2px #0056b3; /* Custom focus ring */
+}
+
+/* Hover effects for dropdown options */
+.form-group input:hover, .form-group select:hover {
+  border-color: #007bff; /* Change border color on hover */
+}
+
+/* Placeholder styling */
+.form-group input::placeholder, .form-group select::placeholder {
+  color: #aaa;
+}
+
+/* Hover effect for buttons */
+.select-button:hover:not(:disabled) {
+  background-color: #0062cc; /* Slightly darker shade for better contrast */
 }
