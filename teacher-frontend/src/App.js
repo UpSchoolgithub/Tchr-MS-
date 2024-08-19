@@ -6,19 +6,25 @@ import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContex
 import { WebSocketProvider } from './WebSocketContext';
 
 function App() {
-  const { token } = useTeacherAuth(); // Assuming you get the token from the TeacherAuthContext
-
   return (
     <TeacherAuthProvider>
-      <WebSocketProvider token={token}>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Routes>
-        </Router>
-      </WebSocketProvider>
+      <InnerApp />
     </TeacherAuthProvider>
+  );
+}
+
+function InnerApp() {
+  const { token } = useTeacherAuth(); // Now this works because it's inside the TeacherAuthProvider
+
+  return (
+    <WebSocketProvider token={token}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </Router>
+    </WebSocketProvider>
   );
 }
 

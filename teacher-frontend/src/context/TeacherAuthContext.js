@@ -4,19 +4,24 @@ import axiosInstance from '../services/axiosInstance';
 const TeacherAuthContext = createContext();
 
 export const useTeacherAuth = () => {
-  return useContext(TeacherAuthContext);
+  const context = useContext(TeacherAuthContext);
+  if (!context) {
+    throw new Error('useTeacherAuth must be used within a TeacherAuthProvider');
+  }
+  return context;
 };
 
 const TeacherAuthProvider = ({ children }) => {
   const [teacherId, setTeacherId] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
 
   const login = async (email, password) => {
     try {
       const response = await axiosInstance.post('/teacher/login', { email, password });
-      setToken(response.data.token);
-      setTeacherId(response.data.teacherId);
-      localStorage.setItem('token', response.data.token);
+      const { token, teacherId } = response.data;
+      setToken(token);
+      setTeacherId(teacherId);
+      localStorage.setItem('token', token); // Save token to localStorage
     } catch (error) {
       throw new Error('Login failed');
     }

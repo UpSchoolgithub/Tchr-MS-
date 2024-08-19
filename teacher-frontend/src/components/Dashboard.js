@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTeacherAuth } from '../context/TeacherAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { logout } = useTeacherAuth();
+  const { token, logout } = useTeacherAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate]);
 
   const handleLogout = () => {
     logout();
