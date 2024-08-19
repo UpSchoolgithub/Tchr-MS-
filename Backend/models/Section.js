@@ -16,17 +16,21 @@ Section.init({
   classInfoId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'ClassInfos',
+      model: 'classinfos', // Ensure this matches the actual table name in your DB
       key: 'id',
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Schools',
+      model: 'schools', // Ensure this matches the actual table name in your DB
       key: 'id',
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   combinedSectionId: {
     type: DataTypes.STRING,
