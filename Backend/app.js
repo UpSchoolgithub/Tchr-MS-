@@ -44,7 +44,9 @@ app.use(helmet());
 // List of allowed origins
 const allowedOrigins = [
   'https://sm.up.school',
-  'https://teachermanager.up.school'
+  'https://teachermanager.up.school',
+  'https://myclasses.up.school'
+ 
 ];
 
 // CORS options setup
