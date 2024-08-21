@@ -49,8 +49,8 @@ app.use(helmet());
 const allowedOrigins = [
   'https://sm.up.school',
   'https://teachermanager.up.school',
-  'https://myclasses.up.school'
- 
+  'https://myclasses.up.school',
+  'https://tms.up.school'  // Include your subdomain here
 ];
 
 // CORS options setup
