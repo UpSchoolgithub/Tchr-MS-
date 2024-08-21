@@ -31,6 +31,10 @@ const testRoutes = require('./routes/testRoutes');
 const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
+
+// Teacher Routes
+const teacherAuthRoutes = require('./routes/teacherAuth');
+
 const app = express();
 
 app.use(helmet());
@@ -490,6 +494,10 @@ app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used
 app.use('/api', mteacherRoutes);
 app.use('/api', sectionsRouter); // Ensure the route is prefixed correctly
 app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
+
+
+// Teacher Routes
+app.use('/api/teacher', teacherAuthRoutes);
 
 // Fallback for undefined routes
 app.use((req, res) => {
