@@ -1,4 +1,3 @@
-// Session.js
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 
@@ -9,6 +8,7 @@ const Session = () => {
     const fetchSessions = async () => {
       try {
         const response = await axiosInstance.get('/api/teacher/sessions');
+        console.log('Fetched sessions:', response.data); // Log the data
         setSessions(response.data);
       } catch (error) {
         console.error('Error fetching sessions:', error);
@@ -18,21 +18,9 @@ const Session = () => {
     fetchSessions();
   }, []);
 
-  const handleStartSession = (sessionId) => {
-    console.log('Starting session:', sessionId);
-  };
-
-  const handleEndSession = (sessionId) => {
-    console.log('Ending session:', sessionId);
-  };
-
-  const handleUpdateAssignment = (sessionId) => {
-    console.log('Updating assignment for session:', sessionId);
-  };
-
-  const handleNotifyAssignment = (sessionId) => {
-    console.log('Notifying assignment for session:', sessionId);
-  };
+  if (sessions.length === 0) {
+    return <div>No sessions available.</div>; // Show message if no data
+  }
 
   return (
     <div>

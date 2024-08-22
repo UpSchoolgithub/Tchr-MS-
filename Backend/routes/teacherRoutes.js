@@ -231,4 +231,31 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/api/teacher/sessions', authenticateToken, async (req, res) => {
+  try {
+    const teacherId = req.user.id; // Assuming you have teacher ID in the JWT
+    const sessions = await Session.findAll({
+      where: { teacherId },
+      include: [
+        { model: ClassInfo, attributes: ['name'] },
+        { model: Section, attributes: ['name'] },
+        { model: Subject, attributes: ['name'] },
+        { model: School, attributes: ['name'] },
+      ],
+    });
+    
+    res.json(sessions.map(session => ({
+      id: session.id,
+      className: session.ClassInfo.name,
+      section: session.Section.name,
+      subject: session.Subject.name,
+      duration: session.duration,
+      schoolName: session.School.name,
+    })));
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
