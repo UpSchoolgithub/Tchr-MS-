@@ -33,7 +33,7 @@ const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
 
 // Teacher Routes
-const teacherAuthRoutes = require('./routes/teacherAuth');
+const teacherAuthRoutes = require('./routes/teacherRoutes'); 
 const teacherRoutes = require('./routes/teacherRoutes');
 const teachersRoutes = require('./routes/teachers');
 
