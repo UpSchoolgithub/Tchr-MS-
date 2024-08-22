@@ -7,8 +7,7 @@ const Session = () => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await axiosInstance.get('/api/teacher/sessions');
-        console.log('Fetched sessions:', response.data); // Log the data
+        const response = await axiosInstance.get('/api/teacher/sessions'); // Ensure this matches the backend route
         setSessions(response.data);
       } catch (error) {
         console.error('Error fetching sessions:', error);
@@ -17,10 +16,6 @@ const Session = () => {
 
     fetchSessions();
   }, []);
-
-  if (sessions.length === 0) {
-    return <div>No sessions available.</div>; // Show message if no data
-  }
 
   return (
     <div>

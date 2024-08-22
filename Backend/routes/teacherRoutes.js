@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Teacher, School } = require('../models'); // Adjust the path if needed
+const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models'); // Adjust the path as needed
 const bcrypt = require('bcrypt');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager'); // Import the middleware
@@ -231,10 +231,13 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Fetch sessions for the logged-in teacher
 router.get('/api/teacher/sessions', authenticateToken, async (req, res) => {
   try {
-    const teacherId = req.user.id; // Assuming you have teacher ID in the JWT
-    const sessions = await Session.findAll({
+    const teacherId = req.user.id; // Get teacher ID from the authenticated user
+    
+    // Fetch the timetable entries (sessions) associated with this teacher
+    const sessions = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
         { model: ClassInfo, attributes: ['name'] },
@@ -243,19 +246,23 @@ router.get('/api/teacher/sessions', authenticateToken, async (req, res) => {
         { model: School, attributes: ['name'] },
       ],
     });
-    
-    res.json(sessions.map(session => ({
+
+    // Map and format the sessions data for the frontend
+    const formattedSessions = sessions.map(session => ({
       id: session.id,
       className: session.ClassInfo.name,
       section: session.Section.name,
       subject: session.Subject.name,
-      duration: session.duration,
+      duration: session.duration, // Assuming duration is a field in your model
       schoolName: session.School.name,
-    })));
+    }));
+
+    res.json(formattedSessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 module.exports = router;
