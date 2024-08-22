@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpSchool Dashboard</title>
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0; 
+        padding: 0;
+    }
+    body {
+        font-family: "Montserrat", sans-serif; 
+        font-size: 12px;
+        overflow-x: hidden;
+    }
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        width: 200px;
+        background-color: #eeeeee;
+        color: white;
+        padding: 20px;
+        position: fixed;
+    }
+    .sidebar div {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar button {
+        color: black;
+        background: none;
+        border: 3px solid transparent;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .sidebar button:hover {
+        background-color: #5A9F68;
+        color: white;
+    }
+    .main-content {
+        margin-left: 200px;
+        padding: 0.1em;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+    .main-header {
+        background-color: #5A9F68;
+        color: white;
+        padding: 30px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 0px);
+    }
+    .search-box input[type="search"] {
+        border: none;
+        padding: 8px;
+        border-radius: 20px;
+    }
+    .search-box input[type="search"]:focus {
+        outline: none;
+    }
+    img {
+        width: 150px;
+        height: auto;
+    }
+
+    /*Main content CSS*/
+    body {
+        font-family: Arial, sans-serif;
+    }
+    
+    .container {
+        width: 90%;
+        margin: auto;
+        padding: 20px;
+    }
+    
+    .btn {
+        background-color: #5A9F68;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+    }
+    
+    .calendar {
+        float: right;
+    }
+    
+    table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        text-align: left;
+        padding: 8px;
+        border: 1px solid #ddd;
+    }
+    
+    th {
+        background-color: #f4f4f4;
+    }
+    
+    .small {
+        padding: 5px 10px;
+        font-size: smaller;
+    }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="https://www.up.school/wp-content/themes/upschool/img/logo.svg" alt="UpSchool Logo">
+    <div>
+        <button onclick="location.href=''">Dashboard</button>
+        <button onclick="location.href='TP_StartSession.html'">Session</button>
+        <button onclick="location.href=''">Class Room</button>
+        <button onclick="location.href=''">School Calender</button>
+        <button onclick="location.href=''">Request</button> 
+
+    </div>
+    <div> 
+        <button onclick="location.href='profile.html'">My Profile</button>
+        <button onclick="location.href='signout.html'">Sign Out</button>
+        <button onclick="location.href='help.html'">Help</button>
+    </div>
+</div>
+  
+<div class="main-content">
+    <div class="main-header">
+        <h2>Welcome, Teacher's Name!</h2>
+        <div class="search-box">
+            <input type="search" placeholder="Search" />
+        </div>
+    </div>
+    <div class="container">
+        <a href="TP_RequestSession.html"> <button class="btn">Request Session</button></a>
+        <button class="btn calendar">View Calender</button>
+        <h2>TODAY'S SESSIONS</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Section</th>
+                    <th>Subject</th>
+                    <th>Duration</th>
+                    <th>Location</th>
+                    <th>Session Started</th>
+                    <th>Session Ended</th>
+                    <th>Assignments</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td><button class="btn small start">Start Session</button></td>
+                    <td></td>
+                    <td>
+                        <a href="TP_Assignment.html"> <button class="btn small update">Update</button> </a>
+                     <button class="btn small notify">Notify</button></td>
+                </tr>
+                <!-- Repeat the above <tr> for each session entry needed -->
+            </tbody>
+        </table>
+    </div>
+</div> 
+</div> 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn.small.start').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Getting the current time in the format like 10:58 am
+                    const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase();
+                    // Getting the parent cell of the clicked button
+                    const parentCell = this.parentElement;
+                    // Replacing the button with the current time
+                    parentCell.innerHTML = currentTime;
+        
+                    // Redirect to the TP_StartSession2.html page
+                    window.location.href = 'TP_StartSession2.html';
+                });
+            });
+        });
+        
+    </script>
+</body>
+</html>

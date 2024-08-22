@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpSchool Dashboard</title>
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0; 
+        padding: 0;
+    }
+    body {
+        font-family: "Montserrat", sans-serif; 
+        font-size: 12px;
+        overflow-x: hidden;
+    }
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        width: 200px;
+        background-color: #eeeeee;
+        color: white;
+        padding: 20px;
+        position: fixed;
+    }
+    .sidebar div {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar button {
+        color: black;
+        background: none;
+        border: 3px solid transparent;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .sidebar button:hover {
+        background-color: #5A9F68;
+        color: white;
+    }
+    .main-content {
+        margin-left: 200px;
+        padding: 0.1em;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+    .main-header {
+        background-color: #5A9F68;
+        color: white;
+        padding: 30px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 0px);
+    }
+    .search-box input[type="search"] {
+        border: none;
+        padding: 8px;
+        border-radius: 20px;
+    }
+    .search-box input[type="search"]:focus {
+        outline: none;
+    }
+    img {
+        width: 150px;
+        height: auto;
+    }
+
+    /*main content CSS*/
+    
+.container {
+    background: white;
+    margin-top: 9%;
+    padding: 5%;
+    border-radius: 8px;
+    width: 50%;
+    margin: auto;
+}
+label {
+    font-weight: bold;
+}
+.input-field, .textarea-field, .button-container {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+input[type="text"], input[type="file"], textarea, button {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+button {
+    background-color: #5A9F68;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #5A9F68;
+}
+
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="https://www.up.school/wp-content/themes/upschool/img/logo.svg" alt="UpSchool Logo">
+    <div>
+        <button onclick="location.href=''">Dashboard</button>
+        <button onclick="location.href='TP_StartSession.html'">Session</button>
+        <button onclick="location.href=''">Class Room</button>
+        <button onclick="location.href=''">School Calender</button>
+        <button onclick="location.href=''">Request</button> 
+    </div>
+    <div> 
+        <button onclick="location.href='profile.html'">My Profile</button>
+        <button onclick="location.href='signout.html'">Sign Out</button>
+        <button onclick="location.href='help.html'">Help</button>
+    </div>
+</div>
+  
+<div class="main-content">
+    <div class="main-header">
+        <h2>Welcome, Teacher's Name!</h2>
+        <div class="search-box">
+            <input type="search" placeholder="Search" />
+        </div>
+    </div>
+      
+<div class="container">
+    <h2>Update Assignment</h2>
+    <div class="input-field">
+        <label for="sessionDate">Session Date:</label>
+        <input type="text" id="sessionDate" name="sessionDate">
+    </div>
+    <div class="input-field">
+        <label for="sessionNumber">Session Number:</label>
+        <input type="text" id="sessionNumber" name="sessionNumber">
+    </div>
+    <div class="input-field">
+        <label for="AssignmentNO">Assignment No:</label>
+        <input type="text" id="AssignmentNO" name="AssignmentNO">
+    </div>
+    <div class="input-field">
+        <label for="chapter">Chapter:</label>
+        <input type="text" id="chapter" name="chapter">
+    </div>
+    <div class="textarea-field">
+        <label for="assignments">Assignments:</label>
+        <textarea id="assignments" name="assignments"></textarea>
+    </div>
+    <div class="input-field">
+        <label for="uploadFile">Upload File:</label>
+        <input type="file" id="uploadFile" name="uploadFile">
+    </div>
+    <div class="button-container">
+        <button type="submit">Submit</button>
+    </div>
+</div>
+</div>
+</div>
+<script>
+    // Example JavaScript to populate fields from backend
+    document.addEventListener("DOMContentLoaded", function() {
+        // Fetch data from backend API (this is just a placeholder URL)
+        fetch("https://api.example.com/get-assignment-details")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("sessionDate").value = data.sessionDate;
+                document.getElementById("sessionNumber").value = data.sessionNumber;
+                document.getElementById("chapter").value = data.chapter;
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    });
+</script> 
+
+</body>
+</html>

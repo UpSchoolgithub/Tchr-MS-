@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpSchool Dashboard</title>
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0; 
+        padding: 0;
+    }
+    body {
+        font-family: "Montserrat", sans-serif; 
+        font-size: 12px;
+        overflow-x: hidden;
+    }
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        width: 200px;
+        background-color: #eeeeee;
+        color: white;
+        padding: 20px;
+        position: fixed;
+    }
+    .sidebar div {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar button {
+        color: black;
+        background: none;
+        border: 3px solid transparent;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .sidebar button:hover {
+        background-color: #5A9F68;
+        color: white;
+    }
+    .main-content {
+        margin-left: 200px;
+        padding: 0.1em;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+    .main-header {
+        background-color: #5A9F68;
+        color: white;
+        padding: 30px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 0px);
+    }
+    .search-box input[type="search"] {
+        border: none;
+        padding: 8px;
+        border-radius: 20px;
+    }
+    .search-box input[type="search"]:focus {
+        outline: none;
+    }
+    img {
+        width: 150px;
+        height: auto;
+    }
+
+    /*Main Content CSS*/
+    
+    .container {    
+        display: flex; 
+        width: 100%; 
+        height: 600px;
+       
+    }
+    
+    .left-side {
+        width: 45%;
+        background-color: #e9e5e5; 
+        padding: 20px; 
+        margin-top: 5%;
+        margin-left: 2%;
+        margin-right: 0.5%;
+        border-radius: 2%;
+    }
+    
+    .right-side {
+        width: 65%; 
+        background-color: #e9e5e5; 
+        padding: 20px;
+        margin-top: 5%;
+        margin-right: 2%;
+        border-radius: 2%;
+    }
+    #attendance {
+        width: 200px; 
+        padding: 8px; 
+        border-radius: 4px; 
+        border: 1px solid #ccc; 
+        margin-top: 2%;
+    }
+    #assignment {
+        width: 200px; 
+        padding: 8px; 
+        border-radius: 4px; 
+        border: 1px solid #ccc; 
+        margin-top: 2%;
+    }
+    input{
+        margin-top: 5px;
+        margin-bottom: 7px;
+        width: 55%;
+        height: 10%;
+    }
+    select{
+        margin-bottom: 2%;
+    }
+    h2{
+        font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+        font-size: 151%;
+    }
+    #endsessionbutton{
+        background-color: #5A9F68; /* Adjust the color to match your design */
+        color: white;
+        padding-top: 5%;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 20px; /* Space after the button */
+        transition: background-color 0.3s;
+        margin-top: 20px;
+        margin-left: 85%;
+        border-radius: 7px; /* Adds rounded corners */
+    } 
+    #endsessionbutton:hover {
+        background-color: #76B586; /* Green background on hover */    
+    } 
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="https://www.up.school/wp-content/themes/upschool/img/logo.svg" alt="UpSchool Logo">
+    <div>
+        <button onclick="location.href=''">Dashboard</button>
+        <button onclick="location.href='TP_StartSession.html'">Session</button>
+        <button onclick="location.href=''">Class Room</button>
+        <button onclick="location.href=''">School Calender</button>
+        <button onclick="location.href=''">Request</button> 
+
+    </div>
+    <div> 
+        <button onclick="location.href='profile.html'">My Profile</button>
+        <button onclick="location.href='signout.html'">Sign Out</button>
+        <button onclick="location.href='help.html'">Help</button>
+    </div>
+</div>
+  
+<div class="main-content">
+    <div class="main-header">
+        <h2>Welcome, Teacher's Name!</h2>
+        <div class="search-box">
+            <input type="search" placeholder="Search" />
+        </div>
+    </div>
+    <div class="container">
+        <div class="left-side">
+            <h2>MARK ATTENDANCE</h2>
+           
+<select id="attendance" name="attendance">
+    <option value="Choose Attendance"disabled selected>Choose Attendance</option >
+    <option value="present">Present</option>
+    <option value="absent">Absent</option>
+    <option value="late">Late</option>
+    <option value="excused">Excused</option>
+</select>
+
+        </div>
+        <div class="right-side">
+            <h2>Session Notes And Details</h2> <br>
+            <h2>Session Number: </h2> <br>                          
+            <h2>Chapters: </h2> <br>
+            <h2>Topics to cover:</h2> <br>
+            <h2>ASSIGNMENTS</h2> 
+            <select id="assignment" name="assignment">
+                <option value="select"disabled selected>Select</option >
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select> 
+            <input type="text" id="observationInput" style="display: none;" placeholder="  Enter Assignment">
+            <h2>OBSERVATION</h2>  
+            <input type="text" placeholder="  Enter observation of class">
+        </div>
+    </div>
+    <a href="TP_Startsession.html"> <button id="endsessionbutton">End Session</button> </a>
+   
+</div> 
+</div> 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var assignmentSelect = document.getElementById('assignment');
+        var observationInput = document.getElementById('observationInput');
+
+        assignmentSelect.addEventListener('change', function() {
+            if (this.value === 'yes') {
+                observationInput.style.display = 'block'; // Show the input field
+            } else {
+                observationInput.style.display = 'none'; // Hide the input field
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('.btn.end').addEventListener('click', function() {
+            // Clear local storage or handle it according to the end session logic
+            // Redirect back to the main page
+            window.location.href = 'index.html'; // Adjust the path as necessary
+        });
+    });
+</script>
+
+</body>
+</html>
