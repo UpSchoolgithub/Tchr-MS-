@@ -142,22 +142,90 @@ router.get('/schools/:schoolId/teachers', async (req, res) => {
 // Teacher login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
   try {
+    // Log the incoming request details for debugging purposes
+    console.log(`Login attempt for email: ${email}`);
+
+    // Fetch the teacher from the database using the provided email
     const teacher = await Teacher.findOne({ where: { email } });
+
+    // If no teacher is found, return an error
     if (!teacher) {
+      console.log(`No teacher found with email: ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(password, teacher.password);
+
+    // If the passwords do not match, return an error
     if (!isMatch) {
+      console.log(`Password mismatch for email: ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: teacher.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Generate a JWT token if authentication is successful
+    let token;
+    try {
+      token = jwt.sign({ id: teacher.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    } catch (tokenError) {
+      console.error('Error generating token:', tokenError.message);
+      return res.status(500).json({ message: 'Token generation failed', error: tokenError.message });
+    }
 
+    // Respond with the generated token and teacherId
+    console.log(`Login successful for email: ${email}`);
     res.json({ token, teacherId: teacher.id });
+
   } catch (error) {
-    console.error('Error during login:', error.message);
+    // Log the full error stack trace for better debugging
+    console.error('Error during login:', error.stack);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+
+router.post('/login', async (req, res) => {
+  // Temporarily hardcode the email and password for testing
+  const hardcodedEmail = 'bhavi@gmail.com';
+  const hardcodedPassword = 'b25'; // This should match the unhashed password
+
+  try {
+    // Use the hardcoded email to find the teacher
+    const teacher = await Teacher.findOne({ where: { email: hardcodedEmail } });
+
+    // If no teacher is found, return an error
+    if (!teacher) {
+      console.log(`No teacher found with email: ${hardcodedEmail}`);
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Compare the hardcoded password with the stored hashed password
+    const isMatch = await bcrypt.compare(hardcodedPassword, teacher.password);
+
+    // If the passwords do not match, return an error
+    if (!isMatch) {
+      console.log(`Password mismatch for email: ${hardcodedEmail}`);
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate a JWT token if authentication is successful
+    let token;
+    try {
+      token = jwt.sign({ id: teacher.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    } catch (tokenError) {
+      console.error('Error generating token:', tokenError.message);
+      return res.status(500).json({ message: 'Token generation failed', error: tokenError.message });
+    }
+
+    // Respond with the generated token and teacherId
+    console.log(`Login successful for email: ${hardcodedEmail}`);
+    res.json({ token, teacherId: teacher.id });
+
+  } catch (error) {
+    // Log the full error stack trace for better debugging
+    console.error('Error during login:', error.stack);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
