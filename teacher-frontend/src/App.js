@@ -2,13 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import Sidebar from './components/Sidebar'; // Ensure Sidebar is imported
-import Session from './components/Session'; // Import other components as needed
+import Sidebar from './components/Sidebar'; 
+import Session from './components/Session';
 import Classroom from './components/Classroom';
 import SchoolCalendar from './components/SchoolCalendar';
 import Request from './components/Request';
 import ViewActivities from './components/ViewActivities';
-import { useTeacherAuth } from './context/TeacherAuthContext';
+import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContext';
 import { WebSocketProvider } from './WebSocketContext';
 
 function InnerApp() {
@@ -17,8 +17,7 @@ function InnerApp() {
   return (
     <WebSocketProvider token={token}>
       <Router>
-        {/* Render the Sidebar here so it appears on every page except /login */}
-        {token && <Sidebar />} 
+        {token && <Sidebar />}
         <div className={token ? "content-with-sidebar" : "content"}>
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
@@ -34,6 +33,14 @@ function InnerApp() {
         </div>
       </Router>
     </WebSocketProvider>
+  );
+}
+
+function App() {
+  return (
+    <TeacherAuthProvider>
+      <InnerApp />
+    </TeacherAuthProvider>
   );
 }
 
