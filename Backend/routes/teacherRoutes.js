@@ -4,6 +4,7 @@ const { Teacher, School } = require('../models'); // Adjust the path if needed
 const bcrypt = require('bcrypt');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager'); // Import the middleware
+const jwt = require('jsonwebtoken');
 
 // Create a new teacher
 router.post('/', authenticateManager, async (req, res) => {
