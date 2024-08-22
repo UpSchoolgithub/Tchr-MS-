@@ -153,12 +153,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: teacher.id }, 'your_jwt_secret', { expiresIn: '1h' });
+    const token = jwt.sign({ id: teacher.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, teacherId: teacher.id });
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error during login:', error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
