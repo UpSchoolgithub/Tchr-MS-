@@ -7,7 +7,7 @@ const Session = () => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await axiosInstance.get('/api/teacher/sessions'); // Ensure this matches the backend route
+        const response = await axiosInstance.get('/teacher/sessions'); // Ensure no extra '/api' is added here
         setSessions(response.data);
       } catch (error) {
         console.error('Error fetching sessions:', error);

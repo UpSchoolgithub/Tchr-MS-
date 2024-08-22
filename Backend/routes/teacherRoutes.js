@@ -232,7 +232,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Fetch sessions for the logged-in teacher
-router.get('/api/teacher/sessions', authenticateToken, async (req, res) => {
+router.get('/teacher/sessions', authenticateToken, async (req, res) => {
   try {
     const teacherId = req.user.id; // Get teacher ID from the authenticated user
     
