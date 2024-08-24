@@ -7,7 +7,7 @@ const Session = () => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await axiosInstance.get('/teacher/sessions'); // Ensure no extra '/api' is added here
+        const response = await axiosInstance.get('/teacher/sessions'); // Fetch sessions for the logged-in teacher
         setSessions(response.data);
       } catch (error) {
         console.error('Error fetching sessions:', error);
@@ -16,6 +16,36 @@ const Session = () => {
 
     fetchSessions();
   }, []);
+
+  const handleStartSession = async (sessionId) => {
+    try {
+      await axiosInstance.post(`/teacher/sessions/${sessionId}/start`);
+      // Optionally, update the session state or refetch sessions after starting
+      fetchSessions();
+    } catch (error) {
+      console.error('Error starting session:', error);
+    }
+  };
+
+  const handleEndSession = async (sessionId) => {
+    try {
+      await axiosInstance.post(`/teacher/sessions/${sessionId}/end`);
+      // Optionally, update the session state or refetch sessions after ending
+      fetchSessions();
+    } catch (error) {
+      console.error('Error ending session:', error);
+    }
+  };
+
+  const handleUpdateAssignment = (sessionId) => {
+    // Logic for updating the assignment for a session
+    console.log('Update assignment for session:', sessionId);
+  };
+
+  const handleNotifyAssignment = (sessionId) => {
+    // Logic for notifying students about the assignment for a session
+    console.log('Notify assignment for session:', sessionId);
+  };
 
   return (
     <div>
@@ -34,7 +64,7 @@ const Session = () => {
           </tr>
         </thead>
         <tbody>
-          {sessions.map(session => (
+          {sessions.map((session) => (
             <tr key={session.id}>
               <td>{session.className}</td>
               <td>{session.section}</td>
