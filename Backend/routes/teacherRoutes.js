@@ -253,7 +253,7 @@ router.get('/teacher/sessions', authenticateToken, async (req, res) => {
       className: session.ClassInfo.name,
       section: session.Section.name,
       subject: session.Subject.name,
-      duration: session.duration, // Assuming duration is a field in your model
+      duration: session.duration,
       schoolName: session.School.name,
     }));
 
@@ -263,6 +263,5 @@ router.get('/teacher/sessions', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 
 module.exports = router;

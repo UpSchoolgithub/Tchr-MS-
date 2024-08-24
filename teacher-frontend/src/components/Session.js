@@ -20,8 +20,7 @@ const Session = () => {
   const handleStartSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/start`);
-      // Optionally, update the session state or refetch sessions after starting
-      fetchSessions();
+      fetchSessions(); // Refresh sessions after starting one
     } catch (error) {
       console.error('Error starting session:', error);
     }
@@ -30,8 +29,7 @@ const Session = () => {
   const handleEndSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/end`);
-      // Optionally, update the session state or refetch sessions after ending
-      fetchSessions();
+      fetchSessions(); // Refresh sessions after ending one
     } catch (error) {
       console.error('Error ending session:', error);
     }
