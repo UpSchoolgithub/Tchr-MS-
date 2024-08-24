@@ -52,25 +52,27 @@ const allowedOrigins = [
   'https://sm.up.school',
   'https://teachermanager.up.school',
   'https://myclasses.up.school',
+  'https://manager.up.school', // Ensure this is included if the request is from here
 ];
 
-// CORS options setup
 const corsOptions = {
   origin: function (origin, callback) {
-    // Check if the incoming origin is allowed
+    console.log('Request origin:', origin); // Log the origin for debugging
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true); // Allow the request if origin is in the allowed list or not present (non-CORS requests)
+      callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS')); // Disallow the request for other origins
+      console.error('Not allowed by CORS for origin:', origin); // Log the error for debugging
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
-  credentials: true, // Allow credentials (cookies, authorization headers with HTTPS)
-  allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 // Apply CORS middleware to all incoming requests
 app.use(cors(corsOptions));
+
 
 // Your existing route definitions
 app.get('/', (req, res) => {
