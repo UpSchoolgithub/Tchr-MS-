@@ -4,6 +4,7 @@ const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require
 const bcrypt = require('bcrypt');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager'); // Import the middleware
+const authenticateTeacherToken = require('./middleware/authenticateTeacherToken');
 const jwt = require('jsonwebtoken');
 
 // Create a new teacher
@@ -181,36 +182,39 @@ router.post('/login', async (req, res) => {
 });
 
 // Fetch sessions for the logged-in teacher
-router.get('/teacher/sessions', authenticateToken, async (req, res) => {
+// Assuming router is defined and the middleware is imported correctly
+
+// Fetch sessions for the logged-in teacher using specific teacher authentication middleware
+router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   try {
-    const teacherId = req.user.id; // Get teacher ID from the authenticated user
-    console.log("Fetching sessions for teacher ID:", teacherId); // Log the teacher ID
+      const teacherId = req.user.id; // Get teacher ID from the authenticated user
+      console.log("Fetching sessions for teacher ID:", teacherId); // Log the teacher ID
 
-    // Fetch the timetable entries (sessions) associated with this teacher
-    const sessions = await TimetableEntry.findAll({
-      where: { teacherId },
-      include: [
-        { model: ClassInfo, attributes: ['name'] },
-        { model: Section, attributes: ['name'] },
-        { model: Subject, attributes: ['name'] },
-        { model: School, attributes: ['name'] },
-      ],
-    });
+      // Fetch the timetable entries (sessions) associated with this teacher
+      const sessions = await TimetableEntry.findAll({
+          where: { teacherId },
+          include: [
+              { model: ClassInfo, attributes: ['name'] },
+              { model: Section, attributes: ['name'] },
+              { model: Subject, attributes: ['name'] },
+              { model: School, attributes: ['name'] },
+          ],
+      });
 
-    // Map and format the sessions data for the frontend
-    const formattedSessions = sessions.map(session => ({
-      id: session.id,
-      className: session.ClassInfo.name,
-      section: session.Section.name,
-      subject: session.Subject.name,
-      duration: session.duration,
-      schoolName: session.School.name,
-    }));
+      // Map and format the sessions data for the frontend
+      const formattedSessions = sessions.map(session => ({
+          id: session.id,
+          className: session.ClassInfo.name,
+          section: session.Section.name,
+          subject: session.Subject.name,
+          duration: session.duration,
+          schoolName: session.School.name,
+      }));
 
-    res.json(formattedSessions);
-  } catch (error) {
-    console.error('Error fetching sessions:', error);
-    res.status(500).json({ message: 'Internal server error' });
+      res.json(formattedSessions);
+  } catch ( error ) {
+      console.error('Error fetching sessions:', error);
+      res.status(500).json({ message: 'Internal server error' });
   }
 });
 
