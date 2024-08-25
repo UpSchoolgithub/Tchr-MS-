@@ -12,6 +12,7 @@ const authenticateToken = (req, res, next) => {
     }
     if (err) return res.sendStatus(403);
 
+    console.log("Decoded user:", user); // This should log the correct user object
     req.user = user;
     next();
   });

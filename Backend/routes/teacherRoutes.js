@@ -184,7 +184,7 @@ router.post('/login', async (req, res) => {
 router.get('/teacher/sessions', authenticateToken, async (req, res) => {
   try {
     const teacherId = req.user.id; // Get teacher ID from the authenticated user
-    console.log("Fetching sessions for teacher ID:", teacherId);
+    console.log("Fetching sessions for teacher ID:", teacherId); // Log the teacher ID
 
     // Fetch the timetable entries (sessions) associated with this teacher
     const sessions = await TimetableEntry.findAll({
