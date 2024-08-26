@@ -12,21 +12,21 @@ Session.init({
   classId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'classinfos', // Use the correct table name
+      model: 'classinfos', // Correct table name
       key: 'id',
     },
   },
   sectionId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'sections', // Ensure this matches the actual table name
+      model: 'sections', // Correct table name
       key: 'id',
     },
   },
   subjectId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'subjects', // Ensure this matches the actual table name
+      model: 'subjects', // Assuming subjects is correct
       key: 'id',
     },
   },
