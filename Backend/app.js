@@ -4,6 +4,10 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 require('dotenv').config();
 
+
+const app = express(); // Add this line to define the `app` variable
+
+
 const { sequelize, School, TimetableSettings, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
 
 const classInfoRoutes = require('./routes/classInfo');
