@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import './Session.css'; // Assuming you have a CSS file for styles
+import './Session.css';
 
 const Session = () => {
   const [sessions, setSessions] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date()); // State to store the selected date
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const fetchSessions = async (date) => {
     try {
       const response = await axiosInstance.get('/teacher/sessions', {
-        params: { date: date.toISOString().slice(0, 10) } // Send the date in YYYY-MM-DD format
+        params: { date: date.toISOString().slice(0, 10) }
       });
       setSessions(response.data);
     } catch (error) {
@@ -20,13 +20,13 @@ const Session = () => {
   };
 
   useEffect(() => {
-    fetchSessions(selectedDate); // Fetch sessions for the selected date
-  }, [selectedDate]); // Re-fetch sessions whenever the selected date changes
+    fetchSessions(selectedDate);
+  }, [selectedDate]);
 
   const handleStartSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/start`);
-      fetchSessions(selectedDate); // Refresh sessions after starting one
+      fetchSessions(selectedDate); // Correct usage of fetchSessions
     } catch (error) {
       console.error('Error starting session:', error);
     }
@@ -35,19 +35,17 @@ const Session = () => {
   const handleEndSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/end`);
-      fetchSessions(selectedDate); // Refresh sessions after ending one
+      fetchSessions(selectedDate); // Correct usage of fetchSessions
     } catch (error) {
       console.error('Error ending session:', error);
     }
   };
 
   const handleUpdateAssignment = (sessionId) => {
-    // Logic for updating the assignment for a session
     console.log('Update assignment for session:', sessionId);
   };
 
   const handleNotifyAssignment = (sessionId) => {
-    // Logic for notifying students about the assignment for a session
     console.log('Notify assignment for session:', sessionId);
   };
 
@@ -66,7 +64,7 @@ const Session = () => {
             <th>Section</th>
             <th>Subject</th>
             <th>Duration</th>
-            <th>School</th> {/* Changed from Location to School */}
+            <th>School</th>
             <th>Session Started</th>
             <th>Session Ended</th>
             <th>Assignments</th>
@@ -79,7 +77,7 @@ const Session = () => {
               <td>{session.section}</td>
               <td>{session.subject}</td>
               <td>{session.duration}</td>
-              <td>{session.schoolName}</td> {/* Changed from Location to School */}
+              <td>{session.schoolName}</td>
               <td>
                 <button onClick={() => handleStartSession(session.id)}>Start Session</button>
               </td>
