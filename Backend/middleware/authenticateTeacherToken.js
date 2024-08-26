@@ -1,4 +1,4 @@
-// File: middleware/authenticateTeacherToken.js
+// middleware/authenticateTeacherToken.js
 
 const jwt = require('jsonwebtoken');
 

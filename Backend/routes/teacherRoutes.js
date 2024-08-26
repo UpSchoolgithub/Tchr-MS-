@@ -4,7 +4,7 @@ const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require
 const bcrypt = require('bcrypt');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager'); // Import the middleware
-const authenticateTeacherToken = require('./middleware/authenticateTeacherToken');
+const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
 const jwt = require('jsonwebtoken');
 
 // Create a new teacher
