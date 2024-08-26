@@ -17,7 +17,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'classinfos', // Correct case for the table name
+      model: 'classinfos', // Ensure this matches the exact table name
       key: 'id',
     },
   },
@@ -25,7 +25,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'sections', // Change 'Sections' to 'sections'
+      model: 'sections', // Ensure this matches the exact table name
       key: 'id',
     },
   },
@@ -33,22 +33,25 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'schools', // Change 'Schools' to 'schools'
+      model: 'schools', // Ensure this matches the exact table name
       key: 'id',
     },
   },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: DataTypes.NOW,
   },
   updatedAt: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: DataTypes.NOW,
   },
 }, {
   sequelize,
   modelName: 'Subject',
   tableName: 'subjects',
+  timestamps: true, // Automatically manage createdAt and updatedAt fields
 });
 
 Subject.associate = (models) => {
