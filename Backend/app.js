@@ -58,25 +58,19 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true); // Allow CORS for this origin
+      callback(null, true); // Allow
     } else {
-      callback(new Error('Not allowed by CORS')); // Block the request
+      callback(new Error('CORS not allowed'), false); // Block
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // Allows credentials such as cookies from the frontend
+  optionsSuccessStatus: 200, // Some legacy browsers choke on status 204
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
 };
 
-const app = express();
-app.use(helmet());
-app.use(cors(corsOptions)); // Apply CORS globally
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
-
-// Middleware to handle preflight requests
-app.options('*', cors(corsOptions)); // Enable preflight across all routes
+// Apply CORS to all incoming requests
+app.use(cors(corsOptions));
 
 
 
