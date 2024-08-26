@@ -47,7 +47,7 @@ app.use(helmet());
   //allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
 //}));
 
-// List of allowed origins
+// Define the list of allowed origins
 const allowedOrigins = [
   'https://sm.up.school',
   'https://teachermanager.up.school',
@@ -55,22 +55,30 @@ const allowedOrigins = [
   'https://manager.up.school', // Ensure this is included if the request is from here
 ];
 
+// Define CORS options
 const corsOptions = {
   origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true); // Allow CORS for this origin
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS')); // Block the request
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
+const app = express();
+app.use(helmet());
+app.use(cors(corsOptions)); // Apply CORS globally
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-// Apply CORS middleware to all incoming requests
-app.use(cors(corsOptions));
+// Middleware to handle preflight requests
+app.options('*', cors(corsOptions)); // Enable preflight across all routes
+
 
 
 // Your existing route definitions
