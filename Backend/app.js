@@ -37,7 +37,6 @@ const teacherAuthRoutes = require('./routes/teacherRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const teachersRoutes = require('./routes/teachers');
 
-const app = express();
 
 app.use(helmet());
 //app.use(cors({
