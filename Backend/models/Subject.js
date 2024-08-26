@@ -17,7 +17,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'ClassInfos',
+      model: 'classinfos',
       key: 'id',
     },
   },

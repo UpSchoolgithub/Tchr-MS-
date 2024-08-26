@@ -7,7 +7,7 @@ ClassSections.init({
   classInfoId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'ClassInfos',
+      model: 'classinfos',
       key: 'id'
     }
   },
