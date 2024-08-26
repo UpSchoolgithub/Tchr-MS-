@@ -51,16 +51,17 @@ const allowedOrigins = [
   'https://sm.up.school',
   'https://teachermanager.up.school',
   'https://myclasses.up.school',
-  'https://manager.up.school', // Ensure this is included if the request is from here
+  'https://manager.up.school',
 ];
+
 
 // Define CORS options
 const corsOptions = {
   origin: function (origin, callback) {
     if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true); // Allow
+      callback(null, true); // Allow request if origin is in the allowed list or if there's no origin (e.g., for server-to-server requests)
     } else {
-      callback(new Error('CORS not allowed'), false); // Block
+      callback(new Error('CORS not allowed'), false); // Block request if origin is not allowed
     }
   },
   credentials: true, // Allows credentials such as cookies from the frontend
@@ -69,8 +70,9 @@ const corsOptions = {
   allowedHeaders: 'Content-Type,Authorization'
 };
 
+
 // Apply CORS to all incoming requests
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // Apply CORS settings to all incoming requests
 
 
 
