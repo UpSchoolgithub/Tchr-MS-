@@ -1,5 +1,3 @@
-// middleware/authenticateTeacherToken.js
-
 const jwt = require('jsonwebtoken');
 
 const authenticateTeacherToken = (req, res, next) => {
@@ -18,14 +16,12 @@ const authenticateTeacherToken = (req, res, next) => {
       return res.status(403).json({ message: 'Invalid token' });
     }
 
-    console.log("Decoded user:", decoded); // This should log the correct user object
+    console.log("Decoded user:", decoded);
 
-    // Additional validation specific to teachers
     if (!decoded.isTeacher) {
       return res.status(403).json({ message: 'Access denied: not a teacher' });
     }
 
-    // If the decoded token includes specific teacher information, set it for downstream use
     req.user = decoded;
     next();
   });

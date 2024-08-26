@@ -1,26 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models'); // Adjust the path as needed
+const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models');
 const bcrypt = require('bcrypt');
-const authenticateToken = require('../middleware/authenticateToken');
-const authenticateManager = require('../middleware/authenticateManager'); // Import the middleware
-const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
 const jwt = require('jsonwebtoken');
+const authenticateToken = require('../middleware/authenticateToken');
+const authenticateManager = require('../middleware/authenticateManager');
+const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
 
 // Create a new teacher
 router.post('/', authenticateManager, async (req, res) => {
   const { name, email, phone, password, schoolIds } = req.body;
 
   try {
-    // Check if email already exists
     const existingTeacher = await Teacher.findOne({ where: { email } });
     if (existingTeacher) {
       return res.status(400).json({ message: 'Email already exists' });
     }
 
     const managerId = req.user.id;
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-    const newTeacher = await Teacher.create({ name, email, phoneNumber: phone, password: hashedPassword, ManagerId: managerId });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newTeacher = await Teacher.create({
+      name,
+      email,
+      phoneNumber: phone,
+      password: hashedPassword,
+      ManagerId: managerId,
+    });
 
     if (schoolIds && schoolIds.length > 0) {
       const schools = await School.findAll({ where: { id: schoolIds } });
@@ -46,8 +51,8 @@ router.get('/', async (req, res) => {
     const teachers = await Teacher.findAll({
       include: {
         model: School,
-        through: { attributes: [] } // This removes the join table attributes
-      }
+        through: { attributes: [] }, // This removes the join table attributes
+      },
     });
     res.json(teachers);
   } catch (error) {
@@ -62,8 +67,8 @@ router.get('/:id', async (req, res) => {
     const teacher = await Teacher.findByPk(req.params.id, {
       include: {
         model: School,
-        through: { attributes: [] } // This removes the join table attributes
-      }
+        through: { attributes: [] }, // This removes the join table attributes
+      },
     });
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
@@ -128,8 +133,8 @@ router.get('/schools/:schoolId/teachers', async (req, res) => {
     const school = await School.findByPk(schoolId, {
       include: [{
         model: Teacher,
-        through: { attributes: [] } // This removes the join table attributes
-      }]
+        through: { attributes: [] }, // This removes the join table attributes
+      }],
     });
     if (!school) {
       return res.status(404).json({ message: 'School not found' });
@@ -146,75 +151,62 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Log the incoming request details for debugging purposes
     console.log(`Login attempt for email: ${email}`);
 
-    // Fetch the teacher from the database using the provided email
     const teacher = await Teacher.findOne({ where: { email } });
 
-    // If no teacher is found, return an error
     if (!teacher) {
       console.log(`No teacher found with email: ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(password, teacher.password);
 
-    // If the passwords do not match, return an error
     if (!isMatch) {
       console.log(`Password mismatch for email: ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate a JWT token if authentication is successful
-    const token = jwt.sign({ id: teacher.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: teacher.id, isTeacher: true }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Respond with the generated token and teacherId
     console.log(`Login successful for email: ${email}`);
     res.json({ token, teacherId: teacher.id });
 
   } catch (error) {
-    // Log the full error stack trace for better debugging
     console.error('Error during login:', error.stack);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
 // Fetch sessions for the logged-in teacher
-// Assuming router is defined and the middleware is imported correctly
-
-// Fetch sessions for the logged-in teacher using specific teacher authentication middleware
 router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   try {
-      const teacherId = req.user.id; // Get teacher ID from the authenticated user
-      console.log("Fetching sessions for teacher ID:", teacherId); // Log the teacher ID
+    const teacherId = req.user.id;
+    console.log("Fetching sessions for teacher ID:", teacherId);
 
-      // Fetch the timetable entries (sessions) associated with this teacher
-      const sessions = await TimetableEntry.findAll({
-          where: { teacherId },
-          include: [
-              { model: ClassInfo, attributes: ['name'] },
-              { model: Section, attributes: ['name'] },
-              { model: Subject, attributes: ['name'] },
-              { model: School, attributes: ['name'] },
-          ],
-      });
+    const sessions = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: ClassInfo, attributes: ['name'] },
+        { model: Section, attributes: ['name'] },
+        { model: Subject, attributes: ['name'] },
+        { model: School, attributes: ['name'] },
+      ],
+    });
 
-      // Map and format the sessions data for the frontend
-      const formattedSessions = sessions.map(session => ({
-          id: session.id,
-          className: session.ClassInfo.name,
-          section: session.Section.name,
-          subject: session.Subject.name,
-          duration: session.duration,
-          schoolName: session.School.name,
-      }));
+    const formattedSessions = sessions.map(session => ({
+      id: session.id,
+      className: session.ClassInfo.name,
+      section: session.Section.name,
+      subject: session.Subject.name,
+      duration: session.duration,
+      schoolName: session.School.name,
+    }));
 
-      res.json(formattedSessions);
-  } catch ( error ) {
-      console.error('Error fetching sessions:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    res.json(formattedSessions);
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
