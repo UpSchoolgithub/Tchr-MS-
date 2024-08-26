@@ -17,7 +17,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'classinfos',
+      model: 'classinfos', // Correct case for the table name
       key: 'id',
     },
   },
@@ -25,7 +25,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Sections',
+      model: 'sections', // Change 'Sections' to 'sections'
       key: 'id',
     },
   },
@@ -33,7 +33,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Schools',
+      model: 'schools', // Change 'Schools' to 'schools'
       key: 'id',
     },
   },
