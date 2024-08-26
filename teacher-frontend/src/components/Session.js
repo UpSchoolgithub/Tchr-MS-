@@ -65,7 +65,7 @@ const Session = () => {
             <th>Section</th>
             <th>Subject</th>
             <th>Duration</th>
-            <th>School</th>
+            <th>School</th> {/* Changed from Location to School */}
             <th>Session Started</th>
             <th>Session Ended</th>
             <th>Assignments</th>
@@ -78,7 +78,7 @@ const Session = () => {
               <td>{session.section}</td>
               <td>{session.subject}</td>
               <td>{session.duration}</td>
-              <td>{session.schoolName}</td>
+              <td>{session.schoolName}</td> {/* Changed from Location to School */}
               <td>
                 <button onClick={() => handleStartSession(session.id)}>Start Session</button>
               </td>
