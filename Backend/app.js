@@ -57,11 +57,9 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('Request origin:', origin); // Log the origin for debugging
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
-      console.error('Not allowed by CORS for origin:', origin); // Log the error for debugging
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -69,6 +67,7 @@ const corsOptions = {
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
+
 
 // Apply CORS middleware to all incoming requests
 app.use(cors(corsOptions));
