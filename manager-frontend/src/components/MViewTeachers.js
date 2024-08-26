@@ -1,35 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './MViewTeachers.css';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const MViewTeachers = () => {
-  const [teachers, setTeachers] = useState([]);
+const MViewTeachers = ({ teachers }) => {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const response = await axios.get('/api/teachers');
-        setTeachers(response.data);
-      } catch (error) {
-        console.error('Error fetching teachers:', error);
-      }
-    };
-
-    fetchTeachers();
-  }, []);
+  const handleViewTimetable = (teacherId) => {
+    navigate(`/teachers/timetable/${teacherId}`);
+  };
 
   return (
     <div className="view-teachers">
-      <h2>View Teachers</h2>
-      <ul>
-        {teachers.map(teacher => (
-          <li key={teacher.id}>
-            <p>Name: {teacher.name}</p>
-            <p>Email: {teacher.email}</p>
-            <p>Phone Number: {teacher.phoneNumber}</p>
-          </li>
-        ))}
-      </ul>
+      <h1>Teachers</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {teachers.map((teacher) => (
+            <tr key={teacher.id}>
+              <td>{teacher.name}</td>
+              <td>
+                <button onClick={() => handleViewTimetable(teacher.id)}>View Timetable</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
