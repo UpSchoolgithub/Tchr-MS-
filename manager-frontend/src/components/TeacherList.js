@@ -25,6 +25,10 @@ const TeacherList = () => {
     }
   };
 
+  const handleViewTimetable = (teacherId) => {
+    navigate(`/schools/timetable/teacher/${teacherId}`);
+  };
+
   useEffect(() => {
     fetchTeachers();
   }, []);
@@ -49,6 +53,7 @@ const TeacherList = () => {
               <td>
                 <button className="edit-button" onClick={() => navigate(`/teachers/edit/${teacher.id}`)}>Edit</button>
                 <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
+                <button className="view-button" onClick={() => handleViewTimetable(teacher.id)}>View Timetable</button>
               </td>
             </tr>
           ))}
