@@ -17,7 +17,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'classinfos', // Ensure this matches the exact table name
+      model: 'classinfos', // Ensure this matches the exact table name in lowercase
       key: 'id',
     },
   },
@@ -25,7 +25,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'sections', // Ensure this matches the exact table name
+      model: 'sections', // Ensure this matches the exact table name in lowercase
       key: 'id',
     },
   },
@@ -33,7 +33,7 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'schools', // Ensure this matches the exact table name
+      model: 'schools', // Ensure this matches the exact table name in lowercase
       key: 'id',
     },
   },
