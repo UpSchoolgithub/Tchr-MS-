@@ -2,23 +2,24 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import './Session.css'; // Assuming you have a CSS file for styles
 
 const Session = () => {
   const [sessions, setSessions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date()); // State to store the selected date
 
-  useEffect(() => {
-    const fetchSessions = async (date) => {
-      try {
-        const response = await axiosInstance.get('/teacher/sessions', {
-          params: { date: date.toISOString().slice(0, 10) } // Send the date in YYYY-MM-DD format
-        });
-        setSessions(response.data);
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-      }
-    };
+  const fetchSessions = async (date) => {
+    try {
+      const response = await axiosInstance.get('/teacher/sessions', {
+        params: { date: date.toISOString().slice(0, 10) } // Send the date in YYYY-MM-DD format
+      });
+      setSessions(response.data);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchSessions(selectedDate); // Fetch sessions for the selected date
   }, [selectedDate]); // Re-fetch sessions whenever the selected date changes
 
@@ -58,7 +59,7 @@ const Session = () => {
         onChange={date => setSelectedDate(date)} 
         dateFormat="yyyy-MM-dd"
       />
-      <table>
+      <table className="session-table">
         <thead>
           <tr>
             <th>Class</th>

@@ -181,16 +181,19 @@ router.post('/login', async (req, res) => {
 // Route to fetch sessions for a specific date for the logged-in teacher
 router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   try {
-    const teacherId = req.user.id; // Get the logged-in teacher's ID from the JWT
-    const dateParam = req.query.date; // Get the date from query parameters, if provided
+    const teacherId = req.user.id;
+    const dateParam = req.query.date; // Expecting YYYY-MM-DD format
     const date = dateParam ? new Date(dateParam) : new Date();
-    const dayOfWeek = date.toLocaleString('en-us', { weekday: 'long' }); // Get the day of the week
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }); // Get the full weekday name
+
+    // Log to confirm date and day
+    console.log(`Fetching sessions for date: ${dateParam}, Day: ${dayOfWeek}`);
 
     // Fetch sessions for the specified day for the logged-in teacher
     const sessions = await TimetableEntry.findAll({
       where: {
         teacherId,
-        day: dayOfWeek // assuming `day` field in DB stores day names like 'Monday', 'Tuesday', etc.
+        day: dayOfWeek // Ensure 'day' field stores names like 'Monday', 'Tuesday', etc.
       },
       include: [
         { model: ClassInfo, attributes: ['name'] },
@@ -200,16 +203,15 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
       ],
     });
 
-    // Format the sessions data
     const formattedSessions = sessions.map(session => ({
+      id: session.id,
       className: session.ClassInfo ? session.ClassInfo.name : '',
       section: session.Section ? session.Section.name : '',
       subject: session.Subject ? session.Subject.name : '',
-      duration: session.duration, // Assuming there's a `duration` field
-      location: session.School ? session.School.name : '',
-      sessionStarted: false, // Initial state; you can add logic to update this
-      sessionEnded: false, // Initial state; you can add logic to update this
-      assignments: false, // Placeholder; you can fetch assignments related to this session if needed
+      duration: session.duration || '', // Provide default value if missing
+      schoolName: session.School ? session.School.name : '',
+      sessionStarted: false, // Initial state; implement session tracking logic as needed
+      sessionEnded: false, // Initial state
     }));
 
     res.json(formattedSessions);

@@ -1,0 +1,15 @@
+.session-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .session-table th, .session-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .session-table th {
+    background-color: #f2f2f2;
+    text-align: left;
+  }
+  
