@@ -178,14 +178,20 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Fetch sessions for the logged-in teacher
+// Route to fetch sessions for a specific date for the logged-in teacher
 router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   try {
-    const teacherId = req.user.id;
-    console.log("Fetching sessions for teacher ID:", teacherId);
+    const teacherId = req.user.id; // Get the logged-in teacher's ID from the JWT
+    const dateParam = req.query.date; // Get the date from query parameters, if provided
+    const date = dateParam ? new Date(dateParam) : new Date();
+    const dayOfWeek = date.toLocaleString('en-us', { weekday: 'long' }); // Get the day of the week
 
+    // Fetch sessions for the specified day for the logged-in teacher
     const sessions = await TimetableEntry.findAll({
-      where: { teacherId },
+      where: {
+        teacherId,
+        day: dayOfWeek // assuming `day` field in DB stores day names like 'Monday', 'Tuesday', etc.
+      },
       include: [
         { model: ClassInfo, attributes: ['name'] },
         { model: Section, attributes: ['name'] },
@@ -194,13 +200,16 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
       ],
     });
 
+    // Format the sessions data
     const formattedSessions = sessions.map(session => ({
-      id: session.id,
-      className: session.ClassInfo.name,
-      section: session.Section.name,
-      subject: session.Subject.name,
-      duration: session.duration,
-      schoolName: session.School.name,
+      className: session.ClassInfo ? session.ClassInfo.name : '',
+      section: session.Section ? session.Section.name : '',
+      subject: session.Subject ? session.Subject.name : '',
+      duration: session.duration, // Assuming there's a `duration` field
+      location: session.School ? session.School.name : '',
+      sessionStarted: false, // Initial state; you can add logic to update this
+      sessionEnded: false, // Initial state; you can add logic to update this
+      assignments: false, // Placeholder; you can fetch assignments related to this session if needed
     }));
 
     res.json(formattedSessions);
@@ -211,3 +220,4 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
 });
 
 module.exports = router;
+

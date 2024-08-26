@@ -1,26 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const Session = () => {
   const [sessions, setSessions] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date()); // State to store the selected date
 
   useEffect(() => {
-    const fetchSessions = async () => {
+    const fetchSessions = async (date) => {
       try {
-        const response = await axiosInstance.get('/teacher/sessions'); // Fetch sessions for the logged-in teacher
+        const response = await axiosInstance.get('/teacher/sessions', {
+          params: { date: date.toISOString().slice(0, 10) } // Send the date in YYYY-MM-DD format
+        });
         setSessions(response.data);
       } catch (error) {
         console.error('Error fetching sessions:', error);
       }
     };
 
-    fetchSessions();
-  }, []);
+    fetchSessions(selectedDate); // Fetch sessions for the selected date
+  }, [selectedDate]); // Re-fetch sessions whenever the selected date changes
 
   const handleStartSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/start`);
-      fetchSessions(); // Refresh sessions after starting one
+      fetchSessions(selectedDate); // Refresh sessions after starting one
     } catch (error) {
       console.error('Error starting session:', error);
     }
@@ -29,7 +34,7 @@ const Session = () => {
   const handleEndSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/end`);
-      fetchSessions(); // Refresh sessions after ending one
+      fetchSessions(selectedDate); // Refresh sessions after ending one
     } catch (error) {
       console.error('Error ending session:', error);
     }
@@ -48,6 +53,11 @@ const Session = () => {
   return (
     <div>
       <h2>TODAY'S SESSIONS</h2>
+      <DatePicker 
+        selected={selectedDate} 
+        onChange={date => setSelectedDate(date)} 
+        dateFormat="yyyy-MM-dd"
+      />
       <table>
         <thead>
           <tr>
