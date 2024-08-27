@@ -16,7 +16,7 @@ Section.init({
   classInfoId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'classinfos', // Ensure this matches the actual table name in your DB
+      model: 'classinfos',
       key: 'id',
     },
     onDelete: 'CASCADE',
@@ -26,7 +26,7 @@ Section.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'schools', // Ensure this matches the actual table name in your DB
+      model: 'schools',
       key: 'id',
     },
     onDelete: 'CASCADE',
@@ -34,7 +34,8 @@ Section.init({
   },
   combinedSectionId: {
     type: DataTypes.STRING,
-    allowNull: true, // Allow null initially, will be set during timetable creation
+    allowNull: false, // If you want this to be a required field
+    unique: true, // Enforces uniqueness across sections
   }
 }, {
   sequelize,
