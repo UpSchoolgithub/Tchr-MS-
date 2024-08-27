@@ -1,4 +1,4 @@
-const { TimetableEntry, Teacher, Subject, School, ClassInfo, Section } = require('../models');
+const { TimetableEntry, TeacherTimetable, Section, ClassInfo } = require('../models');
 
 exports.assignPeriod = async (req, res) => {
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period } = req.body;
@@ -112,5 +112,70 @@ exports.getTeacherTimetable = async (req, res) => {
   } catch (error) {
     console.error('Error fetching timetable:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+exports.assignPeriod = async (req, res) => {
+  const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
+
+  // Validate required fields
+  if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  try {
+    // Ensure classId exists in classinfos table
+    const classExists = await ClassInfo.findByPk(classId);
+    if (!classExists) {
+      return res.status(400).json({ error: 'Invalid classId. Class does not exist.' });
+    }
+
+    // Check for existing timetable entry to avoid duplicates
+    const existingEntry = await TimetableEntry.findOne({
+      where: { schoolId, classId, combinedSectionId, day, period }
+    });
+
+    if (existingEntry) {
+      return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
+    }
+
+    // Create new timetable entry
+    const newEntry = await TimetableEntry.create({
+      schoolId,
+      classId,
+      combinedSectionId,
+      subjectId,
+      teacherId,
+      day,
+      period
+    });
+
+    // Extract sectionName from combinedSectionId
+    const sectionName = combinedSectionId.split('-').slice(2).join('-');
+
+    // Find or create the section based on combinedSectionId
+    await Section.findOrCreate({
+      where: { schoolId, classInfoId: classId, sectionName },
+      defaults: { combinedSectionId }
+    });
+
+    // Create or update TeacherTimetable entry
+    await TeacherTimetable.create({
+      teacherId,
+      schoolId,
+      combinedSectionId,
+      subjectId,
+      day,
+      period,
+      startTime,
+      endTime
+    });
+
+    // Respond with the newly created entry
+    res.status(201).json(newEntry);
+  } catch (error) {
+    // Log the error and respond with a 500 status
+    console.error('Error creating timetable entry:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

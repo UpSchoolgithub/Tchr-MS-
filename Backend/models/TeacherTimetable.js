@@ -20,6 +20,10 @@ TeacherTimetable.init({
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'schools',
+      key: 'id',
+    },
   },
   combinedSectionId: {
     type: DataTypes.STRING,
@@ -28,6 +32,10 @@ TeacherTimetable.init({
   subjectId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'subjects',
+      key: 'id',
+    },
   },
   day: {
     type: DataTypes.STRING,
@@ -44,7 +52,7 @@ TeacherTimetable.init({
   endTime: {
     type: DataTypes.TIME,
     allowNull: false,
-  }
+  },
 }, {
   sequelize,
   modelName: 'TeacherTimetable',
