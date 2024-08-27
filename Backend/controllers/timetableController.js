@@ -83,16 +83,37 @@ exports.getTeacherTimetable = async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    const timetable = await TimetableEntry.findAll({
+    // Fetch periods assigned directly to the teacher
+    const directTimetable = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
         { model: School, attributes: ['name'] },
         { model: ClassInfo, attributes: ['name'] },
-        { model: Section, attributes: ['combinedSectionId'] }, // Fetching combinedSectionId
+        { model: Section, attributes: ['combinedSectionId'] },
         { model: Subject, attributes: ['subjectName'] },
       ],
-      order: [['day', 'ASC'], ['period', 'ASC']], // Ensure it's sorted by day and period
     });
+
+    // Fetch periods tagged for combined sections involving the teacher
+    const combinedTimetable = await TimetableEntry.findAll({
+      where: { combinedSectionId: { [Op.ne]: null } },
+      include: [
+        {
+          model: Section,
+          where: { combinedSectionId: { [Op.ne]: null } },
+          include: {
+            model: TeacherTimetable,
+            where: { teacherId },
+          },
+        },
+        { model: School, attributes: ['name'] },
+        { model: ClassInfo, attributes: ['name'] },
+        { model: Subject, attributes: ['subjectName'] },
+      ],
+    });
+
+    // Combine both direct and combined section periods
+    const timetable = [...directTimetable, ...combinedTimetable];
 
     if (!timetable.length) {
       return res.status(404).json({ message: 'No timetable found for this teacher.' });
@@ -101,10 +122,10 @@ exports.getTeacherTimetable = async (req, res) => {
     const formattedTimetable = timetable.map(entry => ({
       id: entry.id,
       day: entry.day,
-      time: `Period ${entry.period}`, 
+      time: `Period ${entry.period}`,
       schoolName: entry.School ? entry.School.name : 'Unknown School',
       className: entry.ClassInfo ? entry.ClassInfo.name : 'Unknown Class',
-      combinedSectionId: entry.Section ? entry.Section.combinedSectionId : 'Unknown Section', // Use combinedSectionId
+      combinedSectionId: entry.Section ? entry.Section.combinedSectionId : 'Unknown Section',
       subjectName: entry.Subject ? entry.Subject.subjectName : 'Unknown Subject',
     }));
 
@@ -114,6 +135,7 @@ exports.getTeacherTimetable = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
 
 exports.assignPeriod = async (req, res) => {
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
