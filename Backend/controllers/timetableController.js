@@ -88,8 +88,8 @@ exports.getTeacherTimetable = async (req, res) => {
       include: [
         { model: School, attributes: ['name'] },
         { model: ClassInfo, attributes: ['name'] },
-        { model: Section, attributes: ['sectionName'] }, // Assuming sectionName is the field storing the name
-        { model: Subject, attributes: ['name'] },
+        { model: Section, attributes: ['combinedSectionId'] }, // Fetching combinedSectionId
+        { model: Subject, attributes: ['subjectName'] },
       ],
       order: [['day', 'ASC'], ['period', 'ASC']], // Ensure it's sorted by day and period
     });
@@ -101,11 +101,11 @@ exports.getTeacherTimetable = async (req, res) => {
     const formattedTimetable = timetable.map(entry => ({
       id: entry.id,
       day: entry.day,
-      time: `Period ${entry.period}`, // Assuming `period` is an integer representing the period number
+      time: `Period ${entry.period}`, 
       schoolName: entry.School ? entry.School.name : 'Unknown School',
       className: entry.ClassInfo ? entry.ClassInfo.name : 'Unknown Class',
-      sectionName: entry.Section ? entry.Section.sectionName : 'Unknown Section',
-      subjectName: entry.Subject ? entry.Subject.name : 'Unknown Subject',
+      combinedSectionId: entry.Section ? entry.Section.combinedSectionId : 'Unknown Section', // Use combinedSectionId
+      subjectName: entry.Subject ? entry.Subject.subjectName : 'Unknown Subject',
     }));
 
     res.json(formattedTimetable);
