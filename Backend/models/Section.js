@@ -1,7 +1,7 @@
-const { Model, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class Section extends Model {}
+class Section extends Sequelize.Model {}
 
 Section.init({
   id: {
@@ -34,8 +34,8 @@ Section.init({
   },
   combinedSectionId: {
     type: DataTypes.STRING,
-    allowNull: false, // If you want this to be a required field
-    unique: true, // Enforces uniqueness across sections
+    allowNull: false,
+    unique: true,
   }
 }, {
   sequelize,
@@ -44,27 +44,11 @@ Section.init({
   timestamps: true,
 });
 
-Section.associate = (models) => {
-  Section.belongsTo(models.ClassInfo, {
-    foreignKey: 'classInfoId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Section.belongsTo(models.School, {
-    foreignKey: 'schoolId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Section.hasMany(models.Subject, {
-    foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Section.hasMany(models.Student, {
-    foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-};
+// Add this to handle existing data issues
+Section.beforeCreate((section, options) => {
+  if (!section.combinedSectionId) {
+    section.combinedSectionId = `${section.schoolId}-${section.classInfoId}-${section.sectionName}`;
+  }
+});
 
 module.exports = Section;
