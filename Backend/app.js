@@ -70,14 +70,12 @@ const corsOptions = {
   },
   credentials: true, // Allows credentials such as cookies from the frontend
   optionsSuccessStatus: 200, // Some legacy browsers choke on status 204
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  allowedHeaders: 'Content-Type,Authorization'
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Specify allowed methods
+  allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
 };
 
-
 // Apply CORS to all incoming requests
-app.use(cors(corsOptions)); // Apply CORS settings to all incoming requests
-
+app.use(cors(corsOptions));
 
 
 // Your existing route definitions
