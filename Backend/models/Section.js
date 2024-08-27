@@ -35,7 +35,6 @@ Section.init({
   combinedSectionId: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   }
 }, {
   sequelize,
