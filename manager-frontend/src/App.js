@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { WebSocketProvider } from './WebSocketContext'; // Import the WebSocket context
+import { WebSocketProvider } from './WebSocketContext'; 
 import MSidebar from './components/MSidebar';
 import MLoginForm from './components/MLoginForm';
 import MDashboard from './components/MDashboard';
@@ -14,7 +14,7 @@ import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
 import ProtectedRoute from './ProtectedRoute';
-import TeacherTimetable from './components/TeacherTimetable'; // Import the TeacherTimetable component
+import TeacherTimetable from './components/TeacherTimetable';
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 
 function App() {
@@ -74,7 +74,7 @@ function AppContent() {
           <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
           <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
           <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-          <Route path="/teachers/timetable/:teacherId" element={<ProtectedRoute element={<TeacherTimetable />} />} />
+          <Route path="/schools/timetable/teacher/:teacherId" element={<ProtectedRoute element={<TeacherTimetable />} />} />
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
       </div>
