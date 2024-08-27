@@ -1,4 +1,3 @@
-// src/components/TeacherTimetable.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
@@ -41,20 +40,22 @@ const TeacherTimetable = () => {
           <thead>
             <tr>
               <th>Day</th>
+              <th>Time</th>
+              <th>School</th>
               <th>Class</th>
               <th>Section</th>
               <th>Subject</th>
-              <th>Time</th>
             </tr>
           </thead>
           <tbody>
             {timetable.map((entry) => (
               <tr key={entry.id}>
                 <td>{entry.day}</td>
+                <td>{entry.time}</td>
+                <td>{entry.schoolName}</td>
                 <td>{entry.className}</td>
                 <td>{entry.sectionName}</td>
                 <td>{entry.subjectName}</td>
-                <td>{entry.time}</td>
               </tr>
             ))}
           </tbody>

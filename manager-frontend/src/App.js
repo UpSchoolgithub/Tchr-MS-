@@ -18,9 +18,11 @@ import TeacherTimetable from './components/TeacherTimetable'; // Import the Teac
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 
 function App() {
+  const { token } = useManagerAuth();
+
   return (
     <ManagerAuthProvider>
-      <WebSocketProvider token={useManagerAuth().token}>
+      <WebSocketProvider token={token}>
         <Router>
           <AppContent />
         </Router>
@@ -73,7 +75,6 @@ function AppContent() {
           <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
           <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
           <Route path="/teachers/timetable/:teacherId" element={<ProtectedRoute element={<TeacherTimetable />} />} />
-          {/* Optionally, add a 404 page */}
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
       </div>
