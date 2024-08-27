@@ -1,4 +1,4 @@
-const { TimetableEntry, Section } = require('../models');
+const { TimetableEntry, Teacher, Subject, School, ClassInfo, Section } = require('../models');
 
 exports.assignPeriod = async (req, res) => {
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period } = req.body;
@@ -76,5 +76,41 @@ exports.getTimetableSettings = async (req, res) => {
   } catch (error) {
     console.error('Error fetching timetable settings:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getTeacherTimetable = async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    const timetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: School, attributes: ['name'] },
+        { model: ClassInfo, attributes: ['name'] },
+        { model: Section, attributes: ['sectionName'] }, // Assuming sectionName is the field storing the name
+        { model: Subject, attributes: ['name'] },
+      ],
+      order: [['day', 'ASC'], ['period', 'ASC']], // Ensure it's sorted by day and period
+    });
+
+    if (!timetable.length) {
+      return res.status(404).json({ message: 'No timetable found for this teacher.' });
+    }
+
+    const formattedTimetable = timetable.map(entry => ({
+      id: entry.id,
+      day: entry.day,
+      time: `Period ${entry.period}`, // Assuming `period` is an integer representing the period number
+      schoolName: entry.School ? entry.School.name : 'Unknown School',
+      className: entry.ClassInfo ? entry.ClassInfo.name : 'Unknown Class',
+      sectionName: entry.Section ? entry.Section.sectionName : 'Unknown Section',
+      subjectName: entry.Subject ? entry.Subject.name : 'Unknown Subject',
+    }));
+
+    res.json(formattedTimetable);
+  } catch (error) {
+    console.error('Error fetching timetable:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };

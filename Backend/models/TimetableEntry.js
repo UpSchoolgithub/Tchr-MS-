@@ -5,6 +5,9 @@ class TimetableEntry extends Model {
   static associate(models) {
     this.belongsTo(models.Teacher, { foreignKey: 'teacherId' });
     this.belongsTo(models.Subject, { foreignKey: 'subjectId' });
+    this.belongsTo(models.School, { foreignKey: 'schoolId' });
+    this.belongsTo(models.ClassInfo, { foreignKey: 'classId' });
+    this.belongsTo(models.Section, { foreignKey: 'combinedSectionId', targetKey: 'combinedSectionId' });
   }
 }
 

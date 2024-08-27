@@ -8,4 +8,7 @@ router.post('/assign', assignPeriod);
 // Define the route for fetching assignments
 router.get('/:schoolId/:classId/:sectionName/assignments', getAssignments);
 
+// Route to get the timetable for a specific teacher
+router.get('/teachers/:teacherId/timetable', timetableController.getTeacherTimetable);
+
 module.exports = router;
