@@ -8,6 +8,7 @@ class TimetableEntry extends Model {
     this.belongsTo(models.School, { foreignKey: 'schoolId' });
     this.belongsTo(models.ClassInfo, { foreignKey: 'classId' });
     this.belongsTo(models.Section, { foreignKey: 'combinedSectionId', targetKey: 'combinedSectionId' });
+    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId' }); // <-- Add this association
   }
 }
 

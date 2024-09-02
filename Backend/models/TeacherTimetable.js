@@ -1,13 +1,29 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class TeacherTimetable extends Model {}
+class TeacherTimetable extends Model {
+  static associate(models) {
+    this.belongsTo(models.Teacher, { foreignKey: 'teacherId' });
+    this.belongsTo(models.School, { foreignKey: 'schoolId' });
+    this.belongsTo(models.ClassInfo, { foreignKey: 'classId' });
+    this.belongsTo(models.Section, { foreignKey: 'combinedSectionId', targetKey: 'combinedSectionId' });
+    this.belongsTo(models.TimetableEntry, { foreignKey: 'timetableEntryId' }); // <-- Add this association
+  }
+}
 
 TeacherTimetable.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+  },
+  timetableEntryId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'timetable_entries',
+      key: 'id',
+    },
   },
   teacherId: {
     type: DataTypes.INTEGER,
@@ -20,37 +36,13 @@ TeacherTimetable.init({
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: 'schools',
-      key: 'id',
-    },
+  },
+  classId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
   },
   combinedSectionId: {
     type: DataTypes.STRING,
-    allowNull: false,
-  },
-  subjectId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'subjects',
-      key: 'id',
-    },
-  },
-  day: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  period: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  startTime: {
-    type: DataTypes.TIME,
-    allowNull: false,
-  },
-  endTime: {
-    type: DataTypes.TIME,
     allowNull: false,
   },
 }, {
