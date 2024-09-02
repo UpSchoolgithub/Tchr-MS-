@@ -131,7 +131,6 @@ const TimetableSettings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Removed validation check
     const updatedReserveDay = { ...settings.reserveDay };
     if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
       for (const day in updatedReserveDay) {
@@ -146,6 +145,7 @@ const TimetableSettings = () => {
       const settingsToSave = {
         ...settings,
         reserveDay: JSON.stringify(updatedReserveDay),
+        periodTimings: settings.periodTimings // Ensure periodTimings is included in the data sent to the backend
       };
       await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');

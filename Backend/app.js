@@ -275,20 +275,39 @@ app.get('/api/schools/:id/timetable', async (req, res) => {
 // Update the timetable settings for a specific school
 app.put('/api/schools/:id/timetable', async (req, res) => {
   const schoolId = req.params.id;
-  const settings = req.body;
+  const { periodTimings, ...settings } = req.body; // Destructure periodTimings from the request body
+
   try {
     let timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
+
     if (!timetableSettings) {
       timetableSettings = await TimetableSettings.create({ schoolId, ...settings });
-      return res.send({ message: 'Timetable settings created successfully' });
+    } else {
+      await timetableSettings.update(settings);
     }
-    await timetableSettings.update(settings);
+
+    // Handle period timings separately if needed
+    if (periodTimings && periodTimings.length > 0) {
+      // Assuming you have a model to store period timings
+      // You may need to delete existing period timings first if updating
+      await Period.destroy({ where: { schoolId } }); // Optional: clear existing periods for the school
+      for (const [index, timing] of periodTimings.entries()) {
+        await Period.create({
+          schoolId,
+          periodNumber: index + 1,
+          startTime: timing.start,
+          endTime: timing.end,
+        });
+      }
+    }
+
     res.send({ message: 'Timetable settings updated successfully' });
   } catch (error) {
     console.error('Error updating timetable settings:', error.message);
     res.status(500).send({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 // Other school-related routes
 app.get('/api/schools', async (req, res) => {
