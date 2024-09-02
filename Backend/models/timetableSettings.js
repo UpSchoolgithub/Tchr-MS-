@@ -73,7 +73,7 @@ const TimetableSettings = sequelize.define('TimetableSettings', {
   },
   reserveDay: {
     type: DataTypes.JSON,
-    defaultValue: {}
+    defaultValue: {},
   }
 });
 
