@@ -1,5 +1,3 @@
-// Frontend/src/components/TeacherTimetable.js
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
@@ -12,7 +10,8 @@ const TeacherTimetable = () => {
   useEffect(() => {
     const fetchTimetable = async () => {
       try {
-        const response = await axiosInstance.get(`/api/timetable/teachers/${teacherId}/timetable`);
+        // Corrected the URL by removing the extra '/api' part
+        const response = await axiosInstance.get(`/timetable/teachers/${teacherId}/timetable`);
         setTimetable(response.data);
       } catch (err) {
         setError('Failed to load timetable');
