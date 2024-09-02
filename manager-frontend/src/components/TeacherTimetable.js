@@ -11,7 +11,7 @@ const TeacherTimetable = () => {
     const fetchTimetable = async () => {
       try {
         const response = await axiosInstance.get(`/timetable/teachers/${teacherId}/timetable`);
-        console.log('Timetable Data:', response.data); // Debugging line
+        console.log('API Response Data:', response.data); // Log the entire API response
         setTimetable(response.data);
       } catch (err) {
         setError('Failed to load timetable');
@@ -23,11 +23,14 @@ const TeacherTimetable = () => {
   }, [teacherId]);
 
   const formatTime = (startTime, endTime) => {
-    console.log('Start Time:', startTime, 'End Time:', endTime); // Debugging line
+    console.log('Start Time:', startTime, 'End Time:', endTime); // Log startTime and endTime
     if (!startTime || !endTime) return 'N/A';
     const format = (time) => {
       const date = new Date(time);
-      console.log('Formatted Time:', date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })); // Debugging line
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date format:', time); // Log if date is invalid
+        return 'Invalid Time';
+      }
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     return `${format(startTime)} - ${format(endTime)}`;
