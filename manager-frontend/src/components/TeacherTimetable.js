@@ -11,7 +11,7 @@ const TeacherTimetable = () => {
     const fetchTimetable = async () => {
       try {
         const response = await axiosInstance.get(`/timetable/teachers/${teacherId}/timetable`);
-        console.log('API Response Data:', response.data); // Log the entire API response
+        console.log('API Response:', response.data); // Log the entire API response
         setTimetable(response.data);
       } catch (err) {
         setError('Failed to load timetable');
