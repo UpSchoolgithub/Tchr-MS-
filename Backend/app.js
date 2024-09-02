@@ -273,9 +273,9 @@ app.get('/api/schools/:id/timetable', async (req, res) => {
 });
 
 // Update the timetable settings for a specific school
-app.put('/api/schools/:id/timetable', async (req, res) => {
+router.put('/api/schools/:id/timetable', async (req, res) => {
   const schoolId = req.params.id;
-  const { periodTimings, ...settings } = req.body; // Destructure periodTimings from the request body
+  const { periodTimings, ...settings } = req.body;
 
   try {
     let timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
@@ -286,19 +286,27 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
       await timetableSettings.update(settings);
     }
 
-    // Handle period timings separately if needed
-    if (periodTimings && periodTimings.length > 0) {
-      // Assuming you have a model to store period timings
-      // You may need to delete existing period timings first if updating
-      await Period.destroy({ where: { schoolId } }); // Optional: clear existing periods for the school
-      for (const [index, timing] of periodTimings.entries()) {
-        await Period.create({
+    // Handle period timings
+    if (periodTimings && Array.isArray(periodTimings)) {
+      // Fetch existing periods
+      const existingPeriods = await Period.findAll({ where: { schoolId } });
+      
+      if (existingPeriods) {
+        // Destroy existing periods
+        await Period.destroy({ where: { schoolId } });
+      }
+
+      // Create new periods
+      const periodPromises = periodTimings.map((timing, index) => {
+        return Period.create({
           schoolId,
           periodNumber: index + 1,
           startTime: timing.start,
           endTime: timing.end,
         });
-      }
+      });
+
+      await Promise.all(periodPromises);
     }
 
     res.send({ message: 'Timetable settings updated successfully' });
@@ -307,6 +315,7 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
     res.status(500).send({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 // Other school-related routes
