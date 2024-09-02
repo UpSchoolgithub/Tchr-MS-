@@ -10,7 +10,6 @@ const TeacherTimetable = () => {
   useEffect(() => {
     const fetchTimetable = async () => {
       try {
-        // Corrected the URL by removing the extra '/api' part
         const response = await axiosInstance.get(`/timetable/teachers/${teacherId}/timetable`);
         setTimetable(response.data);
       } catch (err) {
@@ -21,6 +20,23 @@ const TeacherTimetable = () => {
 
     fetchTimetable();
   }, [teacherId]);
+
+  const formatTime = (startTime, endTime) => {
+    if (!startTime || !endTime) return 'N/A';
+    const format = (time) => {
+      const date = new Date(time);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+    return `${format(startTime)} - ${format(endTime)}`;
+  };
+
+  // Group timetable entries by day
+  const groupedTimetable = timetable.reduce((acc, entry) => {
+    const day = entry.day;
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(entry);
+    return acc;
+  }, {});
 
   if (error) {
     return <div className="error">{error}</div>;
@@ -33,36 +49,35 @@ const TeacherTimetable = () => {
   return (
     <div>
       <h2>Teacher Timetable</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Period</th>
-            <th>Time</th>
-            <th>School</th>
-            <th>Class</th>
-            <th>Section</th>
-            <th>Subject</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {timetable.map((entry) => (
-            <tr key={entry.id}>
-              <td>{entry.day}</td>
-              <td>{entry.period}</td>
-              <td>{entry.time}</td>
-              <td>{entry.schoolName}</td>
-              <td>{entry.className}</td>
-              <td>{entry.sectionName}</td>
-              <td>{entry.subjectName}</td>
-              <td>{entry.startTime || 'N/A'}</td>
-              <td>{entry.endTime || 'N/A'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {Object.keys(groupedTimetable).map((day) => (
+        <div key={day}>
+          <h3>{day}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Timings</th>
+                <th>School</th>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Subject</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupedTimetable[day]
+                .sort((a, b) => a.period - b.period)
+                .map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{formatTime(entry.startTime, entry.endTime)}</td>
+                    <td>{entry.schoolName}</td>
+                    <td>{entry.className}</td>
+                    <td>{entry.sectionName}</td>
+                    <td>{entry.subjectName}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 };
