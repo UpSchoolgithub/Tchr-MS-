@@ -11,6 +11,7 @@ const TeacherTimetable = () => {
     const fetchTimetable = async () => {
       try {
         const response = await axiosInstance.get(`/timetable/teachers/${teacherId}/timetable`);
+        console.log('Timetable Data:', response.data); // Debugging line
         setTimetable(response.data);
       } catch (err) {
         setError('Failed to load timetable');
@@ -22,15 +23,16 @@ const TeacherTimetable = () => {
   }, [teacherId]);
 
   const formatTime = (startTime, endTime) => {
+    console.log('Start Time:', startTime, 'End Time:', endTime); // Debugging line
     if (!startTime || !endTime) return 'N/A';
     const format = (time) => {
       const date = new Date(time);
+      console.log('Formatted Time:', date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })); // Debugging line
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     return `${format(startTime)} - ${format(endTime)}`;
   };
 
-  // Group timetable entries by day
   const groupedTimetable = timetable.reduce((acc, entry) => {
     const day = entry.day;
     if (!acc[day]) acc[day] = [];
