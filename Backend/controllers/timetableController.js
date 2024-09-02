@@ -111,7 +111,7 @@ exports.getTeacherTimetable = async (req, res) => {
       where: { teacherId },
       include: [
         { model: School, attributes: ['name'] },
-        { model: ClassInfo, attributes: ['name'] },
+        { model: ClassInfo, attributes: ['className'] }, // Use className instead of name
         { model: Section, attributes: ['combinedSectionId', 'sectionName'] },
         { model: Subject, attributes: ['subjectName'] },
       ],
@@ -125,7 +125,7 @@ exports.getTeacherTimetable = async (req, res) => {
           model: TimetableEntry,
           include: [
             { model: School, attributes: ['name'] },
-            { model: ClassInfo, attributes: ['name'] },
+            { model: ClassInfo, attributes: ['className'] }, // Use className instead of name
             { model: Section, attributes: ['combinedSectionId', 'sectionName'] },
             { model: Subject, attributes: ['subjectName'] },
           ],
@@ -161,7 +161,7 @@ exports.getTeacherTimetable = async (req, res) => {
       period: entry.period,
       time: `Period ${entry.period}`,
       schoolName: entry.School ? entry.School.name : 'Unknown School',
-      className: entry.ClassInfo ? entry.ClassInfo.name : 'Unknown Class',
+      className: entry.ClassInfo ? entry.ClassInfo.className : 'Unknown Class', // Use className
       sectionName: entry.Section ? entry.Section.sectionName : 'Unknown Section',
       combinedSectionId: entry.Section ? entry.Section.combinedSectionId : 'Unknown Section ID',
       subjectName: entry.Subject ? entry.Subject.subjectName : 'Unknown Subject',
@@ -175,4 +175,3 @@ exports.getTeacherTimetable = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
-
