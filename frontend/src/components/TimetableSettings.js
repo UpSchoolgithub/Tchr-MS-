@@ -23,7 +23,7 @@ const TimetableSettings = () => {
     reserveTimeStart: '',
     reserveTimeEnd: '',
     applyToAll: false,
-    periodTimings: [] // Ensure this is always initialized as an array
+    periodTimings: [], // Ensure this is always initialized as an array
   });
   const [error, setError] = useState('');
   const [showPeriodSettings, setShowPeriodSettings] = useState(false); // New state variable
@@ -42,10 +42,7 @@ const TimetableSettings = () => {
 
         setSettings({
           ...data,
-          periodTimings: Array.from({ length: data.periodsPerDay }, (_, index) => ({
-            start: data.periodTimings ? data.periodTimings[index]?.start || '' : '',
-            end: data.periodTimings ? data.periodTimings[index]?.end || '' : ''
-          }))
+          periodTimings: data.periodTimings || [], // Ensure this is an array
         });
         setShowPeriodSettings(true); // Show period settings if periods are already defined
       } catch (error) {
@@ -90,22 +87,22 @@ const TimetableSettings = () => {
         applyToAll: checked,
       }));
     } else if (name.startsWith('periodStart-')) {
-      const index = parseInt(name.split('-')[1]);
+      const index = parseInt(name.split('-')[1], 10);
       setSettings((prevSettings) => {
         const periodTimings = [...prevSettings.periodTimings];
         periodTimings[index] = {
           ...periodTimings[index],
-          start: value
+          start: value,
         };
         return { ...prevSettings, periodTimings };
       });
     } else if (name.startsWith('periodEnd-')) {
-      const index = parseInt(name.split('-')[1]);
+      const index = parseInt(name.split('-')[1], 10);
       setSettings((prevSettings) => {
         const periodTimings = [...prevSettings.periodTimings];
         periodTimings[index] = {
           ...periodTimings[index],
-          end: value
+          end: value,
         };
         return { ...prevSettings, periodTimings };
       });
@@ -123,8 +120,8 @@ const TimetableSettings = () => {
       ...prevSettings,
       periodTimings: Array.from({ length: prevSettings.periodsPerDay }, () => ({
         start: '',
-        end: ''
-      }))
+        end: '',
+      })),
     }));
   };
 
@@ -145,7 +142,7 @@ const TimetableSettings = () => {
       const settingsToSave = {
         ...settings,
         reserveDay: JSON.stringify(updatedReserveDay),
-        periodTimings: settings.periodTimings // Ensure periodTimings is included in the data sent to the backend
+        periodTimings: settings.periodTimings, // Ensure periodTimings is included
       };
       await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');
@@ -332,7 +329,7 @@ const TimetableSettings = () => {
           {settings.reserveType === 'day' && (
             <>
               <div className="reserve-day-section">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
                   <div key={day} className="reserve-day-group">
                     <label className="day-label">
                       <input

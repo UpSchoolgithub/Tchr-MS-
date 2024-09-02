@@ -1,47 +1,36 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-
-class Period extends Model {}
-
-Period.init({
-    id: {
+// models/Period.js
+module.exports = (sequelize, DataTypes) => {
+    const Period = sequelize.define('Period', {
+      id: {
         type: DataTypes.INTEGER,
-        autoIncrement: true,
         primaryKey: true,
-    },
-    schoolId: {
+        autoIncrement: true,
+      },
+      schoolId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-    },
-    classId: {
+      },
+      periodNumber: {
         type: DataTypes.INTEGER,
         allowNull: false,
-    },
-    sectionId: {
-        type: DataTypes.INTEGER,
+      },
+      startTime: {
+        type: DataTypes.TIME,
         allowNull: false,
-    },
-    subjectId: {
-        type: DataTypes.INTEGER,
+      },
+      endTime: {
+        type: DataTypes.TIME,
         allowNull: false,
-    },
-    teacherId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    day: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    period: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-}, {
-    sequelize,
-    modelName: 'Period',
-    tableName: 'periods',
-    timestamps: true,
-});
-
-module.exports = Period;
+      },
+    }, {
+      tableName: 'Periods',
+      timestamps: false,
+    });
+  
+    Period.associate = (models) => {
+      Period.belongsTo(models.School, { foreignKey: 'schoolId' });
+    };
+  
+    return Period;
+  };
+  
