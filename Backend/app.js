@@ -274,7 +274,7 @@ app.get('/api/schools/:id/timetable', async (req, res) => {
 });
 
 // Update the timetable settings for a specific school
-router.put('/api/schools/:id/timetable', async (req, res) => {
+app.put('/api/schools/:id/timetable', async (req, res) => {
   const schoolId = req.params.id;
   const { periodTimings, ...settings } = req.body;
 
@@ -289,13 +289,8 @@ router.put('/api/schools/:id/timetable', async (req, res) => {
 
     // Handle period timings
     if (periodTimings && Array.isArray(periodTimings)) {
-      // Fetch existing periods
-      const existingPeriods = await Period.findAll({ where: { schoolId } });
-      
-      if (existingPeriods) {
-        // Destroy existing periods
-        await Period.destroy({ where: { schoolId } });
-      }
+      // Destroy existing periods
+      await Period.destroy({ where: { schoolId } });
 
       // Create new periods
       const periodPromises = periodTimings.map((timing, index) => {
