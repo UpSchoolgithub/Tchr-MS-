@@ -271,37 +271,18 @@ const MSchoolClassSection = () => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
     // Combine periods and breaks/lunches into a single timeline array
-    const timeline = [];
-  
-    periods.forEach((period, index) => {
+    const timeline = periods.map((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
       if (typeof startEndTime === 'string') {
-        const [start, end] = startEndTime.split(' - ');
-  
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: `${start} - ${end}` });
-  
-        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
-  
-        // Insert Lunch Break if it's supposed to be between periods 4 and 5
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
-  
-        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
+        return { type: 'period', period, time: startEndTime };
       } else {
         console.error('Invalid startEndTime format:', startEndTime);
+        return null;
       }
-    });
+    }).filter(entry => entry !== null);
   
     // Check if reserved time overlaps with any period or breaks
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
