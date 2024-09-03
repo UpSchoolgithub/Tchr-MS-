@@ -276,6 +276,8 @@ const MSchoolClassSection = () => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
+    let reservedTimeInserted = false;
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -299,6 +301,16 @@ const MSchoolClassSection = () => {
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            // If reserved time is already inserted, skip the further rendering of it
+            if (isReservedTime && reservedTimeInserted) {
+              return null;
+            }
+  
+            // Mark reserved time as inserted after the first occurrence
+            if (isReservedTime) {
+              reservedTimeInserted = true;
+            }
   
             return (
               <React.Fragment key={index}>
@@ -369,8 +381,8 @@ const MSchoolClassSection = () => {
               </React.Fragment>
             );
           })}
-          {/* Add reserved time if it's not already included in the periods */}
-          {timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
+          {/* Only add reserved time if it wasn't already included */}
+          {!reservedTimeInserted && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
             <tr>
               <td colSpan={days.length + 1} className="merged-row">
                 <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
