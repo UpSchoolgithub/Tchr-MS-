@@ -291,10 +291,30 @@ const MSchoolClassSection = () => {
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
   
-            // Determine if this period time is a reserved time
+            // Determine if this period time is a reserved time, break, or lunch
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            const isBreakTime =
+              (timetableSettings.shortBreak1StartTime === startEndTime.start &&
+                timetableSettings.shortBreak1EndTime === startEndTime.end) ||
+              (timetableSettings.shortBreak2StartTime === startEndTime.start &&
+                timetableSettings.shortBreak2EndTime === startEndTime.end) ||
+              (timetableSettings.lunchStartTime === startEndTime.start &&
+                timetableSettings.lunchEndTime === startEndTime.end);
+  
+            const breakLabel =
+              timetableSettings.shortBreak1StartTime === startEndTime.start &&
+              timetableSettings.shortBreak1EndTime === startEndTime.end
+                ? 'SHORT BREAK 1'
+                : timetableSettings.shortBreak2StartTime === startEndTime.start &&
+                  timetableSettings.shortBreak2EndTime === startEndTime.end
+                ? 'SHORT BREAK 2'
+                : timetableSettings.lunchStartTime === startEndTime.start &&
+                  timetableSettings.lunchEndTime === startEndTime.end
+                ? 'LUNCH'
+                : '';
   
             return (
               <React.Fragment key={index}>
@@ -304,6 +324,10 @@ const MSchoolClassSection = () => {
                       {isReservedTime ? (
                         <>
                           <strong>RESERVED TIME</strong> <br />
+                        </>
+                      ) : isBreakTime ? (
+                        <>
+                          <strong>{breakLabel}</strong> <br />
                         </>
                       ) : (
                         <>
@@ -316,22 +340,24 @@ const MSchoolClassSection = () => {
                   {days.map((day, dayIndex) => (
                     <td
                       key={`${day}-${index}`}
-                      colSpan={isReservedTime ? days.length : 1}
-                      className={isReservedTime ? 'merged-row' : ''}
-                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
+                      colSpan={isReservedTime || isBreakTime ? days.length : 1}
+                      className={isReservedTime || isBreakTime ? 'merged-row' : ''}
+                      style={{ display: isReservedTime || isBreakTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
                     >
-                      {isReservedTime && dayIndex === 0 ? (
+                      {(isReservedTime || isBreakTime) && dayIndex === 0 ? (
                         <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                          Reserved Time
+                          {isReservedTime ? 'Reserved Time' : breakLabel}
                         </div>
                       ) : (
-                        !isReservedTime && assignedPeriods[`${day}-${period}`] ? (
+                        !isReservedTime &&
+                        !isBreakTime &&
+                        assignedPeriods[`${day}-${period}`] ? (
                           <>
                             <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
                             <div>{assignedPeriods[`${day}-${period}`].subject}</div>
                           </>
                         ) : (
-                          !isReservedTime && <span className="add-icon">+</span>
+                          !isReservedTime && !isBreakTime && <span className="add-icon">+</span>
                         )
                       )}
                     </td>
