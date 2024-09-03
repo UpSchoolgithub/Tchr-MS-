@@ -265,51 +265,12 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
-    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  
-    // Combine periods and breaks/lunches into a single timeline array
-    const timeline = [];
-  
-    periods.forEach((period, index) => {
-      const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime && typeof startEndTime.start === 'string' && typeof startEndTime.end === 'string') {
-        const start = startEndTime.start;
-        const end = startEndTime.end;
-  
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: `${start} - ${end}` });
-  
-        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
-  
-        // Insert Lunch Break if it's supposed to be between periods 4 and 5
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
-  
-        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
-      } else {
-        console.error('Invalid startEndTime format:', startEndTime);
-      }
-    });
-  
-    // Insert reserved time if set and it falls after all periods
-    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-    }
-  
-    console.log('Timeline:', timeline); // Log the generated timeline
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
     return (
       <table className="timetable-table">
@@ -322,43 +283,89 @@ const MSchoolClassSection = () => {
           </tr>
         </thead>
         <tbody>
-          {timeline.map((entry, index) => (
-            <tr key={index}>
-              <td>
-                {entry.type === 'period' ? `Period ${entry.period}` : entry.label} <br />
-                {entry.time}
-              </td>
-              {days.map(day => {
-                if (entry.type === 'period') {
-                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${entry.period}`] : undefined;
-                  return (
-                    <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, entry.period)}>
-                      {periodAssignment ? (
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
+              return null; // Skip if the time format is invalid
+            }
+  
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+  
+            // Determine if this period time is a reserved time, break, or lunch
+            const isReservedTime =
+              timetableSettings.reserveTimeStart === startEndTime.start &&
+              timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            const isBreakTime =
+              (timetableSettings.shortBreak1StartTime === startEndTime.start &&
+                timetableSettings.shortBreak1EndTime === startEndTime.end) ||
+              (timetableSettings.shortBreak2StartTime === startEndTime.start &&
+                timetableSettings.shortBreak2EndTime === startEndTime.end) ||
+              (timetableSettings.lunchStartTime === startEndTime.start &&
+                timetableSettings.lunchEndTime === startEndTime.end);
+  
+            const breakLabel =
+              timetableSettings.shortBreak1StartTime === startEndTime.start &&
+              timetableSettings.shortBreak1EndTime === startEndTime.end
+                ? 'SHORT BREAK 1'
+                : timetableSettings.shortBreak2StartTime === startEndTime.start &&
+                  timetableSettings.shortBreak2EndTime === startEndTime.end
+                ? 'SHORT BREAK 2'
+                : timetableSettings.lunchStartTime === startEndTime.start &&
+                  timetableSettings.lunchEndTime === startEndTime.end
+                ? 'LUNCH'
+                : '';
+  
+            return (
+              <React.Fragment key={index}>
+                <tr>
+                  <td>
+                    <div>
+                      {isReservedTime ? (
                         <>
-                          <div>{periodAssignment.teacher}</div>
-                          <div>{periodAssignment.subject}</div>
+                          <strong>RESERVED TIME</strong> <br />
+                        </>
+                      ) : isBreakTime ? (
+                        <>
+                          <strong>{breakLabel}</strong> <br />
                         </>
                       ) : (
-                        <span className="add-icon">+</span>
+                        <>
+                          Period {period} <br />
+                        </>
+                      )}
+                      {periodTime}
+                    </div>
+                  </td>
+                  {days.map((day, dayIndex) => (
+                    <td
+                      key={`${day}-${index}`}
+                      colSpan={isReservedTime || isBreakTime ? days.length : 1}
+                      className={isReservedTime || isBreakTime ? 'merged-row' : ''}
+                      style={{ display: isReservedTime || isBreakTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
+                    >
+                      {(isReservedTime || isBreakTime) && dayIndex === 0 ? (
+                        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                          {isReservedTime ? 'Reserved Time' : breakLabel}
+                        </div>
+                      ) : (
+                        !isReservedTime &&
+                        !isBreakTime &&
+                        assignedPeriods[`${day}-${period}`] ? (
+                          <>
+                            <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                            <div>{assignedPeriods[`${day}-${period}`].subject}</div>
+                          </>
+                        ) : (
+                          !isReservedTime && !isBreakTime && <span className="add-icon">+</span>
+                        )
                       )}
                     </td>
-                  );
-                }
-                return (
-                  <td
-                    key={`${day}-${index}`}
-                    colSpan={days.length}
-                    className={entry.type === 'break' || entry.type === 'reserved' ? 'merged-row' : ''}
-                    style={{ display: entry.type === 'break' || entry.type === 'reserved' ? 'none' : 'table-cell' }}
-                  >
-                    {day === 'Monday' && entry.type !== 'period' && (
-                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>{entry.label}</div>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+                  ))}
+                </tr>
+              </React.Fragment>
+            );
+          })}
         </tbody>
       </table>
     );
