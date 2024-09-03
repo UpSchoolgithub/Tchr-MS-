@@ -290,8 +290,8 @@ const MSchoolClassSection = () => {
             }
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+            const periodName = `Period ${period}`;
   
-            // Determine if this period time is a reserved time
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
@@ -301,15 +301,7 @@ const MSchoolClassSection = () => {
                 <tr>
                   <td>
                     <div>
-                      {isReservedTime ? (
-                        <>
-                          <strong>RESERVED TIME</strong> <br />
-                        </>
-                      ) : (
-                        <>
-                          Period {period} <br />
-                        </>
-                      )}
+                      <strong>{periodName}</strong> <br />
                       {periodTime}
                     </div>
                   </td>
