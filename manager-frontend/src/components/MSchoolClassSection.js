@@ -294,13 +294,11 @@ const MSchoolClassSection = () => {
             }
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
-            
-            // Check if this period time is a reserved time
+            const periodName = `Period ${period}`;
+  
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
-  
-            const periodName = isReservedTime ? "RESERVED TIME" : `Period ${period}`;
   
             return (
               <React.Fragment key={index}>
@@ -316,7 +314,7 @@ const MSchoolClassSection = () => {
                       key={`${day}-${index}`}
                       colSpan={isReservedTime ? days.length : 1}
                       className={isReservedTime ? 'merged-row' : ''}
-                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns for merged rows
+                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
                     >
                       {isReservedTime && dayIndex === 0 ? (
                         <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
@@ -342,7 +340,6 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
  
   
 
