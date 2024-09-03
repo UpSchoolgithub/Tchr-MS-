@@ -427,7 +427,7 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
+
   
   
 
