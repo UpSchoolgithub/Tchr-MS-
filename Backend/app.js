@@ -35,8 +35,9 @@ const testRoutes = require('./routes/testRoutes');
 const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
-app.use('/api/timetable', require('./routes/timetableRoutes'));
 const TimetablePeriods = require('./models/TimetablePeriods');
+
+app.use('/api/timetable', require('./routes/timetableRoutes'));
 
 // Teacher Routes
 const teacherAuthRoutes = require('./routes/teacherRoutes'); 
@@ -274,8 +275,9 @@ app.get('/api/schools/:id/timetable', async (req, res) => {
   }
 });
 
+
 // Update the timetable settings for a specific school
-router.put('/api/schools/:id/timetable', async (req, res) => {
+app.put('/api/schools/:id/timetable', async (req, res) => {
   const schoolId = req.params.id;
   const { periodTimings, ...settings } = req.body;
 
