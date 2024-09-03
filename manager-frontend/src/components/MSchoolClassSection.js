@@ -289,14 +289,16 @@ const MSchoolClassSection = () => {
         <tbody>
           {periods.map((period, index) => {
             const startEndTime = timetableSettings.periodTimings[index];
-            
-            // Check if startEndTime exists and is an object with 'start' and 'end' properties
-            if (!startEndTime || typeof startEndTime !== 'object' || !startEndTime.start || !startEndTime.end) {
-              return null; // Skip if startEndTime is invalid
+            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
+              return null; // Skip if the time format is invalid
             }
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
             const periodName = `Period ${period}`;
+  
+            const isReservedTime =
+              timetableSettings.reserveTimeStart === startEndTime.start &&
+              timetableSettings.reserveTimeEnd === startEndTime.end;
   
             return (
               <React.Fragment key={index}>
@@ -307,54 +309,30 @@ const MSchoolClassSection = () => {
                       {periodTime}
                     </div>
                   </td>
-                  {days.map((day, dayIndex) => {
-                    const dayLower = day.toLowerCase();
-                    let isReservedDay = false;
-                    let reserveStartTime = '';
-                    let reserveEndTime = '';
-  
-                    if (timetableSettings.reserveType === 'time') {
-                      // Apply uniform reserve time
-                      isReservedDay = true;
-                      reserveStartTime = timetableSettings.reserveTimeStart;
-                      reserveEndTime = timetableSettings.reserveTimeEnd;
-                    } else if (timetableSettings.reserveType === 'day' &&
-                               timetableSettings.reserveDay[dayLower] &&
-                               timetableSettings.reserveDay[dayLower].open) {
-                      // Apply day-specific reserve time
-                      isReservedDay = true;
-                      reserveStartTime = timetableSettings.reserveDay[dayLower].start;
-                      reserveEndTime = timetableSettings.reserveDay[dayLower].end;
-                    }
-  
-                    const isReservePeriod = isReservedDay && reserveStartTime === startEndTime.start && reserveEndTime === startEndTime.end;
-  
-                    return (
-                      <td
-                        key={`${day}-${index}`}
-                        colSpan={isReservePeriod ? days.length : 1}
-                        className={isReservePeriod ? 'merged-row' : ''}
-                        style={{ display: isReservePeriod && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns for merged rows
-                      >
-                        {isReservePeriod && dayIndex === 0 ? (
-                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                            Reserved Time
-                          </div>
+                  {days.map((day, dayIndex) => (
+                    <td
+                      key={`${day}-${index}`}
+                      colSpan={isReservedTime ? days.length : 1}
+                      className={isReservedTime ? 'merged-row' : ''}
+                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
+                    >
+                      {isReservedTime && dayIndex === 0 ? (
+                        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                          Reserved Time
+                        </div>
+                      ) : (
+                        !isReservedTime && assignedPeriods[`${day}-${period}`] ? (
+                          <>
+                            <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                            <div>{assignedPeriods[`${day}-${period}`].subject}</div>
+                          </>
                         ) : (
-                          !isReservePeriod && assignedPeriods[`${day}-${period}`] ? (
-                            <>
-                              <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
-                              <div>{assignedPeriods[`${day}-${period}`].subject}</div>
-                            </>
-                          ) : (
-                            !isReservePeriod && <span className="add-icon">+</span>
-                          )
-                        )}
-                      </td>
-                    );
-                  })}
+                          !isReservedTime && <span className="add-icon">+</span>
+                        )
+                      )}
+                    </td>
+                  ))}
                 </tr>
-                {/* Insert Breaks and other schedule elements as per your original logic */}
               </React.Fragment>
             );
           })}
@@ -362,7 +340,6 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
   
   
 
