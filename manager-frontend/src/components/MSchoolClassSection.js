@@ -271,41 +271,41 @@ const MSchoolClassSection = () => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   
     // Combine periods and breaks/lunches into a single timeline array
-    const timeline = periods.map((period, index) => {
+    const timeline = [];
+  
+    periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
       if (typeof startEndTime === 'string') {
-        return { type: 'period', period, time: startEndTime };
+        const [start, end] = startEndTime.split(' - ');
+  
+        // Insert the period itself
+        timeline.push({ type: 'period', period, time: startEndTime });
+  
+        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
+        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
+        }
+  
+        // Insert Lunch Break if it's supposed to be between periods 4 and 5
+        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
+          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
+        }
+  
+        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
+        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
+        }
       } else {
         console.error('Invalid startEndTime format:', startEndTime);
-        return null;
       }
-    }).filter(entry => entry !== null);
+    });
   
-    // Check if reserved time overlaps with any period or breaks
+    // Insert reserved time if set and it falls after all periods
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      const reservedStart = timetableSettings.reserveTimeStart;
-      const reservedEnd = timetableSettings.reserveTimeEnd;
-      let reservedPlaced = false;
-  
-      // Loop through timeline to find a matching period or break
-      timeline.forEach((entry, index) => {
-        if (entry.type === 'period') {
-          const [periodStart, periodEnd] = entry.time.split(' - ');
-  
-          if (reservedStart >= periodStart && reservedEnd <= periodEnd) {
-            timeline[index].reserved = { label: 'Reserved Time', time: `${reservedStart} - ${reservedEnd}` };
-            reservedPlaced = true;
-          }
-        }
-      });
-  
-      // If reserved time doesn't fit into any period, add it as a separate entry
-      if (!reservedPlaced) {
-        timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${reservedStart} - ${reservedEnd}` });
-      }
+      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
   
     console.log('Timeline:', timeline); // Log the generated timeline
@@ -332,9 +332,7 @@ const MSchoolClassSection = () => {
                   const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${entry.period}`] : undefined;
                   return (
                     <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, entry.period)}>
-                      {entry.reserved ? (
-                        <div className="reserved-time">{entry.reserved.label}</div>
-                      ) : periodAssignment ? (
+                      {periodAssignment ? (
                         <>
                           <div>{periodAssignment.teacher}</div>
                           <div>{periodAssignment.subject}</div>
@@ -353,7 +351,6 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
   
 
   const downloadTimetableAsPDF = () => {
