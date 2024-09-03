@@ -320,22 +320,22 @@ const MSchoolClassSection = () => {
               <React.Fragment key={index}>
                 <tr>
                   <td>
-                    {isReservedTime ? (
-                      <div>
-                        <strong>RESERVED TIME</strong> <br />
-                        {periodTime}
-                      </div>
-                    ) : isBreakTime ? (
-                      <div>
-                        <strong>{breakLabel}</strong> <br />
-                        {periodTime}
-                      </div>
-                    ) : (
-                      <div>
-                        Period {period} <br />
-                        {periodTime}
-                      </div>
-                    )}
+                    <div>
+                      {isReservedTime ? (
+                        <>
+                          <strong>RESERVED TIME</strong> <br />
+                        </>
+                      ) : isBreakTime ? (
+                        <>
+                          <strong>{breakLabel}</strong> <br />
+                        </>
+                      ) : (
+                        <>
+                          Period {period} <br />
+                        </>
+                      )}
+                      {periodTime}
+                    </div>
                   </td>
                   {days.map(day => (
                     <td
@@ -344,20 +344,20 @@ const MSchoolClassSection = () => {
                       className={isReservedTime || isBreakTime ? 'merged-row' : ''}
                       onClick={!isReservedTime && !isBreakTime ? () => handleOpenModal(day, period) : undefined}
                     >
-                      {isReservedTime || isBreakTime ? (
-                        day === 'Monday' ? (
-                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                            {isReservedTime ? 'Reserved Time' : breakLabel}
-                          </div>
-                        ) : null
+                      {(isReservedTime || isBreakTime) && day === 'Monday' ? (
+                        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                          {isReservedTime ? 'Reserved Time' : breakLabel}
+                        </div>
                       ) : (
+                        !isReservedTime &&
+                        !isBreakTime &&
                         assignedPeriods[`${day}-${period}`] ? (
                           <>
                             <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
                             <div>{assignedPeriods[`${day}-${period}`].subject}</div>
                           </>
                         ) : (
-                          <span className="add-icon">+</span>
+                          !isReservedTime && !isBreakTime && <span className="add-icon">+</span>
                         )
                       )}
                     </td>
