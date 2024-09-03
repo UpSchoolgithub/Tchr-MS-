@@ -275,38 +275,6 @@ const MSchoolClassSection = () => {
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const timeline = [];
-  
-    periods.forEach((period, index) => {
-      const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime) {
-        // Check if this period is a reserved time
-        const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
-                               timetableSettings.reserveTimeEnd === startEndTime.end;
-  
-        if (isReservedTime) {
-          timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${startEndTime.start} - ${startEndTime.end}` });
-        } else {
-          // Insert the period itself
-          timeline.push({ type: 'period', period, time: `${startEndTime.start} - ${startEndTime.end}` });
-        }
-  
-        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
-  
-        // Insert Lunch Break if it's supposed to be between periods 4 and 5
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
-  
-        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
-      }
-    });
   
     return (
       <table className="timetable-table">
@@ -319,42 +287,49 @@ const MSchoolClassSection = () => {
           </tr>
         </thead>
         <tbody>
-          {timeline.map((entry, index) => {
-            const isBreak = entry.type === 'break';
-            const isReservedTime = entry.type === 'reserved';
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
+              return null; // Skip if the time format is invalid
+            }
+  
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+            
+            // Check if this period time is a reserved time
+            const isReservedTime =
+              timetableSettings.reserveTimeStart === startEndTime.start &&
+              timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            const periodName = isReservedTime ? "RESERVED TIME" : `Period ${period}`;
   
             return (
               <React.Fragment key={index}>
                 <tr>
                   <td>
                     <div>
-                      <strong>{isBreak || isReservedTime ? entry.label : `Period ${entry.period}`}</strong> <br />
-                      {entry.time}
+                      <strong>{periodName}</strong> <br />
+                      {periodTime}
                     </div>
                   </td>
                   {days.map((day, dayIndex) => (
                     <td
                       key={`${day}-${index}`}
-                      colSpan={isBreak || isReservedTime ? days.length : 1}
-                      className={isBreak || isReservedTime ? 'merged-row' : ''}
-                      style={{ display: (isBreak || isReservedTime) && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns for merged rows
+                      colSpan={isReservedTime ? days.length : 1}
+                      className={isReservedTime ? 'merged-row' : ''}
+                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns for merged rows
                     >
-                      {isBreak && dayIndex === 0 ? (
-                        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                          {entry.label}
-                        </div>
-                      ) : isReservedTime && dayIndex === 0 ? (
+                      {isReservedTime && dayIndex === 0 ? (
                         <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
                           Reserved Time
                         </div>
                       ) : (
-                        !isBreak && !isReservedTime && assignedPeriods[`${day}-${entry.period}`] ? (
+                        !isReservedTime && assignedPeriods[`${day}-${period}`] ? (
                           <>
-                            <div>{assignedPeriods[`${day}-${entry.period}`].teacher}</div>
-                            <div>{assignedPeriods[`${day}-${entry.period}`].subject}</div>
+                            <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                            <div>{assignedPeriods[`${day}-${period}`].subject}</div>
                           </>
                         ) : (
-                          !isBreak && !isReservedTime && <span className="add-icon">+</span>
+                          !isReservedTime && <span className="add-icon">+</span>
                         )
                       )}
                     </td>
