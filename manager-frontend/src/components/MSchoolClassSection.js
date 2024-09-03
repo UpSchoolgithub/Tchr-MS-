@@ -270,7 +270,7 @@ const MSchoolClassSection = () => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
     return (
       <table className="timetable-table">
@@ -291,10 +291,30 @@ const MSchoolClassSection = () => {
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
   
-            // Check if this period time matches the reserved time exactly
+            // Determine if this period time is a reserved time or break
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            const isBreakTime =
+              (timetableSettings.shortBreak1StartTime === startEndTime.start &&
+                timetableSettings.shortBreak1EndTime === startEndTime.end) ||
+              (timetableSettings.shortBreak2StartTime === startEndTime.start &&
+                timetableSettings.shortBreak2EndTime === startEndTime.end) ||
+              (timetableSettings.lunchStartTime === startEndTime.start &&
+                timetableSettings.lunchEndTime === startEndTime.end);
+  
+            const breakLabel = 
+              timetableSettings.shortBreak1StartTime === startEndTime.start &&
+              timetableSettings.shortBreak1EndTime === startEndTime.end
+                ? 'SHORT BREAK 1'
+                : timetableSettings.shortBreak2StartTime === startEndTime.start &&
+                  timetableSettings.shortBreak2EndTime === startEndTime.end
+                ? 'SHORT BREAK 2'
+                : timetableSettings.lunchStartTime === startEndTime.start &&
+                  timetableSettings.lunchEndTime === startEndTime.end
+                ? 'LUNCH'
+                : '';
   
             return (
               <tr key={index}>
@@ -302,6 +322,11 @@ const MSchoolClassSection = () => {
                   {isReservedTime ? (
                     <div>
                       <strong>RESERVED TIME</strong> <br />
+                      {periodTime}
+                    </div>
+                  ) : isBreakTime ? (
+                    <div>
+                      <strong>{breakLabel}</strong> <br />
                       {periodTime}
                     </div>
                   ) : (
@@ -314,12 +339,14 @@ const MSchoolClassSection = () => {
                 {days.map(day => (
                   <td
                     key={`${day}-${index}`}
-                    colSpan={isReservedTime ? 6 : 1}
-                    className={isReservedTime ? 'reserved-time' : ''}
-                    onClick={!isReservedTime ? () => handleOpenModal(day, period) : undefined}
+                    colSpan={isReservedTime || isBreakTime ? days.length : 1}
+                    className={isReservedTime || isBreakTime ? 'merged-row' : ''}
+                    onClick={!isReservedTime && !isBreakTime ? () => handleOpenModal(day, period) : undefined}
                   >
-                    {isReservedTime ? (
-                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>Reserved Time</div>
+                    {isReservedTime || isBreakTime ? (
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        {isReservedTime ? 'Reserved Time' : breakLabel}
+                      </div>
                     ) : (
                       assignedPeriods[`${day}-${period}`] ? (
                         <>
