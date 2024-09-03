@@ -317,49 +317,53 @@ const MSchoolClassSection = () => {
                 : '';
   
             return (
-              <tr key={index}>
-                <td>
-                  {isReservedTime ? (
-                    <div>
-                      <strong>RESERVED TIME</strong> <br />
-                      {periodTime}
-                    </div>
-                  ) : isBreakTime ? (
-                    <div>
-                      <strong>{breakLabel}</strong> <br />
-                      {periodTime}
-                    </div>
-                  ) : (
-                    <div>
-                      Period {period} <br />
-                      {periodTime}
-                    </div>
-                  )}
-                </td>
-                {days.map(day => (
-                  <td
-                    key={`${day}-${index}`}
-                    colSpan={isReservedTime || isBreakTime ? days.length : 1}
-                    className={isReservedTime || isBreakTime ? 'merged-row' : ''}
-                    onClick={!isReservedTime && !isBreakTime ? () => handleOpenModal(day, period) : undefined}
-                  >
-                    {isReservedTime || isBreakTime ? (
-                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                        {isReservedTime ? 'Reserved Time' : breakLabel}
+              <React.Fragment key={index}>
+                <tr>
+                  <td>
+                    {isReservedTime ? (
+                      <div>
+                        <strong>RESERVED TIME</strong> <br />
+                        {periodTime}
+                      </div>
+                    ) : isBreakTime ? (
+                      <div>
+                        <strong>{breakLabel}</strong> <br />
+                        {periodTime}
                       </div>
                     ) : (
-                      assignedPeriods[`${day}-${period}`] ? (
-                        <>
-                          <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
-                          <div>{assignedPeriods[`${day}-${period}`].subject}</div>
-                        </>
-                      ) : (
-                        <span className="add-icon">+</span>
-                      )
+                      <div>
+                        Period {period} <br />
+                        {periodTime}
+                      </div>
                     )}
                   </td>
-                ))}
-              </tr>
+                  {days.map(day => (
+                    <td
+                      key={`${day}-${index}`}
+                      colSpan={isReservedTime || isBreakTime ? days.length : 1}
+                      className={isReservedTime || isBreakTime ? 'merged-row' : ''}
+                      onClick={!isReservedTime && !isBreakTime ? () => handleOpenModal(day, period) : undefined}
+                    >
+                      {isReservedTime || isBreakTime ? (
+                        day === 'Monday' ? (
+                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                            {isReservedTime ? 'Reserved Time' : breakLabel}
+                          </div>
+                        ) : null
+                      ) : (
+                        assignedPeriods[`${day}-${period}`] ? (
+                          <>
+                            <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                            <div>{assignedPeriods[`${day}-${period}`].subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </React.Fragment>
             );
           })}
         </tbody>
