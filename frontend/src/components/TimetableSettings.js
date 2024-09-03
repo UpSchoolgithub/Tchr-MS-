@@ -30,36 +30,39 @@ const TimetableSettings = () => {
 
   useEffect(() => {
     const fetchTimetable = async () => {
-      try {
-        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
-        const data = response.data;
+        try {
+            const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
+            const data = response.data;
 
-        if (data.reserveDay) {
-          data.reserveDay = JSON.parse(data.reserveDay);
-        } else {
-          data.reserveDay = {};
-        }
+            console.log("Fetched timetable data:", data);  // Debugging line
 
-        setSettings({
-          ...data,
-          periodTimings: data.periodTimings || [], // Ensure this is an array
-        });
-        setShowPeriodSettings(true); // Show period settings if periods are already defined
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error('Timetable settings not found for this school.');
-          setError('Timetable settings not found.');
-        } else {
-          console.error('Failed to fetch timetable settings:', error);
-          setError('Failed to fetch timetable settings.');
+            if (data.reserveDay) {
+                data.reserveDay = JSON.parse(data.reserveDay);
+            } else {
+                data.reserveDay = {};
+            }
+
+            setSettings({
+                ...data,
+                periodTimings: data.periodTimings || [], // Ensure this is an array
+            });
+            setShowPeriodSettings(true); // Show period settings if periods are already defined
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                console.error('Timetable settings not found for this school.');
+                setError('Timetable settings not found.');
+            } else {
+                console.error('Failed to fetch timetable settings:', error);
+                setError('Failed to fetch timetable settings.');
+            }
         }
-      }
     };
 
     if (schoolId) {
-      fetchTimetable();
+        fetchTimetable();
     }
-  }, [schoolId]);
+}, [schoolId]);
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
