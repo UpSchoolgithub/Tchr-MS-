@@ -277,7 +277,9 @@ const MSchoolClassSection = () => {
   
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime) {
+      
+      // Ensure startEndTime is a string before splitting
+      if (typeof startEndTime === 'string') {
         const [start, end] = startEndTime.split(' - ');
   
         // Insert the period itself
@@ -297,6 +299,8 @@ const MSchoolClassSection = () => {
         if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
           timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
         }
+      } else {
+        console.error('Invalid startEndTime format:', startEndTime);
       }
     });
   
