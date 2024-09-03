@@ -111,22 +111,26 @@ const MSchoolClassSection = () => {
     const { periodsPerDay, durationPerPeriod, schoolStartTime } = timetableSettings;
     const periodTimings = [];
     let startTime = new Date(`1970-01-01T${schoolStartTime}`);
-    
+  
     for (let i = 0; i < periodsPerDay; i++) {
       const endTime = new Date(startTime.getTime() + durationPerPeriod * 60000);
-      periodTimings.push(`${formatTime(startTime)} - ${formatTime(endTime)}`);
+      periodTimings.push({
+        start: formatTime(startTime),
+        end: formatTime(endTime),
+      });
       startTime = endTime; // Move to the next period's start time
     }
-
+  
     setTimetableSettings((prevSettings) => ({
       ...prevSettings,
       periodTimings,
     }));
   };
-
+  
   const formatTime = (date) => {
-    return date.toTimeString().split(' ')[0].substring(0, 5); // Format time as HH:MM
+    return date.toTimeString().split(' ')[0].substring(0, 5); // Extracts only the HH:MM part
   };
+  
 
   const fetchAssignments = async () => {
     try {
@@ -336,7 +340,7 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
-  
+ 
   
 
   const downloadTimetableAsPDF = () => {
