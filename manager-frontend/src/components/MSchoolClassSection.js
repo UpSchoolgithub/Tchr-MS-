@@ -278,9 +278,8 @@ const MSchoolClassSection = () => {
   
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime && typeof startEndTime.start === 'string' && typeof startEndTime.end === 'string') {
-        const start = startEndTime.start;
-        const end = startEndTime.end;
+      if (typeof startEndTime === 'string') {
+        const [start, end] = startEndTime.split(' - ');
   
         // Insert the period itself
         timeline.push({ type: 'period', period, time: `${start} - ${end}` });
@@ -304,9 +303,28 @@ const MSchoolClassSection = () => {
       }
     });
   
-    // Insert reserved time if set and it falls after all periods
+    // Check if reserved time overlaps with any period or breaks
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
+      const reservedStart = timetableSettings.reserveTimeStart;
+      const reservedEnd = timetableSettings.reserveTimeEnd;
+      let reservedPlaced = false;
+  
+      // Loop through timeline to find a matching period or break
+      timeline.forEach((entry, index) => {
+        if (entry.type === 'period') {
+          const [periodStart, periodEnd] = entry.time.split(' - ');
+  
+          if (reservedStart >= periodStart && reservedEnd <= periodEnd) {
+            timeline[index].reserved = { label: 'Reserved Time', time: `${reservedStart} - ${reservedEnd}` };
+            reservedPlaced = true;
+          }
+        }
+      });
+  
+      // If reserved time doesn't fit into any period, add it as a separate entry
+      if (!reservedPlaced) {
+        timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${reservedStart} - ${reservedEnd}` });
+      }
     }
   
     console.log('Timeline:', timeline); // Log the generated timeline
@@ -333,7 +351,9 @@ const MSchoolClassSection = () => {
                   const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${entry.period}`] : undefined;
                   return (
                     <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, entry.period)}>
-                      {periodAssignment ? (
+                      {entry.reserved ? (
+                        <div className="reserved-time">{entry.reserved.label}</div>
+                      ) : periodAssignment ? (
                         <>
                           <div>{periodAssignment.teacher}</div>
                           <div>{periodAssignment.subject}</div>
