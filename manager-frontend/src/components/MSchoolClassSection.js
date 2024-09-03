@@ -92,19 +92,20 @@ const MSchoolClassSection = () => {
   const fetchTimetableSettings = async (schoolId) => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
-      console.log('Timetable Settings Response:', response.data); // Log the response
+      console.log('Timetable Settings Response:', response.data);
       setTimetableSettings(response.data);
     } catch (error) {
       setError('Error fetching timetable settings.');
       console.error('Error fetching timetable settings:', error);
     }
   };
-
+  
   useEffect(() => {
-    if (timetableSettings && !timetableSettings.periodTimings) {
-      generatePeriodTimings();
+    if (schoolId) {
+      fetchTimetableSettings(schoolId);
     }
-  }, [timetableSettings]);
+  }, [schoolId]);
+  
 
   const generatePeriodTimings = () => {
     const { periodsPerDay, durationPerPeriod, schoolStartTime } = timetableSettings;
@@ -264,7 +265,6 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
-    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
@@ -307,8 +307,6 @@ const MSchoolClassSection = () => {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
   
-    console.log('Timeline:', timeline); // Log the generated timeline
-  
     return (
       <table className="timetable-table">
         <thead>
@@ -350,6 +348,7 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
+  
   
 
   const downloadTimetableAsPDF = () => {
