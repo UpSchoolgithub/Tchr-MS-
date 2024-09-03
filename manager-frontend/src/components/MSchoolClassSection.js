@@ -289,8 +289,10 @@ const MSchoolClassSection = () => {
         <tbody>
           {periods.map((period, index) => {
             const startEndTime = timetableSettings.periodTimings[index];
-            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
-              return null;
+            
+            // Check if startEndTime exists and is an object with 'start' and 'end' properties
+            if (!startEndTime || typeof startEndTime !== 'object' || !startEndTime.start || !startEndTime.end) {
+              return null; // Skip if startEndTime is invalid
             }
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
