@@ -265,51 +265,12 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
-    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  
-    // Combine periods and breaks/lunches into a single timeline array
-    const timeline = [];
-  
-    periods.forEach((period, index) => {
-      const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime && typeof startEndTime.start === 'string' && typeof startEndTime.end === 'string') {
-        const start = startEndTime.start;
-        const end = startEndTime.end;
-  
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: `${start} - ${end}` });
-  
-        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
-  
-        // Insert Lunch Break if it's supposed to be between periods 4 and 5
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
-  
-        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
-      } else {
-        console.error('Invalid startEndTime format:', startEndTime);
-      }
-    });
-  
-    // Insert reserved time if set and it falls after all periods
-    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-    }
-  
-    console.log('Timeline:', timeline); // Log the generated timeline
   
     return (
       <table className="timetable-table">
@@ -322,17 +283,30 @@ const MSchoolClassSection = () => {
           </tr>
         </thead>
         <tbody>
-          {timeline.map((entry, index) => (
-            <tr key={index}>
-              <td>
-                {entry.type === 'period' ? `Period ${entry.period}` : entry.label} <br />
-                {entry.time}
-              </td>
-              {days.map(day => {
-                if (entry.type === 'period') {
-                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${entry.period}`] : undefined;
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
+              return null; // Skip if the time format is invalid
+            }
+  
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+  
+            return (
+              <tr key={index}>
+                <td>
+                  Period {period} <br />
+                  {periodTime}
+                  {timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
+                    timetableSettings.reserveTimeStart >= startEndTime.start &&
+                    timetableSettings.reserveTimeEnd <= startEndTime.end && (
+                      <div>RESERVED TIME <br /> {`${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`}</div>
+                    )
+                  )}
+                </td>
+                {days.map(day => {
+                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                   return (
-                    <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, entry.period)}>
+                    <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, period)}>
                       {periodAssignment ? (
                         <>
                           <div>{periodAssignment.teacher}</div>
@@ -343,11 +317,10 @@ const MSchoolClassSection = () => {
                       )}
                     </td>
                   );
-                }
-                return <td key={`${day}-${index}`} className="break"></td>;
-              })}
-            </tr>
-          ))}
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
