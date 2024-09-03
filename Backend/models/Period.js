@@ -19,18 +19,14 @@ const Period = sequelize.define('Period', {
   startTime: {
     type: DataTypes.TIME,
     allowNull: false,
-    defaultValue: '00:00:00',
   },
   endTime: {
     type: DataTypes.TIME,
     allowNull: false,
-    defaultValue: '00:00:00',
   },
 }, {
-  tableName: 'Periods',
-  timestamps: true, // Optional: include timestamps if needed
-  createdAt: 'createdAt', // Customize timestamp column names if using timestamps
-  updatedAt: 'updatedAt',
+  tableName: 'periods', // Explicitly define the table name as lowercase
+  timestamps: false, // If you don't want createdAt/updatedAt columns
 });
 
 module.exports = Period;
