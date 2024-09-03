@@ -279,30 +279,38 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
   const { periodTimings, ...settings } = req.body;
 
   try {
-    // Update TimetableSettings
+    // Find or create timetable settings
     let timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
+
     if (!timetableSettings) {
       timetableSettings = await TimetableSettings.create({ schoolId, ...settings });
     } else {
       await timetableSettings.update(settings);
     }
 
-    // Handle Periods
-    if (periodTimings && Array.isArray(periodTimings)) {
-      // Delete existing periods
-      await Period.destroy({ where: { schoolId } });
+    // Log the deletion operation
+    console.log(`Deleting existing periods for school ID: ${schoolId}`);
+    
+    // Delete existing periods
+    await Period.destroy({ where: { schoolId } });
+    console.log('Existing periods deleted.');
 
-      // Create new periods
+    // Handle period timings
+    if (periodTimings && Array.isArray(periodTimings)) {
+      console.log('Inserting new periods:', periodTimings);
+
+      // Insert new periods
       const periodPromises = periodTimings.map((timing, index) => {
         return Period.create({
           schoolId,
-          periodNumber: index + 1,
+          periodNumber: index + 1,  // Ensure period numbers are sequential
           startTime: timing.start,
           endTime: timing.end,
         });
       });
 
       await Promise.all(periodPromises);
+      console.log('New periods inserted successfully.');
     }
 
     res.send({ message: 'Timetable settings updated successfully' });
@@ -311,6 +319,7 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
     res.status(500).send({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 
