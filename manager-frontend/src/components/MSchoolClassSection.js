@@ -278,11 +278,12 @@ const MSchoolClassSection = () => {
   
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
-      if (typeof startEndTime === 'string') {
-        const [start, end] = startEndTime.split(' - ');
+      if (startEndTime && typeof startEndTime.start === 'string' && typeof startEndTime.end === 'string') {
+        const start = startEndTime.start;
+        const end = startEndTime.end;
   
         // Insert the period itself
-        timeline.push({ type: 'period', period, time: startEndTime });
+        timeline.push({ type: 'period', period, time: `${start} - ${end}` });
   
         // Insert Short Break 1 if it's supposed to be between periods 2 and 3
         if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
@@ -351,6 +352,8 @@ const MSchoolClassSection = () => {
       </table>
     );
   };
+  
+  
   
 
   const downloadTimetableAsPDF = () => {
