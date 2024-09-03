@@ -36,6 +36,7 @@ const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
 app.use('/api/timetable', require('./routes/timetableRoutes'));
+const TimetablePeriods = require('./models/TimetablePeriods');
 
 // Teacher Routes
 const teacherAuthRoutes = require('./routes/teacherRoutes'); 
@@ -274,12 +275,11 @@ app.get('/api/schools/:id/timetable', async (req, res) => {
 });
 
 // Update the timetable settings for a specific school
-app.put('/api/schools/:id/timetable', async (req, res) => {
+router.put('/api/schools/:id/timetable', async (req, res) => {
   const schoolId = req.params.id;
   const { periodTimings, ...settings } = req.body;
 
   try {
-    // Find or create timetable settings
     let timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
 
     if (!timetableSettings) {
@@ -288,29 +288,22 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
       await timetableSettings.update(settings);
     }
 
-    // Log the deletion operation
-    console.log(`Deleting existing periods for school ID: ${schoolId}`);
-    
-    // Delete existing periods
-    await Period.destroy({ where: { schoolId } });
-    console.log('Existing periods deleted.');
-
     // Handle period timings
     if (periodTimings && Array.isArray(periodTimings)) {
-      console.log('Inserting new periods:', periodTimings);
+      // Delete existing periods
+      await TimetablePeriods.destroy({ where: { schoolId } });
 
-      // Insert new periods
+      // Create new periods
       const periodPromises = periodTimings.map((timing, index) => {
-        return Period.create({
+        return TimetablePeriods.create({
           schoolId,
-          periodNumber: index + 1,  // Ensure period numbers are sequential
+          periodNumber: index + 1,
           startTime: timing.start,
           endTime: timing.end,
         });
       });
 
       await Promise.all(periodPromises);
-      console.log('New periods inserted successfully.');
     }
 
     res.send({ message: 'Timetable settings updated successfully' });
@@ -319,6 +312,7 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
     res.status(500).send({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 

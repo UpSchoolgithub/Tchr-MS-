@@ -1,32 +1,47 @@
-// models/Period.js
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const Period = sequelize.define('Period', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  schoolId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  periodNumber: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  startTime: {
-    type: DataTypes.TIME,
-    allowNull: false,
-  },
-  endTime: {
-    type: DataTypes.TIME,
-    allowNull: false,
-  },
+class Period extends Model {}
+
+Period.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
+    schoolId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    classId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    sectionId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    subjectId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    teacherId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    day: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    period: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
 }, {
-  tableName: 'periods', // Explicitly define the table name as lowercase
-  timestamps: false, // If you don't want createdAt/updatedAt columns
+    sequelize,
+    modelName: 'Period',
+    tableName: 'periods',
+    timestamps: true,
 });
 
 module.exports = Period;
