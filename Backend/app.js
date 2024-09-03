@@ -264,11 +264,26 @@ app.post('/api/schools', async (req, res) => {
 app.get('/api/schools/:id/timetable', async (req, res) => {
   const schoolId = req.params.id;
   try {
+    // Fetch the timetable settings
     const timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
     if (!timetableSettings) {
       return res.status(404).send({ message: 'Timetable not found' });
     }
-    res.send(timetableSettings);
+
+    // Fetch the associated periods
+    const periodTimings = await TimetablePeriods.findAll({
+      where: { schoolId },
+      order: [['periodNumber', 'ASC']] // Order by period number to maintain the sequence
+    });
+
+    // Combine timetable settings and period timings in the response
+    res.send({
+      ...timetableSettings.toJSON(),
+      periodTimings: periodTimings.map(period => ({
+        start: period.startTime,
+        end: period.endTime,
+      })),
+    });
   } catch (error) {
     console.error('Error fetching timetable settings:', error.message);
     res.status(500).send({ message: 'Internal server error', error: error.message });
