@@ -291,43 +291,71 @@ const MSchoolClassSection = () => {
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
   
+            let isBreakOrReserved = false;
+            let mergedLabel = '';
+            let mergedTime = '';
+  
+            if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && index === 1) {
+              isBreakOrReserved = true;
+              mergedLabel = 'SHORT BREAK 1';
+              mergedTime = `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`;
+            }
+  
+            if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && index === 3) {
+              isBreakOrReserved = true;
+              mergedLabel = 'LUNCH';
+              mergedTime = `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`;
+            }
+  
+            if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && index === 5) {
+              isBreakOrReserved = true;
+              mergedLabel = 'SHORT BREAK 2';
+              mergedTime = `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`;
+            }
+  
+            if (
+              timetableSettings.reserveTimeStart &&
+              timetableSettings.reserveTimeEnd &&
+              timetableSettings.reserveTimeStart >= startEndTime.start &&
+              timetableSettings.reserveTimeEnd <= startEndTime.end
+            ) {
+              isBreakOrReserved = true;
+              mergedLabel = 'RESERVED TIME';
+              mergedTime = `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`;
+            }
+  
             return (
-              <tr key={index}>
-                <td>
-                  Period {period} <br />
-                  {periodTime}
-                  {timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && index === 1 && (
-                    <div>SHORT BREAK 1 <br /> {`${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`}</div>
-                  )}
-                  {timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && index === 3 && (
-                    <div>LUNCH <br /> {`${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`}</div>
-                  )}
-                  {timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && index === 5 && (
-                    <div>SHORT BREAK 2 <br /> {`${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`}</div>
-                  )}
-                  {timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
-                    timetableSettings.reserveTimeStart >= startEndTime.start &&
-                    timetableSettings.reserveTimeEnd <= startEndTime.end && (
-                      <div>RESERVED TIME <br /> {`${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`}</div>
-                    )
-                  )}
-                </td>
-                {days.map(day => {
-                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                  return (
-                    <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, period)}>
-                      {periodAssignment ? (
-                        <>
-                          <div>{periodAssignment.teacher}</div>
-                          <div>{periodAssignment.subject}</div>
-                        </>
-                      ) : (
-                        <span className="add-icon">+</span>
-                      )}
+              <React.Fragment key={index}>
+                <tr>
+                  <td>
+                    Period {period} <br />
+                    {periodTime}
+                  </td>
+                  {days.map(day => {
+                    const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+                    return (
+                      <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, period)}>
+                        {periodAssignment ? (
+                          <>
+                            <div>{periodAssignment.teacher}</div>
+                            <div>{periodAssignment.subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {isBreakOrReserved && (
+                  <tr>
+                    <td colSpan={6} className="merged-row">
+                      {mergedLabel} <br />
+                      {mergedTime}
                     </td>
-                  );
-                })}
-              </tr>
+                  </tr>
+                )}
+              </React.Fragment>
             );
           })}
         </tbody>
