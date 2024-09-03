@@ -296,6 +296,15 @@ const MSchoolClassSection = () => {
                 <td>
                   Period {period} <br />
                   {periodTime}
+                  {timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && index === 1 && (
+                    <div>SHORT BREAK 1 <br /> {`${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`}</div>
+                  )}
+                  {timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && index === 3 && (
+                    <div>LUNCH <br /> {`${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`}</div>
+                  )}
+                  {timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && index === 5 && (
+                    <div>SHORT BREAK 2 <br /> {`${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`}</div>
+                  )}
                   {timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
                     timetableSettings.reserveTimeStart >= startEndTime.start &&
                     timetableSettings.reserveTimeEnd <= startEndTime.end && (
