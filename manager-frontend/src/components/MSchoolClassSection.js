@@ -280,8 +280,16 @@ const MSchoolClassSection = () => {
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
       if (startEndTime) {
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: `${startEndTime.start} - ${startEndTime.end}` });
+        // Check if this period is a reserved time
+        const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
+                               timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+        if (isReservedTime) {
+          timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${startEndTime.start} - ${startEndTime.end}` });
+        } else {
+          // Insert the period itself
+          timeline.push({ type: 'period', period, time: `${startEndTime.start} - ${startEndTime.end}` });
+        }
   
         // Insert Short Break 1 if it's supposed to be between periods 2 and 3
         if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
@@ -299,11 +307,6 @@ const MSchoolClassSection = () => {
         }
       }
     });
-  
-    // Add reserved time if set and it falls after all periods
-    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-    }
   
     return (
       <table className="timetable-table">
