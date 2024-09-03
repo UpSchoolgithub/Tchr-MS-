@@ -26,51 +26,54 @@ const TimetableSettings = () => {
     periodTimings: [], // Ensure this is always initialized as an array
   });
   const [error, setError] = useState('');
-  const [showPeriodSettings, setShowPeriodSettings] = useState(false); // New state variable
+  const [showPeriodSettings, setShowPeriodSettings] = useState(false);
 
   useEffect(() => {
     const fetchTimetable = async () => {
-        try {
-            const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
-            const data = response.data;
+      try {
+        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
+        const data = response.data;
 
-            console.log("Fetched timetable data:", data);  // Debugging line
-
-            if (data.reserveDay) {
-                data.reserveDay = JSON.parse(data.reserveDay);
-            } else {
-                data.reserveDay = {};
-            }
-
-            setSettings({
-                ...data,
-                periodTimings: data.periodTimings || [], // Ensure this is an array
-            });
-            setShowPeriodSettings(true); // Show period settings if periods are already defined
-        } catch (error) {
-            if (error.response && error.response.status === 404) {
-                console.error('Timetable settings not found for this school.');
-                setError('Timetable settings not found.');
-            } else {
-                console.error('Failed to fetch timetable settings:', error);
-                setError('Failed to fetch timetable settings.');
-            }
+        if (data.reserveDay) {
+          data.reserveDay = JSON.parse(data.reserveDay);
+        } else {
+          data.reserveDay = {};
         }
+
+        setSettings({
+          ...data,
+          periodTimings: data.periodTimings || [], // Ensure this is an array
+        });
+
+        if (data.periodTimings && data.periodTimings.length > 0) {
+          setShowPeriodSettings(true);
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          console.error('Timetable settings not found for this school.');
+          setError('Timetable settings not found.');
+        } else {
+          console.error('Failed to fetch timetable settings:', error);
+          setError('Failed to fetch timetable settings.');
+        }
+      }
     };
 
     if (schoolId) {
-        fetchTimetable();
+      fetchTimetable();
     }
-}, [schoolId]);
-
+  }, [schoolId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith('reserveDay')) {
       const [_, day, field] = name.split('-');
       setSettings((prevSettings) => {
-        const updatedDaySettings = { ...prevSettings.reserveDay[day], [field || 'open']: type === 'checkbox' ? checked : value };
-        
+        const updatedDaySettings = {
+          ...prevSettings.reserveDay[day],
+          [field || 'open']: type === 'checkbox' ? checked : value,
+        };
+
         if (type === 'checkbox' && !checked) {
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
@@ -181,7 +184,11 @@ const TimetableSettings = () => {
               required
             />
           </div>
-          <button type="button" onClick={handleSavePeriodSettings} className="save-button">
+          <button
+            type="button"
+            onClick={handleSavePeriodSettings}
+            className="save-button"
+          >
             Save Period Settings
           </button>
         </div>
@@ -288,7 +295,7 @@ const TimetableSettings = () => {
           </div>
         </div>
 
-        {showPeriodSettings && (
+        {showPeriodSettings && settings.periodTimings.length > 0 && (
           <>
             <h3>Period Timings</h3>
             <div className="form-section">
@@ -299,7 +306,7 @@ const TimetableSettings = () => {
                     <input
                       type="time"
                       name={`periodStart-${index}`}
-                      value={settings.periodTimings[index].start}
+                      value={settings.periodTimings[index]?.start || ''}
                       onChange={handleChange}
                       required
                     />
@@ -309,7 +316,7 @@ const TimetableSettings = () => {
                     <input
                       type="time"
                       name={`periodEnd-${index}`}
-                      value={settings.periodTimings[index].end}
+                      value={settings.periodTimings[index]?.end || ''}
                       onChange={handleChange}
                       required
                     />
