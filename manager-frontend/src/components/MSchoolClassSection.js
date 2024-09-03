@@ -277,8 +277,6 @@ const MSchoolClassSection = () => {
   
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
-      
-      // Ensure startEndTime is a string before splitting
       if (typeof startEndTime === 'string') {
         const [start, end] = startEndTime.split(' - ');
   
@@ -308,6 +306,8 @@ const MSchoolClassSection = () => {
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
+  
+    console.log('Timeline:', timeline); // Log the generated timeline
   
     return (
       <table className="timetable-table">
