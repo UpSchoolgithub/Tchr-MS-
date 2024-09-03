@@ -291,71 +291,48 @@ const MSchoolClassSection = () => {
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
   
-            let isBreakOrReserved = false;
-            let mergedLabel = '';
-            let mergedTime = '';
-  
-            if (timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && index === 1) {
-              isBreakOrReserved = true;
-              mergedLabel = 'SHORT BREAK 1';
-              mergedTime = `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`;
-            }
-  
-            if (timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && index === 3) {
-              isBreakOrReserved = true;
-              mergedLabel = 'LUNCH';
-              mergedTime = `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`;
-            }
-  
-            if (timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && index === 5) {
-              isBreakOrReserved = true;
-              mergedLabel = 'SHORT BREAK 2';
-              mergedTime = `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`;
-            }
-  
-            if (
-              timetableSettings.reserveTimeStart &&
-              timetableSettings.reserveTimeEnd &&
-              timetableSettings.reserveTimeStart >= startEndTime.start &&
-              timetableSettings.reserveTimeEnd <= startEndTime.end
-            ) {
-              isBreakOrReserved = true;
-              mergedLabel = 'RESERVED TIME';
-              mergedTime = `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`;
-            }
+            // Check if this period time matches the reserved time exactly
+            const isReservedTime =
+              timetableSettings.reserveTimeStart === startEndTime.start &&
+              timetableSettings.reserveTimeEnd === startEndTime.end;
   
             return (
-              <React.Fragment key={index}>
-                <tr>
-                  <td>
-                    Period {period} <br />
-                    {periodTime}
+              <tr key={index}>
+                <td>
+                  {isReservedTime ? (
+                    <div>
+                      <strong>RESERVED TIME</strong> <br />
+                      {periodTime}
+                    </div>
+                  ) : (
+                    <div>
+                      Period {period} <br />
+                      {periodTime}
+                    </div>
+                  )}
+                </td>
+                {days.map(day => (
+                  <td
+                    key={`${day}-${index}`}
+                    colSpan={isReservedTime ? 6 : 1}
+                    className={isReservedTime ? 'reserved-time' : ''}
+                    onClick={!isReservedTime ? () => handleOpenModal(day, period) : undefined}
+                  >
+                    {isReservedTime ? (
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>Reserved Time</div>
+                    ) : (
+                      assignedPeriods[`${day}-${period}`] ? (
+                        <>
+                          <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                          <div>{assignedPeriods[`${day}-${period}`].subject}</div>
+                        </>
+                      ) : (
+                        <span className="add-icon">+</span>
+                      )
+                    )}
                   </td>
-                  {days.map(day => {
-                    const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                    return (
-                      <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, period)}>
-                        {periodAssignment ? (
-                          <>
-                            <div>{periodAssignment.teacher}</div>
-                            <div>{periodAssignment.subject}</div>
-                          </>
-                        ) : (
-                          <span className="add-icon">+</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-                {isBreakOrReserved && (
-                  <tr>
-                    <td colSpan={6} className="merged-row">
-                      {mergedLabel} <br />
-                      {mergedTime}
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
+                ))}
+              </tr>
             );
           })}
         </tbody>
