@@ -291,30 +291,10 @@ const MSchoolClassSection = () => {
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
   
-            // Determine if this period time is a reserved time or break
+            // Determine if this period time is a reserved time
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
-  
-            const isBreakTime =
-              (timetableSettings.shortBreak1StartTime === startEndTime.start &&
-                timetableSettings.shortBreak1EndTime === startEndTime.end) ||
-              (timetableSettings.shortBreak2StartTime === startEndTime.start &&
-                timetableSettings.shortBreak2EndTime === startEndTime.end) ||
-              (timetableSettings.lunchStartTime === startEndTime.start &&
-                timetableSettings.lunchEndTime === startEndTime.end);
-  
-            const breakLabel = 
-              timetableSettings.shortBreak1StartTime === startEndTime.start &&
-              timetableSettings.shortBreak1EndTime === startEndTime.end
-                ? 'SHORT BREAK 1'
-                : timetableSettings.shortBreak2StartTime === startEndTime.start &&
-                  timetableSettings.shortBreak2EndTime === startEndTime.end
-                ? 'SHORT BREAK 2'
-                : timetableSettings.lunchStartTime === startEndTime.start &&
-                  timetableSettings.lunchEndTime === startEndTime.end
-                ? 'LUNCH'
-                : '';
   
             return (
               <React.Fragment key={index}>
@@ -325,10 +305,6 @@ const MSchoolClassSection = () => {
                         <>
                           <strong>RESERVED TIME</strong> <br />
                         </>
-                      ) : isBreakTime ? (
-                        <>
-                          <strong>{breakLabel}</strong> <br />
-                        </>
                       ) : (
                         <>
                           Period {period} <br />
@@ -337,27 +313,25 @@ const MSchoolClassSection = () => {
                       {periodTime}
                     </div>
                   </td>
-                  {days.map(day => (
+                  {days.map((day, dayIndex) => (
                     <td
                       key={`${day}-${index}`}
-                      colSpan={isReservedTime || isBreakTime ? days.length : 1}
-                      className={isReservedTime || isBreakTime ? 'merged-row' : ''}
-                      onClick={!isReservedTime && !isBreakTime ? () => handleOpenModal(day, period) : undefined}
+                      colSpan={isReservedTime ? days.length : 1}
+                      className={isReservedTime ? 'merged-row' : ''}
+                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
                     >
-                      {(isReservedTime || isBreakTime) && day === 'Monday' ? (
+                      {isReservedTime && dayIndex === 0 ? (
                         <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                          {isReservedTime ? 'Reserved Time' : breakLabel}
+                          Reserved Time
                         </div>
                       ) : (
-                        !isReservedTime &&
-                        !isBreakTime &&
-                        assignedPeriods[`${day}-${period}`] ? (
+                        !isReservedTime && assignedPeriods[`${day}-${period}`] ? (
                           <>
                             <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
                             <div>{assignedPeriods[`${day}-${period}`].subject}</div>
                           </>
                         ) : (
-                          !isReservedTime && !isBreakTime && <span className="add-icon">+</span>
+                          !isReservedTime && <span className="add-icon">+</span>
                         )
                       )}
                     </td>
