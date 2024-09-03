@@ -276,6 +276,8 @@ const MSchoolClassSection = () => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
+    let reservedTimeInserted = false;
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -299,6 +301,16 @@ const MSchoolClassSection = () => {
             const isReservedTime =
               timetableSettings.reserveTimeStart === startEndTime.start &&
               timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            // If reserved time is already inserted, skip the further rendering of it
+            if (isReservedTime && reservedTimeInserted) {
+              return null;
+            }
+  
+            // Mark reserved time as inserted after the first occurrence
+            if (isReservedTime) {
+              reservedTimeInserted = true;
+            }
   
             return (
               <React.Fragment key={index}>
@@ -333,13 +345,58 @@ const MSchoolClassSection = () => {
                     </td>
                   ))}
                 </tr>
+                {/* Insert Short Break 1 between periods 2 and 3 */}
+                {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
+                  <tr>
+                    <td colSpan={days.length + 1} className="merged-row">
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        SHORT BREAK 1 <br />
+                        {timetableSettings.shortBreak1StartTime} - {timetableSettings.shortBreak1EndTime}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {/* Insert Lunch Break between periods 4 and 5 */}
+                {index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && (
+                  <tr>
+                    <td colSpan={days.length + 1} className="merged-row">
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        LUNCH <br />
+                        {timetableSettings.lunchStartTime} - {timetableSettings.lunchEndTime}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {/* Insert Short Break 2 between periods 6 and 7 */}
+                {index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && (
+                  <tr>
+                    <td colSpan={days.length + 1} className="merged-row">
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        SHORT BREAK 2 <br />
+                        {timetableSettings.shortBreak2StartTime} - {timetableSettings.shortBreak2EndTime}
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </React.Fragment>
             );
           })}
+          {/* Only add reserved time if it wasn't already included */}
+          {!reservedTimeInserted && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
+            <tr>
+              <td colSpan={days.length + 1} className="merged-row">
+                <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                  RESERVED TIME <br />
+                  {timetableSettings.reserveTimeStart} - {timetableSettings.reserveTimeEnd}
+                </div>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     );
   };
+  
   
   
 
