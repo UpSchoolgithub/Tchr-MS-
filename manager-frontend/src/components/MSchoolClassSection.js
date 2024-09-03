@@ -321,29 +321,60 @@ const MSchoolClassSection = () => {
                       {periodTime}
                     </div>
                   </td>
-                  {days.map((day, dayIndex) => (
-                    <td
-                      key={`${day}-${index}`}
-                      colSpan={isReservedTime ? days.length : 1}
-                      className={isReservedTime ? 'merged-row' : ''}
-                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
-                    >
-                      {isReservedTime && dayIndex === 0 ? (
-                        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                          Reserved Time
-                        </div>
-                      ) : (
-                        !isReservedTime && assignedPeriods[`${day}-${period}`] ? (
-                          <>
-                            <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
-                            <div>{assignedPeriods[`${day}-${period}`].subject}</div>
-                          </>
-                        ) : (
-                          !isReservedTime && <span className="add-icon">+</span>
-                        )
-                      )}
-                    </td>
-                  ))}
+                  {days.map((day, dayIndex) => {
+                    const dayLower = day.toLowerCase();
+                    const isReservedDay = timetableSettings.reserveType === 'day' &&
+                      timetableSettings.reserveDay[dayLower] &&
+                      timetableSettings.reserveDay[dayLower].open;
+  
+                    const isReservedDayWithinPeriod = isReservedDay &&
+                      timetableSettings.reserveDay[dayLower].start >= startEndTime.start &&
+                      timetableSettings.reserveDay[dayLower].end <= startEndTime.end;
+  
+                    const isReservedDayOutsidePeriod = isReservedDay &&
+                      (timetableSettings.reserveDay[dayLower].start < timetableSettings.schoolStartTime ||
+                       timetableSettings.reserveDay[dayLower].end > timetableSettings.schoolEndTime);
+  
+                    if (isReservedDayWithinPeriod) {
+                      return (
+                        <td key={`${day}-${index}`} colSpan={1}>
+                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                            Reserved Day
+                          </div>
+                        </td>
+                      );
+                    } else if (isReservedDayOutsidePeriod && dayIndex === 0) {
+                      return (
+                        <td key={`${day}-${index}`} colSpan={days.length} className="merged-row">
+                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                            Reserved Day <br />
+                            {timetableSettings.reserveDay[dayLower].start} - {timetableSettings.reserveDay[dayLower].end}
+                          </div>
+                        </td>
+                      );
+                    } else if (isReservedTime && dayIndex === 0) {
+                      return (
+                        <td key={`${day}-${index}`} colSpan={days.length} className="merged-row">
+                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                            Reserved Time
+                          </div>
+                        </td>
+                      );
+                    } else {
+                      return (
+                        <td key={`${day}-${index}`}>
+                          {assignedPeriods[`${day}-${period}`] ? (
+                            <>
+                              <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                              <div>{assignedPeriods[`${day}-${period}`].subject}</div>
+                            </>
+                          ) : (
+                            <span className="add-icon">+</span>
+                          )}
+                        </td>
+                      );
+                    }
+                  })}
                 </tr>
                 {/* Insert Short Break 1 between periods 2 and 3 */}
                 {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
