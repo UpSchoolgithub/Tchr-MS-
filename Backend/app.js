@@ -279,17 +279,17 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
   const { periodTimings, ...settings } = req.body;
 
   try {
+    // Update TimetableSettings
     let timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
-
     if (!timetableSettings) {
       timetableSettings = await TimetableSettings.create({ schoolId, ...settings });
     } else {
       await timetableSettings.update(settings);
     }
 
-    // Handle period timings
+    // Handle Periods
     if (periodTimings && Array.isArray(periodTimings)) {
-      // Destroy existing periods
+      // Delete existing periods
       await Period.destroy({ where: { schoolId } });
 
       // Create new periods
@@ -311,6 +311,7 @@ app.put('/api/schools/:id/timetable', async (req, res) => {
     res.status(500).send({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 
