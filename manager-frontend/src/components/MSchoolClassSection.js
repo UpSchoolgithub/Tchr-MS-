@@ -448,7 +448,6 @@ const MSchoolClassSection = () => {
   };
   
   
-  
 
   const downloadTimetableAsPDF = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
