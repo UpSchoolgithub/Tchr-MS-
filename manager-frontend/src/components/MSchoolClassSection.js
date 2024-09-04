@@ -276,6 +276,8 @@ const MSchoolClassSection = () => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
+    let reservedTimeInserted = false;
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -296,48 +298,104 @@ const MSchoolClassSection = () => {
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
             const periodName = `Period ${period}`;
   
+            const isReservedTime =
+              timetableSettings.reserveTimeStart === startEndTime.start &&
+              timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            // If reserved time is already inserted, skip the further rendering of it
+            if (isReservedTime && reservedTimeInserted) {
+              return null;
+            }
+  
+            // Mark reserved time as inserted after the first occurrence
+            if (isReservedTime) {
+              reservedTimeInserted = true;
+            }
+  
             return (
-              <tr key={index}>
-                <td>
-                  <div>
-                    <strong>{periodName}</strong> <br />
-                    {periodTime}
-                  </div>
-                </td>
-                {days.map((day) => {
-                  // Check if the current day has a reserved period
-                  const isReservedDay = timetableSettings.reserveDay[day]?.open;
-                  const reservedDayStart = timetableSettings.reserveDay[day]?.start;
-                  const reservedDayEnd = timetableSettings.reserveDay[day]?.end;
-  
-                  // Check if the current period time is within the reserved period for this day
-                  const isReservedPeriod = isReservedDay && reservedDayStart <= startEndTime.start && reservedDayEnd >= startEndTime.end;
-  
-                  return (
-                    <td key={`${day}-${index}`} className={isReservedPeriod ? 'reserved-period' : ''}>
-                      {isReservedPeriod ? (
-                        <div style={{ textAlign: 'center', fontWeight: 'bold', color: 'red' }}>
-                          Reserved Day
+              <React.Fragment key={index}>
+                <tr>
+                  <td>
+                    <div>
+                      <strong>{periodName}</strong> <br />
+                      {periodTime}
+                    </div>
+                  </td>
+                  {days.map((day, dayIndex) => (
+                    <td
+                      key={`${day}-${index}`}
+                      colSpan={isReservedTime ? days.length : 1}
+                      className={isReservedTime ? 'merged-row' : ''}
+                      style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }} // Hide extra columns
+                    >
+                      {isReservedTime && dayIndex === 0 ? (
+                        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                          Reserved Time
                         </div>
-                      ) : assignedPeriods[`${day}-${period}`] ? (
-                        <>
-                          <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
-                          <div>{assignedPeriods[`${day}-${period}`].subject}</div>
-                        </>
                       ) : (
-                        <span className="add-icon">+</span>
+                        !isReservedTime && assignedPeriods[`${day}-${period}`] ? (
+                          <>
+                            <div>{assignedPeriods[`${day}-${period}`].teacher}</div>
+                            <div>{assignedPeriods[`${day}-${period}`].subject}</div>
+                          </>
+                        ) : (
+                          !isReservedTime && <span className="add-icon">+</span>
+                        )
                       )}
                     </td>
-                  );
-                })}
-              </tr>
+                  ))}
+                </tr>
+                {/* Insert Short Break 1 between periods 2 and 3 */}
+                {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
+                  <tr>
+                    <td colSpan={days.length + 1} className="merged-row">
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        SHORT BREAK 1 <br />
+                        {timetableSettings.shortBreak1StartTime} - {timetableSettings.shortBreak1EndTime}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {/* Insert Lunch Break between periods 4 and 5 */}
+                {index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && (
+                  <tr>
+                    <td colSpan={days.length + 1} className="merged-row">
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        LUNCH <br />
+                        {timetableSettings.lunchStartTime} - {timetableSettings.lunchEndTime}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {/* Insert Short Break 2 between periods 6 and 7 */}
+                {index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && (
+                  <tr>
+                    <td colSpan={days.length + 1} className="merged-row">
+                      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        SHORT BREAK 2 <br />
+                        {timetableSettings.shortBreak2StartTime} - {timetableSettings.shortBreak2EndTime}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             );
           })}
+          {/* Only add reserved time if it wasn't already included */}
+          {!reservedTimeInserted && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
+            <tr>
+              <td colSpan={days.length + 1} className="merged-row">
+                <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                  RESERVED TIME <br />
+                  {timetableSettings.reserveTimeStart} - {timetableSettings.reserveTimeEnd}
+                </div>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     );
   };
-  
   
   
   
