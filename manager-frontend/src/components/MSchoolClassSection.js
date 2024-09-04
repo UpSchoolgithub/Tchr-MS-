@@ -154,6 +154,7 @@ const MSchoolClassSection = () => {
   };
 
   const handleOpenModal = (day, period) => {
+    console.log('Clicked on day:', day, 'period:', period); // Log to check if the function is called
     const existingAssignment = assignedPeriods[`${day}-${period}`];
     if (existingAssignment) {
       setSelectedTeacher(existingAssignment.teacherId);
@@ -163,9 +164,10 @@ const MSchoolClassSection = () => {
       setSelectedPeriod({ day, period });
       setSelectedTeacher('');
       setSelectedSubject('');
-      setIsModalOpen(true);
+      setIsModalOpen(true); // Open the modal for assignment
     }
   };
+  
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
