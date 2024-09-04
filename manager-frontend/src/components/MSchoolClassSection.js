@@ -418,7 +418,7 @@ const handleOpenModal = (day, period) => {
       if (entry.type === 'period') {
         days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
-          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '+';
+          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
           row.push(entryText);
         });
       } else {
