@@ -6,8 +6,8 @@ exports.assignPeriod = async (req, res) => {
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
   // Validate required fields
-  if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period) {
-    return res.status(400).json({ error: 'All fields are required.' });
+  if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period || !startTime || !endTime) {
+    return res.status(400).json({ error: 'All fields, including startTime and endTime, are required.' });
   }
 
   try {
@@ -34,7 +34,9 @@ exports.assignPeriod = async (req, res) => {
       subjectId,
       teacherId,
       day,
-      period
+      period,
+      startTime,
+      endTime
     });
 
     // Extract sectionName from combinedSectionId
@@ -76,6 +78,10 @@ exports.getAssignments = async (req, res) => {
     // Fetch all assignments for the given combinedSectionId
     const assignments = await TimetableEntry.findAll({ where: { combinedSectionId } });
 
+    if (!assignments.length) {
+      return res.status(404).json({ message: 'No assignments found for this section.' });
+    }
+
     // Respond with the assignments
     res.status(200).json(assignments);
   } catch (error) {
@@ -90,10 +96,11 @@ exports.getTimetableSettings = async (req, res) => {
   const { schoolId } = req.params;
   try {
     const timetableSettings = await TimetableSettings.findOne({ where: { schoolId } });
-    console.log('Timetable Settings from DB:', timetableSettings); // Log the data
+
     if (!timetableSettings) {
       return res.status(404).json({ error: 'Timetable settings not found.' });
     }
+
     res.status(200).json(timetableSettings);
   } catch (error) {
     console.error('Error fetching timetable settings:', error);

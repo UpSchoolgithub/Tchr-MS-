@@ -46,14 +46,15 @@ const MSchoolClassSection = () => {
     setCombinedSectionId(combinedId);
     fetchCalendarEventsAndHolidays(schoolId);
     fetchTeachers(schoolId);
+    fetchSubjects(schoolId); // Fetch subjects before fetching assignments
     fetchTimetableSettings(schoolId);
   }, [schoolId, sectionName]);
 
   useEffect(() => {
-    if (teachers.length > 0 && timetableSettings) {
+    if (teachers.length > 0 && subjects.length > 0 && timetableSettings) {
       fetchAssignments();
     }
-  }, [teachers, timetableSettings, combinedSectionId]);
+  }, [teachers, subjects, timetableSettings, combinedSectionId]);
 
   useEffect(() => {
     axiosInstance.get(`/schools/${schoolId}`)
@@ -89,6 +90,15 @@ const MSchoolClassSection = () => {
     }
   };
 
+  const fetchSubjects = async (schoolId) => {
+    try {
+      const response = await axiosInstance.get(`/schools/${schoolId}/subjects`);
+      setSubjects(response.data);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+    }
+  };
+
   const fetchTimetableSettings = async (schoolId) => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
@@ -99,13 +109,6 @@ const MSchoolClassSection = () => {
       console.error('Error fetching timetable settings:', error);
     }
   };
-  
-  useEffect(() => {
-    if (schoolId) {
-      fetchTimetableSettings(schoolId);
-    }
-  }, [schoolId]);
-  
 
   const generatePeriodTimings = () => {
     const { periodsPerDay, durationPerPeriod, schoolStartTime } = timetableSettings;
@@ -130,9 +133,9 @@ const MSchoolClassSection = () => {
   const formatTime = (date) => {
     return date.toTimeString().split(' ')[0].substring(0, 5); // Extracts only the HH:MM part
   };
-  
 
   const fetchAssignments = async () => {
+    if (!subjects.length || !teachers.length) return;
     try {
       const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionName}/assignments`);
       const assignments = response.data.reduce((acc, entry) => {
@@ -153,9 +156,6 @@ const MSchoolClassSection = () => {
     }
   };
 
-
-  
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -172,6 +172,7 @@ const MSchoolClassSection = () => {
   const handleAssignPeriod = async (e) => {
     e.preventDefault();
     try {
+      const periodTimings = timetableSettings.periodTimings[selectedPeriod.period - 1]; // Get period timings
       const requestData = {
         schoolId,
         classId,
@@ -180,6 +181,8 @@ const MSchoolClassSection = () => {
         subjectId: selectedSubject,
         period: selectedPeriod.period,
         day: selectedPeriod.day,
+        startTime: periodTimings.start,  // Include startTime and endTime
+        endTime: periodTimings.end
       };
   
       await axiosInstance.post(`/timetable/assign`, requestData);
@@ -205,17 +208,13 @@ const MSchoolClassSection = () => {
   
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
-      if (error.response) {
-        console.log('Response Data:', error.response.data);
-        console.log('Response Status:', error.response.status);
-        console.log('Response Headers:', error.response.headers);
-      }
       setError('Failed to assign period. Please try again.');
     }
   };
 
   const handleReload = () => {
-    navigate(0);
+    fetchAssignments();
+    setShowReloadButton(false);
   };
 
   const handleFilterChange = (e) => {
@@ -280,7 +279,7 @@ const MSchoolClassSection = () => {
           {periods.map((period, index) => {
             const startEndTime = timetableSettings.periodTimings[index];
             if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
-              return null; // Skip if the time format is invalid
+              return null;
             }
   
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
@@ -288,7 +287,6 @@ const MSchoolClassSection = () => {
             const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
                                    timetableSettings.reserveTimeEnd === startEndTime.end;
 
-            // Skip rendering if reserved time is already inserted
             if (isReservedTime && reservedTimeInserted) {
               return null;
             }
@@ -365,278 +363,227 @@ const handleOpenModal = (day, period) => {
   }
 };
 
-  
-  
-  
+const downloadTimetableAsPDF = () => {
+  if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
+    alert('No timetable settings available to download.');
+    return;
+  }
 
-  const downloadTimetableAsPDF = () => {
-    if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
-      alert('No timetable settings available to download.');
-      return;
-    }
-  
-    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait mode with A4 size
-  
-    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']; // Days names as in the webpage
-  
-    const rows = [];
-    const timeline = [];
-  
-    // Build the timeline with periods and breaks
-    periods.forEach((period, index) => {
-      const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime) {
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: startEndTime });
-  
-        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
-  
-        // Insert Lunch Break if it's supposed to be between periods 4 and 5
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
-  
-        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const rows = [];
+  const timeline = [];
+
+  periods.forEach((period, index) => {
+    const startEndTime = timetableSettings.periodTimings[index];
+    if (startEndTime) {
+      timeline.push({ type: 'period', period, time: startEndTime });
+
+      if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+        timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
       }
-    });
   
-    // Insert reserved time if set and it falls after all periods
-    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-    }
-  
-    // Build rows for the PDF
-    timeline.forEach(entry => {
-      const row = [`${entry.time}`];
-      if (entry.type === 'period') {
-        days.forEach(day => {
-          const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
-          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-          row.push(entryText);
-        });
-      } else {
-        row.push(entry.label); // For breaks and reserved time
+      if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
+        timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
       }
-      rows.push(row);
-    });
   
-    const columns = ['Time', ...days];
-  
-    // Set up custom styles
-    const headerStyles = {
+      if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
+        timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
+      }
+    }
+  });
+
+  if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
+    timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
+  }
+
+  timeline.forEach(entry => {
+    const row = [`${entry.time}`];
+    if (entry.type === 'period') {
+      days.forEach(day => {
+        const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
+        const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+        row.push(entryText);
+      });
+    } else {
+      row.push(entry.label);
+    }
+    rows.push(row);
+  });
+
+  const columns = ['Time', ...days];
+
+  doc.setFontSize(18);
+  doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+  doc.setFontSize(14);
+  doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+  const classSectionText = `Class: ${classId}    Section: ${sectionName}`;
+  doc.setFontSize(12);
+  doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
+
+  doc.autoTable({
+    startY: 45,
+    head: [columns],
+    body: rows,
+    theme: 'grid',
+    styles: {
+      halign: 'center',
+      valign: 'middle',
+      lineWidth: 0.1,
+    },
+    headStyles: {
       fillColor: [0, 0, 0],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
-    };
-  
-    const breakStyles = {
+    },
+    alternateRowStyles: {
       fillColor: [245, 245, 245],
-      textColor: [0, 0, 0],
-      fontStyle: 'bold',
-      halign: 'center',
-    };
+    },
+  });
+
+  const filename = `Timetable_${classId}_${sectionName}.pdf`;
+  doc.save(filename);
+};
   
-    // Add school name
-    doc.setFontSize(18);
-    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-  
-    // Add the timetable heading
-    doc.setFontSize(14);
-    doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-  
-    // Add class and section details
-    const classSectionText = `Class: ${classId}    Section: ${sectionName}`;
-    doc.setFontSize(12);
-    const classSectionTextWidth = doc.getTextWidth(classSectionText);
-    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
-  
-    // Create the table with merged cells for breaks, lunch, and reserved time
-    doc.autoTable({
-      startY: 45, // Adjust the Y position to leave space for headings
-      head: [columns],
-      body: rows,
-      theme: 'grid',
-      styles: {
-        halign: 'center',
-        valign: 'middle',
-        lineWidth: 0.1,
-      },
-      headStyles: headerStyles,
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
-      rowPageBreak: 'avoid',
-      didDrawCell: function (data) {
-        if (data.column.index === 0 && ['SHORT BREAK 1', 'LUNCH', 'SHORT BREAK 2', 'RESERVED TIME'].includes(data.cell.raw)) {
-          // Merge cells for break/lunch/reserved time labels
-          const label = data.cell.raw;
-          doc.setFillColor(245, 245, 245); // Grey background
-          doc.rect(data.cell.x, data.cell.y, data.cell.width * columns.length, data.cell.height, 'F');
-          doc.text(label, data.cell.x + data.cell.width * columns.length / 2, data.cell.y + data.cell.height / 2, {
-            align: 'center',
-            baseline: 'middle'
-          });
-        }
-      },
-      willDrawCell: function (data) {
-        if (data.column.index > 0 && ['SHORT BREAK 1', 'LUNCH', 'SHORT BREAK 2', 'RESERVED TIME'].includes(data.cell.raw)) {
-          data.cell.styles.fillColor = [245, 245, 245]; // Set background color for merged cells
-        }
-      },
-    });
-  
-    const filename = `Timetable_${classId}_${sectionName}.pdf`;
-    doc.save(filename);
-  };
-  
-  
-  
-  
-  return (
-    <div className="container">
-      <div className="header">
-        <div className="school-info">
-          <div className="class-info">
-            <span className="label">Class :</span>
-            <span className="line">{classId}</span>
-          </div>
-          <div className="section-info">
-            <span className="label">Section :</span>
-            <span className="line">{sectionName}</span>
-          </div>
+return (
+  <div className="container">
+    <div className="header">
+      <div className="school-info">
+        <div className="class-info">
+          <span className="label">Class :</span>
+          <span className="line">{classId}</span>
         </div>
-        <h1>{schoolName}</h1>
-        <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
-          {showDetails ? 'Hide Details' : 'More Details'}
-        </button>
+        <div className="section-info">
+          <span className="label">Section :</span>
+          <span className="line">{sectionName}</span>
+        </div>
       </div>
-      {showDetails && (
-        <div className="details-section">
-          <div className="details">
-            <h3>Class and Section Details</h3>
-            <p>School ID: {schoolId}</p>
-            <p>Class ID: {classId}</p>
-            <p>Section Name: {sectionName}</p>
-          </div>
-          <div className="subjects">
-            <h3>Subjects:</h3>
+      <h1>{schoolName}</h1>
+      <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
+        {showDetails ? 'Hide Details' : 'More Details'}
+      </button>
+    </div>
+    {showDetails && (
+      <div className="details-section">
+        <div className="details">
+          <h3>Class and Section Details</h3>
+          <p>School ID: {schoolId}</p>
+          <p>Class ID: {classId}</p>
+          <p>Section Name: {sectionName}</p>
+        </div>
+        <div className="subjects">
+          <h3>Subjects:</h3>
+          {subjects.length > 0 ? (
+            subjects.map(subject => (
+              <div key={subject.id} className="subject">
+                <span>{subject.subjectName || 'No Subject Name'}</span>
+              </div>
+            ))
+          ) : (
+            <p>No subjects found for this section.</p>
+          )}
+        </div>
+      </div>
+    )}
+    <div className="buttons">
+      <button onClick={handleShowCalendar}>School Calendar</button>
+      <button onClick={handleShowTimetable}>Timetable</button>
+      <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
+    </div>
+    {successMessage && <div className="success-message">{successMessage}</div>}
+    {error && <div className="error-message">{error}</div>}
+    {showCalendar && (
+      <div className="calendar">
+        <h2>School Calendar Events</h2>
+        <label>
+          Filter:
+          <select onChange={handleFilterChange} value={filter}>
+            <option value="all">All</option>
+            <option value="events">Events</option>
+            <option value="holidays">Holidays</option>
+          </select>
+        </label>
+        <div className="events">
+          {filteredList.length > 0 ? (
+            <table className="calendar-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredList.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.eventName || item.name}</td>
+                    <td>{formatDate(item.date || item.startDate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No events found for this school.</p>
+          )}
+        </div>
+      </div>
+    )}
+    {showTimetable && (
+      <div className="timetable">
+        <h2>School Timetable</h2>
+        {renderTable()}
+      </div>
+    )}
+
+    <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
+      <h2>Assign Period</h2>
+      <form onSubmit={handleAssignPeriod}>
+        <div>
+          <label>Teacher:</label>
+          <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
+            <option value="">Select a teacher</option>
+            {teachers.map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Subject:</label>
+          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
+            <option value="">Select a subject</option>
             {subjects.length > 0 ? (
-              subjects.map(subject => (
-                <div key={subject.id} className="subject">
-                  <span>{subject.subjectName || 'No Subject Name'}</span>
-                </div>
+              subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.subjectName}
+                </option>
               ))
             ) : (
-              <p>No subjects found for this section.</p>
+              <option disabled>No subjects available</option>
             )}
-          </div>
+          </select>
         </div>
-      )}
-      <div className="buttons">
-        <button onClick={handleShowCalendar}>School Calendar</button>
-        <button onClick={handleShowTimetable}>Timetable</button>
-        <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
-      </div>
-      {successMessage && <div className="success-message">{successMessage}</div>}
-      {error && <div className="error-message">{error}</div>}
-      {showCalendar && (
-        <div className="calendar">
-          <h2>School Calendar Events</h2>
-          <label>
-            Filter:
-            <select onChange={handleFilterChange} value={filter}>
-              <option value="all">All</option>
-              <option value="events">Events</option>
-              <option value="holidays">Holidays</option>
-            </select>
-          </label>
-          <div className="events">
-            {filteredList.length > 0 ? (
-              <table className="calendar-table">
-                <thead>
-                  <tr>
-                    <th>Event</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredList.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.eventName || item.name}</td>
-                      <td>{formatDate(item.date || item.startDate)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No events found for this school.</p>
-            )}
-          </div>
-        </div>
-      )}
-      {showTimetable && (
-        <div className="timetable">
-          <h2>School Timetable</h2>
-          {renderTable()}
-        </div>
-      )}
+        <button type="submit">Assign</button>
+        <button type="button" onClick={handleCloseModal}>Cancel</button>
+      </form>
 
-      <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
-        <h2>Assign Period</h2>
-        <form onSubmit={handleAssignPeriod}>
-          <div>
-            <label>Teacher:</label>
-            <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
-              <option value="">Select a teacher</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label>Subject:</label>
-            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
-              <option value="">Select a subject</option>
-              {subjects.length > 0 ? (
-                subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.subjectName}
-                  </option>
-                ))
-              ) : (
-                <option disabled>No subjects available</option>
-              )}
-            </select>
-          </div>
-          <button type="submit">Assign</button>
-          <button type="button" onClick={handleCloseModal}>Cancel</button>
-        </form>
+      {showReloadButton && (
+        <button onClick={handleReload} className="reload-button">
+          Reload Page
+        </button>
+      )}
+    </Modal>
 
-        {showReloadButton && (
-          <button onClick={handleReload} className="reload-button">
-            Reload Page
-          </button>
-        )}
-      </Modal>
-
-      <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
-        <h2>Warning</h2>
-        <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
-        <button onClick={handleEditConfirmed}>Yes</button>
-        <button onClick={handleCloseEditWarning}>No</button>
-      </Modal>
-    </div>
-  );
+    <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
+      <h2>Warning</h2>
+      <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
+      <button onClick={handleEditConfirmed}>Yes</button>
+      <button onClick={handleCloseEditWarning}>No</button>
+    </Modal>
+  </div>
+);
 };
 
 export default MSchoolClassSection;
