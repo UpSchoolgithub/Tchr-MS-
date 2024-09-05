@@ -280,7 +280,7 @@ const MSchoolClassSection = () => {
             if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
               return null;
             }
-  
+
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
             const periodName = `Period ${period}`;
             const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
@@ -304,22 +304,23 @@ const MSchoolClassSection = () => {
                   </td>
                   {days.map((day, dayIndex) => {
                     const key = `${day}-${period}`;
-                    const assignment = assignedPeriods[key];
+                    const periodAssignment = assignedPeriods ? assignedPeriods[key] : undefined;  // Change from assignment to periodAssignment
+                    
                     return (
                       <td
                         key={day}
                         colSpan={isReservedTime ? days.length : 1}
                         className={isReservedTime ? 'merged-row' : ''}
                         style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }}
-                        onClick={() => !isReservedTime && (assignment ? handleOpenModal(day, period) : setIsModalOpen(true))}
+                        onClick={() => !isReservedTime && (periodAssignment ? handleOpenModal(day, period) : setIsModalOpen(true))}
                       >
                         {isReservedTime && dayIndex === 0 ? (
                           <div style={{ textAlign: 'center', fontWeight: 'bold' }}>Reserved Time</div>
                         ) : (
-                          assignment ? (
+                          periodAssignment ? (  // Updated from assignment to periodAssignment
                             <>
-                              <div>{assignment.teacher}</div>
-                              <div>{assignment.subject}</div>
+                              <div>{periodAssignment.teacher}</div>
+                              <div>{periodAssignment.subject}</div>
                             </>
                           ) : (
                             <span className="add-icon">+</span>
@@ -347,11 +348,12 @@ const MSchoolClassSection = () => {
     );
 };
 
+
 const handleOpenModal = (day, period) => {
-  const existingAssignment = assignedPeriods[`${day}-${period}`];
-  if (existingAssignment) {
-    setSelectedTeacher(existingAssignment.teacherId);
-    setSelectedSubject(existingAssignment.subjectId);
+  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;  // Updated from assignment to periodAssignment
+  if (periodAssignment) {
+    setSelectedTeacher(periodAssignment.teacherId);  // Using periodAssignment
+    setSelectedSubject(periodAssignment.subjectId);  // Using periodAssignment
     setIsEditWarningOpen(true);
   } else {
     setSelectedPeriod({ day, period });
@@ -360,6 +362,9 @@ const handleOpenModal = (day, period) => {
     setIsModalOpen(true);
   }
 };
+
+
+
 
 const downloadTimetableAsPDF = () => {
   if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
