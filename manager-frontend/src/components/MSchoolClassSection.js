@@ -171,8 +171,16 @@ const MSchoolClassSection = () => {
 
   const handleAssignPeriod = async (e) => {
     e.preventDefault();
+  
+    // Validate that period timings exist in the timetable settings
+    if (!timetableSettings || !selectedPeriod || !timetableSettings.periodTimings[selectedPeriod.period]) {
+      setError('Timetable settings or period timings are missing. Please ensure that the timetable is properly configured.');
+      return;
+    }
+  
     try {
-      const periodTimings = timetableSettings.periodTimings[selectedPeriod.period - 1]; // Get period timings
+      const periodTiming = timetableSettings.periodTimings[selectedPeriod.period];
+  
       const requestData = {
         schoolId,
         classId,
@@ -181,8 +189,8 @@ const MSchoolClassSection = () => {
         subjectId: selectedSubject,
         period: selectedPeriod.period,
         day: selectedPeriod.day,
-        startTime: periodTimings.start,  // Include startTime and endTime
-        endTime: periodTimings.end
+        startTime: periodTiming.start,  // Ensure startTime exists
+        endTime: periodTiming.end,      // Ensure endTime exists
       };
   
       await axiosInstance.post(`/timetable/assign`, requestData);
@@ -211,6 +219,7 @@ const MSchoolClassSection = () => {
       setError('Failed to assign period. Please try again.');
     }
   };
+  
 
   const handleReload = () => {
     fetchAssignments();
