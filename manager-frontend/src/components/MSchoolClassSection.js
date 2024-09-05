@@ -135,7 +135,7 @@ const MSchoolClassSection = () => {
   };
 
   const fetchAssignments = async () => {
-    if (!subjects.length || !teachers.length) return;
+    if (!subjects.length || !teachers.length) return; // Ensure teachers and subjects are loaded
     try {
       const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionName}/assignments`);
       const assignments = response.data.reduce((acc, entry) => {
@@ -149,12 +149,13 @@ const MSchoolClassSection = () => {
         };
         return acc;
       }, {});
-      setAssignedPeriods(assignments);
+      setAssignedPeriods(assignments);  // Set the assignments to assignedPeriods
     } catch (error) {
       setError('Error fetching assignments.');
       console.error('Error fetching assignments:', error);
     }
   };
+  
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -259,11 +260,11 @@ const MSchoolClassSection = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
-
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     let reservedTimeInserted = false;
-
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -280,19 +281,19 @@ const MSchoolClassSection = () => {
             if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
               return null;
             }
-
+  
             const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
             const periodName = `Period ${period}`;
             const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
                                    timetableSettings.reserveTimeEnd === startEndTime.end;
-
+  
             if (isReservedTime && reservedTimeInserted) {
               return null;
             }
             if (isReservedTime) {
               reservedTimeInserted = true;
             }
-
+  
             return (
               <React.Fragment key={index}>
                 <tr>
@@ -304,8 +305,8 @@ const MSchoolClassSection = () => {
                   </td>
                   {days.map((day, dayIndex) => {
                     const key = `${day}-${period}`;
-                    const periodAssignment = assignedPeriods ? assignedPeriods[key] : undefined;  // Change from assignment to periodAssignment
-                    
+                    const periodAssignment = assignedPeriods ? assignedPeriods[key] : undefined; // Fetch assigned period
+  
                     return (
                       <td
                         key={day}
@@ -317,7 +318,7 @@ const MSchoolClassSection = () => {
                         {isReservedTime && dayIndex === 0 ? (
                           <div style={{ textAlign: 'center', fontWeight: 'bold' }}>Reserved Time</div>
                         ) : (
-                          periodAssignment ? (  // Updated from assignment to periodAssignment
+                          periodAssignment ? (
                             <>
                               <div>{periodAssignment.teacher}</div>
                               <div>{periodAssignment.subject}</div>
@@ -333,20 +334,11 @@ const MSchoolClassSection = () => {
               </React.Fragment>
             );
           })}
-          {!reservedTimeInserted && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
-            <tr>
-              <td colSpan={days.length + 1} className="merged-row">
-                <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                  RESERVED TIME <br />
-                  {timetableSettings.reserveTimeStart} - {timetableSettings.reserveTimeEnd}
-                </div>
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
     );
-};
+  };
+  
 
 
 const handleOpenModal = (day, period) => {
