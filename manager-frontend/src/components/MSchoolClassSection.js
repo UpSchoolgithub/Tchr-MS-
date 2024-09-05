@@ -51,11 +51,11 @@ const MSchoolClassSection = () => {
   }, [schoolId, sectionName]);
 
   useEffect(() => {
-    if (teachers.length > 0 && subjects.length > 0 && timetableSettings) {
+    if (teachers.length > 0 && timetableSettings && Object.keys(assignedPeriods).length > 0) {
       fetchAssignments();
     }
-  }, [teachers, subjects, timetableSettings, combinedSectionId]);
-
+  }, [teachers, timetableSettings, combinedSectionId]);
+  
   useEffect(() => {
     axiosInstance.get(`/schools/${schoolId}`)
       .then(response => {
@@ -171,16 +171,7 @@ const MSchoolClassSection = () => {
 
   const handleAssignPeriod = async (e) => {
     e.preventDefault();
-  
-    // Validate that period timings exist in the timetable settings
-    if (!timetableSettings || !selectedPeriod || !timetableSettings.periodTimings[selectedPeriod.period]) {
-      setError('Timetable settings or period timings are missing. Please ensure that the timetable is properly configured.');
-      return;
-    }
-  
     try {
-      const periodTiming = timetableSettings.periodTimings[selectedPeriod.period];
-  
       const requestData = {
         schoolId,
         classId,
@@ -189,8 +180,6 @@ const MSchoolClassSection = () => {
         subjectId: selectedSubject,
         period: selectedPeriod.period,
         day: selectedPeriod.day,
-        startTime: periodTiming.start,  // Ensure startTime exists
-        endTime: periodTiming.end,      // Ensure endTime exists
       };
   
       await axiosInstance.post(`/timetable/assign`, requestData);
@@ -219,6 +208,7 @@ const MSchoolClassSection = () => {
       setError('Failed to assign period. Please try again.');
     }
   };
+  
   
 
   const handleReload = () => {
@@ -358,11 +348,10 @@ const MSchoolClassSection = () => {
 };
 
 const handleOpenModal = (day, period) => {
-  const key = `${day}-${period}`;
-  const assignment = assignedPeriods[key];
-  if (assignment) {
-    setSelectedTeacher(assignment.teacherId);
-    setSelectedSubject(assignment.subjectId);
+  const existingAssignment = assignedPeriods[`${day}-${period}`];
+  if (existingAssignment) {
+    setSelectedTeacher(existingAssignment.teacherId);
+    setSelectedSubject(existingAssignment.subjectId);
     setIsEditWarningOpen(true);
   } else {
     setSelectedPeriod({ day, period });
