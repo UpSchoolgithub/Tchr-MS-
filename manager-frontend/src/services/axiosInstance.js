@@ -29,7 +29,7 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -38,6 +38,10 @@ axiosInstance.interceptors.response.use(
         
         if (!refreshToken) {
           console.error('No refresh token available. Please log in again.');
+          // Optional: Redirect to login or logout user
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
           return Promise.reject(error);
         }
 
@@ -58,6 +62,10 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (err) {
         console.error('Failed to refresh token:', err);
+        // Handle token refresh failure (e.g., log the user out or redirect to login)
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login'; // Or any other action
       }
     }
     

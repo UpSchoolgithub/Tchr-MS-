@@ -33,12 +33,11 @@ const assignmentRoutes = require('./routes/assignmentRoutes');
 const testRoutes = require('./routes/testRoutes');
 //const studentRoutes = require('./routes/student');
 const studentRoutes = require('./routes/students');
-const sectionsRouter = require('./routes/students');
-const studentsRouter = require('./routes/students')
+//const sectionsRouter = require('./routes/students');
+//const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
 
 app.use('/api/timetable', require('./routes/timetableRoutes'));
-
 // Teacher Routes
 const teacherAuthRoutes = require('./routes/teacherRoutes'); 
 const teacherRoutes = require('./routes/teacherRoutes');
@@ -553,7 +552,7 @@ app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/teachers', teachersRoutes);
 app.use('/api/timetable', timetableRoutes);
-app.use('/timetable', timetableRoutes);
+//app.use('/timetable', timetableRoutes);
 
 // Fallback for undefined routes
 app.use((req, res) => {
