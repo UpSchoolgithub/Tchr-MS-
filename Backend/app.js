@@ -534,7 +534,7 @@ app.use('/api', subjectRoutes);
 app.use('/api', calendarRoutes);
 app.use('/api', schoolRoutes);
 //app.use('/api/schools/timetable', timetableRoutes); // Ensure the correct path
-app.use('/api/timetable', timetableRoutes); // Base path for timetable routes
+//app.use('/api/timetable', timetableRoutes); // Base path for timetable routes
 //app.use('/api/students', studentRoutes);
 //app.use('/students', studentRoutes); // Ensure this path matches your frontend API calls
 app.use('/api/attendance', attendanceRoutes);
