@@ -203,11 +203,19 @@ const MSchoolClassSection = () => {
   
       setIsModalOpen(false);
       setSuccessMessage('Assignment added successfully!');
+      setShowReloadButton(true);
+ 
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
+      if (error.response) {
+        console.log('Response Data:', error.response.data);
+        console.log('Response Status:', error.response.status);
+        console.log('Response Headers:', error.response.headers);
+      }
       setError('Failed to assign period. Please try again.');
     }
   };
+
   
   
   
