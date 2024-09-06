@@ -205,10 +205,11 @@ const MSchoolClassSection = () => {
       setShowReloadButton(true);
   
     } catch (error) {
-      console.error('Error assigning period:', error.response || error);
+      console.error('Error assigning period:', error.response || error);  // Add this line
       setError('Failed to assign period. Please try again.');
     }
   };
+  
   
   
 
