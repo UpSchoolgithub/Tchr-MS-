@@ -258,14 +258,47 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
+    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
-  
+ 
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    let reservedTimeInserted = false;
-  
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+ 
+    // Combine periods and breaks/lunches into a single timeline array
+    const timeline = [];
+ 
+    periods.forEach((period, index) => {
+      const startEndTime = timetableSettings.periodTimings[index];
+      if (startEndTime) {
+        const [start, end] = startEndTime.split(' - ');
+ 
+        // Insert the period itself
+        timeline.push({ type: 'period', period, time: startEndTime });
+ 
+        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
+        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
+        }
+ 
+        // Insert Lunch Break if it's supposed to be between periods 4 and 5
+        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
+          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
+        }
+ 
+        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
+        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
+        }
+      }
+    });
+ 
+    // Insert reserved time if set and it falls after all periods
+    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
+      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
+    }
+ 
     return (
       <table className="timetable-table">
         <thead>
@@ -277,48 +310,17 @@ const MSchoolClassSection = () => {
           </tr>
         </thead>
         <tbody>
-          {periods.map((period, index) => {
-            const startEndTime = timetableSettings.periodTimings[index];
-            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
-              return null;
-            }
-  
-            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
-            const periodName = `Period ${period}`;
-            const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
-                                   timetableSettings.reserveTimeEnd === startEndTime.end;
-  
-            if (isReservedTime && reservedTimeInserted) {
-              return null;
-            }
-            if (isReservedTime) {
-              reservedTimeInserted = true;
-            }
-  
-            return (
-              <tr key={index}>
-                <td>
-                  {periodName} <br />
-                  {periodTime}
-                </td>
-                {days.map((day, dayIndex) => {
-                  if (isReservedTime) {
-                    return (
-                      <td
-                        key={day}
-                        colSpan={days.length}
-                        className="merged-row"
-                        style={{ textAlign: 'center' }}
-                      >
-                        Reserved Time
-                      </td>
-                    );
-                  }
-  
-                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-  
+          {timeline.map((entry, index) => (
+            <tr key={index}>
+              <td>
+                {entry.type === 'period' ? `Period ${entry.period}` : entry.label} <br />
+                {entry.time}
+              </td>
+              {days.map(day => {
+                if (entry.type === 'period') {
+                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${entry.period}`] : undefined;
                   return (
-                    <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
+                    <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, entry.period)}>
                       {periodAssignment ? (
                         <>
                           <div>{periodAssignment.teacher}</div>
@@ -329,32 +331,36 @@ const MSchoolClassSection = () => {
                       )}
                     </td>
                   );
-                })}
-              </tr>
-            );
-          })}
+                }
+                return <td key={`${day}-${index}`} className="break"></td>;
+              })}
+            </tr>
+          ))}
         </tbody>
       </table>
     );
   };
+
   
             
   
 
 
-const handleOpenModal = (day, period) => {
-  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;  // Updated from assignment to periodAssignment
-  if (periodAssignment) {
-    setSelectedTeacher(periodAssignment.teacherId);  // Using periodAssignment
-    setSelectedSubject(periodAssignment.subjectId);  // Using periodAssignment
-    setIsEditWarningOpen(true);
-  } else {
-    setSelectedPeriod({ day, period });
-    setSelectedTeacher('');
-    setSelectedSubject('');
-    setIsModalOpen(true);
-  }
-};
+  const handleOpenModal = (day, period) => {
+    const existingAssignment = assignedPeriods[`${day}-${period}`];
+    if (existingAssignment) {
+      setSelectedTeacher(existingAssignment.teacherId);
+      setSelectedSubject(existingAssignment.subjectId);
+      setIsEditWarningOpen(true);
+    } else {
+      setSelectedPeriod({ day, period });
+      setSelectedTeacher('');
+      setSelectedSubject('');
+      setIsModalOpen(true);
+    }
+  };
+
+  
 
 
 
