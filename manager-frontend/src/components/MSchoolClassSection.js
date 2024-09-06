@@ -296,49 +296,49 @@ const MSchoolClassSection = () => {
             }
   
             return (
-              <React.Fragment key={index}>
-                <tr>
-                  <td>
-                    <div>
-                      <strong>{periodName}</strong> <br />
-                      {periodTime}
-                    </div>
-                  </td>
-                  {days.map((day, dayIndex) => {
-                    const key = `${day}-${period}`;
-                    const periodAssignment = assignedPeriods ? assignedPeriods[key] : undefined; // Fetch assigned period
-  
+              <tr key={index}>
+                <td>
+                  {periodName} <br />
+                  {periodTime}
+                </td>
+                {days.map((day, dayIndex) => {
+                  if (isReservedTime) {
                     return (
                       <td
                         key={day}
-                        colSpan={isReservedTime ? days.length : 1}
-                        className={isReservedTime ? 'merged-row' : ''}
-                        style={{ display: isReservedTime && dayIndex !== 0 ? 'none' : 'table-cell' }}
-                        onClick={() => !isReservedTime && (periodAssignment ? handleOpenModal(day, period) : setIsModalOpen(true))}
+                        colSpan={days.length}
+                        className="merged-row"
+                        style={{ textAlign: 'center' }}
                       >
-                        {isReservedTime && dayIndex === 0 ? (
-                          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>Reserved Time</div>
-                        ) : (
-                          periodAssignment ? (
-                            <>
-                              <div>{periodAssignment.teacher}</div>
-                              <div>{periodAssignment.subject}</div>
-                            </>
-                          ) : (
-                            <span className="add-icon">+</span>
-                          )
-                        )}
+                        Reserved Time
                       </td>
                     );
-                  })}
-                </tr>
-              </React.Fragment>
+                  }
+  
+                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+  
+                  return (
+                    <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
+                      {periodAssignment ? (
+                        <>
+                          <div>{periodAssignment.teacher}</div>
+                          <div>{periodAssignment.subject}</div>
+                        </>
+                      ) : (
+                        <span className="add-icon">+</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
             );
           })}
         </tbody>
       </table>
     );
   };
+  
+            
   
 
 
