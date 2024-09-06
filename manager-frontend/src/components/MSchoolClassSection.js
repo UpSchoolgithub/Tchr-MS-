@@ -185,6 +185,7 @@ const MSchoolClassSection = () => {
   
       await axiosInstance.post(`/timetable/assign`, requestData);
   
+      // Update assigned periods with the new teacher and subject
       const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
       const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
   
@@ -202,13 +203,12 @@ const MSchoolClassSection = () => {
   
       setIsModalOpen(false);
       setSuccessMessage('Assignment added successfully!');
-      setShowReloadButton(true);
-  
     } catch (error) {
-      console.error('Error assigning period:', error.response || error);  // Add this line
+      console.error('Error assigning period:', error.response || error);
       setError('Failed to assign period. Please try again.');
     }
   };
+  
   
   
   
@@ -258,47 +258,14 @@ const MSchoolClassSection = () => {
   });
 
   const renderTable = () => {
-    console.log('Timetable Settings:', timetableSettings); // Log the timetable settings
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
       return <p>No timetable settings available</p>;
     }
- 
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
- 
-    // Combine periods and breaks/lunches into a single timeline array
-    const timeline = [];
- 
-    periods.forEach((period, index) => {
-      const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime) {
-        const [start, end] = startEndTime.split(' - ');
- 
-        // Insert the period itself
-        timeline.push({ type: 'period', period, time: startEndTime });
- 
-        // Insert Short Break 1 if it's supposed to be between periods 2 and 3
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
- 
-        // Insert Lunch Break if it's supposed to be between periods 4 and 5
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
- 
-        // Insert Short Break 2 if it's supposed to be between periods 6 and 7
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
-      }
-    });
- 
-    // Insert reserved time if set and it falls after all periods
-    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-    }
- 
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let reservedTimeInserted = false;
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -310,17 +277,48 @@ const MSchoolClassSection = () => {
           </tr>
         </thead>
         <tbody>
-          {timeline.map((entry, index) => (
-            <tr key={index}>
-              <td>
-                {entry.type === 'period' ? `Period ${entry.period}` : entry.label} <br />
-                {entry.time}
-              </td>
-              {days.map(day => {
-                if (entry.type === 'period') {
-                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${entry.period}`] : undefined;
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
+              return null;
+            }
+  
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+            const periodName = `Period ${period}`;
+            const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
+                                   timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            if (isReservedTime && reservedTimeInserted) {
+              return null;
+            }
+            if (isReservedTime) {
+              reservedTimeInserted = true;
+            }
+  
+            return (
+              <tr key={index}>
+                <td>
+                  {periodName} <br />
+                  {periodTime}
+                </td>
+                {days.map((day, dayIndex) => {
+                  if (isReservedTime) {
+                    return (
+                      <td
+                        key={day}
+                        colSpan={days.length}
+                        className="merged-row"
+                        style={{ textAlign: 'center' }}
+                      >
+                        Reserved Time
+                      </td>
+                    );
+                  }
+  
+                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+  
                   return (
-                    <td key={`${day}-${index}`} onClick={() => handleOpenModal(day, entry.period)}>
+                    <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
                       {periodAssignment ? (
                         <>
                           <div>{periodAssignment.teacher}</div>
@@ -331,16 +329,14 @@ const MSchoolClassSection = () => {
                       )}
                     </td>
                   );
-                }
-                return <td key={`${day}-${index}`} className="break"></td>;
-              })}
-            </tr>
-          ))}
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
   };
-
   
             
   
@@ -538,45 +534,40 @@ return (
       </div>
     )}
 
-    <Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
-      <h2>Assign Period</h2>
-      <form onSubmit={handleAssignPeriod}>
-        <div>
-          <label>Teacher:</label>
-          <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
-            <option value="">Select a teacher</option>
-            {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
-                {teacher.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Subject:</label>
-          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
-            <option value="">Select a subject</option>
-            {subjects.length > 0 ? (
-              subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.subjectName}
-                </option>
-              ))
-            ) : (
-              <option disabled>No subjects available</option>
-            )}
-          </select>
-        </div>
-        <button type="submit">Assign</button>
-        <button type="button" onClick={handleCloseModal}>Cancel</button>
-      </form>
+<Modal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
+  <h2>Assign Period</h2>
+  <form onSubmit={handleAssignPeriod}>
+    <div>
+      <label>Teacher:</label>
+      <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} required>
+        <option value="">Select a teacher</option>
+        {teachers.map((teacher) => (
+          <option key={teacher.id} value={teacher.id}>
+            {teacher.name}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label>Subject:</label>
+      <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
+        <option value="">Select a subject</option>
+        {subjects.length > 0 ? (
+          subjects.map((subject) => (
+            <option key={subject.id} value={subject.id}>
+              {subject.subjectName}
+            </option>
+          ))
+        ) : (
+          <option disabled>No subjects available</option>
+        )}
+      </select>
+    </div>
+    <button type="submit">Assign</button>
+    <button type="button" onClick={handleCloseModal}>Cancel</button>
+  </form>
+</Modal>
 
-      {showReloadButton && (
-        <button onClick={handleReload} className="reload-button">
-          Reload Page
-        </button>
-      )}
-    </Modal>
 
     <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
       <h2>Warning</h2>
