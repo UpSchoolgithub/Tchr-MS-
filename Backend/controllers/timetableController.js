@@ -4,8 +4,6 @@ const { sequelize } = require('../config/db'); // Ensure you adjust this to matc
 
 // Controller function to assign a period
 exports.assignPeriod = async (req, res) => {
-  console.log('Request Body:', req.body);
-
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
   // Validate required fields
@@ -17,17 +15,17 @@ exports.assignPeriod = async (req, res) => {
 
   try {
     // Check if classId exists in ClassInfo table
-    const classExists = await ClassInfo.findByPk(classId);
+    const classExists = await ClassInfo.findByPk(classId, { transaction });
     
     if (!classExists) {
-      // If classId doesn't exist, rollback and return an error
       await transaction.rollback();
       return res.status(400).json({ error: 'Invalid classId. Class does not exist.' });
     }
 
     // Check if a timetable entry already exists to prevent duplicates
     const existingEntry = await TimetableEntry.findOne({
-      where: { schoolId, classId, combinedSectionId, day, period }
+      where: { schoolId, classId, combinedSectionId, day, period },
+      transaction
     });
 
     if (existingEntry) {
@@ -78,11 +76,12 @@ exports.assignPeriod = async (req, res) => {
   } catch (error) {
     // Rollback the transaction in case of any errors
     await transaction.rollback();
-
     console.error('Error creating timetable entry:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
