@@ -20,7 +20,8 @@ exports.assignPeriod = async (req, res) => {
     const classExists = await ClassInfo.findByPk(classId);
     
     if (!classExists) {
-      // If classId doesn't exist, return an error
+      // If classId doesn't exist, rollback and return an error
+      await transaction.rollback();
       return res.status(400).json({ error: 'Invalid classId. Class does not exist.' });
     }
 
@@ -30,6 +31,7 @@ exports.assignPeriod = async (req, res) => {
     });
 
     if (existingEntry) {
+      await transaction.rollback();
       return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
     }
 
@@ -82,7 +84,6 @@ exports.assignPeriod = async (req, res) => {
   }
 };
 
-
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
   const { schoolId, classId, sectionName } = req.params;
@@ -90,7 +91,11 @@ exports.getAssignments = async (req, res) => {
 
   try {
     // Fetch all assignments for the given combinedSectionId
-    const assignments = await TimetableEntry.findAll({ where: { combinedSectionId } });
+    const assignments = await Assignment.findAll({
+      where: { combinedSectionId },
+      order: [['createdAt', 'DESC']], // Order by the latest entries
+      limit: 10 // Limit the result set, adjust as per your requirement
+    });
 
     if (!assignments.length) {
       return res.status(404).json({ message: 'No assignments found for this section.' });
@@ -99,7 +104,6 @@ exports.getAssignments = async (req, res) => {
     // Respond with the assignments
     res.status(200).json(assignments);
   } catch (error) {
-    // Log the error and respond with a 500 status
     console.error('Error fetching assignments:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
