@@ -188,33 +188,22 @@ const MSchoolClassSection = () => {
         endTime
       };
   
-      await axiosInstance.post(`/timetable/assign`, requestData);
+      // Log request data to check if it's populated correctly
+      console.log('Request data:', requestData);
   
-      // Update assigned periods with the new teacher and subject
-      const teacher = teachers.find(t => t.id === selectedTeacher) || { name: 'Unknown Teacher' };
-      const subject = subjects.find(s => s.id === selectedSubject) || { subjectName: 'Unknown Subject' };
+      const response = await axiosInstance.post('/timetable/assign', requestData);
+      console.log('Assignment successful:', response);
   
-      const newAssignedPeriod = {
-        teacher: teacher.name,
-        teacherId: selectedTeacher,
-        subject: subject.subjectName,
-        subjectId: selectedSubject
-      };
-  
-      setAssignedPeriods(prevAssignedPeriods => ({
-        ...prevAssignedPeriods,
-        [`${selectedPeriod.day}-${selectedPeriod.period}`]: newAssignedPeriod
-      }));
-  
-      setIsModalOpen(false);
+      // Handle successful response
       setSuccessMessage('Assignment added successfully!');
       setShowReloadButton(true);
-   
+  
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
       setError('Failed to assign period. Please try again.');
     }
   };
+  
   
 
   

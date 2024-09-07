@@ -45,6 +45,10 @@ const corsOptions = {
 // Apply CORS to all incoming requests
 app.use(cors(corsOptions));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
 
 const classInfoRoutes = require('./routes/classInfo');
@@ -90,9 +94,7 @@ app.use(helmet());
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+
 
 sequelize.sync({ alter: true }).then(async () => {
   console.log('Database & tables created!');

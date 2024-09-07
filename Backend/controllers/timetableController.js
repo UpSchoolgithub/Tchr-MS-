@@ -2,22 +2,24 @@ const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, T
 const { Op } = require('sequelize');
 
 // Controller function to assign a period
+const { sequelize } = require('../models'); // Adjust this based on your setup
+
 exports.assignPeriod = async (req, res) => {
+  console.log('Request Body:', req.body);
   const { schoolId, classId, combinedSectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
-  // Validate required fields
   if (!schoolId || !classId || !combinedSectionId || !subjectId || !teacherId || !day || !period || !startTime || !endTime) {
     return res.status(400).json({ error: 'All fields, including startTime and endTime, are required.' });
   }
 
+  const transaction = await sequelize.transaction();
+
   try {
-    // Ensure classId exists in ClassInfo table
     const classExists = await ClassInfo.findByPk(classId);
     if (!classExists) {
       return res.status(400).json({ error: 'Invalid classId. Class does not exist.' });
     }
 
-    // Check for existing timetable entry to avoid duplicates
     const existingEntry = await TimetableEntry.findOne({
       where: { schoolId, classId, combinedSectionId, day, period }
     });
@@ -26,7 +28,6 @@ exports.assignPeriod = async (req, res) => {
       return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
     }
 
-    // Create new timetable entry
     const newEntry = await TimetableEntry.create({
       schoolId,
       classId,
@@ -37,18 +38,16 @@ exports.assignPeriod = async (req, res) => {
       period,
       startTime,
       endTime
-    });
+    }, { transaction });
 
-    // Extract sectionName from combinedSectionId
     const sectionName = combinedSectionId.split('-').slice(2).join('-');
 
-    // Find or create the section based on combinedSectionId
     await Section.findOrCreate({
       where: { schoolId, classInfoId: classId, sectionName },
-      defaults: { combinedSectionId }
+      defaults: { combinedSectionId },
+      transaction
     });
 
-    // Create or update TeacherTimetable entry
     await TeacherTimetable.create({
       teacherId,
       schoolId,
@@ -58,16 +57,18 @@ exports.assignPeriod = async (req, res) => {
       period,
       startTime,
       endTime
-    });
+    }, { transaction });
 
-    // Respond with the newly created entry
+    await transaction.commit();
+
     res.status(201).json(newEntry);
   } catch (error) {
-    // Log the error and respond with a 500 status
+    await transaction.rollback();
     console.error('Error creating timetable entry:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
