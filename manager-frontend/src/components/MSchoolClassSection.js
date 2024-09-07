@@ -188,21 +188,17 @@ const MSchoolClassSection = () => {
         endTime
       };
   
-      // Log request data to check if it's populated correctly
-      console.log('Request data:', requestData);
-  
       const response = await axiosInstance.post('/timetable/assign', requestData);
-      console.log('Assignment successful:', response);
   
       // Handle successful response
       setSuccessMessage('Assignment added successfully!');
       setShowReloadButton(true);
-  
     } catch (error) {
       console.error('Error assigning period:', error.response || error);
       setError('Failed to assign period. Please try again.');
     }
   };
+  
   
   
 
