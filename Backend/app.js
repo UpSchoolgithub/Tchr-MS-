@@ -8,6 +8,43 @@ require('dotenv').config();
 const app = express(); // Add this line to define the `app` variable
 
 
+//app.use(cors({
+//  origin: 'https://sm.up.school', // Replace with the allowed origin
+ // methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
+  //credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  //allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
+//}));
+
+// Define the list of allowed origins
+const allowedOrigins = [
+  'https://sm.up.school',
+  'https://teachermanager.up.school',
+  'https://myclasses.up.school',
+  'https://manager.up.school',
+];
+
+
+// Define CORS options
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true); // Allow request if origin is in the allowed list or if there's no origin (e.g., for server-to-server requests)
+    } else {
+      callback(new Error('CORS not allowed'), false); // Block request if origin is not allowed
+    }
+  },
+  credentials: true, // Allows credentials such as cookies from the frontend
+  optionsSuccessStatus: 200, // Some legacy browsers choke on status 204
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Specify allowed methods including OPTIONS for preflight
+  allowedHeaders: 'Content-Type,Authorization', // Specify allowed headers
+  preflightContinue: false, // Do not pass to next handler for preflight requests
+  maxAge: 600, // Cache the preflight request for 10 minutes
+};
+
+
+// Apply CORS to all incoming requests
+app.use(cors(corsOptions));
+
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
 
 const classInfoRoutes = require('./routes/classInfo');
@@ -37,7 +74,7 @@ const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
 
-app.use('/api/timetable', require('./routes/timetableRoutes'));
+//app.use('/api/timetable', require('./routes/timetableRoutes'));
 
 // Teacher Routes
 const teacherAuthRoutes = require('./routes/teacherRoutes'); 
@@ -46,39 +83,7 @@ const teachersRoutes = require('./routes/teachers');
 
 
 app.use(helmet());
-//app.use(cors({
-//  origin: 'https://sm.up.school', // Replace with the allowed origin
- // methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
-  //credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-  //allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
-//}));
 
-// Define the list of allowed origins
-const allowedOrigins = [
-  'https://sm.up.school',
-  'https://teachermanager.up.school',
-  'https://myclasses.up.school',
-  'https://manager.up.school',
-];
-
-
-// Define CORS options
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true); // Allow request if origin is in the allowed list or if there's no origin (e.g., for server-to-server requests)
-    } else {
-      callback(new Error('CORS not allowed'), false); // Block request if origin is not allowed
-    }
-  },
-  credentials: true, // Allows credentials such as cookies from the frontend
-  optionsSuccessStatus: 200, // Some legacy browsers choke on status 204
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Specify allowed methods
-  allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
-};
-
-// Apply CORS to all incoming requests
-app.use(cors(corsOptions));
 
 
 // Your existing route definitions
