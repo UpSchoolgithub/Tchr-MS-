@@ -16,6 +16,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects', a
         }]
       }]
     });
+
+    if (!subjects.length) {
+      return res.status(404).json({ message: 'No subjects found for this section, class, and school.' });
+    }
+
     res.status(200).json(subjects);
   } catch (error) {
     console.error('Error fetching subjects:', error);
