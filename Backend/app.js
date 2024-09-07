@@ -21,6 +21,9 @@ const allowedOrigins = [
   'https://teachermanager.up.school',
   'https://myclasses.up.school',
   'https://manager.up.school',
+  'http://localhost:3000', // for local development
+  'http://localhost:3001', // for local development
+
 ];
 
 
@@ -48,6 +51,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+app.use(helmet());
 
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
 
@@ -86,7 +91,6 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const teachersRoutes = require('./routes/teachers');
 
 
-app.use(helmet());
 
 
 
