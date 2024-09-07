@@ -21,9 +21,6 @@ const allowedOrigins = [
   'https://teachermanager.up.school',
   'https://myclasses.up.school',
   'https://manager.up.school',
-  'http://localhost:3000', // for local development
-  'http://localhost:3001', // for local development
-
 ];
 
 
