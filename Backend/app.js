@@ -4,16 +4,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 require('dotenv').config();
 
-
-const app = express(); // Add this line to define the `app` variable
-
-
-//app.use(cors({
-//  origin: 'https://sm.up.school', // Replace with the allowed origin
- // methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
-  //credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-  //allowedHeaders: 'Content-Type,Authorization' // Specify allowed headers
-//}));
+const app = express();
 
 // Define the list of allowed origins
 const allowedOrigins = [
@@ -23,24 +14,22 @@ const allowedOrigins = [
   'https://manager.up.school',
 ];
 
-
 // Define CORS options
 const corsOptions = {
   origin: function (origin, callback) {
     if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true); // Allow request if origin is in the allowed list or if there's no origin (e.g., for server-to-server requests)
+      callback(null, true); // Allow requests from allowed origins or server-to-server requests (no origin)
     } else {
       callback(new Error('CORS not allowed'), false); // Block request if origin is not allowed
     }
   },
-  credentials: true, // Allows credentials such as cookies from the frontend
-  optionsSuccessStatus: 200, // Some legacy browsers choke on status 204
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Specify allowed methods including OPTIONS for preflight
-  allowedHeaders: 'Content-Type,Authorization', // Specify allowed headers
+  credentials: true, // Allow credentials such as cookies or authorization headers
+  optionsSuccessStatus: 200, // Some browsers choke on 204 status
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allow these methods
+  allowedHeaders: 'Content-Type,Authorization', // Allow these headers
   preflightContinue: false, // Do not pass to next handler for preflight requests
-  maxAge: 600, // Cache the preflight request for 10 minutes
+  maxAge: 600, // Cache preflight request for 10 minutes
 };
-
 
 // Apply CORS to all incoming requests
 app.use(cors(corsOptions));
@@ -48,8 +37,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-
 app.use(helmet());
+
+
 
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
 
