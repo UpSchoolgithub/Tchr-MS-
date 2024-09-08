@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useManagerAuth } from '../context/ManagerAuthContext';
 import './MLoginForm.css';
-import axiosInstance from '../services/axiosInstance';
 
 const MLoginForm = () => {
   const [email, setEmail] = useState('');
@@ -17,19 +16,19 @@ const MLoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-  
+
     try {
-      const response = await axiosInstance.post('/manager/auth/login', {
+      const response = await axios.post('https://tms.up.school/api/manager/auth/login', {
         email,
         password,
       });
-  
+
       const { token } = response.data;
       setAuthToken(token);
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-  
+
       if (error.response && error.response.status === 401) {
         setError('Invalid credentials. Please try again.');
       } else {
@@ -39,7 +38,6 @@ const MLoginForm = () => {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <div className="login-form-container">

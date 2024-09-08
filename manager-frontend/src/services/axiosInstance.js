@@ -1,76 +1,76 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useManagerAuth } from '../context/ManagerAuthContext';
-import axiosInstance from '../axiosInstance'; // Import your axios instance
-import './MLoginForm.css';
+import axios from 'axios';
 
-const MLoginForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { setAuthToken } = useManagerAuth();
-  const navigate = useNavigate();
+// Create an Axios instance
+const axiosInstance = axios.create({
+  baseURL: 'https://tms.up.school/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await axiosInstance.post('/manager/auth/login', {
-        email,
-        password,
-      });
-
-      const { token } = response.data;
-      setAuthToken(token); // Store token in context
-      localStorage.setItem('token', token); // Store token in localStorage
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Login error:', error);
-
-      if (error.response && error.response.status === 401) {
-        setError('Invalid credentials. Please try again.');
-      } else {
-        setError('An error occurred. Please try again later.');
-      }
-    } finally {
-      setIsLoading(false);
+// Add a request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
-  };
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-  return (
-    <div className="login-form-container">
-      <h2>Manager Login</h2>
-      <form onSubmit={handleLogin}>
-        <div className="form-group">
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {error && <div className="error-message">{error}</div>}
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
-    </div>
-  );
-};
+// Add a response interceptor
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
 
-export default MLoginForm;
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        
+        if (!refreshToken) {
+          console.error('No refresh token available. Please log in again.');
+          // Optional: Redirect to login or logout user
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        const response = await axios.post('https://tms.up.school/api/manager/auth/refresh-token', {
+          refreshToken,
+        });
+
+        const newToken = response.data.token;
+        
+        // Save the new token
+        localStorage.setItem('token', newToken);
+
+        // Update the Authorization header
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+
+        // Retry the original request with the new token
+        return axiosInstance(originalRequest);
+      } catch (err) {
+        console.error('Failed to refresh token:', err);
+        // Handle token refresh failure (e.g., log the user out or redirect to login)
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login'; // Or any other action
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;
