@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useManagerAuth } from '../context/ManagerAuthContext'; // Assuming you're using a context for authentication
+import { useManagerAuth } from '../context/ManagerAuthContext';
 import './MLoginForm.css';
 
 const MLoginForm = () => {
@@ -17,6 +17,7 @@ const MLoginForm = () => {
     setIsLoading(true);
     setError('');
 
+    // Begin try block
     try {
       const response = await axios.post('https://tms.up.school/api/manager/auth/login', {
         email,
@@ -42,7 +43,7 @@ const MLoginForm = () => {
         setError('An error occurred. Please try again later.');
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading is stopped regardless of success or failure
     }
   };
 
