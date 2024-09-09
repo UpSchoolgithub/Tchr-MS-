@@ -16,7 +16,6 @@ const allowedOrigins = [
 // Define CORS options
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = ['https://sm.up.school', 'https://teachermanager.up.school', 'https://myclasses.up.school'];
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
@@ -26,6 +25,7 @@ const corsOptions = {
   credentials: true, // This allows credentials like cookies or tokens to be sent
   optionsSuccessStatus: 200,
 };
+
 
 
 // Apply CORS to all incoming requests
