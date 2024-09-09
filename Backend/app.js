@@ -16,19 +16,17 @@ const allowedOrigins = [
 // Define CORS options
 const corsOptions = {
   origin: function (origin, callback) {
+    const allowedOrigins = ['https://sm.up.school', 'https://teachermanager.up.school', 'https://myclasses.up.school'];
     if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true); // Allow requests from allowed origins or server-to-server requests (no origin)
+      callback(null, true);
     } else {
-      callback(new Error('CORS not allowed'), false); // Block request if origin is not allowed
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allow credentials such as cookies or authorization headers
-  optionsSuccessStatus: 200, // Some browsers choke on 204 status
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allow these methods
-  allowedHeaders: 'Content-Type,Authorization', // Allow these headers
-  preflightContinue: false, // Do not pass to next handler for preflight requests
-  maxAge: 600, // Cache preflight request for 10 minutes
+  credentials: true, // This allows credentials like cookies or tokens to be sent
+  optionsSuccessStatus: 200,
 };
+
 
 // Apply CORS to all incoming requests
 app.use(cors(corsOptions));
