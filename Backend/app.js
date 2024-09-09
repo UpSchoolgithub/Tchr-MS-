@@ -33,13 +33,15 @@ const corsOptions = {
 // Apply CORS to all incoming requests
 app.use(cors(corsOptions));
 
+// Handle preflight OPTIONS requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(helmet());
 
-
-
+// Your database models and other logic below
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
 
 const classInfoRoutes = require('./routes/classInfo');
