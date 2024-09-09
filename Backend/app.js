@@ -11,7 +11,6 @@ const allowedOrigins = [
   'https://sm.up.school',
   'https://teachermanager.up.school',
   'https://myclasses.up.school',
-  'https://manager.up.school',
 ];
 
 // Define CORS options
