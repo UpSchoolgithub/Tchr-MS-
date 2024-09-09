@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useManagerAuth } from '../context/ManagerAuthContext';
+import { useManagerAuth } from '../context/ManagerAuthContext'; // Assuming you're using a context for authentication
 import './MLoginForm.css';
 
 const MLoginForm = () => {
@@ -23,12 +23,19 @@ const MLoginForm = () => {
         password,
       });
 
-      const { token } = response.data;
+      const { token, refreshToken } = response.data;
+      
+      // Store tokens securely
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('refreshToken', refreshToken);
+
+      // Set the token in the global auth state (or context)
       setAuthToken(token);
+      
+      // Redirect to the dashboard
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-
       if (error.response && error.response.status === 401) {
         setError('Invalid credentials. Please try again.');
       } else {
