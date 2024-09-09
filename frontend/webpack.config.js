@@ -1,5 +1,4 @@
 module.exports = {
-  // Other configurations...
   resolve: {
     fallback: {
       "zlib": require.resolve("browserify-zlib"),
@@ -8,17 +7,16 @@ module.exports = {
       "stream": require.resolve("stream-browserify"),
       "http": require.resolve("stream-http"),
       "querystring": require.resolve("querystring-es3"),
-      "fs": false  // Use false if you don't require filesystem operations in the frontend.
+      "fs": false // Assuming no filesystem operations are needed in the frontend.
     }
   },
   devServer: {
-    // Replace deprecated middleware setup with setupMiddlewares
     setupMiddlewares: (middlewares, devServer) => {
-      // Add any custom middleware logic if needed, otherwise leave as is
+      // Add custom middleware logic here if required, or leave empty for defaults.
       console.log('Setting up middlewares');
       return middlewares;
     },
-    // Additional devServer options (optional)
-    port: 3000, // Adjust the port as needed
-  }
+    port: 3000, // Adjust if necessary.
+    historyApiFallback: true, // Enables support for single-page apps, redirects 404s to index.html
+  },
 };
