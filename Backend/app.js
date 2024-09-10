@@ -22,28 +22,29 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // This allows credentials like cookies or tokens to be sent
-  optionsSuccessStatus: 200,
+  credentials: true, // Allows cookies and tokens to be sent
+  optionsSuccessStatus: 200, // For legacy browsers that do not support 204
 };
 
-
-
-// Apply CORS to all incoming requests
+// Apply CORS middleware with the custom options
 app.use(cors(corsOptions));
 
-// Handle preflight OPTIONS requests
-app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin); // Dynamically set the allowed origin
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
+// Automatically handles preflight requests, no need to define manually
+// app.options('*', cors(corsOptions)); // This can be removed as it's redundant
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(helmet());
+
+// Define your routes here
+// Example route
+app.get('/api/manager/auth/login', (req, res) => {
+  res.json({ message: 'CORS is working!' });
+});
+
+module.exports = app;
+
 
 // Your database models and other logic below
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');
