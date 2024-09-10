@@ -162,6 +162,23 @@ const SessionPlans = () => {
     }
   };
 
+
+  useEffect(() => {
+    // Fetch session details including the PDF URL when the component mounts
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/getPdf`);
+        if (response.data.pdfUrl) {
+          setPdfUrl(response.data.pdfUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+      }
+    };
+
+    fetchSessionDetails();
+  }, [sessionId]);
+
   // PDF File Upload Handlers
   const handlePdfChange = (e) => {
     setPdfFile(e.target.files[0]);
@@ -182,11 +199,31 @@ const SessionPlans = () => {
         },
       });
 
-      setPdfFile(null); // Clear the file input after upload
-      setPdfUrl(response.data.fileUrl); // Assuming backend returns the file URL
+      setPdfUrl(response.data.fileUrl); // Update the state with the new file URL
       alert('PDF uploaded successfully');
     } catch (error) {
       console.error('Error uploading PDF file:', error);
+      if (error.response && error.response.data) {
+        setError(error.response.data.message);
+      }
+    }
+  };
+
+  // Delete PDF handler
+  const handlePdfDelete = async () => {
+    if (!pdfUrl) {
+      setError('No PDF to delete.');
+      return;
+    }
+
+    try {
+      await axios.delete(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/deletePdf`, {
+        data: { fileUrl: pdfUrl }, // Send the file URL to identify which PDF to delete
+      });
+      setPdfUrl(null); // Clear the PDF URL after successful deletion
+      alert('PDF deleted successfully');
+    } catch (error) {
+      console.error('Error deleting PDF:', error);
       if (error.response && error.response.data) {
         setError(error.response.data.message);
       }
@@ -265,7 +302,7 @@ const SessionPlans = () => {
       </div>
 
       {/* Upload and View Lesson Plan */}
-    <div className="container">
+      <div className="container">
       <h2 className="header">Upload and View Lesson Plan</h2>
       {error && <div className="error">{error}</div>}
 

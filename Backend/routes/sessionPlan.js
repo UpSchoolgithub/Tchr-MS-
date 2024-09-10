@@ -194,7 +194,7 @@ router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
 });
 
 // session plan pdf
-router.post('/sessions/:sessionId/sessionPlans/uploadPdf', upload.single('file'), (req, res) => {
+router.post('/sessions/:sessionId/sessionPlans/uploadPdf', upload.single('file'), async (req, res) => {
   const { sessionId } = req.params;
   const file = req.file;
 
@@ -203,11 +203,30 @@ router.post('/sessions/:sessionId/sessionPlans/uploadPdf', upload.single('file')
   }
 
   try {
-    console.log(`PDF uploaded for session ${sessionId}:`, file);
-    res.status(201).json({ message: 'PDF uploaded successfully', file });
+    // Assuming you're saving the file path in the database with the sessionId
+    const fileUrl = `/uploads/${file.filename}`; // Modify as per your file serving setup
+    await Session.update({ pdfUrl: fileUrl }, { where: { id: sessionId } }); // Update the session with the PDF URL
+
+    res.status(201).json({ message: 'PDF uploaded successfully', fileUrl });
   } catch (error) {
     console.error('Error uploading PDF:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+router.get('/sessions/:sessionId/getPdf', async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const session = await Session.findByPk(sessionId);
+    if (session) {
+      return res.status(200).json({ pdfUrl: session.pdfUrl });
+    } else {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching session details:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
