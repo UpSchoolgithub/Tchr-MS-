@@ -5,6 +5,8 @@ import '../styles.css';
  
 const SessionPlans = () => {
   const { sessionId } = useParams();
+  const [pdfFile, setPdfFile] = useState(null); // PDF file state
+  const [pdfUrl, setPdfUrl] = useState(null);
   const [sessionPlans, setSessionPlans] = useState([]);
   const [numberOfSessions, setNumberOfSessions] = useState(0);
   const [topics, setTopics] = useState({});
@@ -160,6 +162,37 @@ const SessionPlans = () => {
     }
   };
 
+  // PDF File Upload Handlers
+  const handlePdfChange = (e) => {
+    setPdfFile(e.target.files[0]);
+  };
+
+  const handlePdfUpload = async (e) => {
+    e.preventDefault();
+    if (!pdfFile) {
+      setError('Please select a PDF file to upload.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', pdfFile);
+    try {
+      const response = await axios.post(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/uploadPdf`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setPdfFile(null); // Clear the file input after upload
+      setPdfUrl(response.data.fileUrl); // Assuming backend returns the file URL
+      alert('PDF uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading PDF file:', error);
+      if (error.response && error.response.data) {
+        setError(error.response.data.message);
+      }
+    }
+  };
+  
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
@@ -230,8 +263,34 @@ const SessionPlans = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Upload and View Lesson Plan */}
+    <div className="container">
+      <h2 className="header">Upload and View Lesson Plan</h2>
+      {error && <div className="error">{error}</div>}
+
+      {/* Upload PDF Lesson Plan */}
+      <form onSubmit={handlePdfUpload} className="form-group">
+        <label>Upload PDF Lesson Plan:</label>
+        <input type="file" accept=".pdf" onChange={handlePdfChange} />
+        <button type="submit">Upload PDF</button>
+      </form>
+
+      {/* View and Delete PDF Lesson Plan */}
+      {pdfUrl && (
+        <div>
+          <h3>View Lesson Plan</h3>
+          <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+            View Lesson Plan
+          </a>
+          <button onClick={handlePdfDelete} style={{ marginLeft: '10px' }}>Delete Lesson Plan</button>
+        </div>
+      )}
     </div>
+  </div>
+
   );
 };
+
 
 export default SessionPlans;

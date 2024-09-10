@@ -193,4 +193,42 @@ router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
   }
 });
 
+// session plan pdf
+router.post('/sessions/:sessionId/sessionPlans/uploadPdf', upload.single('file'), (req, res) => {
+  const { sessionId } = req.params;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+
+  try {
+    console.log(`PDF uploaded for session ${sessionId}:`, file);
+    res.status(201).json({ message: 'PDF uploaded successfully', file });
+  } catch (error) {
+    console.error('Error uploading PDF:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+const handlePdfDelete = async () => {
+  if (!pdfUrl) {
+    setError('No PDF to delete.');
+    return;
+  }
+
+  try {
+    await axios.delete(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/deletePdf`, {
+      data: { fileUrl: pdfUrl }, // Send the file URL to identify which PDF to delete
+    });
+    setPdfUrl(null); // Clear the PDF URL after successful deletion
+    alert('PDF deleted successfully');
+  } catch (error) {
+    console.error('Error deleting PDF:', error);
+    if (error.response && error.response.data) {
+      setError(error.response.data.message);
+    }
+  }
+};
+
 module.exports = router;
