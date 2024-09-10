@@ -5,8 +5,8 @@ const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 
-// Fetch all managers
-router.get('/', async (req, res) => {
+// Fetch all managers (protected route)
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const managers = await Manager.findAll({ include: School });
     res.json(managers);
@@ -27,8 +27,8 @@ router.get('/schools', async (req, res) => {
   }
 });
 
-// Fetch specific manager by ID
-router.get('/:id', async (req, res) => {
+// Fetch specific manager by ID (protected route)
+router.get('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
     const manager = await Manager.findByPk(id, { include: School });
@@ -43,7 +43,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new manager
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { name, email, phoneNumber, password, schoolIds } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,6 +57,9 @@ router.post('/', async (req, res) => {
     if (error.name === 'SequelizeUniqueConstraintError') {
       const errors = error.errors.map(e => e.message);
       res.status(400).json({ message: 'Validation error', errors });
+    } else if (error.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors.map(e => e.message);
+      res.status(400).json({ message: 'Validation error', errors: validationErrors });
     } else {
       console.error('Error creating manager:', error);
       res.status(500).json({ message: 'Internal server error', error: error.message });
@@ -65,7 +68,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update a manager
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { name, email, phoneNumber, password, schoolIds } = req.body;
   try {
@@ -89,13 +92,18 @@ router.put('/:id', async (req, res) => {
 
     res.json({ message: 'Manager updated successfully', manager });
   } catch (error) {
-    console.error('Error updating manager:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    if (error.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors.map(e => e.message);
+      res.status(400).json({ message: 'Validation error', errors: validationErrors });
+    } else {
+      console.error('Error updating manager:', error);
+      res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
   }
 });
 
 // Delete a manager
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
     const manager = await Manager.findByPk(id);
