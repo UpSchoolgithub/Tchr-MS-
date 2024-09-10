@@ -22,15 +22,14 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allows cookies and tokens to be sent
-  optionsSuccessStatus: 200, // For legacy browsers that do not support 204
+  credentials: true, // This allows cookies and credentials to be sent in cross-origin requests
+  optionsSuccessStatus: 200, // For legacy browsers
 };
 
-// Apply CORS middleware with the custom options
 app.use(cors(corsOptions));
 
 // Automatically handles preflight requests, no need to define manually
-// app.options('*', cors(corsOptions)); // This can be removed as it's redundant
+ app.options('*', cors(corsOptions)); // This can be removed as it's redundant
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
