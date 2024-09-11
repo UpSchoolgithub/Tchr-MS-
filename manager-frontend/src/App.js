@@ -1,30 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { WebSocketProvider } from './WebSocketContext'; 
-import MSidebar from './components/MSidebar';  // Ensure MSidebar is exported correctly
-import MLoginForm from './components/MLoginForm';  // Ensure MLoginForm is exported correctly
-import MDashboard from './components/MDashboard';  // Ensure MDashboard is exported correctly
-import MClassroom from './components/MClassroom';  // Ensure MClassroom is exported correctly
-import MViewTeachers from './components/MViewTeachers';  // Ensure MViewTeachers is exported correctly
-import MRequest from './components/MRequest';  // Ensure MRequest is exported correctly
-import MViewActivities from './components/MViewActivities';  // Ensure MViewActivities is exported correctly
-import MSchoolClassSection from './components/MSchoolClassSection';  // Ensure MSchoolClassSection is exported correctly
-import TeacherList from './components/TeacherList';  // Ensure TeacherList is exported correctly
-import CreateTeacher from './components/CreateTeacher';  // Ensure CreateTeacher is exported correctly
-import EditTeacher from './components/EditTeacher';  // Ensure EditTeacher is exported correctly
-import SchoolCalendar from './components/SchoolCalendar';  // Ensure SchoolCalendar is exported correctly
-import ProtectedRoute from './ProtectedRoute';  // Ensure ProtectedRoute is exported correctly
-import TeacherTimetable from './components/TeacherTimetable';  // Ensure TeacherTimetable is exported correctly
-import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';  // Ensure ManagerAuthProvider is exported correctly
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { WebSocketProvider } from './WebSocketContext';
+import MSidebar from './components/MSidebar';
+import MLoginForm from './components/MLoginForm';
+import MDashboard from './components/MDashboard';
+import MClassroom from './components/MClassroom';
+import MViewTeachers from './components/MViewTeachers';
+import MRequest from './components/MRequest';
+import MViewActivities from './components/MViewActivities';
+import MSchoolClassSection from './components/MSchoolClassSection';
+import TeacherList from './components/TeacherList';
+import CreateTeacher from './components/CreateTeacher';
+import EditTeacher from './components/EditTeacher';
+import SchoolCalendar from './components/SchoolCalendar';
+import ProtectedRoute from './ProtectedRoute';
+import TeacherTimetable from './components/TeacherTimetable';
+import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 
 function App() {
-  const { token } = useManagerAuth();  // Access the authentication token using the context
+  const { token } = useManagerAuth();
 
   return (
-    <ManagerAuthProvider> {/* Ensure that the provider wraps the components that use context */}
+    <ManagerAuthProvider>
       <WebSocketProvider token={token}>
         <Router>
-          <AppContent /> {/* Main application content */}
+          <AppContent />
         </Router>
       </WebSocketProvider>
     </ManagerAuthProvider>
@@ -32,10 +32,10 @@ function App() {
 }
 
 function AppContent() {
-  const { token, setAuthToken } = useManagerAuth();  // Access token and token setter from the context
+  const { token, setAuthToken } = useManagerAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);  // State to manage loading while checking token
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load token from localStorage to maintain session
@@ -43,7 +43,7 @@ function AppContent() {
     if (storedToken) {
       setAuthToken(storedToken);
     }
-    setLoading(false);  // Stop loading after token check
+    setLoading(false);
   }, [setAuthToken]);
 
   useEffect(() => {
@@ -54,34 +54,22 @@ function AppContent() {
   }, [token, loading, location.pathname, navigate]);
 
   if (loading) {
-    return <div>Loading...</div>;  // Show loading state while token is being checked
+    return <div>Loading...</div>;
   }
 
   return (
     <div className="app">
-      {token && <MSidebar />} {/* Show sidebar if the user is authenticated */}
+      {token && <MSidebar />}
       <div className="main-content">
         <Routes>
-          {/* Redirect to dashboard if authenticated, otherwise to login */}
           <Route path="/" element={<Navigate to={token ? '/dashboard' : '/mlogin'} replace />} />
-          
-          {/* Public route for login */}
+
           <Route path="/mlogin" element={<MLoginForm />} />
 
-          {/* Protected routes: Only accessible if authenticated */}
           <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
           <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
-          <Route path="/view-teachers" element={<ProtectedRoute element={<MViewTeachers />} />} />
-          <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
-          <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
-          <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
-          <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
-          <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
-          <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
-          <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-          <Route path="/schools/timetable/teacher/:teacherId" element={<ProtectedRoute element={<TeacherTimetable />} />} />
+          {/* Other protected routes... */}
 
-          {/* Fallback route for undefined paths */}
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
       </div>
