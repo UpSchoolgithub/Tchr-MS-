@@ -10,7 +10,11 @@ import Request from './components/Request';
 import ViewActivities from './components/ViewActivities';
 import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContext';
 import { WebSocketProvider } from './WebSocketContext';
-import { useLocation, useNavigate } from 'react-router-dom';
+
+function PrivateRoute({ children }) {
+  const { token } = useTeacherAuth();
+  return token ? children : <Navigate to="/login" />;
+}
 
 function InnerApp() {
   const { token } = useTeacherAuth();
@@ -21,14 +25,14 @@ function InnerApp() {
         {token && <Sidebar />}
         <div className={token ? "content-with-sidebar" : "content"}>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/session" element={<Session />} />
-            <Route path="/classroom" element={<Classroom />} />
-            <Route path="/school-calendar" element={<SchoolCalendar />} />
-            <Route path="/request" element={<Request />} />
-            <Route path="/view-activities" element={<ViewActivities />} />
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
+            <Route path="/classroom" element={<PrivateRoute><Classroom /></PrivateRoute>} />
+            <Route path="/school-calendar" element={<PrivateRoute><SchoolCalendar /></PrivateRoute>} />
+            <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
+            <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
             {/* Add other routes as needed */}
           </Routes>
         </div>
