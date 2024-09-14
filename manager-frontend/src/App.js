@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { WebSocketProvider } from './WebSocketContext';
 import MSidebar from './components/MSidebar';
 import MLoginForm from './components/MLoginForm';
@@ -13,9 +13,9 @@ import TeacherList from './components/TeacherList';
 import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
-import ProtectedRoute from './ProtectedRoute';
 import TeacherTimetable from './components/TeacherTimetable';
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   const { token } = useManagerAuth();
@@ -66,9 +66,24 @@ function AppContent() {
 
           <Route path="/mlogin" element={<MLoginForm />} />
 
-          <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
-          <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
-          {/* Other protected routes... */}
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <MDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/classroom"
+            element={
+              <ProtectedRoute>
+                <MClassroom />
+              </ProtectedRoute>
+            }
+          />
+          {/* Other protected routes can be added similarly... */}
 
           <Route path="*" element={<div>Page Not Found</div>} />
         </Routes>
