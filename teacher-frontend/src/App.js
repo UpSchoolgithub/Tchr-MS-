@@ -10,6 +10,7 @@ import Request from './components/Request';
 import ViewActivities from './components/ViewActivities';
 import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContext';
 import { WebSocketProvider } from './WebSocketContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function InnerApp() {
   const { token } = useTeacherAuth();
