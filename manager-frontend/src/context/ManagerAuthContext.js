@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Correct for named export
+const jwtDecode = require('jwt-decode');
 
 const ManagerAuthContext = createContext();
 
