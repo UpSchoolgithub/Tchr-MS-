@@ -47,5 +47,5 @@ module.exports = {
     port: 3001,  // Set the development server port
     hot: true,  // Enable hot module replacement
     historyApiFallback: true,  // Support for client-side routing with React Router
-  },
+  }
 };
