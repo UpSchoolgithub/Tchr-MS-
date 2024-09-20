@@ -13,7 +13,7 @@ import TeacherList from './components/TeacherList';
 import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
-import TeacherTimetable from './components/TeacherTimetable';
+//import TeacherTimetable from './components/TeacherTimetable';
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
