@@ -1,18 +1,12 @@
-const path = require('path-browserify');
+const path = require('path');
 
 module.exports = {
   mode: 'development',  // Set to 'production' for production builds
   entry: './src/index.js',  // Entry point of your React app
   output: {
     filename: 'bundle.js',  // Output bundle
-    path: path.resolve(__dirname, 'dist'),  // Output directory
+    path: path.resolve(__dirname, 'dist'),  // Output directory (should create 'dist' folder)
     publicPath: '/',  // Ensure correct routing for React Router
-  },
-  devServer: {
-    static: path.join(__dirname, 'dist'),  // Directory for static files
-    port: 3001,  // You can change the port if necessary
-    hot: true,  // Enable hot module replacement
-    historyApiFallback: true,  // Enable client-side routing for React Router
   },
   module: {
     rules: [
