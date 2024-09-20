@@ -13,7 +13,8 @@ import TeacherList from './components/TeacherList';
 import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
-//import TeacherTimetable from './components/TeacherTimetable';
+import TeacherTimetable from './components/TeacherTimetable'; // Un-commented the import
+
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -76,6 +77,9 @@ function AppContent() {
           <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
           <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
           <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
+          
+          {/* TeacherTimetable Route */}
+          <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
 
           {/* 404 Page */}
           <Route path="*" element={<div>Page Not Found</div>} />
