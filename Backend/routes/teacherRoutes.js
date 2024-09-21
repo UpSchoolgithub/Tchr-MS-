@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
+const axios = require('axios');
 
 // Create a new teacher
 router.post('/', authenticateManager, async (req, res) => {
@@ -153,30 +154,27 @@ router.post('/login', async (req, res) => {
   try {
     console.log(`Login attempt for email: ${email}`);
 
-    const teacher = await Teacher.findOne({ where: { email } });
+    // Replace with the actual endpoint of the manager portal
+    const response = await axios.post('http://manager-portal-url/api/validate-teacher', { email, password });
 
-    if (!teacher) {
-      console.log(`No teacher found with email: ${email}`);
+    if (!response.data.success) {
+      console.log(`Invalid credentials for email: ${email}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await bcrypt.compare(password, teacher.password);
+    const teacherId = response.data.teacherId; // Get the teacher ID from the response
 
-    if (!isMatch) {
-      console.log(`Password mismatch for email: ${email}`);
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign({ id: teacher.id, isTeacher: true }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: teacherId, isTeacher: true }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     console.log(`Login successful for email: ${email}`);
-    res.json({ token, teacherId: teacher.id });
+    res.json({ token, teacherId });
 
   } catch (error) {
     console.error('Error during login:', error.stack);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 // Fetch the timetable for a specific teacher
 router.get('/:teacherId/timetable', authenticateToken, async (req, res) => {

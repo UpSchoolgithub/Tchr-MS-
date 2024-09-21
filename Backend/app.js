@@ -89,7 +89,7 @@ app.use('/api/timetable', require('./routes/timetableRoutes'));
 const teacherAuthRoutes = require('./routes/teacherRoutes'); 
 const teacherRoutes = require('./routes/teacherRoutes');
 const teachersRoutes = require('./routes/teachers');
-
+const teacherRoutes = require('./routes/teacher');
 
 
 
