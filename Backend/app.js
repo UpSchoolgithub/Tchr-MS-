@@ -16,15 +16,18 @@ const allowedOrigins = [
 // Define CORS options
 const corsOptions = {
   origin: function (origin, callback) {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+      if (allowedOrigins.includes(origin) || !origin) {
+          callback(null, true);
+      } else {
+          callback(new Error('Not allowed by CORS'));
+      }
   },
-  credentials: true, // This allows cookies and credentials to be sent in cross-origin requests
-  optionsSuccessStatus: 200, // For legacy browsers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify the allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify the allowed headers
+  credentials: true,
+  optionsSuccessStatus: 200,
 };
+
 
 app.use(cors(corsOptions));
 
