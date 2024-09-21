@@ -3,7 +3,7 @@ import axiosInstance from '../services/axiosInstance';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './Session.css';
-import fetchSessions from '../services/sessionService'; // Or wherever the function is defined
+//import fetchSessions from '../services/sessionService'; // Or wherever the function is defined
 
 const Session = () => {
   const [sessions, setSessions] = useState([]);
