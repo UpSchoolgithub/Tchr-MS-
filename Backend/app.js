@@ -86,10 +86,10 @@ const TimetablePeriods = require('./models/TimetablePeriods');
 app.use('/api/timetable', require('./routes/timetableRoutes'));
 
 // Teacher Routes
-const teacherAuthRoutes = require('./routes/teacherRoutes'); 
+//const teacherAuthRoutes = require('./routes/teacherRoutes'); 
 const teacherRoutes = require('./routes/teacherRoutes');
-const teachersRoutes = require('./routes/teachers');
-const teacherRoutes = require('./routes/teacher');
+//const teachersRoutes = require('./routes/teachers');
+//const teacherRoutes = require('./routes/teacher');
 
 
 
