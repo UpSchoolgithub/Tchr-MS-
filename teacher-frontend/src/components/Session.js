@@ -22,7 +22,9 @@ const Session = () => {
 
   useEffect(() => {
     fetchSessions(selectedDate);
+    console.log('Sessions:', sessions); // Log the sessions
   }, [selectedDate]);
+  
 
   const handleStartSession = async (sessionId) => {
     try {
