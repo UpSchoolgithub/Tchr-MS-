@@ -1,19 +1,25 @@
 const express = require('express');
 const cors = require('cors');
-const corsMiddleware = require('./middleware/cors');
-
+const corsMiddleware = require('./middleware/cors'); // Your custom CORS middleware
 const morgan = require('morgan');
 const helmet = require('helmet');
 require('dotenv').config();
 
 const app = express();
 
+// Apply the CORS middleware globally
 app.use(corsMiddleware);
+
+// Handle preflight requests globally (important for POST/PUT/DELETE)
+app.options('*', corsMiddleware);
+
+// Other middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(helmet());
 
+// Serve static files from the public directory
 app.use(express.static('public', {
   setHeaders: (res, path) => {
     if (path.endsWith('.js')) {
@@ -22,14 +28,13 @@ app.use(express.static('public', {
   }
 }));
 
-// Define your routes here
-// Example route
+// Example route to test if CORS is working
 app.get('/api/manager/auth/login', (req, res) => {
   res.json({ message: 'CORS is working!' });
 });
 
+// Export the app
 module.exports = app;
-
 
 // Your database models and other logic below
 const { sequelize, School, TimetableSettings, Period, SchoolCalendar, ClassInfo, Member, Holiday, Session, SessionPlan, Manager } = require('./models');

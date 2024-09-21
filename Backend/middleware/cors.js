@@ -6,6 +6,8 @@ const allowedOrigins = [
     'https://sm.up.school',
     'https://teachermanager.up.school',
     'https://myclasses.up.school',
+    'http://localhost:3000'  // For development
+
   ];
   
   const corsOptions = {
