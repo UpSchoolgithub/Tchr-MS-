@@ -1,39 +1,14 @@
 const express = require('express');
 const cors = require('cors');
+const corsMiddleware = require('./middleware/cors');
+
 const morgan = require('morgan');
 const helmet = require('helmet');
 require('dotenv').config();
 
 const app = express();
 
-// Define the list of allowed origins
-const allowedOrigins = [
-  'https://sm.up.school',
-  'https://teachermanager.up.school',
-  'https://myclasses.up.school',
-];
-
-// Define CORS options
-const corsOptions = {
-  origin: function (origin, callback) {
-      if (allowedOrigins.includes(origin) || !origin) {
-          callback(null, true);
-      } else {
-          callback(new Error('Not allowed by CORS'));
-      }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify the allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Specify the allowed headers
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-
-
-app.use(cors(corsOptions));
-
-// Automatically handles preflight requests, no need to define manually
- app.options('*', cors(corsOptions)); // This can be removed as it's redundant
-
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
