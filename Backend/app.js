@@ -562,7 +562,7 @@ app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
 // Teacher Routes
 //app.use('/api/teacher', teacherAuthRoutes);
 app.use('/api/teacher', teacherRoutes);
-app.use('/api/teachers', teachersRoutes);
+//app.use('/api/teachers', teachersRoutes);
 //app.use('/api/timetable', timetableRoutes);
 
 // Fallback for undefined routes
