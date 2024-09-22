@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const corsMiddleware = require('./middleware/cors'); // Your custom CORS middleware
 const morgan = require('morgan');
 const helmet = require('helmet');
