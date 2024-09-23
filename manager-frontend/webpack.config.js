@@ -1,22 +1,59 @@
-module.exports = {
-  resolve: {
-    fallback: {
-      "zlib": require.resolve("browserify-zlib"),
-      "crypto": require.resolve("crypto-browserify"),
-      "path": require.resolve("path-browserify"),
-      "stream": require.resolve("stream-browserify"),
-      "http": require.resolve("stream-http"),
-      "querystring": require.resolve("querystring-es3"),
-      "fs": false // Assuming no filesystem operations are needed in the frontend.
-    }
-  },
-  devServer: {
-    setupMiddlewares: (middlewares, devServer) => {
-      // Add custom middleware logic here if required, or leave empty for defaults.
-      console.log('Setting up middlewares');
-      return middlewares;
+// Generated using webpack-cli https://github.com/webpack/webpack-cli
+
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
+
+const isProduction = process.env.NODE_ENV == 'production';
+
+
+const config = {
+    entry: './src/index.ts',
+    output: {
+        path: path.resolve(__dirname, 'dist'),
     },
-    port: 3000, // Adjust if necessary.
-    historyApiFallback: true, // Enables support for single-page apps, redirects 404s to index.html
-  },
+    devServer: {
+        open: true,
+        host: 'localhost',
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: 'index.html',
+        }),
+
+        // Add your plugins here
+        // Learn more about plugins from https://webpack.js.org/configuration/plugins/
+    ],
+    module: {
+        rules: [
+            {
+                test: /\.(ts|tsx)$/i,
+                loader: 'ts-loader',
+                exclude: ['/node_modules/'],
+            },
+            {
+                test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
+                type: 'asset',
+            },
+
+            // Add your rules for custom modules here
+            // Learn more about loaders from https://webpack.js.org/loaders/
+        ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.jsx', '.js', '...'],
+    },
+};
+
+module.exports = () => {
+    if (isProduction) {
+        config.mode = 'production';
+        
+        
+        config.plugins.push(new WorkboxWebpackPlugin.GenerateSW());
+        
+    } else {
+        config.mode = 'development';
+    }
+    return config;
 };
