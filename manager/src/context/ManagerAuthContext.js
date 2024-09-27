@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from './axiosInstance';  // Shared axios instance
 
 export const ManagerAuthContext = createContext();
 
@@ -14,9 +13,25 @@ export const ManagerAuthProvider = ({ children }) => {
   }, []);
 
   const managerLogin = async (credentials) => {
-    const response = await axios.post('/manager/login', credentials);
-    setManager(response.data);
-    localStorage.setItem('manager', JSON.stringify(response.data));
+    try {
+      const response = await fetch('/manager/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      setManager(data);
+      localStorage.setItem('manager', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error during manager login:', error);
+    }
   };
 
   const managerLogout = () => {

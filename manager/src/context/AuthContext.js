@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from './axiosInstance';  // Assuming you will use a shared axios instance
 
 export const AuthContext = createContext();
 
@@ -15,9 +14,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (credentials) => {
-    const response = await axios.post('/login', credentials);
-    setUser(response.data);
-    localStorage.setItem('user', JSON.stringify(response.data));
+    try {
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error during login:', error);
+    }
   };
 
   const logout = () => {
