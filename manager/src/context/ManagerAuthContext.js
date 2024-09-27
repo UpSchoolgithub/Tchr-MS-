@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-export const ManagerAuthContext = createContext();
+const ManagerAuthContext = createContext();
 
 export const ManagerAuthProvider = ({ children }) => {
   const [manager, setManager] = useState(null);
@@ -12,36 +12,21 @@ export const ManagerAuthProvider = ({ children }) => {
     }
   }, []);
 
-  const managerLogin = async (credentials) => {
-    try {
-      const response = await fetch('/manager/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const data = await response.json();
-      setManager(data);
-      localStorage.setItem('manager', JSON.stringify(data));
-    } catch (error) {
-      console.error('Error during manager login:', error);
-    }
+  const login = (managerData) => {
+    setManager(managerData);
+    localStorage.setItem('manager', JSON.stringify(managerData));
   };
 
-  const managerLogout = () => {
+  const logout = () => {
     setManager(null);
     localStorage.removeItem('manager');
   };
 
   return (
-    <ManagerAuthContext.Provider value={{ manager, managerLogin, managerLogout }}>
+    <ManagerAuthContext.Provider value={{ manager, login, logout }}>
       {children}
     </ManagerAuthContext.Provider>
   );
 };
+
+export const useManagerAuth = () => useContext(ManagerAuthContext);
