@@ -27,7 +27,7 @@ function App() {
 }
 
 function AppContent() {
-  const { token, setAuthToken } = useManagerAuth();  // Authentication token from context
+  const { token, setAuthToken } = useManagerAuth();  // Moved here
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -61,19 +61,19 @@ function AppContent() {
           <Route path="/mlogin" element={<MLoginForm />} />
 
           {/* Protected Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><MDashboard /></ProtectedRoute>} />
-          <Route path="/classroom" element={<ProtectedRoute><MClassroom /></ProtectedRoute>} />
-          <Route path="/view-teachers" element={<ProtectedRoute><MViewTeachers /></ProtectedRoute>} />
-          <Route path="/request" element={<ProtectedRoute><MRequest /></ProtectedRoute>} />
-          <Route path="/view-activities" element={<ProtectedRoute><MViewActivities /></ProtectedRoute>} />
-          <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName" element={<ProtectedRoute><MSchoolClassSection /></ProtectedRoute>} />
-          <Route path="/teachers" element={<ProtectedRoute><TeacherList /></ProtectedRoute>} />
-          <Route path="/teachers/create" element={<ProtectedRoute><CreateTeacher /></ProtectedRoute>} />
-          <Route path="/teachers/edit/:id" element={<ProtectedRoute><EditTeacher /></ProtectedRoute>} />
-          <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute><SchoolCalendar /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
+          <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
+          <Route path="/view-teachers" element={<ProtectedRoute element={<MViewTeachers />} />} />
+          <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
+          <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
+          <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
+          <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
+          <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
+          <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
+          <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
           
           {/* TeacherTimetable Route */}
-          <Route path="/teacher-timetable" element={<ProtectedRoute><TeacherTimetable /></ProtectedRoute>} />
+          <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} />
 
           {/* 404 Page */}
           <Route path="*" element={<div>Page Not Found</div>} />
