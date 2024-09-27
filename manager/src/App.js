@@ -13,13 +13,10 @@ import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
 import TeacherTimetable from './components/TeacherTimetable';
-
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
 function App() {
-  const { token } = useManagerAuth();
-
   return (
     <ManagerAuthProvider>
       <Router>
@@ -30,7 +27,7 @@ function App() {
 }
 
 function AppContent() {
-  const { token, setAuthToken } = useManagerAuth();
+  const { token, setAuthToken } = useManagerAuth();  // Moved here
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
