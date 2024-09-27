@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { WebSocketProvider } from './WebSocketContext';
 import MSidebar from './components/MSidebar';
 import MLoginForm from './components/MLoginForm';
 import MDashboard from './components/MDashboard';
@@ -12,22 +13,27 @@ import TeacherList from './components/TeacherList';
 import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
-import TeacherTimetable from './components/TeacherTimetable';
+import TeacherTimetable from './components/TeacherTimetable'; // Un-commented the import
+
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
 function App() {
+  const { token } = useManagerAuth();
+
   return (
     <ManagerAuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <WebSocketProvider token={token}>
+        <Router>
+          <AppContent />
+        </Router>
+      </WebSocketProvider>
     </ManagerAuthProvider>
   );
 }
 
 function AppContent() {
-  const { token, setAuthToken } = useManagerAuth();  // Moved here
+  const { token, setAuthToken } = useManagerAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -73,7 +79,7 @@ function AppContent() {
           <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
           
           {/* TeacherTimetable Route */}
-          <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} />
+          <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
 
           {/* 404 Page */}
           <Route path="*" element={<div>Page Not Found</div>} />
