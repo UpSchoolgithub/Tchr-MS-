@@ -1,18 +1,11 @@
 import React from 'react';
-import { Route, Navigate } from 'react-router-dom';
-import { useManagerAuth } from '../context/ManagerAuthContext';  // Adjust the path if necessary
+import { Navigate, Outlet } from 'react-router-dom';
+import { useManagerAuth } from '../context/ManagerAuthContext';  // Ensure the path is correct
 
-const ProtectedRoute = ({ element: Component, ...rest }) => {
+const ProtectedRoute = () => {
   const { manager } = useManagerAuth();
 
-  return (
-    <Route
-      {...rest}
-      render={(props) =>
-        manager ? <Component {...props} /> : <Navigate to="/login" />
-      }
-    />
-  );
+  return manager ? <Outlet /> : <Navigate to="/mlogin" />;
 };
 
 export default ProtectedRoute;
