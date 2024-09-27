@@ -1,47 +1,57 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode'; // Using named import
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [token, setToken] = useState(null);
+
+  const isTokenValid = (decodedToken) => {
+    const currentTime = Date.now() / 1000;
+    return decodedToken.exp > currentTime;
+  };
 
   useEffect(() => {
-    // Load user from localStorage or make a call to backend to verify session
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      try {
+        const decodedToken = jwtDecode(storedToken);
+        console.log('Decoded Token:', decodedToken);
+        if (decodedToken.id && isTokenValid(decodedToken)) {
+          setUserId(decodedToken.id);
+          setToken(storedToken);
+        } else {
+          console.error('Token is invalid or expired');
+          localStorage.removeItem('token');
+        }
+      } catch (error) {
+        console.error('Failed to decode token:', error);
+        localStorage.removeItem('token');
+      }
     }
   }, []);
 
-  const login = async (credentials) => {
+  const setAuthToken = (newToken) => {
     try {
-      const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
+      const decodedToken = jwtDecode(newToken);
+      console.log('Decoded Token:', decodedToken);
+      if (decodedToken.id && isTokenValid(decodedToken)) {
+        setUserId(decodedToken.id);
+        setToken(newToken);
+        localStorage.setItem('token', newToken);
+      } else {
+        console.error('Token is invalid or expired');
       }
-
-      const data = await response.json();
-      setUser(data);
-      localStorage.setItem('user', JSON.stringify(data));
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error('Failed to decode token:', error);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ userId, token, setAuthToken }}>
       {children}
     </AuthContext.Provider>
   );

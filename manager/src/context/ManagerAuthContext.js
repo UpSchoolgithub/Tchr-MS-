@@ -1,32 +1,64 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import jwtDecode from 'jwt-decode';
 
 const ManagerAuthContext = createContext();
 
+export const useManagerAuth = () => useContext(ManagerAuthContext);
+
 export const ManagerAuthProvider = ({ children }) => {
-  const [manager, setManager] = useState(null);
+  const [managerId, setManagerId] = useState(null);
+  const [token, setToken] = useState(null);
+
+  const isTokenValid = (decodedToken) => {
+    const currentTime = Date.now() / 1000;
+    return decodedToken.exp > currentTime;
+  };
 
   useEffect(() => {
-    const savedManager = localStorage.getItem('manager');
-    if (savedManager) {
-      setManager(JSON.parse(savedManager));
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      try {
+        const decodedToken = jwtDecode(storedToken);
+        console.log('Decoded Token:', decodedToken);
+        if (decodedToken.id && isTokenValid(decodedToken)) {
+          setManagerId(decodedToken.id);
+          setToken(storedToken);
+        } else {
+          console.error('Token is invalid or expired');
+          localStorage.removeItem('token');
+        }
+      } catch (error) {
+        console.error('Failed to decode token:', error);
+        localStorage.removeItem('token');
+      }
     }
   }, []);
 
-  const login = (managerData) => {
-    setManager(managerData);
-    localStorage.setItem('manager', JSON.stringify(managerData));
+  const setAuthToken = (newToken) => {
+    try {
+      const decodedToken = jwtDecode(newToken);
+      console.log('Decoded Token:', decodedToken);
+      if (decodedToken.id && isTokenValid(decodedToken)) {
+        setManagerId(decodedToken.id);
+        setToken(newToken);
+        localStorage.setItem('token', newToken);
+      } else {
+        console.error('Token is invalid or expired');
+      }
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+    }
   };
 
-  const logout = () => {
-    setManager(null);
-    localStorage.removeItem('manager');
+  const handleLogout = () => {
+    setManagerId(null);
+    setToken(null);
+    localStorage.removeItem('token');
   };
 
   return (
-    <ManagerAuthContext.Provider value={{ manager, login, logout }}>
+    <ManagerAuthContext.Provider value={{ managerId, token, setAuthToken, handleLogout }}>
       {children}
     </ManagerAuthContext.Provider>
   );
 };
-
-export const useManagerAuth = () => useContext(ManagerAuthContext);
