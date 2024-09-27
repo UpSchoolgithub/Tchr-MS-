@@ -1,0 +1,19 @@
+.dashboard-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.gif-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.full-page-gif {
+  width: 100%;
+  height: auto;
+}
+
+.welcome-message {
+  margin-top: 20px;
+  font-size: 1.5rem;
+}
