@@ -21,7 +21,9 @@ import ProtectedRoute from './ProtectedRoute';
 function App() {
   return (
     <ManagerAuthProvider>
-      <AppContent />
+      <Router> {/* Moved Router here to wrap everything */}
+        <AppContent />
+      </Router>
     </ManagerAuthProvider>
   );
 }
@@ -54,35 +56,33 @@ function AppContent() {
 
   return (
     <WebSocketProvider token={token}>
-      <Router>
-        <div className="app">
-          {token && <MSidebar />}
-          <div className="main-content">
-            <Routes>
-              <Route path="/" element={<Navigate to={token ? '/dashboard' : '/mlogin'} replace />} />
-              <Route path="/mlogin" element={<MLoginForm />} />
+      <div className="app">
+        {token && <MSidebar />}
+        <div className="main-content">
+          <Routes>
+            <Route path="/" element={<Navigate to={token ? '/dashboard' : '/mlogin'} replace />} />
+            <Route path="/mlogin" element={<MLoginForm />} />
 
-              {/* Protected Routes */}
-              <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
-              <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
-              <Route path="/view-teachers" element={<ProtectedRoute element={<MViewTeachers />} />} />
-              <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
-              <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
-              <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
-              <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
-              <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
-              <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
-              <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-              
-              {/* TeacherTimetable Route */}
-              <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute element={<MDashboard />} />} />
+            <Route path="/classroom" element={<ProtectedRoute element={<MClassroom />} />} />
+            <Route path="/view-teachers" element={<ProtectedRoute element={<MViewTeachers />} />} />
+            <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
+            <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
+            <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
+            <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
+            <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
+            <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
+            <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
+            
+            {/* TeacherTimetable Route */}
+            <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
 
-              {/* 404 Page */}
-              <Route path="*" element={<div>Page Not Found</div>} />
-            </Routes>
-          </div>
+            {/* 404 Page */}
+            <Route path="*" element={<div>Page Not Found</div>} />
+          </Routes>
         </div>
-      </Router>
+      </div>
     </WebSocketProvider>
   );
 }
