@@ -1,23 +1,42 @@
+// Import necessary modules
 const cors = require('cors');
+const express = require('express');
+const app = express();
 
+// Define your allowed origins
 const allowedOrigins = [
     'https://sm.up.school',
     'https://teachermanager.up.school',
     'https://myclasses.up.school',
-    'https://tms.up.school'  // Ensure this is included if it should be allowed
+    'https://tms.up.school'
 ];
 
+// CORS Options
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-    credentials: true
+  origin: function (origin, callback) {
+    console.log(`Origin of request ${origin}`);
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        console.log('Allowed CORS for:', origin);
+        callback(null, true);
+    } else {
+        console.log('Blocked CORS for:', origin);
+        callback(new Error('Not allowed by CORS'), false);
+    }
+},
+
+    credentials: true, // Reflect the request origin, as defined by `origin` above
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
-module.exports = cors(corsOptions);
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Optionally, you can apply CORS to a particular route:
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
+app.get('/api/some-route', cors(corsOptions), (req, res) => {
+    res.json({ message: 'This route is CORS-enabled for an allowed origin.' });
+});
+
+// Your other routes and middleware
