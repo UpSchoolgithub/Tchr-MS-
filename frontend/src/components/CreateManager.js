@@ -50,7 +50,7 @@ const CreateManager = () => {
       navigate('/managers'); // Redirect back to manager list
     } catch (error) {
       if (error.response && error.response.data && Array.isArray(error.response.data.errors)) {
-        setErrorMessage(error.response.data.errors.join(', ')); // Join errors into a string
+        setErrorMessage(error.response.data.errors.join(', '));
       } else {
         console.error('Error saving manager account:', error.message);
         setErrorMessage('An error occurred while saving the manager account.');
