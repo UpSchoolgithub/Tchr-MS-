@@ -7,7 +7,7 @@ require('dotenv').config();
 const app = express();
 
 // Apply the CORS middleware globally
-app.use(corsMiddleware);
+//app.use(corsMiddleware);
 
 // Handle preflight requests globally (important for POST/PUT/DELETE)
 app.options('*', corsMiddleware);
