@@ -1,7 +1,6 @@
 // middleware/cors.js
 const cors = require('cors');
 
-// Define allowed origins
 const allowedOrigins = [
     'https://sm.up.school',
     'https://teachermanager.up.school',
@@ -9,7 +8,6 @@ const allowedOrigins = [
     'https://tms.up.school'
 ];
 
-// CORS options
 const corsOptions = {
     origin: (origin, callback) => {
         console.log(`Origin of request: ${origin}`);
@@ -25,5 +23,4 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
-// Export the middleware as a function
 module.exports = cors(corsOptions);
