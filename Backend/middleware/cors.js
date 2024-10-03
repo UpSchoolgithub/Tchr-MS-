@@ -5,9 +5,7 @@ const cors = require('cors');
 const allowedOrigins = [
     'https://sm.up.school',
     'https://teachermanager.up.school',
-    'https://myclasses.up.school',
-    'http://localhost:3000'  // For development
-
+    'https://myclasses.up.school'
   ];
   
   // CORS configuration options
