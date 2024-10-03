@@ -21,7 +21,12 @@ const CreateManager = () => {
 
   const fetchSchools = async () => {
     try {
-      const response = await axios.get('https://tms.up.school/api/managers/schools');
+      const token = localStorage.getItem('authToken'); // Assuming the token is stored in localStorage
+      const response = await axios.get('https://tms.up.school/api/managers/schools', {
+        headers: {
+          Authorization: `Bearer ${token}`, // Send the token in the request headers
+        },
+      });
       setSchools(response.data);
     } catch (error) {
       console.error('Error fetching schools:', error.message);
@@ -32,11 +37,20 @@ const CreateManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://tms.up.school/api/managers', { name, email, phoneNumber, password, schoolIds });
+      const token = localStorage.getItem('authToken'); // Assuming the token is stored in localStorage
+      await axios.post(
+        'https://tms.up.school/api/managers', 
+        { name, email, phoneNumber, password, schoolIds },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the token in the request headers
+          },
+        }
+      );
       navigate('/managers'); // Redirect back to manager list
     } catch (error) {
-      if (error.response && error.response.data) {
-        setErrorMessage(error.response.data.errors.join(', '));
+      if (error.response && error.response.data && Array.isArray(error.response.data.errors)) {
+        setErrorMessage(error.response.data.errors.join(', ')); // Join errors into a string
       } else {
         console.error('Error saving manager account:', error.message);
         setErrorMessage('An error occurred while saving the manager account.');
@@ -77,20 +91,48 @@ const CreateManager = () => {
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Name</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+          <label htmlFor="name">Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            value={name} 
+            onChange={(e) => setName(e.target.value)} 
+            required 
+          />
         </div>
         <div>
-          <label>Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label htmlFor="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
         </div>
         <div>
-          <label>Phone Number</label>
-          <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required />
+          <label htmlFor="phoneNumber">Phone Number</label>
+          <input 
+            type="tel" 
+            id="phoneNumber" 
+            name="phoneNumber" 
+            value={phoneNumber} 
+            onChange={(e) => setPhoneNumber(e.target.value)} 
+            required 
+          />
         </div>
         <div>
-          <label>Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <label htmlFor="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+          />
         </div>
         <div>
           <label>Schools</label>
