@@ -13,30 +13,35 @@ const allowedOrigins = [
 
 // CORS Options
 const corsOptions = {
-  origin: function (origin, callback) {
-    console.log(`Origin of request ${origin}`);
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        console.log('Allowed CORS for:', origin);
-        callback(null, true);
-    } else {
-        console.log('Blocked CORS for:', origin);
-        callback(new Error('Not allowed by CORS'), false);
-    }
-},
-
+    origin: function (origin, callback) {
+        console.log(`Origin of request ${origin}`);
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            console.log('Allowed CORS for:', origin);
+            callback(null, true);
+        } else {
+            console.log('Blocked CORS for:', origin);
+            callback(new Error('Not allowed by CORS'), false);
+        }
+    },
     credentials: true, // Reflect the request origin, as defined by `origin` above
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
-// Apply CORS middleware
+// Apply CORS middleware globally
 app.use(cors(corsOptions));
 
-// Optionally, you can apply CORS to a particular route:
-app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
-app.get('/api/some-route', cors(corsOptions), (req, res) => {
+// Handle preflight requests globally (important for POST/PUT/DELETE)
+app.options('*', cors(corsOptions));
+
+// Example route to test if CORS is working
+app.get('/api/some-route', (req, res) => {
     res.json({ message: 'This route is CORS-enabled for an allowed origin.' });
 });
 
-// Your other routes and middleware
+// Start server (ensure that `PORT` is defined in your environment)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
