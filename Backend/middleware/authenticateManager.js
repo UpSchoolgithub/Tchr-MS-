@@ -12,8 +12,8 @@ const authenticateManager = (req, res, next) => {
       return res.sendStatus(403);
     }
 
-    // Check for the super manager role in the decoded token
-    if (user.role !== 'SuperManager') {
+    // Allow both 'SuperManager' and 'Admin' roles
+    if (user.role !== 'SuperManager' && user.role !== 'Admin') {
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
 
