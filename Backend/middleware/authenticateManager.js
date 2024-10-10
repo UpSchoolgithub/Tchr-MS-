@@ -1,5 +1,3 @@
-const jwt = require('jsonwebtoken');
-
 const authenticateManager = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -13,6 +11,13 @@ const authenticateManager = (req, res, next) => {
       }
       return res.sendStatus(403);
     }
+
+    // Check for the super manager role in the decoded token
+    if (user.role !== 'SuperManager') {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+
+    console.log("Decoded user with sufficient permissions:", user);
     req.user = user;
     next();
   });
