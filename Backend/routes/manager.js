@@ -42,7 +42,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Create a new manager
+// Create a new manager (only allowed for SuperManagers)
 router.post('/', authenticateToken, async (req, res) => {
   const { name, email, phoneNumber, password, schoolIds } = req.body;
   try {

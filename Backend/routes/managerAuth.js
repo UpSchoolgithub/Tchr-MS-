@@ -16,7 +16,7 @@ router.post('/login', async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    // Include the user's role in the token
+    // Include the role in the token payload
     const token = jwt.sign({ id: manager.id, role: manager.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: manager.id, role: manager.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 

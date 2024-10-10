@@ -19,37 +19,56 @@ const CreateManager = () => {
     fetchSchools();
   }, []);
 
+  // Fetch all schools available
   const fetchSchools = async () => {
     try {
-      const token = localStorage.getItem('authToken'); // Assuming the token is stored in localStorage
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setErrorMessage('You are not authorized to perform this action. Please log in.');
+        return;
+      }
+      
       const response = await axios.get('https://tms.up.school/api/managers/schools', {
         headers: {
-          Authorization: `Bearer ${token}`, // Send the token in the request headers
+          Authorization: `Bearer ${token}`,
         },
       });
+
       setSchools(response.data);
     } catch (error) {
-      console.error('Error fetching schools:', error.message);
-      setErrorMessage('Error fetching schools.');
+      if (error.response && error.response.status === 403) {
+        setErrorMessage('You do not have permission to access school data.');
+      } else {
+        console.error('Error fetching schools:', error.message);
+        setErrorMessage('Error fetching schools.');
+      }
     }
   };
 
+  // Handle form submission to create a new manager
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('authToken'); // Assuming the token is stored in localStorage
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setErrorMessage('You are not authorized to perform this action. Please log in.');
+        return;
+      }
+
       await axios.post(
-        'https://tms.up.school/api/managers', 
+        'https://tms.up.school/api/managers',
         { name, email, phoneNumber, password, schoolIds },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Send the token in the request headers
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      navigate('/managers'); // Redirect back to manager list
+      navigate('/managers'); // Redirect to the manager list upon success
     } catch (error) {
-      if (error.response && error.response.data && Array.isArray(error.response.data.errors)) {
+      if (error.response && error.response.status === 403) {
+        setErrorMessage('You do not have permission to create a manager.');
+      } else if (error.response && error.response.data && Array.isArray(error.response.data.errors)) {
         setErrorMessage(error.response.data.errors.join(', '));
       } else {
         console.error('Error saving manager account:', error.message);
@@ -58,21 +77,24 @@ const CreateManager = () => {
     }
   };
 
+  // Handle the change of selecting or deselecting schools
   const handleSchoolChange = (e) => {
     const value = parseInt(e.target.value);
     if (e.target.checked) {
       setSchoolIds([...schoolIds, value]);
     } else {
       if (window.confirm('Are you sure you want to remove this school from the manager?')) {
-        setSchoolIds(schoolIds.filter(id => id !== value));
+        setSchoolIds(schoolIds.filter((id) => id !== value));
       }
     }
   };
 
+  // Calculate the schools to be shown in the current page
   const indexOfLastSchool = currentPage * schoolsPerPage;
   const indexOfFirstSchool = indexOfLastSchool - schoolsPerPage;
   const currentSchools = schools.slice(indexOfFirstSchool, indexOfLastSchool);
 
+  // Handle pagination
   const nextPage = () => {
     if (currentPage < Math.ceil(schools.length / schoolsPerPage)) {
       setCurrentPage(currentPage + 1);
@@ -92,46 +114,46 @@ const CreateManager = () => {
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="name">Name</label>
-          <input 
-            type="text" 
-            id="name" 
-            name="name" 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            required 
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
           />
         </div>
         <div>
           <label htmlFor="email">Email</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <div>
           <label htmlFor="phoneNumber">Phone Number</label>
-          <input 
-            type="tel" 
-            id="phoneNumber" 
-            name="phoneNumber" 
-            value={phoneNumber} 
-            onChange={(e) => setPhoneNumber(e.target.value)} 
-            required 
+          <input
+            type="tel"
+            id="phoneNumber"
+            name="phoneNumber"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            required
           />
         </div>
         <div>
           <label htmlFor="password">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
         </div>
         <div>
@@ -162,8 +184,12 @@ const CreateManager = () => {
         </div>
         <div className="pagination-save-container">
           <div className="pagination-buttons">
-            <button type="button" onClick={prevPage} disabled={currentPage === 1}>&lt;</button>
-            <button type="button" onClick={nextPage} disabled={currentPage === Math.ceil(schools.length / schoolsPerPage)}>&gt;</button>
+            <button type="button" onClick={prevPage} disabled={currentPage === 1}>
+              &lt;
+            </button>
+            <button type="button" onClick={nextPage} disabled={currentPage === Math.ceil(schools.length / schoolsPerPage)}>
+              &gt;
+            </button>
           </div>
           <button type="submit" className="save-button">Save</button>
         </div>
