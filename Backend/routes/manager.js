@@ -45,14 +45,24 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Create a new manager (only allowed for SuperManagers)
 router.post('/', authenticateToken, async (req, res) => {
   const { name, email, phoneNumber, password, schoolIds } = req.body;
+
   try {
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create the manager in the database
     const newManager = await Manager.create({ name, email, phoneNumber, password: hashedPassword });
+
+    // Set schools for the manager if provided
     if (schoolIds && schoolIds.length > 0) {
       const schools = await School.findAll({ where: { id: schoolIds } });
       await newManager.setSchools(schools);
     }
-    res.status(201).json(newManager);
+
+    // Send response without the password
+    const { id, name: managerName, email: managerEmail, phoneNumber: managerPhone } = newManager;
+    res.status(201).json({ id, name: managerName, email: managerEmail, phoneNumber: managerPhone });
+
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
       const errors = error.errors.map(e => e.message);
