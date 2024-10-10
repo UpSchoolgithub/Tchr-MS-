@@ -1,8 +1,6 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const router = express.Router();
 
 // Utility function to read users from the JSON file
