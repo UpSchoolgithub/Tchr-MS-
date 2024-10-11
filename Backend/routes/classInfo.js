@@ -1,89 +1,137 @@
 const express = require('express');
 const router = express.Router();
-const { ClassInfo, Section, School } = require('../models');
+const ClassInfo = require('../models/ClassInfo');
+const Section = require('../models/Section');
+const Subject = require('../models/Subject');
 
-// Get all classes, optionally including sections
-router.get('/classes', async (req, res) => {
+// Get all class infos for a school, with sections grouped under each class
+router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
     const classInfos = await ClassInfo.findAll({
+      where: { schoolId: req.params.schoolId },
       include: [{ model: Section }]
     });
-    res.status(200).json(classInfos);
+
+    // Format data to group sections under each class
+    const formattedClasses = classInfos.map(classInfo => {
+      const sections = {};
+      classInfo.Sections.forEach(section => {
+        sections[section.sectionName] = {
+          id: section.id,
+          schoolId: section.schoolId,
+          createdAt: section.createdAt,
+          updatedAt: section.updatedAt
+        };
+      });
+      return {
+        id: classInfo.id,
+        className: classInfo.className,
+        subject: classInfo.subject,
+        schoolId: classInfo.schoolId,
+        sections
+      };
+    });
+
+    res.status(200).json(formattedClasses);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve classes' });
+    res.status(500).json({ message: 'Error fetching class infos', error });
   }
 });
 
-// Get a specific class by ID, optionally including sections
-router.get('/classes/:id', async (req, res) => {
+// Check if class and subject already exist
+router.get('/schools/:schoolId/classes/check', async (req, res) => {
+  const { className, subject } = req.query;
   try {
-    const classInfo = await ClassInfo.findByPk(req.params.id, {
+    const classInfo = await ClassInfo.findOne({
+      where: { schoolId: req.params.schoolId, className, subject },
       include: [{ model: Section }]
     });
     if (classInfo) {
-      res.status(200).json(classInfo);
+      res.status(200).json({ exists: true, classInfo });
     } else {
-      res.status(404).json({ error: 'Class not found' });
+      res.status(200).json({ exists: false });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve the class' });
+    res.status(500).json({ message: 'Error checking class and subject', error });
   }
 });
 
-// Create a new class
-router.post('/classes', async (req, res) => {
+// Add a class info with sections
+router.post('/schools/:schoolId/classes', async (req, res) => {
+  const { schoolId } = req.params;
+  const { className, subject, sections } = req.body;
+
   try {
-    const { className, subject, schoolId } = req.body;
-
-    // Validate the school ID
-    const school = await School.findByPk(schoolId);
-    if (!school) {
-      return res.status(404).json({ error: 'School not found' });
-    }
-
-    const newClass = await ClassInfo.create({
+    const newClassInfo = await ClassInfo.create({
       className,
       subject,
       schoolId,
     });
-    res.status(201).json(newClass);
+
+    // Create sections for the class
+    for (const sectionName in sections) {
+      await Section.create({
+        sectionName,
+        classInfoId: newClassInfo.id,
+        schoolId,
+      });
+    }
+
+    res.status(201).json(newClassInfo);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create class' });
+    console.error('Error adding class info:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
-// Update a class by ID
-router.put('/classes/:id', async (req, res) => {
-  try {
-    const { className, subject } = req.body;
-    const classInfo = await ClassInfo.findByPk(req.params.id);
+// Update existing class info and its sections
+router.put('/schools/:schoolId/classes/:id', async (req, res) => {
+  const { className, subject, sections } = req.body;
 
-    if (classInfo) {
-      classInfo.className = className || classInfo.className;
-      classInfo.subject = subject || classInfo.subject;
-      await classInfo.save();
-      res.status(200).json(classInfo);
-    } else {
-      res.status(404).json({ error: 'Class not found' });
+  try {
+    const classInfo = await ClassInfo.findByPk(req.params.id);
+    if (!classInfo) {
+      return res.status(404).json({ message: 'Class not found' });
     }
+
+    await classInfo.update({ className, subject });
+
+    // Update sections: delete existing ones and add new
+    await Section.destroy({ where: { classInfoId: classInfo.id } });
+
+    for (const sectionName in sections) {
+      await Section.create({
+        sectionName,
+        classInfoId: classInfo.id,
+        schoolId: req.params.schoolId,
+      });
+    }
+
+    res.status(200).json(classInfo);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update class' });
+    console.error('Error updating class info:', error);
+    res.status(500).json({ message: 'Error updating class info', error: error.message });
   }
 });
 
-// Delete a class by ID
-router.delete('/classes/:id', async (req, res) => {
+// Delete class info and its sections
+router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   try {
-    const classInfo = await ClassInfo.findByPk(req.params.id);
+    const classInfo = await ClassInfo.findByPk(req.params.id, {
+      include: [{ model: Section }]
+    });
 
-    if (classInfo) {
-      await classInfo.destroy();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ error: 'Class not found' });
+    if (!classInfo) {
+      return res.status(404).json({ message: 'Class not found' });
     }
+
+    await Section.destroy({ where: { classInfoId: classInfo.id } });
+    await classInfo.destroy();
+
+    res.status(204).end();
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete class' });
+    console.error('Error deleting class info:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 

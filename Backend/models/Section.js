@@ -16,9 +16,10 @@ Section.init({
   classInfoId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'classinfos', 
+      model: 'classinfos',
       key: 'id',
     },
+    allowNull: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   },
@@ -31,10 +32,6 @@ Section.init({
     },
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
-  },
-  combinedSectionId: {
-    type: DataTypes.STRING,
-    allowNull: true, // Set during timetable creation or any custom needs
   }
 }, {
   sequelize,
@@ -51,16 +48,6 @@ Section.associate = (models) => {
   });
   Section.belongsTo(models.School, {
     foreignKey: 'schoolId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Section.hasMany(models.Subject, {
-    foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Section.hasMany(models.Student, {
-    foreignKey: 'sectionId',
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });

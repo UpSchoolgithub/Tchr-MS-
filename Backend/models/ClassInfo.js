@@ -40,11 +40,6 @@ ClassInfo.associate = (models) => {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });
-  ClassInfo.belongsTo(models.School, {
-    foreignKey: 'schoolId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
 };
 
 module.exports = ClassInfo;
