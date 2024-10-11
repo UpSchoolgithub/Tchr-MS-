@@ -1,3 +1,4 @@
+// models/Subject.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -13,15 +14,21 @@ Subject.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  classInfoId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'classinfos',
-      key: 'id',
-    },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+  academicStartDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  academicEndDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  revisionStartDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  revisionEndDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
   },
   sectionId: {
     type: DataTypes.INTEGER,
@@ -30,18 +37,6 @@ Subject.init({
       model: 'sections',
       key: 'id',
     },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  },
-  schoolId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'schools',
-      key: 'id',
-    },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
   },
 }, {
   sequelize,
@@ -56,13 +51,8 @@ Subject.associate = (models) => {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });
-  Subject.belongsTo(models.ClassInfo, {
-    foreignKey: 'classInfoId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Subject.belongsTo(models.School, {
-    foreignKey: 'schoolId',
+  Subject.hasMany(models.Session, {
+    foreignKey: 'subjectId',
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });

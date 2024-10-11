@@ -1,3 +1,4 @@
+// models/Section.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -15,13 +16,11 @@ Section.init({
   },
   classInfoId: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
       model: 'classinfos',
       key: 'id',
     },
-    allowNull: false,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
   },
   schoolId: {
     type: DataTypes.INTEGER,
@@ -30,9 +29,7 @@ Section.init({
       model: 'schools',
       key: 'id',
     },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  }
+  },
 }, {
   sequelize,
   modelName: 'Section',
@@ -46,8 +43,8 @@ Section.associate = (models) => {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });
-  Section.belongsTo(models.School, {
-    foreignKey: 'schoolId',
+  Section.hasMany(models.Subject, {
+    foreignKey: 'sectionId',
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });

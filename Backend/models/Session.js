@@ -1,3 +1,4 @@
+// models/Session.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -9,49 +10,29 @@ Session.init({
     autoIncrement: true,
     primaryKey: true,
   },
-  classId: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: 'classinfos', // Correct table name
-      key: 'id',
-    },
+  sessionDate: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  topic: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   sectionId: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
-      model: 'sections', // Correct table name
+      model: 'sections',
       key: 'id',
     },
   },
   subjectId: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
-      model: 'subjects', // Assuming subjects is correct
+      model: 'subjects',
       key: 'id',
     },
-  },
-  chapterName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  numberOfSessions: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  priorityNumber: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  lessonPlan: {
-    type: DataTypes.STRING,
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
   },
 }, {
   sequelize,
@@ -59,5 +40,18 @@ Session.init({
   tableName: 'sessions',
   timestamps: true,
 });
+
+Session.associate = (models) => {
+  Session.belongsTo(models.Section, {
+    foreignKey: 'sectionId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+  Session.belongsTo(models.Subject, {
+    foreignKey: 'subjectId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+};
 
 module.exports = Session;

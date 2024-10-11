@@ -1,3 +1,4 @@
+// models/ClassInfo.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -13,10 +14,6 @@ ClassInfo.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  subject: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -24,9 +21,7 @@ ClassInfo.init({
       model: 'schools',
       key: 'id',
     },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  }
+  },
 }, {
   sequelize,
   modelName: 'ClassInfo',

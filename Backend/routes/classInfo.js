@@ -4,15 +4,18 @@ const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 
-// Get all class infos for a school, with sections grouped under each class
+// Get all class infos for a school, with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
     const classInfos = await ClassInfo.findAll({
       where: { schoolId: req.params.schoolId },
-      include: [{ model: Section }]
+      include: [{ 
+        model: Section,
+        include: [Subject] // Include subjects within each section
+      }]
     });
 
-    // Format data to group sections under each class
+    // Format data to group sections under each class, with nested subjects
     const formattedClasses = classInfos.map(classInfo => {
       const sections = {};
       classInfo.Sections.forEach(section => {
@@ -20,13 +23,20 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
           id: section.id,
           schoolId: section.schoolId,
           createdAt: section.createdAt,
-          updatedAt: section.updatedAt
+          updatedAt: section.updatedAt,
+          subjects: section.Subjects.map(subject => ({
+            id: subject.id,
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate,
+          }))
         };
       });
       return {
         id: classInfo.id,
         className: classInfo.className,
-        subject: classInfo.subject,
         schoolId: classInfo.schoolId,
         sections
       };
@@ -38,43 +48,36 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-// Check if class and subject already exist
-router.get('/schools/:schoolId/classes/check', async (req, res) => {
-  const { className, subject } = req.query;
-  try {
-    const classInfo = await ClassInfo.findOne({
-      where: { schoolId: req.params.schoolId, className, subject },
-      include: [{ model: Section }]
-    });
-    if (classInfo) {
-      res.status(200).json({ exists: true, classInfo });
-    } else {
-      res.status(200).json({ exists: false });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Error checking class and subject', error });
-  }
-});
-
-// Add a class info with sections
+// Add a class info with sections and subjects
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
-  const { className, subject, sections } = req.body;
+  const { className, sections } = req.body;
 
   try {
     const newClassInfo = await ClassInfo.create({
       className,
-      subject,
       schoolId,
     });
 
-    // Create sections for the class
     for (const sectionName in sections) {
-      await Section.create({
+      const newSection = await Section.create({
         sectionName,
         classInfoId: newClassInfo.id,
         schoolId,
       });
+
+      // Create subjects for the section
+      const subjects = sections[sectionName].subjects || [];
+      for (const subject of subjects) {
+        await Subject.create({
+          subjectName: subject.subjectName,
+          academicStartDate: subject.academicStartDate,
+          academicEndDate: subject.academicEndDate,
+          revisionStartDate: subject.revisionStartDate,
+          revisionEndDate: subject.revisionEndDate,
+          sectionId: newSection.id,
+        });
+      }
     }
 
     res.status(201).json(newClassInfo);
@@ -84,9 +87,9 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-// Update existing class info and its sections
+// Update existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
-  const { className, subject, sections } = req.body;
+  const { className, sections } = req.body;
 
   try {
     const classInfo = await ClassInfo.findByPk(req.params.id);
@@ -94,17 +97,29 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
       return res.status(404).json({ message: 'Class not found' });
     }
 
-    await classInfo.update({ className, subject });
+    await classInfo.update({ className });
 
-    // Update sections: delete existing ones and add new
+    // Delete existing sections and subjects, then add the new ones
     await Section.destroy({ where: { classInfoId: classInfo.id } });
 
     for (const sectionName in sections) {
-      await Section.create({
+      const newSection = await Section.create({
         sectionName,
         classInfoId: classInfo.id,
         schoolId: req.params.schoolId,
       });
+
+      const subjects = sections[sectionName].subjects || [];
+      for (const subject of subjects) {
+        await Subject.create({
+          subjectName: subject.subjectName,
+          academicStartDate: subject.academicStartDate,
+          academicEndDate: subject.academicEndDate,
+          revisionStartDate: subject.revisionStartDate,
+          revisionEndDate: subject.revisionEndDate,
+          sectionId: newSection.id,
+        });
+      }
     }
 
     res.status(200).json(classInfo);
@@ -114,18 +129,22 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
   }
 });
 
-// Delete class info and its sections
+// Delete class info, including its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   try {
     const classInfo = await ClassInfo.findByPk(req.params.id, {
-      include: [{ model: Section }]
+      include: [{ model: Section, include: [Subject] }]
     });
 
     if (!classInfo) {
       return res.status(404).json({ message: 'Class not found' });
     }
 
-    await Section.destroy({ where: { classInfoId: classInfo.id } });
+    for (const section of classInfo.Sections) {
+      await Subject.destroy({ where: { sectionId: section.id } });
+      await Section.destroy({ where: { id: section.id } });
+    }
+
     await classInfo.destroy();
 
     res.status(204).end();
