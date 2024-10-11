@@ -1,145 +1,89 @@
 const express = require('express');
 const router = express.Router();
-const ClassInfo = require('../models/ClassInfo');
-const Section = require('../models/Section');
-const Subject = require('../models/Subject');
+const { ClassInfo, Section, School } = require('../models');
 
-// Get all class infos for a school
-router.get('/schools/:schoolId/classes', async (req, res) => {
+// Get all classes, optionally including sections
+router.get('/classes', async (req, res) => {
   try {
-    const classInfos = await ClassInfo.findAll({ where: { schoolId: req.params.schoolId } });
+    const classInfos = await ClassInfo.findAll({
+      include: [{ model: Section }]
+    });
     res.status(200).json(classInfos);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching class infos', error });
+    res.status(500).json({ error: 'Failed to retrieve classes' });
   }
 });
 
-// Check if class and subject already exist
-router.get('/schools/:schoolId/classes/check', async (req, res) => {
-  const { className, section, subject } = req.query;
-  try {
-    const classInfo = await ClassInfo.findOne({
-      where: { schoolId: req.params.schoolId, className, section, subject }
-    });
-    if (classInfo) {
-      res.status(200).json({ exists: true, classInfo });
-    } else {
-      res.status(200).json({ exists: false });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Error checking class and subject', error });
-  }
-});
-
-// Add a class info
-router.post('/schools/:schoolId/classes', async (req, res) => {
-  const { schoolId } = req.params;
-  const { className, section, subject, academicStartDate, academicEndDate, revisionStartDate, revisionEndDate } = req.body;
-
-  try {
-    const newClassInfo = await ClassInfo.create({
-      className,
-      section,
-      subject,
-      academicStartDate,
-      academicEndDate,
-      revisionStartDate,
-      revisionEndDate,
-      schoolId,
-    });
-
-    // Create a section
-    const newSection = await Section.create({
-      sectionName: section,
-      classInfoId: newClassInfo.id,
-      schoolId,
-    });
-
-    // Create a subject
-    await Subject.create({
-      subjectName: subject,
-      classInfoId: newClassInfo.id,
-      sectionId: newSection.id,
-      schoolId,
-    });
-
-    res.status(201).json(newClassInfo);
-  } catch (error) {
-    console.error('Error adding class info:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-
-// Update existing class info with section and subject
-router.put('/schools/:schoolId/classes/:id', async (req, res) => {
-  try {
-    const classInfo = await ClassInfo.findByPk(req.params.id);
-    if (!classInfo) {
-      return res.status(404).json({ message: 'Class not found' });
-    }
-    await classInfo.update({
-      className: req.body.className,
-      section: req.body.section,
-      subject: req.body.subject,
-      academicStartDate: req.body.academicStartDate,
-      academicEndDate: req.body.academicEndDate,
-      revisionStartDate: req.body.revisionStartDate,
-      revisionEndDate: req.body.revisionEndDate
-    });
-
-    if (req.body.section) {
-      let section = await Section.findOne({ where: { sectionName: req.body.section, classInfoId: classInfo.id } });
-      if (!section) {
-        section = await Section.create({
-          sectionName: req.body.section,
-          classInfoId: classInfo.id,
-          schoolId: req.params.schoolId
-        });
-      }
-    }
-
-    if (req.body.subject) {
-      let section = await Section.findOne({ where: { sectionName: req.body.section, classInfoId: classInfo.id } });
-      let subject = await Subject.findOne({ where: { subjectName: req.body.subject, classInfoId: classInfo.id, sectionId: section.id } });
-      if (!subject) {
-        await Subject.create({
-          subjectName: req.body.subject,
-          classInfoId: classInfo.id,
-          sectionId: section.id,
-          schoolId: req.params.schoolId
-        });
-      }
-    }
-
-    res.status(200).json(classInfo);
-  } catch (error) {
-    console.error('Error updating class info:', error.stack);
-    res.status(500).json({ message: 'Error updating class info', error: error.message });
-  }
-});
-
-// Delete class info with cascade deletion for sections and subjects
-router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
+// Get a specific class by ID, optionally including sections
+router.get('/classes/:id', async (req, res) => {
   try {
     const classInfo = await ClassInfo.findByPk(req.params.id, {
-      include: [{ model: Section, include: [Subject] }]
+      include: [{ model: Section }]
     });
-
-    if (!classInfo) {
-      return res.status(404).json({ message: 'Class not found' });
+    if (classInfo) {
+      res.status(200).json(classInfo);
+    } else {
+      res.status(404).json({ error: 'Class not found' });
     }
-
-    // Delete related subjects and sections
-    for (const section of classInfo.Sections) {
-      await Subject.destroy({ where: { sectionId: section.id } });
-      await Section.destroy({ where: { id: section.id } });
-    }
-
-    await classInfo.destroy();
-    res.status(204).end();
   } catch (error) {
-    console.error('Error deleting class info:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ error: 'Failed to retrieve the class' });
+  }
+});
+
+// Create a new class
+router.post('/classes', async (req, res) => {
+  try {
+    const { className, subject, schoolId } = req.body;
+
+    // Validate the school ID
+    const school = await School.findByPk(schoolId);
+    if (!school) {
+      return res.status(404).json({ error: 'School not found' });
+    }
+
+    const newClass = await ClassInfo.create({
+      className,
+      subject,
+      schoolId,
+    });
+    res.status(201).json(newClass);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create class' });
+  }
+});
+
+// Update a class by ID
+router.put('/classes/:id', async (req, res) => {
+  try {
+    const { className, subject } = req.body;
+    const classInfo = await ClassInfo.findByPk(req.params.id);
+
+    if (classInfo) {
+      classInfo.className = className || classInfo.className;
+      classInfo.subject = subject || classInfo.subject;
+      await classInfo.save();
+      res.status(200).json(classInfo);
+    } else {
+      res.status(404).json({ error: 'Class not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update class' });
+  }
+});
+
+// Delete a class by ID
+router.delete('/classes/:id', async (req, res) => {
+  try {
+    const classInfo = await ClassInfo.findByPk(req.params.id);
+
+    if (classInfo) {
+      await classInfo.destroy();
+      res.status(204).send();
+    } else {
+      res.status(404).json({ error: 'Class not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete class' });
   }
 });
 

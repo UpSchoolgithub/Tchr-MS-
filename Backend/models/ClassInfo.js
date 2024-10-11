@@ -13,29 +13,9 @@ ClassInfo.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  section: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
   subject: {
     type: DataTypes.STRING,
-    allowNull: true,
-  },
-  academicStartDate: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
-  },
-  academicEndDate: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
-  },
-  revisionStartDate: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
-  },
-  revisionEndDate: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
+    allowNull: false,
   },
   schoolId: {
     type: DataTypes.INTEGER,
@@ -43,7 +23,9 @@ ClassInfo.init({
     references: {
       model: 'schools',
       key: 'id',
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   }
 }, {
   sequelize,
@@ -56,12 +38,12 @@ ClassInfo.associate = (models) => {
   ClassInfo.hasMany(models.Section, {
     foreignKey: 'classInfoId',
     onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+    onUpdate: 'CASCADE',
   });
-  ClassInfo.hasMany(models.Subject, {
-    foreignKey: 'classInfoId',
+  ClassInfo.belongsTo(models.School, {
+    foreignKey: 'schoolId',
     onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+    onUpdate: 'CASCADE',
   });
 };
 

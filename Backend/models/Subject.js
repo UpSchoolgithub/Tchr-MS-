@@ -17,41 +17,37 @@ Subject.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'classinfos', // Ensure this matches the exact table name in lowercase
+      model: 'classinfos',
       key: 'id',
     },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   sectionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'sections', // Ensure this matches the exact table name in lowercase
+      model: 'sections',
       key: 'id',
     },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'schools', // Ensure this matches the exact table name in lowercase
+      model: 'schools',
       key: 'id',
     },
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
 }, {
   sequelize,
   modelName: 'Subject',
   tableName: 'subjects',
-  timestamps: true, // Automatically manage createdAt and updatedAt fields
+  timestamps: true,
 });
 
 Subject.associate = (models) => {
