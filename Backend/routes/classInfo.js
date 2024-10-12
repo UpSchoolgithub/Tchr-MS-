@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const sequelize = require('../config/db'); // Ensure sequelize is imported for transactions
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
@@ -65,48 +64,42 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
-  const transaction = await sequelize.transaction();
 
   try {
-    const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
+    const newClassInfo = await ClassInfo.create({ className, schoolId });
     console.log(`Created ClassInfo: ${className} with ID: ${newClassInfo.id}`);
 
     for (const sectionName in sections) {
-      const newSection = await Section.create(
-        { sectionName, classInfoId: newClassInfo.id, schoolId },
-        { transaction }
-      );
+      const newSection = await Section.create({
+        sectionName,
+        classInfoId: newClassInfo.id,
+        schoolId
+      });
       console.log(`Created Section: ${sectionName} with ID: ${newSection.id}`);
 
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
         try {
           validateDateOrder(subject);
-          await Subject.create(
-            { 
-              subjectName: subject.subjectName,
-              academicStartDate: subject.academicStartDate,
-              academicEndDate: subject.academicEndDate,
-              revisionStartDate: subject.revisionStartDate,
-              revisionEndDate: subject.revisionEndDate,
-              sectionId: newSection.id 
-            },
-            { transaction }
-          );
-          console.log(`Created Subject: ${subject.subjectName} under Section ID: ${newSection.id}`);
+          const newSubject = await Subject.create({
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate,
+            sectionId: newSection.id
+          });
+          console.log(`Created Subject: ${newSubject.subjectName} under Section ID: ${newSection.id}`);
         } catch (validationError) {
           console.error('Date validation error:', validationError.message);
-          await transaction.rollback();
           return res.status(400).json({ message: validationError.message });
         }
       }
     }
 
-    await transaction.commit();
     res.status(201).json(newClassInfo);
   } catch (error) {
     console.error('Error adding class info:', error);
-    await transaction.rollback();
     res.status(500).json({ message: 'Error adding class info', error: error.message });
   }
 });
