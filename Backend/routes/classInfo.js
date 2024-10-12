@@ -6,7 +6,7 @@ const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 
-// Helper function to validate date order
+// Helper function to validate the order of academic and revision dates
 const validateDateOrder = (dates) => {
   const { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate } = dates;
   if (new Date(academicStartDate) >= new Date(academicEndDate)) {
@@ -20,7 +20,7 @@ const validateDateOrder = (dates) => {
   }
 };
 
-// Get all class infos for a school, with sections and subjects grouped under each class
+// Fetch all class infos with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
     const classInfos = await ClassInfo.findAll({
@@ -61,9 +61,7 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-// Add a class info with sections and subjects
-// Additional logs added to the POST route
-
+// Add a new class info with sections and subjects
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
@@ -72,7 +70,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   try {
     console.log(`Adding ClassInfo: ${className} for SchoolId: ${schoolId}`);
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
-    console.log(`ClassInfo added with ID: ${newClassInfo.id}`);
 
     for (const sectionName in sections) {
       console.log(`Adding Section: ${sectionName} for ClassInfoId: ${newClassInfo.id}`);
@@ -80,7 +77,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
         { sectionName, classInfoId: newClassInfo.id, schoolId },
         { transaction }
       );
-      console.log(`Section added with ID: ${newSection.id}`);
 
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
@@ -95,13 +91,13 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
               revisionStartDate: subject.revisionStartDate,
               revisionEndDate: subject.revisionEndDate,
               sectionId: newSection.id,
-              schoolId
+              schoolId 
             },
             { transaction }
           );
           console.log(`Subject ${subject.subjectName} added successfully.`);
         } catch (validationError) {
-          console.error('Validation error:', validationError.message);
+          console.error('Date validation error:', validationError.message);
           await transaction.rollback();
           return res.status(400).json({ message: validationError.message });
         }
@@ -118,8 +114,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-
-// Update existing class info with sections and subjects
+// Update an existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
   const { className, sections } = req.body;
 
@@ -130,6 +125,7 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
     }
 
     await classInfo.update({ className });
+    console.log(`Updated ClassInfo: ${className} with ID: ${classInfo.id}`);
     await Section.destroy({ where: { classInfoId: classInfo.id } });
 
     for (const sectionName in sections) {
@@ -149,7 +145,7 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
           revisionStartDate: subject.revisionStartDate,
           revisionEndDate: subject.revisionEndDate,
           sectionId: newSection.id,
-          schoolId: req.params.schoolId // Include schoolId explicitly
+          schoolId: req.params.schoolId
         });
       }
     }
@@ -161,7 +157,7 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
   }
 });
 
-// Delete class info, including its sections and subjects
+// Delete a class info, including its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   try {
     const classInfo = await ClassInfo.findByPk(req.params.id, {
