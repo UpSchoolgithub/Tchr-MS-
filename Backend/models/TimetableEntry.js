@@ -1,3 +1,4 @@
+// models/TimetableEntry.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -7,8 +8,8 @@ class TimetableEntry extends Model {
     this.belongsTo(models.Subject, { foreignKey: 'subjectId' });
     this.belongsTo(models.School, { foreignKey: 'schoolId' });
     this.belongsTo(models.ClassInfo, { foreignKey: 'classId' });
-    this.belongsTo(models.Section, { foreignKey: 'combinedSectionId', targetKey: 'combinedSectionId' });
-    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId' }); // <-- Add this association
+    this.belongsTo(models.Section, { foreignKey: 'sectionId' }); // Use sectionId instead of combinedSectionId
+    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId' });
   }
 }
 
@@ -26,9 +27,13 @@ TimetableEntry.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  combinedSectionId: {
-    type: DataTypes.STRING,
+  sectionId: {  // Replace combinedSectionId with sectionId
+    type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'sections', // References Section model
+      key: 'id',
+    },
   },
   subjectId: {
     type: DataTypes.INTEGER,
