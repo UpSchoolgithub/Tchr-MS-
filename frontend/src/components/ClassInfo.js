@@ -19,6 +19,13 @@ const ClassInfo = () => {
   const classes = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
   const sections = ['A', 'B', 'C', 'D', 'E'];
 
+  // Hardcoded subjects based on class
+  const getSubjects = (className) => {
+    return parseInt(className, 10) <= 7
+      ? ['Science', 'Math', 'Social', 'English', 'Kannada', 'Hindi']
+      : ['Chemistry', 'Biology', 'Physics', 'Mathematics', 'Social', 'English', 'Hindi', 'Kannada'];
+  };
+
   useEffect(() => {
     const fetchClassInfos = async () => {
       try {
@@ -71,27 +78,15 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate,
       };
-      await axios.post(`https://tms.up.school/api/sections/${section}/subjects`, newSubject);
-
-      setClassInfos((prev) => {
-        return prev.map(info => {
-          if (info.className === className) {
-            return {
-              ...info,
-              sections: {
-                ...info.sections,
-                [section]: {
-                  ...info.sections[section],
-                  subjects: [...(info.sections[section].subjects || []), newSubject]
-                }
-              }
-            };
-          }
-          return info;
-        });
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+        className,
+        sections: {
+          [section]: { subjects: [newSubject] }
+        }
       });
 
       resetForm();
+      fetchClassInfos(); // Fetch updated data after adding
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
@@ -110,27 +105,9 @@ const ClassInfo = () => {
 
       await axios.put(`https://tms.up.school/api/sections/${section}/subjects/${editing.id}`, updatedSubject);
 
-      setClassInfos(prev =>
-        prev.map(info =>
-          info.className === className
-            ? {
-                ...info,
-                sections: {
-                  ...info.sections,
-                  [section]: {
-                    ...info.sections[section],
-                    subjects: info.sections[section].subjects.map(sub =>
-                      sub.id === editing.id ? updatedSubject : sub
-                    )
-                  }
-                }
-              }
-            : info
-        )
-      );
-
       resetForm();
       setEditing(null);
+      fetchClassInfos(); // Fetch updated data after edit
     } catch (error) {
       console.error('Error updating subject:', error);
       setError('Failed to update subject. Please try again.');
@@ -154,20 +131,7 @@ const ClassInfo = () => {
 
     try {
       await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
-      setClassInfos(prev =>
-        prev.map(info => ({
-          ...info,
-          sections: Object.fromEntries(
-            Object.entries(info.sections).map(([secName, secData]) => [
-              secName,
-              {
-                ...secData,
-                subjects: secData.subjects.filter(sub => sub.id !== subjectId)
-              }
-            ])
-          )
-        }))
-      );
+      fetchClassInfos(); // Fetch updated data after delete
     } catch (error) {
       console.error('Error deleting subject:', error);
       setError('Failed to delete subject. Please try again.');
@@ -213,48 +177,28 @@ const ClassInfo = () => {
         </div>
         <div>
           <label>Subject:</label>
-          <input
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            required
-          />
+          <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
+            <option value="">Select Subject</option>
+            {getSubjects(className).map((subj) => (
+              <option key={subj} value={subj}>{subj}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label>Academic Start Date:</label>
-          <input
-            type="date"
-            value={academicStartDate}
-            onChange={(e) => setAcademicStartDate(e.target.value)}
-            required
-          />
+          <input type="date" value={academicStartDate} onChange={(e) => setAcademicStartDate(e.target.value)} required />
         </div>
         <div>
           <label>Academic End Date:</label>
-          <input
-            type="date"
-            value={academicEndDate}
-            onChange={(e) => setAcademicEndDate(e.target.value)}
-            required
-          />
+          <input type="date" value={academicEndDate} onChange={(e) => setAcademicEndDate(e.target.value)} required />
         </div>
         <div>
           <label>Revision Start Date:</label>
-          <input
-            type="date"
-            value={revisionStartDate}
-            onChange={(e) => setRevisionStartDate(e.target.value)}
-            required
-          />
+          <input type="date" value={revisionStartDate} onChange={(e) => setRevisionStartDate(e.target.value)} required />
         </div>
         <div>
           <label>Revision End Date:</label>
-          <input
-            type="date"
-            value={revisionEndDate}
-            onChange={(e) => setRevisionEndDate(e.target.value)}
-            required
-          />
+          <input type="date" value={revisionEndDate} onChange={(e) => setRevisionEndDate(e.target.value)} required />
         </div>
         <button type="submit">{editing ? 'Save Changes' : 'Add Subject'}</button>
       </form>
