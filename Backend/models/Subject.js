@@ -37,7 +37,7 @@ Subject.init({
       model: 'sections',
       key: 'id',
     },
-  },
+  }
 }, {
   sequelize,
   modelName: 'Subject',
@@ -48,11 +48,6 @@ Subject.init({
 Subject.associate = (models) => {
   Subject.belongsTo(models.Section, {
     foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Subject.hasMany(models.Session, {
-    foreignKey: 'subjectId',
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });
