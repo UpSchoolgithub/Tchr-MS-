@@ -1,23 +1,8 @@
-// routes/classInfo.js
 const express = require('express');
 const router = express.Router();
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
-
-// Helper function to validate date order
-const validateDateOrder = (dates) => {
-  const { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate } = dates;
-  if (new Date(academicStartDate) >= new Date(academicEndDate)) {
-    throw new Error('Academic Start Date must be before Academic End Date.');
-  }
-  if (new Date(academicEndDate) >= new Date(revisionStartDate)) {
-    throw new Error('Academic End Date must be before Revision Start Date.');
-  }
-  if (new Date(revisionStartDate) >= new Date(revisionEndDate)) {
-    throw new Error('Revision Start Date must be before Revision End Date.');
-  }
-};
 
 // Get all class infos for a school, with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
@@ -26,10 +11,11 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
       where: { schoolId: req.params.schoolId },
       include: [{ 
         model: Section,
-        include: [Subject]
+        include: [Subject] // Include subjects within each section
       }]
     });
 
+    // Format data to group sections under each class, with nested subjects
     const formattedClasses = classInfos.map(classInfo => {
       const sections = {};
       classInfo.Sections.forEach(section => {
@@ -58,7 +44,7 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 
     res.status(200).json(formattedClasses);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching class infos', error: error.message });
+    res.status(500).json({ message: 'Error fetching class infos', error });
   }
 });
 
@@ -68,13 +54,21 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const { className, sections } = req.body;
 
   try {
-    const newClassInfo = await ClassInfo.create({ className, schoolId });
+    const newClassInfo = await ClassInfo.create({
+      className,
+      schoolId,
+    });
 
     for (const sectionName in sections) {
-      const newSection = await Section.create({ sectionName, classInfoId: newClassInfo.id, schoolId });
+      const newSection = await Section.create({
+        sectionName,
+        classInfoId: newClassInfo.id,
+        schoolId,
+      });
+
+      // Create subjects for the section
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
-        validateDateOrder(subject);
         await Subject.create({
           subjectName: subject.subjectName,
           academicStartDate: subject.academicStartDate,
@@ -88,7 +82,8 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
     res.status(201).json(newClassInfo);
   } catch (error) {
-    res.status(500).json({ message: 'Error adding class info', error: error.message });
+    console.error('Error adding class info:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
@@ -103,6 +98,8 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
     }
 
     await classInfo.update({ className });
+
+    // Delete existing sections and subjects, then add the new ones
     await Section.destroy({ where: { classInfoId: classInfo.id } });
 
     for (const sectionName in sections) {
@@ -111,10 +108,9 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
         classInfoId: classInfo.id,
         schoolId: req.params.schoolId,
       });
-      
+
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
-        validateDateOrder(subject);
         await Subject.create({
           subjectName: subject.subjectName,
           academicStartDate: subject.academicStartDate,
@@ -128,6 +124,7 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
 
     res.status(200).json(classInfo);
   } catch (error) {
+    console.error('Error updating class info:', error);
     res.status(500).json({ message: 'Error updating class info', error: error.message });
   }
 });
@@ -149,9 +146,11 @@ router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
     }
 
     await classInfo.destroy();
+
     res.status(204).end();
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting class info', error: error.message });
+    console.error('Error deleting class info:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
