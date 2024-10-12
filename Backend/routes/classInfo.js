@@ -66,31 +66,48 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
+  const transaction = await sequelize.transaction();
 
   try {
-    const newClassInfo = await ClassInfo.create({ className, schoolId });
+    const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
 
     for (const sectionName in sections) {
-      const newSection = await Section.create({ sectionName, classInfoId: newClassInfo.id, schoolId });
+      const newSection = await Section.create(
+        { sectionName, classInfoId: newClassInfo.id, schoolId },
+        { transaction }
+      );
+
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
-        validateDateOrder(subject);
-        await Subject.create({
-          subjectName: subject.subjectName,
-          academicStartDate: subject.academicStartDate,
-          academicEndDate: subject.academicEndDate,
-          revisionStartDate: subject.revisionStartDate,
-          revisionEndDate: subject.revisionEndDate,
-          sectionId: newSection.id,
-        });
+        try {
+          validateDateOrder(subject);
+        } catch (validationError) {
+          await transaction.rollback();
+          return res.status(400).json({ message: validationError.message });
+        }
+        await Subject.create(
+          { 
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate,
+            sectionId: newSection.id 
+          },
+          { transaction }
+        );
       }
     }
 
+    await transaction.commit();
     res.status(201).json(newClassInfo);
   } catch (error) {
+    await transaction.rollback();
+    console.error('Error adding class info:', error);
     res.status(500).json({ message: 'Error adding class info', error: error.message });
   }
 });
+
 
 // Update existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
