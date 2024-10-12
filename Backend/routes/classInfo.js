@@ -1,6 +1,7 @@
+// routes/classInfo.js
 const express = require('express');
 const router = express.Router();
-const sequelize = require('../config/db'); // Ensure sequelize is imported for transactions
+const sequelize = require('../config/db');
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
@@ -8,7 +9,6 @@ const Subject = require('../models/Subject');
 // Helper function to validate date order
 const validateDateOrder = (dates) => {
   const { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate } = dates;
-  console.log(`Validating dates for subject: ${JSON.stringify(dates)}`);
   if (new Date(academicStartDate) >= new Date(academicEndDate)) {
     throw new Error('Academic Start Date must be before Academic End Date.');
   }
@@ -68,33 +68,30 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    console.log(`Attempting to create ClassInfo for school ID: ${schoolId}, className: ${className}`);
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
-    console.log(`Created ClassInfo with ID: ${newClassInfo.id}`);
 
     for (const sectionName in sections) {
       const newSection = await Section.create(
-        { sectionName, classInfoId: newClassInfo.id, schoolId },
+        { sectionName, classInfoId: newClassInfo.id, schoolId }, // Include schoolId here
         { transaction }
       );
-      console.log(`Created Section with ID: ${newSection.id}`);
 
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
         try {
           validateDateOrder(subject);
-          const newSubject = await Subject.create(
+          await Subject.create(
             { 
               subjectName: subject.subjectName,
               academicStartDate: subject.academicStartDate,
               academicEndDate: subject.academicEndDate,
               revisionStartDate: subject.revisionStartDate,
               revisionEndDate: subject.revisionEndDate,
-              sectionId: newSection.id 
+              sectionId: newSection.id,
+              schoolId // Explicitly include schoolId if necessary
             },
             { transaction }
           );
-          console.log(`Created Subject: ${newSubject.subjectName} under Section ID: ${newSection.id}`);
         } catch (validationError) {
           console.error('Date validation error:', validationError.message);
           await transaction.rollback();
@@ -112,6 +109,70 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-// Update and Delete functions omitted for brevity
+// Update existing class info with sections and subjects
+router.put('/schools/:schoolId/classes/:id', async (req, res) => {
+  const { className, sections } = req.body;
+
+  try {
+    const classInfo = await ClassInfo.findByPk(req.params.id);
+    if (!classInfo) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    await classInfo.update({ className });
+    await Section.destroy({ where: { classInfoId: classInfo.id } });
+
+    for (const sectionName in sections) {
+      const newSection = await Section.create({
+        sectionName,
+        classInfoId: classInfo.id,
+        schoolId: req.params.schoolId,
+      });
+
+      const subjects = sections[sectionName].subjects || [];
+      for (const subject of subjects) {
+        validateDateOrder(subject);
+        await Subject.create({
+          subjectName: subject.subjectName,
+          academicStartDate: subject.academicStartDate,
+          academicEndDate: subject.academicEndDate,
+          revisionStartDate: subject.revisionStartDate,
+          revisionEndDate: subject.revisionEndDate,
+          sectionId: newSection.id,
+          schoolId: req.params.schoolId // Include schoolId explicitly
+        });
+      }
+    }
+
+    res.status(200).json(classInfo);
+  } catch (error) {
+    console.error('Error updating class info:', error);
+    res.status(500).json({ message: 'Error updating class info', error: error.message });
+  }
+});
+
+// Delete class info, including its sections and subjects
+router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
+  try {
+    const classInfo = await ClassInfo.findByPk(req.params.id, {
+      include: [{ model: Section, include: [Subject] }]
+    });
+
+    if (!classInfo) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    for (const section of classInfo.Sections) {
+      await Subject.destroy({ where: { sectionId: section.id } });
+      await Section.destroy({ where: { id: section.id } });
+    }
+
+    await classInfo.destroy();
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting class info:', error);
+    res.status(500).json({ message: 'Error deleting class info', error: error.message });
+  }
+});
 
 module.exports = router;
