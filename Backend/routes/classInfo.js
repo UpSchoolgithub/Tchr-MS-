@@ -118,42 +118,56 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 // Update an existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
   const { className, sections } = req.body;
+  const { schoolId, id: classInfoId } = req.params;
+  const transaction = await sequelize.transaction();
 
   try {
-    const classInfo = await ClassInfo.findByPk(req.params.id);
+    const classInfo = await ClassInfo.findByPk(classInfoId, { transaction });
     if (!classInfo) {
+      await transaction.rollback();
       return res.status(404).json({ message: 'Class not found' });
     }
 
-    await classInfo.update({ className });
+    await classInfo.update({ className }, { transaction });
     console.log(`Updated ClassInfo: ${className} with ID: ${classInfo.id}`);
-    await Section.destroy({ where: { classInfoId: classInfo.id } });
 
+    // Delete all existing sections and subjects for the class
+    const existingSections = await Section.findAll({ where: { classInfoId } });
+    for (const section of existingSections) {
+      await Subject.destroy({ where: { sectionId: section.id }, transaction });
+      await Section.destroy({ where: { id: section.id }, transaction });
+    }
+
+    // Create new sections and subjects
     for (const sectionName in sections) {
-      const newSection = await Section.create({
-        sectionName,
-        classInfoId: classInfo.id,
-        schoolId: req.params.schoolId,
-      });
+      const newSection = await Section.create(
+        { sectionName, classInfoId, schoolId },
+        { transaction }
+      );
 
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
         validateDateOrder(subject);
-        await Subject.create({
-          subjectName: subject.subjectName,
-          academicStartDate: subject.academicStartDate,
-          academicEndDate: subject.academicEndDate,
-          revisionStartDate: subject.revisionStartDate,
-          revisionEndDate: subject.revisionEndDate,
-          sectionId: newSection.id,
-          schoolId: req.params.schoolId
-        });
+        await Subject.create(
+          {
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate,
+            sectionId: newSection.id, // Associate with the new section only
+            schoolId // Include schoolId explicitly
+          },
+          { transaction }
+        );
       }
     }
 
+    await transaction.commit();
     res.status(200).json(classInfo);
   } catch (error) {
     console.error('Error updating class info:', error);
+    await transaction.rollback();
     res.status(500).json({ message: 'Error updating class info', error: error.message });
   }
 });
