@@ -70,50 +70,40 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    // Check if the school exists
-    const schoolExists = await School.findByPk(schoolId);
-    if (!schoolExists) {
-      return res.status(404).json({ message: 'School not found' });
-    }
-
-    console.log(`Creating class info: ${className}`);
+    // Create Class
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
 
     for (const sectionName in sections) {
-      console.log(`Creating section: ${sectionName} for Class ID: ${newClassInfo.id}`);
-      const newSection = await Section.create(
-        { sectionName, classInfoId: newClassInfo.id, schoolId },
-        { transaction }
-      );
+      // Create Section
+      const newSection = await Section.create({
+        sectionName,
+        classInfoId: newClassInfo.id,
+        schoolId,
+      }, { transaction });
 
-      const subjects = sections[sectionName].subjects || [];
-      for (const subject of subjects) {
-        validateDateOrder(subject);
-        console.log(`Creating subject: ${subject.subjectName} in Section ID: ${newSection.id}`);
-        await Subject.create(
-          {
-            subjectName: subject.subjectName,
-            academicStartDate: subject.academicStartDate,
-            academicEndDate: subject.academicEndDate,
-            revisionStartDate: subject.revisionStartDate,
-            revisionEndDate: subject.revisionEndDate,
-            sectionId: newSection.id,
-            classInfoId: newClassInfo.id,
-            schoolId: schoolId // Ensuring schoolId is included
-          },
-          { transaction }
-        );
+      for (const subject of sections[sectionName].subjects) {
+        // Create Subject
+        await Subject.create({
+          subjectName: subject.subjectName,
+          classInfoId: newClassInfo.id,
+          sectionId: newSection.id,
+          schoolId,
+          academicStartDate: subject.academicStartDate,
+          academicEndDate: subject.academicEndDate,
+          revisionStartDate: subject.revisionStartDate,
+          revisionEndDate: subject.revisionEndDate,
+        }, { transaction });
       }
     }
 
     await transaction.commit();
-    res.status(201).json(newClassInfo);
+    res.status(201).json({ message: 'Class, sections, and subjects created successfully' });
   } catch (error) {
-    console.error('Error creating class info:', error);
     await transaction.rollback();
-    res.status(500).json({ message: 'Failed to create class info', error: error.message });
+    res.status(500).json({ message: 'Error creating class, sections, and subjects', error: error.message });
   }
 });
+
 
 
 // Fetch all class infos with sections and subjects grouped under each class
