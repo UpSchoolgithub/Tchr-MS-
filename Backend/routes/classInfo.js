@@ -69,6 +69,12 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
+    // Check if the school exists
+    const schoolExists = await School.findByPk(schoolId);
+    if (!schoolExists) {
+      return res.status(404).json({ message: 'School not found' });
+    }
+
     console.log(`Creating class info: ${className}`);
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
 
@@ -90,9 +96,9 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
             academicEndDate: subject.academicEndDate,
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
-            sectionId: newSection.id, // Only sectionId is included here
-            classInfoId: newClassInfo.id, // Add this line
-            schoolId: schoolId // Add this line
+            sectionId: newSection.id,
+            classInfoId: newClassInfo.id,
+            schoolId: schoolId // Ensuring schoolId is included
           },
           { transaction }
         );
@@ -107,6 +113,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Failed to create class info', error: error.message });
   }
 });
+
 
 // Fetch all class infos with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
