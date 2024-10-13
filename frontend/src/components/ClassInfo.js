@@ -109,19 +109,18 @@ const ClassInfo = () => {
         revisionEndDate,
       };
 
-      await axios.put(`https://tms.up.school/api/sections/${section}/subjects/${editing.id}`, updatedSubject);
+      await axios.put(`https://tms.up.school/api/sections/${editing.section}/subjects/${editing.id}`, updatedSubject);
 
       setClassInfos(prevClassInfos => {
-        const updatedInfos = prevClassInfos.map(info => {
-          if (info.className === className) {
-            const sec = info.sections[section];
+        return prevClassInfos.map(info => {
+          if (info.className === editing.className) {
+            const sec = info.sections[editing.section];
             if (sec) {
               sec.subjects = sec.subjects.map(sub => sub.id === editing.id ? { ...sub, ...updatedSubject } : sub);
             }
           }
           return info;
         });
-        return updatedInfos;
       });
 
       resetForm();
@@ -140,10 +139,10 @@ const ClassInfo = () => {
     setAcademicEndDate(sub.academicEndDate);
     setRevisionStartDate(sub.revisionStartDate);
     setRevisionEndDate(sub.revisionEndDate);
-    setEditing(sub);
+    setEditing({ ...sub, className: classInfo.className, section: sec });
   };
 
-  const handleDelete = async (subjectId) => {
+  const handleDelete = async (subjectId, section) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this subject?');
     if (!confirmDelete) return;
 
@@ -162,6 +161,16 @@ const ClassInfo = () => {
       console.error('Error deleting subject:', error);
       setError('Failed to delete subject. Please try again.');
     }
+  };
+
+  // This function updates the current editing subject's date fields as they change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditing(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSessionsClick = (classInfo, sec, sub) => {
+    navigate(`/schools/${schoolId}/classes/${classInfo.className}/sections/${sec}/subjects/${sub.subjectName}/sessions`);
   };
 
   const resetForm = () => {
@@ -247,17 +256,32 @@ const ClassInfo = () => {
                   <td>{info.className}</td>
                   <td>{sec}</td>
                   <td>{sub.subjectName}</td>
-                  <td>{new Date(sub.academicStartDate).toLocaleDateString()}</td>
-                  <td>{new Date(sub.academicEndDate).toLocaleDateString()}</td>
-                  <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
-                  <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
-                  <td>
-                    <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
-                  </td>
-                  <td>
-                    <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
-                    <button onClick={() => handleDelete(sub.id)}>Delete</button>
-                  </td>
+                  {editing && editing.id === sub.id ? (
+                    <>
+                      <td><input type="date" name="academicStartDate" value={editing.academicStartDate} onChange={handleChange} /></td>
+                      <td><input type="date" name="academicEndDate" value={editing.academicEndDate} onChange={handleChange} /></td>
+                      <td><input type="date" name="revisionStartDate" value={editing.revisionStartDate} onChange={handleChange} /></td>
+                      <td><input type="date" name="revisionEndDate" value={editing.revisionEndDate} onChange={handleChange} /></td>
+                      <td>
+                        <button onClick={handleEditSave}>Save</button>
+                        <button onClick={() => setEditing(null)}>Cancel</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{new Date(sub.academicStartDate).toLocaleDateString()}</td>
+                      <td>{new Date(sub.academicEndDate).toLocaleDateString()}</td>
+                      <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
+                      <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
+                      <td>
+                        <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
+                      </td>
+                      <td>
+                        <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
+                        <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             ))
