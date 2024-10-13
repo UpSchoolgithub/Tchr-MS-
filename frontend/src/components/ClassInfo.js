@@ -278,3 +278,5 @@ const ClassInfo = () => {
     </div>
   );
 };
+
+export default ClassInfo;
