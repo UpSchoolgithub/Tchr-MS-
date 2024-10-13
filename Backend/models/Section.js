@@ -1,3 +1,4 @@
+// Section Model
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -23,6 +24,11 @@ Section.init({
       model: 'schools',
       key: 'id',
     },
+  },
+  // Add subjectsData to hold JSON array of subjects
+  subjectsData: {
+    type: DataTypes.JSON,
+    allowNull: true,
   },
 }, {
   sequelize,

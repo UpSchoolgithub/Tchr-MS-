@@ -1,3 +1,4 @@
+// models/ClassInfo.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -21,6 +22,10 @@ ClassInfo.init({
       key: 'id',
     },
   },
+  sections: {
+    type: DataTypes.JSON, // JSON column to store sections and their subjects
+    allowNull: true,
+  },
 }, {
   sequelize,
   modelName: 'ClassInfo',
@@ -28,7 +33,7 @@ ClassInfo.init({
   timestamps: true,
 });
 
-// Define associations in the associate method
+// Update associations
 ClassInfo.associate = (models) => {
   // Associate ClassInfo with School
   ClassInfo.belongsTo(models.School, {
@@ -37,12 +42,7 @@ ClassInfo.associate = (models) => {
     onUpdate: 'CASCADE',
   });
 
-  // Associate ClassInfo with Section
-  ClassInfo.hasMany(models.Section, {
-    foreignKey: 'classInfoId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
+  // No direct association with Section as it's stored as JSON
 };
 
 module.exports = ClassInfo;

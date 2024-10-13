@@ -62,19 +62,15 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 });
 
 // Add a new class info with sections and subjects
-// routes/classInfo.js
-
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
   const transaction = await sequelize.transaction();
 
   try {
-    // Create Class
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
 
     for (const sectionName in sections) {
-      // Create Section
       const newSection = await Section.create({
         sectionName,
         classInfoId: newClassInfo.id,
@@ -82,7 +78,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
       }, { transaction });
 
       for (const subject of sections[sectionName].subjects) {
-        // Create Subject
+        validateDateOrder(subject);
         await Subject.create({
           subjectName: subject.subjectName,
           classInfoId: newClassInfo.id,
@@ -100,55 +96,10 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(201).json({ message: 'Class, sections, and subjects created successfully' });
   } catch (error) {
     await transaction.rollback();
+    console.error('Error creating class, sections, and subjects:', error);
     res.status(500).json({ message: 'Error creating class, sections, and subjects', error: error.message });
   }
 });
-
-
-
-// Fetch all class infos with sections and subjects grouped under each class
-router.get('/schools/:schoolId/classes', async (req, res) => {
-  try {
-    const classInfos = await ClassInfo.findAll({
-      where: { schoolId: req.params.schoolId },
-      include: [{ model: Section, include: [Subject] }]
-    });
-
-    const formattedClasses = classInfos.map(classInfo => {
-      const sections = {};
-      classInfo.Sections.forEach(section => {
-        sections[section.sectionName] = {
-          id: section.id,
-          schoolId: section.schoolId,
-          createdAt: section.createdAt,
-          updatedAt: section.updatedAt,
-          subjects: section.Subjects.map(subject => ({
-            id: subject.id,
-            subjectName: subject.subjectName,
-            academicStartDate: subject.academicStartDate,
-            academicEndDate: subject.academicEndDate,
-            revisionStartDate: subject.revisionStartDate,
-            revisionEndDate: subject.revisionEndDate,
-          }))
-        };
-      });
-      return {
-        id: classInfo.id,
-        className: classInfo.className,
-        schoolId: classInfo.schoolId,
-        createdAt: classInfo.createdAt,
-        updatedAt: classInfo.updatedAt,
-        sections
-      };
-    });
-
-    res.status(200).json({ classes: formattedClasses });
-  } catch (error) {
-    console.error('Error fetching class information:', error);
-    res.status(500).json({ message: 'Failed to fetch class information', error: error.message });
-  }
-});
-
 
 // Delete a class info, including its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
@@ -161,10 +112,10 @@ router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
       return res.status(404).json({ message: 'Class not found' });
     }
 
-    for (const section of classInfo.Sections) {
+    await Promise.all(classInfo.Sections.map(async (section) => {
       await Subject.destroy({ where: { sectionId: section.id } });
       await Section.destroy({ where: { id: section.id } });
-    }
+    }));
 
     await classInfo.destroy();
     res.status(204).end();
