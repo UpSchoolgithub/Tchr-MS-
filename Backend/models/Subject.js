@@ -1,8 +1,6 @@
+// Subject.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Section = require('./Section');
-const ClassInfo = require('./ClassInfo');
-const School = require('./School'); // Import related models
 
 class Subject extends Model {}
 
@@ -30,26 +28,14 @@ Subject.init({
   sectionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: Section,
-      key: 'id',
-    },
   },
   classInfoId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: ClassInfo,
-      key: 'id',
-    },
   },
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: School,
-      key: 'id',
-    },
   },
 }, {
   sequelize,
@@ -58,21 +44,10 @@ Subject.init({
   timestamps: true,
 });
 
-// Define associations within the model file
-Subject.belongsTo(Section, {
-  foreignKey: 'sectionId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
-});
-Subject.belongsTo(ClassInfo, {
-  foreignKey: 'classInfoId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
-});
-Subject.belongsTo(School, {
-  foreignKey: 'schoolId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
-});
+Subject.associate = (models) => {
+  Subject.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  Subject.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  Subject.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+};
 
 module.exports = Subject;
