@@ -1,6 +1,7 @@
-// models/ClassInfo.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const Section = require('./Section'); // Import related models
+const School = require('./School');
 
 class ClassInfo extends Model {}
 
@@ -18,13 +19,9 @@ ClassInfo.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'schools',
+      model: School,
       key: 'id',
     },
-  },
-  sections: {
-    type: DataTypes.JSON, // JSON column to store sections and their subjects
-    allowNull: true,
   },
 }, {
   sequelize,
@@ -33,16 +30,16 @@ ClassInfo.init({
   timestamps: true,
 });
 
-// Update associations
-ClassInfo.associate = (models) => {
-  // Associate ClassInfo with School
-  ClassInfo.belongsTo(models.School, {
-    foreignKey: 'schoolId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-
-  // No direct association with Section as it's stored as JSON
-};
+// Define associations within the model file
+ClassInfo.belongsTo(School, {
+  foreignKey: 'schoolId',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+});
+ClassInfo.hasMany(Section, {
+  foreignKey: 'classInfoId',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+});
 
 module.exports = ClassInfo;
