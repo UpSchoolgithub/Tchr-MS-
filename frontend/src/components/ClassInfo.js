@@ -1,7 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-
 const ClassInfo = () => {
   const { schoolId } = useOutletContext();
   const navigate = useNavigate();
@@ -162,6 +158,12 @@ const ClassInfo = () => {
     }
   };
 
+  // This function updates the current editing subject's date fields as they change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditing(prev => ({ ...prev, [name]: value }));
+  };
+
   const resetForm = () => {
     setClassName('');
     setSection('');
@@ -173,11 +175,9 @@ const ClassInfo = () => {
     setEditing(null);
   };
 
-
   return (
     <div>
       {error && <div className="error">{error}</div>}
-      
       <form onSubmit={handleSubmit}>
         <div>
           <label>Class:</label>
@@ -224,7 +224,7 @@ const ClassInfo = () => {
         </div>
         <button type="submit">{editing ? 'Save Changes' : 'Add Subject'}</button>
       </form>
-  
+
       <table>
         <thead>
           <tr>
@@ -253,7 +253,7 @@ const ClassInfo = () => {
                       <td><input type="date" name="revisionStartDate" value={editing.revisionStartDate} onChange={handleChange} /></td>
                       <td><input type="date" name="revisionEndDate" value={editing.revisionEndDate} onChange={handleChange} /></td>
                       <td>
-                        <button onClick={handleSaveClick}>Save</button>
+                        <button onClick={handleEditSave}>Save</button>
                         <button onClick={() => setEditing(null)}>Cancel</button>
                       </td>
                     </>
@@ -265,7 +265,7 @@ const ClassInfo = () => {
                       <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
                       <td>
                         <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
-                        <button onClick={() => handleDelete(sub.id)}>Delete</button>
+                        <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
                       </td>
                     </>
                   )}
@@ -278,5 +278,3 @@ const ClassInfo = () => {
     </div>
   );
 };
-
-export default ClassInfo;
