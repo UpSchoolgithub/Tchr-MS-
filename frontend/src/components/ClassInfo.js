@@ -188,6 +188,7 @@ const ClassInfo = () => {
     <div>
       {error && <div className="error">{error}</div>}
       <form onSubmit={handleSubmit}>
+        {/* Form for adding/editing subjects */}
         <div>
           <label>Class:</label>
           <select value={className} onChange={(e) => setClassName(e.target.value)} required>
@@ -233,7 +234,7 @@ const ClassInfo = () => {
         </div>
         <button type="submit">{editing ? 'Save Changes' : 'Add Subject'}</button>
       </form>
-
+  
       <table>
         <thead>
           <tr>
@@ -263,6 +264,9 @@ const ClassInfo = () => {
                       <td><input type="date" name="revisionStartDate" value={editing.revisionStartDate} onChange={handleChange} /></td>
                       <td><input type="date" name="revisionEndDate" value={editing.revisionEndDate} onChange={handleChange} /></td>
                       <td>
+                        <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
+                      </td>
+                      <td>
                         <button onClick={handleEditSave}>Save</button>
                         <button onClick={() => setEditing(null)}>Cancel</button>
                       </td>
@@ -290,6 +294,7 @@ const ClassInfo = () => {
       </table>
     </div>
   );
+  
 };
 
 export default ClassInfo;
