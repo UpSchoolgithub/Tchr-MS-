@@ -37,6 +37,14 @@ Subject.init({
       model: 'sections',
       key: 'id',
     },
+  },
+  classInfoId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'classinfos',
+      key: 'id',
+    },
   }
 }, {
   sequelize,
@@ -48,6 +56,11 @@ Subject.init({
 Subject.associate = (models) => {
   Subject.belongsTo(models.Section, {
     foreignKey: 'sectionId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+  Subject.belongsTo(models.ClassInfo, {
+    foreignKey: 'classInfoId',
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });
