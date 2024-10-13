@@ -91,6 +91,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
             sectionId: newSection.id, // Only sectionId is included here
+            classInfoId: newClassInfo.id // Add this line
           },
           { transaction }
         );
@@ -105,8 +106,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Failed to create class info', error: error.message });
   }
 });
-
-
 
 // Fetch all class infos with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
