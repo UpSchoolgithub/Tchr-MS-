@@ -1,12 +1,9 @@
 const express = require('express');
-const { Sequelize } = require('sequelize');
 const multer = require('multer');
 const path = require('path');
 const XLSX = require('xlsx');
 const Session = require('../models/Session');
-const SessionPlan = require('../models/SessionPlan');
 const Section = require('../models/Section');
-const Subject = require('../models/Subject');
 
 const router = express.Router();
 
@@ -21,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Fetch all sessions for a class and section by sectionId
+// Fetch all sessions by sectionId
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
   const { schoolId, classId, sectionId } = req.params;
   try {
@@ -34,22 +31,21 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', a
     });
 
     if (!section) {
-      console.error(`Section not found for sectionId: ${sectionId}, classInfoId: ${classId}, schoolId: ${schoolId}`);
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    const sessions = await Session.findAll({ where: { sectionId: section.id } });
+    const sessions = await Session.findAll({
+      where: { sectionId: section.id }
+    });
     res.json(sessions);
   } catch (error) {
-    console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
 
-
-// Create a new session by sectionName
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/sessions', async (req, res) => {
-  const { schoolId, classId, sectionName } = req.params;
+// Create a new session by sectionId
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
+  const { classId, sectionId } = req.params;
   const { chapterName, numberOfSessions, priorityNumber } = req.body;
 
   if (!chapterName || !numberOfSessions || !priorityNumber) {
@@ -59,9 +55,9 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/sessions'
   try {
     const section = await Section.findOne({
       where: {
-        sectionName,
+        id: sectionId,
         classInfoId: classId,
-        schoolId
+        schoolId: req.params.schoolId
       }
     });
 
@@ -149,16 +145,16 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/up
   }
 });
 
-// Batch delete sessions in a section
+// Batch delete sessions by sectionId
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
-  const { schoolId, classId, sectionId } = req.params;
+  const { sectionId } = req.params;
 
   try {
     const section = await Section.findOne({
       where: {
         id: sectionId,
-        classInfoId: classId,
-        schoolId
+        classInfoId: req.params.classId,
+        schoolId: req.params.schoolId
       }
     });
 

@@ -16,14 +16,13 @@ const SessionManagement = () => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
-        console.log("Fetched Sessions: ", response.data); // Debugging log
+        const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
         setSessions(response.data);
       } catch (error) {
         console.error('Error fetching sessions:', error);
+        setError('Failed to fetch sessions.');
       }
     };
-
     fetchSessions();
   }, [schoolId, classId, sectionId]);
 
@@ -32,7 +31,7 @@ const SessionManagement = () => {
     setError('');
 
     try {
-      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`, {
+      const response = await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`, {
         chapterName,
         numberOfSessions,
         priorityNumber
@@ -43,9 +42,7 @@ const SessionManagement = () => {
       setPriorityNumber('');
     } catch (error) {
       console.error('Error adding session:', error);
-      if (error.response && error.response.data) {
-        setError(error.response.data.error);
-      }
+      setError(error.response?.data?.error || 'Failed to add session.');
     }
   };
 
@@ -53,41 +50,35 @@ const SessionManagement = () => {
     setError('');
 
     try {
-      const response = await axios.put(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
+      const response = await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
         numberOfSessions: editingNumberOfSessions,
         priorityNumber: editingPriorityNumber
       });
       setSessions(sessions.map(session => (session.id === sessionId ? response.data : session)));
-      setEditingSessionId(null); // Exit editing mode after saving
-
-      // Update the number of session plans
-      await axios.put(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`, {
-        numberOfSessions: editingNumberOfSessions
-      });
-
+      setEditingSessionId(null);
     } catch (error) {
       console.error('Error updating session:', error);
-      if (error.response && error.response.data) {
-        setError(error.response.data.error);
-      }
+      setError(error.response?.data?.error || 'Failed to update session.');
     }
   };
 
   const handleSessionDelete = async (sessionId) => {
     try {
-      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
       setSessions(sessions.filter(session => session.id !== sessionId));
     } catch (error) {
       console.error('Error deleting session:', error);
+      setError('Failed to delete session.');
     }
   };
 
   const handleDeleteAll = async () => {
     try {
-      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
-      setSessions([]); // Clear all sessions from state
+      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+      setSessions([]);
     } catch (error) {
       console.error('Error deleting all sessions:', error);
+      setError('Failed to delete all sessions.');
     }
   };
 
@@ -99,11 +90,13 @@ const SessionManagement = () => {
 
   const cancelEditing = () => {
     setEditingSessionId(null);
+    setEditingNumberOfSessions('');
+    setEditingPriorityNumber('');
   };
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    const file = e.target.file.files[0];
+    const file = e.target.elements.file.files[0];
     if (!file) {
       alert('Please select a file to upload.');
       return;
@@ -113,22 +106,14 @@ const SessionManagement = () => {
     formData.append('file', file);
 
     try {
-      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      alert('File uploaded and sessions created successfully!');
-      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
-      console.log("Sessions after upload: ", response.data); // Debugging log
+      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error uploading file:', error);
-      if (error.response && error.response.data && error.response.data.error) {
-        setError(error.response.data.error);
-      } else {
-        alert('Failed to upload file.');
-      }
+      setError(error.response?.data?.error || 'Failed to upload file.');
     }
   };
 
@@ -136,6 +121,22 @@ const SessionManagement = () => {
     <div>
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
+
+      <form onSubmit={handleSessionSubmit}>
+        <div>
+          <label>Chapter Name:</label>
+          <input type="text" value={chapterName} onChange={(e) => setChapterName(e.target.value)} required />
+        </div>
+        <div>
+          <label>Number of Sessions:</label>
+          <input type="number" value={numberOfSessions} onChange={(e) => setNumberOfSessions(e.target.value)} required />
+        </div>
+        <div>
+          <label>Priority Number:</label>
+          <input type="number" value={priorityNumber} onChange={(e) => setPriorityNumber(e.target.value)} required />
+        </div>
+        <button type="submit">Add Session</button>
+      </form>
 
       <form onSubmit={handleFileUpload}>
         <div>
@@ -157,28 +158,19 @@ const SessionManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {console.log('Rendering Sessions:', sessions)}
           {sessions.map(session => (
             <tr key={session.id}>
               <td>{session.chapterName}</td>
               <td>
                 {editingSessionId === session.id ? (
-                  <input
-                    type="number"
-                    value={editingNumberOfSessions}
-                    onChange={(e) => setEditingNumberOfSessions(e.target.value)}
-                  />
+                  <input type="number" value={editingNumberOfSessions} onChange={(e) => setEditingNumberOfSessions(e.target.value)} />
                 ) : (
                   session.numberOfSessions
                 )}
               </td>
               <td>
                 {editingSessionId === session.id ? (
-                  <input
-                    type="number"
-                    value={editingPriorityNumber}
-                    onChange={(e) => setEditingPriorityNumber(e.target.value)}
-                  />
+                  <input type="number" value={editingPriorityNumber} onChange={(e) => setEditingPriorityNumber(e.target.value)} />
                 ) : (
                   session.priorityNumber
                 )}
