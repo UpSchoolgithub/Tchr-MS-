@@ -21,30 +21,31 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Fetch all sessions for a class and section by sectionName
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/sessions', async (req, res) => {
-  const { schoolId, classId, sectionName } = req.params;
+// Fetch all sessions for a class and section by sectionId
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
+  const { schoolId, classId, sectionId } = req.params;
   try {
     const section = await Section.findOne({
       where: {
-        sectionName,
+        id: sectionId,
         classInfoId: classId,
         schoolId
       }
     });
 
     if (!section) {
+      console.error(`Section not found for sectionId: ${sectionId}, classInfoId: ${classId}, schoolId: ${schoolId}`);
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    const sessions = await Session.findAll({
-      where: { sectionId: section.id }
-    });
+    const sessions = await Session.findAll({ where: { sectionId: section.id } });
     res.json(sessions);
   } catch (error) {
+    console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
+
 
 // Create a new session by sectionName
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/sessions', async (req, res) => {
