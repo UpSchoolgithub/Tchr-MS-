@@ -65,55 +65,55 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
+  
+  // Start transaction
   const transaction = await sequelize.transaction();
-
+  
   try {
-    console.log(`Adding ClassInfo: ${className} for SchoolId: ${schoolId}`);
+    console.log(`Creating class info: ${className}`);
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
-    console.log(`ClassInfo added with ID: ${newClassInfo.id}`);
-
+    
     for (const sectionName in sections) {
-      console.log(`Adding Section: ${sectionName} for ClassInfoId: ${newClassInfo.id}`);
+      console.log(`Creating section: ${sectionName} for Class ID: ${newClassInfo.id}`);
       const newSection = await Section.create(
         { sectionName, classInfoId: newClassInfo.id, schoolId },
         { transaction }
       );
-      console.log(`Section added with ID: ${newSection.id}`);
 
+      // Process subjects within each section
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
-        try {
-          validateDateOrder(subject);
-          console.log(`Adding Subject: ${subject.subjectName} to SectionId: ${newSection.id}`);
-          await Subject.create(
-            { 
-              subjectName: subject.subjectName,
-              academicStartDate: subject.academicStartDate,
-              academicEndDate: subject.academicEndDate,
-              revisionStartDate: subject.revisionStartDate,
-              revisionEndDate: subject.revisionEndDate,
-              sectionId: newSection.id
-            },
-            { transaction }
-          );
-          console.log(`Subject ${subject.subjectName} added successfully.`);
-        } catch (validationError) {
-          console.error('Validation error:', validationError.message);
-          await transaction.rollback();
-          return res.status(400).json({ message: validationError.message });
-        }
+        validateDateOrder(subject);
+        
+        console.log(`Creating subject: ${subject.subjectName} in Section ID: ${newSection.id}`);
+        await Subject.create(
+          {
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate,
+            sectionId: newSection.id,
+            classInfoId: newClassInfo.id,
+            schoolId
+          },
+          { transaction }
+        );
       }
     }
 
+    // Commit transaction
     await transaction.commit();
-    console.log('Transaction committed successfully.');
+    console.log('Transaction committed successfully');
     res.status(201).json(newClassInfo);
+
   } catch (error) {
-    console.error('Error adding class info:', error);
+    console.error('Error creating class info:', error.message);
     await transaction.rollback();
-    res.status(500).json({ message: 'Error adding class info', error: error.message });
+    res.status(500).json({ message: 'Failed to create class info', error: error.message });
   }
 });
+
 
 // Update an existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
