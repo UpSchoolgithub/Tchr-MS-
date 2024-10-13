@@ -137,21 +137,23 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
       );
 
       const subjects = sections[sectionName].subjects || [];
-      for (const subject of subjects) {
-        validateDateOrder(subject);
-        await Subject.create(
-          {
+for (const subject of subjects) {
+    validateDateOrder(subject);
+    console.log(`Creating subject: ${subject.subjectName} in Section ID: ${newSection.id}`);
+    await Subject.create(
+        {
             subjectName: subject.subjectName,
             academicStartDate: subject.academicStartDate,
             academicEndDate: subject.academicEndDate,
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
-            sectionId: newSection.id,
-            schoolId
-          },
-          { transaction }
-        );
-      }
+            sectionId: newSection.id, // This is already here
+            classInfoId: newClassInfo.id // Make sure to add this line
+        },
+        { transaction }
+    );
+}
+
     }
 
     await transaction.commit();
