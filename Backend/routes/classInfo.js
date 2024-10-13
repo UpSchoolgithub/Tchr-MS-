@@ -61,16 +61,17 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 });
 
 // Add a new class info with sections and subjects
+// routes/classInfo.js
+
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
-  
   const transaction = await sequelize.transaction();
-  
+
   try {
     console.log(`Creating class info: ${className}`);
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
-    
+
     for (const sectionName in sections) {
       console.log(`Creating section: ${sectionName} for Class ID: ${newClassInfo.id}`);
       const newSection = await Section.create(
@@ -81,7 +82,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
         validateDateOrder(subject);
-        
         console.log(`Creating subject: ${subject.subjectName} in Section ID: ${newSection.id}`);
         await Subject.create(
           {
@@ -90,9 +90,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
             academicEndDate: subject.academicEndDate,
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
-            sectionId: newSection.id,
-            classInfoId: newClassInfo.id,
-            schoolId
+            sectionId: newSection.id, // Only sectionId is included here
           },
           { transaction }
         );
@@ -100,15 +98,15 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     }
 
     await transaction.commit();
-    console.log('Transaction committed successfully');
     res.status(201).json(newClassInfo);
-
   } catch (error) {
-    console.error('Error creating class info:', error.message);
+    console.error('Error creating class info:', error);
     await transaction.rollback();
     res.status(500).json({ message: 'Failed to create class info', error: error.message });
   }
 });
+
+
 
 // Update an existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
