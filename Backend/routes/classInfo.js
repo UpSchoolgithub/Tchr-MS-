@@ -91,7 +91,8 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
             sectionId: newSection.id, // Only sectionId is included here
-            classInfoId: newClassInfo.id // Add this line
+            classInfoId: newClassInfo.id, // Add this line
+            schoolId: schoolId // Add this line
           },
           { transaction }
         );
