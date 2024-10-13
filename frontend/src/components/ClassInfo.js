@@ -41,6 +41,11 @@ const ClassInfo = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (editing) {
+      await handleEditSave();
+      return;
+    }
+
     const duplicate = classInfos.some(info =>
       info.className === className &&
       info.sections[section]?.subjects?.some(sub => sub.subjectName === subject)
@@ -66,48 +71,64 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate,
       };
+      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+        className,
+        sections: {
+          [section]: { subjects: [newSubject] }
+        }
+      });
 
-      if (editing) {
-        // Editing existing subject
-        await axios.put(`https://tms.up.school/api/sections/${section}/subjects/${editing.id}`, newSubject);
-        setClassInfos(prevClassInfos => {
-          return prevClassInfos.map(info => {
-            if (info.className === className) {
-              const sec = info.sections[section];
-              if (sec) {
-                sec.subjects = sec.subjects.map(sub => sub.id === editing.id ? { ...sub, ...newSubject } : sub);
-              }
-            }
-            return info;
-          });
-        });
-        setEditing(null);
-      } else {
-        // Adding new subject
-        const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
-          className,
-          sections: {
-            [section]: { subjects: [newSubject] }
-          }
-        });
-        const newClassInfo = response.data;
-        setClassInfos(prevClassInfos => {
-          const updatedInfos = [...prevClassInfos];
-          const classIndex = updatedInfos.findIndex(info => info.className === className);
-          if (classIndex > -1) {
-            const sectionData = updatedInfos[classIndex].sections[section] || { subjects: [] };
-            sectionData.subjects.push(newSubject);
-            updatedInfos[classIndex].sections[section] = sectionData;
-          } else {
-            updatedInfos.push(newClassInfo);
-          }
-          return updatedInfos;
-        });
-      }
+      const newClassInfo = response.data;
+      setClassInfos(prevClassInfos => {
+        const updatedInfos = [...prevClassInfos];
+        const classIndex = updatedInfos.findIndex(info => info.className === className);
+        if (classIndex > -1) {
+          const sectionData = updatedInfos[classIndex].sections[section] || { subjects: [] };
+          sectionData.subjects.push(newSubject);
+          updatedInfos[classIndex].sections[section] = sectionData;
+        } else {
+          updatedInfos.push(newClassInfo);
+        }
+        return updatedInfos;
+      });
+
       resetForm();
     } catch (error) {
-      console.error('Error adding/updating subject:', error);
-      setError('Failed to add/update subject. Please try again.');
+      console.error('Error adding subject:', error);
+      setError('Failed to add subject. Please try again.');
+    }
+  };
+
+  const handleEditSave = async () => {
+    try {
+      const updatedSubject = {
+        subjectName: subject,
+        academicStartDate,
+        academicEndDate,
+        revisionStartDate,
+        revisionEndDate,
+      };
+
+      await axios.put(`https://tms.up.school/api/sections/${section}/subjects/${editing.id}`, updatedSubject);
+
+      setClassInfos(prevClassInfos => {
+        const updatedInfos = prevClassInfos.map(info => {
+          if (info.className === className) {
+            const sec = info.sections[section];
+            if (sec) {
+              sec.subjects = sec.subjects.map(sub => sub.id === editing.id ? { ...sub, ...updatedSubject } : sub);
+            }
+          }
+          return info;
+        });
+        return updatedInfos;
+      });
+
+      resetForm();
+      setEditing(null);
+    } catch (error) {
+      console.error('Error updating subject:', error);
+      setError('Failed to update subject. Please try again.');
     }
   };
 
