@@ -130,18 +130,16 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
       for (const subject of subjects) {
         validateDateOrder(subject);
         console.log(`Creating subject: ${subject.subjectName} in Section ID: ${newSection.id}`);
-        await Subject.create(
-          {
-            subjectName: subject.subjectName,
-            academicStartDate: subject.academicStartDate,
-            academicEndDate: subject.academicEndDate,
-            revisionStartDate: subject.revisionStartDate,
-            revisionEndDate: subject.revisionEndDate,
-            sectionId: newSection.id,
-            classInfoId: newClassInfo.id, // Ensure classInfoId is explicitly included here
-            schoolId, // Also include schoolId if needed
-          },
-          { transaction }
+        await Subject.create({
+          subjectName: subject.subjectName,
+          academicStartDate: subject.academicStartDate,
+          academicEndDate: subject.academicEndDate,
+          revisionStartDate: subject.revisionStartDate,
+          revisionEndDate: subject.revisionEndDate,
+          sectionId: newSection.id,
+          classInfoId: newClassInfo.id,  // Make sure this is explicitly assigned
+          schoolId,
+      }, { transaction }
         );
       }
     }
