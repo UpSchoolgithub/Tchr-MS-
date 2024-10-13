@@ -1,15 +1,9 @@
-// models/Section.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
 class Section extends Model {}
 
 Section.init({
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
   sectionName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -38,16 +32,9 @@ Section.init({
 });
 
 Section.associate = (models) => {
-  Section.belongsTo(models.ClassInfo, {
-    foreignKey: 'classInfoId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Section.hasMany(models.Subject, {
-    foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
+  Section.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  Section.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  Section.hasMany(models.Subject, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 };
 
 module.exports = Section;

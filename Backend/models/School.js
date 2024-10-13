@@ -1,12 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class School extends Model {
-  static associate(models) {
-    this.belongsToMany(models.Manager, { through: 'ManagerSchools', foreignKey: 'SchoolId' });
-    this.belongsToMany(models.Teacher, { through: 'TeacherSchools', foreignKey: 'SchoolId' });
-  }
-}
+class School extends Model {}
 
 School.init({
   name: {
@@ -35,5 +30,11 @@ School.init({
   tableName: 'schools',
   timestamps: true,
 });
+
+School.associate = (models) => {
+  School.hasMany(models.ClassInfo, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  School.hasMany(models.Section, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  School.hasMany(models.Subject, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+};
 
 module.exports = School;

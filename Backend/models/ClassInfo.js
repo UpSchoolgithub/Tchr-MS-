@@ -1,4 +1,3 @@
-// models/ClassInfo.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -29,7 +28,16 @@ ClassInfo.init({
   timestamps: true,
 });
 
+// Define associations in the associate method
 ClassInfo.associate = (models) => {
+  // Associate ClassInfo with School
+  ClassInfo.belongsTo(models.School, {
+    foreignKey: 'schoolId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+
+  // Associate ClassInfo with Section
   ClassInfo.hasMany(models.Section, {
     foreignKey: 'classInfoId',
     onDelete: 'CASCADE',
