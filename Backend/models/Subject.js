@@ -28,14 +28,32 @@ Subject.init({
   sectionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'sections',
+      key: 'id',
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
   },
   classInfoId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'classinfos',
+      key: 'id',
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
   },
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'schools',
+      key: 'id',
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
   },
 }, {
   sequelize,
