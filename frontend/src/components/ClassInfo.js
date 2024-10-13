@@ -48,7 +48,7 @@ const ClassInfo = () => {
 
     const duplicate = classInfos.some(info =>
       info.className === className &&
-      info.sections[section]?.subjects?.some(sub => sub.subjectName === subject)
+      info.sections?.[section]?.subjects?.some(sub => sub.subjectName === subject)
     );
 
     if (duplicate) {
@@ -102,11 +102,11 @@ const ClassInfo = () => {
   const handleEditSave = async () => {
     try {
       const updatedSubject = {
-        subjectName: subject,
-        academicStartDate,
-        academicEndDate,
-        revisionStartDate,
-        revisionEndDate,
+        subjectName: editing.subjectName,
+        academicStartDate: editing.academicStartDate,
+        academicEndDate: editing.academicEndDate,
+        revisionStartDate: editing.revisionStartDate,
+        revisionEndDate: editing.revisionEndDate,
       };
 
       await axios.put(`https://tms.up.school/api/sections/${editing.section}/subjects/${editing.id}`, updatedSubject);
@@ -114,7 +114,7 @@ const ClassInfo = () => {
       setClassInfos(prevClassInfos => {
         return prevClassInfos.map(info => {
           if (info.className === editing.className) {
-            const sec = info.sections[editing.section];
+            const sec = info.sections?.[editing.section];
             if (sec) {
               sec.subjects = sec.subjects.map(sub => sub.id === editing.id ? { ...sub, ...updatedSubject } : sub);
             }
@@ -132,13 +132,6 @@ const ClassInfo = () => {
   };
 
   const handleEdit = (classInfo, sec, sub) => {
-    setClassName(classInfo.className);
-    setSection(sec);
-    setSubject(sub.subjectName);
-    setAcademicStartDate(sub.academicStartDate);
-    setAcademicEndDate(sub.academicEndDate);
-    setRevisionStartDate(sub.revisionStartDate);
-    setRevisionEndDate(sub.revisionEndDate);
     setEditing({ ...sub, className: classInfo.className, section: sec });
   };
 
@@ -150,7 +143,7 @@ const ClassInfo = () => {
       await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
       setClassInfos(prevClassInfos => {
         return prevClassInfos.map(info => {
-          const sec = info.sections[section];
+          const sec = info.sections?.[section];
           if (sec) {
             sec.subjects = sec.subjects.filter(sub => sub.id !== subjectId);
           }
@@ -163,7 +156,6 @@ const ClassInfo = () => {
     }
   };
 
-  // This function updates the current editing subject's date fields as they change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEditing(prev => ({ ...prev, [name]: value }));
@@ -234,7 +226,7 @@ const ClassInfo = () => {
         </div>
         <button type="submit">{editing ? 'Save Changes' : 'Add Subject'}</button>
       </form>
-  
+
       <table>
         <thead>
           <tr>
@@ -251,7 +243,7 @@ const ClassInfo = () => {
         </thead>
         <tbody>
           {classInfos.map((info) => (
-            Object.keys(info.sections).map((sec) => (
+            Object.keys(info.sections || {}).map((sec) => (
               (info.sections[sec].subjects || []).map(sub => (
                 <tr key={`${info.className}-${sec}-${sub.subjectName}`}>
                   <td>{info.className}</td>
@@ -294,7 +286,6 @@ const ClassInfo = () => {
       </table>
     </div>
   );
-  
 };
 
 export default ClassInfo;
