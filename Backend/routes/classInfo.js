@@ -68,21 +68,28 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
+    // Create the class
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
 
     for (const sectionName in sections) {
-      const newSection = await Section.create({
-        sectionName,
-        classInfoId: newClassInfo.id,
-        schoolId,
-      }, { transaction });
+      // Find or create the section to ensure subjects are associated with the same section ID
+      const [section] = await Section.findOrCreate({
+        where: {
+          sectionName,
+          classInfoId: newClassInfo.id,
+          schoolId,
+        },
+        transaction,
+      });
 
       for (const subject of sections[sectionName].subjects) {
         validateDateOrder(subject);
+        
+        // Create the subject and link it to the existing or new section ID
         await Subject.create({
           subjectName: subject.subjectName,
           classInfoId: newClassInfo.id,
-          sectionId: newSection.id,
+          sectionId: section.id,  // Use the section ID from findOrCreate
           schoolId,
           academicStartDate: subject.academicStartDate,
           academicEndDate: subject.academicEndDate,
@@ -100,6 +107,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Error creating class, sections, and subjects', error: error.message });
   }
 });
+
 
 // Delete a class info, including its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
