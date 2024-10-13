@@ -70,6 +70,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   try {
     console.log(`Adding ClassInfo: ${className} for SchoolId: ${schoolId}`);
     const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
+    console.log(`ClassInfo added with ID: ${newClassInfo.id}`);
 
     for (const sectionName in sections) {
       console.log(`Adding Section: ${sectionName} for ClassInfoId: ${newClassInfo.id}`);
@@ -77,6 +78,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
         { sectionName, classInfoId: newClassInfo.id, schoolId },
         { transaction }
       );
+      console.log(`Section added with ID: ${newSection.id}`);
 
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
@@ -90,14 +92,13 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
               academicEndDate: subject.academicEndDate,
               revisionStartDate: subject.revisionStartDate,
               revisionEndDate: subject.revisionEndDate,
-              sectionId: newSection.id,
-              schoolId 
+              sectionId: newSection.id
             },
             { transaction }
           );
           console.log(`Subject ${subject.subjectName} added successfully.`);
         } catch (validationError) {
-          console.error('Date validation error:', validationError.message);
+          console.error('Validation error:', validationError.message);
           await transaction.rollback();
           return res.status(400).json({ message: validationError.message });
         }
