@@ -19,29 +19,28 @@ const ClassInfo = () => {
   const classes = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
   const sections = ['A', 'B', 'C', 'D', 'E'];
 
-  // Hardcoded subjects based on class
   const getSubjects = (className) => {
     return parseInt(className, 10) <= 7
       ? ['Science', 'Math', 'Social', 'English', 'Kannada', 'Hindi']
       : ['Chemistry', 'Biology', 'Physics', 'Mathematics', 'Social', 'English', 'Hindi', 'Kannada'];
   };
 
-  useEffect(() => {
-    const fetchClassInfos = async () => {
-      try {
-        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-        setClassInfos(response.data);
-      } catch (error) {
-        console.error('Error fetching class data:', error);
-      }
-    };
+  const fetchClassInfos = async () => {
+    try {
+      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      setClassInfos(response.data);
+    } catch (error) {
+      console.error('Error fetching class data:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchClassInfos();
   }, [schoolId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (editing) {
       await handleEditSave();
       return;
@@ -78,15 +77,30 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate,
       };
-      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className,
         sections: {
           [section]: { subjects: [newSubject] }
         }
       });
 
+      const newClassInfo = response.data;
+      setClassInfos(prevClassInfos => {
+        const updatedInfos = [...prevClassInfos];
+        const classIndex = updatedInfos.findIndex(info => info.className === className);
+        if (classIndex > -1) {
+          // Class exists, update section
+          const sectionData = updatedInfos[classIndex].sections[section] || { subjects: [] };
+          sectionData.subjects.push(newSubject);
+          updatedInfos[classIndex].sections[section] = sectionData;
+        } else {
+          // Add new class entry
+          updatedInfos.push(newClassInfo);
+        }
+        return updatedInfos;
+      });
+
       resetForm();
-      fetchClassInfos(); // Fetch updated data after adding
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
@@ -105,24 +119,25 @@ const ClassInfo = () => {
 
       await axios.put(`https://tms.up.school/api/sections/${section}/subjects/${editing.id}`, updatedSubject);
 
+      setClassInfos(prevClassInfos => {
+        const updatedInfos = prevClassInfos.map(info => {
+          if (info.className === className) {
+            const sec = info.sections[section];
+            if (sec) {
+              sec.subjects = sec.subjects.map(sub => sub.id === editing.id ? updatedSubject : sub);
+            }
+          }
+          return info;
+        });
+        return updatedInfos;
+      });
+
       resetForm();
       setEditing(null);
-      fetchClassInfos(); // Fetch updated data after edit
     } catch (error) {
       console.error('Error updating subject:', error);
       setError('Failed to update subject. Please try again.');
     }
-  };
-
-  const handleEdit = (classInfo, sec, sub) => {
-    setClassName(classInfo.className);
-    setSection(sec);
-    setSubject(sub.subjectName);
-    setAcademicStartDate(sub.academicStartDate);
-    setAcademicEndDate(sub.academicEndDate);
-    setRevisionStartDate(sub.revisionStartDate);
-    setRevisionEndDate(sub.revisionEndDate);
-    setEditing(sub);
   };
 
   const handleDelete = async (subjectId) => {
@@ -131,15 +146,19 @@ const ClassInfo = () => {
 
     try {
       await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
-      fetchClassInfos(); // Fetch updated data after delete
+      setClassInfos(prevClassInfos => {
+        return prevClassInfos.map(info => {
+          const sec = info.sections[section];
+          if (sec) {
+            sec.subjects = sec.subjects.filter(sub => sub.id !== subjectId);
+          }
+          return info;
+        });
+      });
     } catch (error) {
       console.error('Error deleting subject:', error);
       setError('Failed to delete subject. Please try again.');
     }
-  };
-
-  const handleSessionsClick = (classInfo, sec, sub) => {
-    navigate(`/schools/${schoolId}/classes/${classInfo.className}/sections/${sec}/subjects/${sub.subjectName}/sessions`);
   };
 
   const resetForm = () => {
