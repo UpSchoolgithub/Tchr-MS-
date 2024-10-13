@@ -18,15 +18,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Fetch all sessions by sectionId
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
-  const { schoolId, classId, sectionId } = req.params;
+// Fetch all sessions for a specific school, class, section, and subject
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectName/sessions', async (req, res) => {
+  const { schoolId, classId, sectionName, subjectName } = req.params;
+
   try {
+    // Find the section by section name, classId, and schoolId
     const section = await Section.findOne({
       where: {
-        id: sectionId,
+        sectionName: sectionName,
         classInfoId: classId,
-        schoolId
+        schoolId: schoolId
       }
     });
 
@@ -34,48 +36,30 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', a
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    const sessions = await Session.findAll({
-      where: { sectionId: section.id }
+    // Find the subject within the found section
+    const subject = await Subject.findOne({
+      where: {
+        subjectName: subjectName,
+        sectionId: section.id
+      }
     });
+
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
+    // Fetch all sessions associated with the section and subject
+    const sessions = await Session.findAll({
+      where: {
+        sectionId: section.id,
+        subjectId: subject.id
+      }
+    });
+
     res.json(sessions);
   } catch (error) {
+    console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
-  }
-});
-
-// Create a new session by sectionId
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
-  const { classId, sectionId } = req.params;
-  const { chapterName, numberOfSessions, priorityNumber } = req.body;
-
-  if (!chapterName || !numberOfSessions || !priorityNumber) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  try {
-    const section = await Section.findOne({
-      where: {
-        id: sectionId,
-        classInfoId: classId,
-        schoolId: req.params.schoolId
-      }
-    });
-
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
-    }
-
-    const newSession = await Session.create({
-      classId,
-      sectionId: section.id,
-      chapterName,
-      numberOfSessions,
-      priorityNumber
-    });
-
-    res.status(201).json(newSession);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create session' });
   }
 });
 
@@ -114,7 +98,7 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
   }
 });
 
-// Handle file upload and session creation by sectionId
+// Handle file upload and create sessions based on file content
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/upload', upload.single('file'), async (req, res) => {
   const { schoolId, classId, sectionId } = req.params;
 
@@ -144,6 +128,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/up
     res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
+
 
 // Batch delete sessions by sectionId
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
