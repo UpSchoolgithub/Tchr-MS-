@@ -108,48 +108,46 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
 
 
-// Update an existing class info with sections and subjects
-// Add a new class info with sections and subjects
-router.post('/schools/:schoolId/classes', async (req, res) => {
-  const { schoolId } = req.params;
-  const { className, sections } = req.body;
-  const transaction = await sequelize.transaction();
-
+// Fetch all class infos with sections and subjects grouped under each class
+router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
-    console.log(`Creating class info: ${className}`);
-    const newClassInfo = await ClassInfo.create({ className, schoolId }, { transaction });
+    const classInfos = await ClassInfo.findAll({
+      where: { schoolId: req.params.schoolId },
+      include: [{ model: Section, include: [Subject] }]
+    });
 
-    for (const sectionName in sections) {
-      console.log(`Creating section: ${sectionName} for Class ID: ${newClassInfo.id}`);
-      const newSection = await Section.create(
-        { sectionName, classInfoId: newClassInfo.id, schoolId },
-        { transaction }
-      );
+    const formattedClasses = classInfos.map(classInfo => {
+      const sections = {};
+      classInfo.Sections.forEach(section => {
+        sections[section.sectionName] = {
+          id: section.id,
+          schoolId: section.schoolId,
+          createdAt: section.createdAt,
+          updatedAt: section.updatedAt,
+          subjects: section.Subjects.map(subject => ({
+            id: subject.id,
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate,
+          }))
+        };
+      });
+      return {
+        id: classInfo.id,
+        className: classInfo.className,
+        schoolId: classInfo.schoolId,
+        createdAt: classInfo.createdAt,
+        updatedAt: classInfo.updatedAt,
+        sections
+      };
+    });
 
-      const subjects = sections[sectionName].subjects || [];
-      for (const subject of subjects) {
-        validateDateOrder(subject);
-        console.log(`Creating subject: ${subject.subjectName} in Section ID: ${newSection.id}`);
-        await Subject.create({
-          subjectName: subject.subjectName,
-          academicStartDate: subject.academicStartDate,
-          academicEndDate: subject.academicEndDate,
-          revisionStartDate: subject.revisionStartDate,
-          revisionEndDate: subject.revisionEndDate,
-          sectionId: newSection.id,
-          classInfoId: newClassInfo.id,  // Make sure this is explicitly assigned
-          schoolId,
-      }, { transaction }
-        );
-      }
-    }
-
-    await transaction.commit();
-    res.status(201).json(newClassInfo);
+    res.status(200).json({ classes: formattedClasses });
   } catch (error) {
-    console.error('Error creating class info:', error);
-    await transaction.rollback();
-    res.status(500).json({ message: 'Failed to create class info', error: error.message });
+    console.error('Error fetching class information:', error);
+    res.status(500).json({ message: 'Failed to fetch class information', error: error.message });
   }
 });
 
