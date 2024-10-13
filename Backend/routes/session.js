@@ -21,14 +21,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Fetch all sessions for a class and section by sectionId
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
+// Fetch all sessions for a class and section by sectionName
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/sessions', async (req, res) => {
+  const { schoolId, classId, sectionName } = req.params;
   try {
     const section = await Section.findOne({
       where: {
-        id: req.params.sectionId,
-        classInfoId: req.params.classId,
-        schoolId: req.params.schoolId
+        sectionName,
+        classInfoId: classId,
+        schoolId
       }
     });
 
@@ -45,16 +46,21 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', a
   }
 });
 
-// Create a new session in a section by sectionId
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
+// Create a new session by sectionName
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/sessions', async (req, res) => {
+  const { schoolId, classId, sectionName } = req.params;
   const { chapterName, numberOfSessions, priorityNumber } = req.body;
+
+  if (!chapterName || !numberOfSessions || !priorityNumber) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
 
   try {
     const section = await Section.findOne({
       where: {
-        id: req.params.sectionId,
-        classInfoId: req.params.classId,
-        schoolId: req.params.schoolId
+        sectionName,
+        classInfoId: classId,
+        schoolId
       }
     });
 
@@ -63,7 +69,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', 
     }
 
     const newSession = await Session.create({
-      classId: req.params.classId,
+      classId,
       sectionId: section.id,
       chapterName,
       numberOfSessions,
@@ -72,17 +78,17 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', 
 
     res.status(201).json(newSession);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to create session', error: error.message });
+    res.status(500).json({ error: 'Failed to create session' });
   }
 });
 
 // Update a session by sessionId
 router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
   const { numberOfSessions, priorityNumber } = req.body;
 
   try {
-    const session = await Session.findByPk(req.params.sessionId);
-
+    const session = await Session.findByPk(sessionId);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
@@ -90,15 +96,16 @@ router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:se
     await session.update({ numberOfSessions, priorityNumber });
     res.json(session);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ error: 'Failed to update session' });
   }
 });
 
 // Delete a session by sessionId
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
-  try {
-    const session = await Session.findByPk(req.params.sessionId);
+  const { sessionId } = req.params;
 
+  try {
+    const session = await Session.findByPk(sessionId);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
@@ -110,69 +117,14 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
   }
 });
 
-// Fetch a session by sessionId
-router.get('/sessions/:sessionId', async (req, res) => {
-  try {
-    const session = await Session.findByPk(req.params.sessionId);
-
-    if (!session) {
-      return res.status(404).json({ message: 'Session not found' });
-    }
-
-    res.json(session);
-  } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-
-// Route to duplicate sessions and session plans for a new section
-router.post('/duplicate-sessions', async (req, res) => {
-  const { schoolId, classId, sourceSectionId, targetSectionId } = req.body;
-
-  try {
-    const sessions = await Session.findAll({
-      where: {
-        schoolId,
-        classId,
-        sectionId: sourceSectionId
-      }
-    });
-
-    for (const session of sessions) {
-      const newSession = await Session.create({
-        schoolId,
-        classId,
-        sectionId: targetSectionId,
-        chapterName: session.chapterName,
-        numberOfSessions: session.numberOfSessions,
-        priorityNumber: session.priorityNumber
-      });
-
-      const sessionPlans = await SessionPlan.findAll({ where: { sessionId: session.id } });
-      for (const plan of sessionPlans) {
-        await SessionPlan.create({
-          sessionId: newSession.id,
-          planDetails: plan.planDetails,
-          sessionNumber: plan.sessionNumber
-        });
-      }
-    }
-
-    res.status(201).json({ message: 'Sessions and session plans duplicated successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-
-// Route to handle file upload and session creation
+// Handle file upload and session creation by sectionId
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/upload', upload.single('file'), async (req, res) => {
   const { schoolId, classId, sectionId } = req.params;
 
   try {
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
     const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
     const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
@@ -180,35 +132,32 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/up
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    const sessions = [];
-    for (const row of jsonData) {
-      const { ChapterName, NumberOfSessions, PriorityNumber } = row;
-
-      sessions.push({
-        schoolId,
-        classId,
-        sectionId: section.id,
-        chapterName: ChapterName,
-        numberOfSessions: NumberOfSessions,
-        priorityNumber: PriorityNumber
-      });
-    }
+    const sessions = jsonData.map(row => ({
+      schoolId,
+      classInfoId: classId,
+      sectionId: section.id,
+      chapterName: row.ChapterName,
+      numberOfSessions: row.NumberOfSessions,
+      priorityNumber: row.PriorityNumber
+    }));
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
 
-// Batch delete sessions
+// Batch delete sessions in a section
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
+  const { schoolId, classId, sectionId } = req.params;
+
   try {
     const section = await Section.findOne({
       where: {
-        id: req.params.sectionId,
-        classInfoId: req.params.classId,
-        schoolId: req.params.schoolId
+        id: sectionId,
+        classInfoId: classId,
+        schoolId
       }
     });
 
