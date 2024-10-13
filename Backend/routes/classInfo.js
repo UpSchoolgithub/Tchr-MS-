@@ -4,6 +4,7 @@ const sequelize = require('../config/db');
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
+const School = require('../models/School');
 
 // Helper function to validate the order of academic and revision dates
 const validateDateOrder = (dates) => {
