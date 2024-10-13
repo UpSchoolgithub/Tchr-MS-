@@ -1,4 +1,3 @@
-// routes/classInfo.js
 const express = require('express');
 const router = express.Router();
 const sequelize = require('../config/db');
@@ -66,7 +65,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
   
-  // Start transaction
   const transaction = await sequelize.transaction();
   
   try {
@@ -80,7 +78,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
         { transaction }
       );
 
-      // Process subjects within each section
       const subjects = sections[sectionName].subjects || [];
       for (const subject of subjects) {
         validateDateOrder(subject);
@@ -102,7 +99,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
       }
     }
 
-    // Commit transaction
     await transaction.commit();
     console.log('Transaction committed successfully');
     res.status(201).json(newClassInfo);
@@ -113,7 +109,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Failed to create class info', error: error.message });
   }
 });
-
 
 // Update an existing class info with sections and subjects
 router.put('/schools/:schoolId/classes/:id', async (req, res) => {
@@ -131,14 +126,12 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
     await classInfo.update({ className }, { transaction });
     console.log(`Updated ClassInfo: ${className} with ID: ${classInfo.id}`);
 
-    // Delete all existing sections and subjects for the class
     const existingSections = await Section.findAll({ where: { classInfoId } });
     for (const section of existingSections) {
       await Subject.destroy({ where: { sectionId: section.id }, transaction });
       await Section.destroy({ where: { id: section.id }, transaction });
     }
 
-    // Create new sections and subjects
     for (const sectionName in sections) {
       const newSection = await Section.create(
         { sectionName, classInfoId, schoolId },
@@ -155,8 +148,8 @@ router.put('/schools/:schoolId/classes/:id', async (req, res) => {
             academicEndDate: subject.academicEndDate,
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
-            sectionId: newSection.id, // Associate with the new section only
-            schoolId // Include schoolId explicitly
+            sectionId: newSection.id,
+            schoolId
           },
           { transaction }
         );
