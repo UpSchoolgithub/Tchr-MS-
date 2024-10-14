@@ -64,16 +64,47 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 // Route to create a new class
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
-  const { className } = req.body;
+  const { className, sections } = req.body;
 
+  const transaction = await sequelize.transaction();
   try {
-    const newClass = await ClassInfo.create({ className, schoolId });
-    res.status(201).json({ message: 'Class created successfully', classId: newClass.id });
+    // Create the class
+    const newClass = await ClassInfo.create({ className, schoolId }, { transaction });
+
+    // Create sections and subjects if provided
+    if (sections) {
+      for (const [sectionName, sectionData] of Object.entries(sections)) {
+        const newSection = await Section.create(
+          { sectionName, classInfoId: newClass.id, schoolId },
+          { transaction }
+        );
+
+        if (sectionData.subjects) {
+          for (const subject of sectionData.subjects) {
+            validateDateOrder(subject); // Validate date order before saving
+
+            await Subject.create({
+              sectionId: newSection.id,
+              subjectName: subject.subjectName,
+              academicStartDate: subject.academicStartDate,
+              academicEndDate: subject.academicEndDate,
+              revisionStartDate: subject.revisionStartDate,
+              revisionEndDate: subject.revisionEndDate
+            }, { transaction });
+          }
+        }
+      }
+    }
+
+    await transaction.commit();
+    res.status(201).json({ message: 'Class, sections, and subjects created successfully', classId: newClass.id });
   } catch (error) {
-    console.error('Error creating class:', error);
-    res.status(500).json({ message: 'Error creating class', error: error.message });
+    await transaction.rollback();
+    console.error('Error creating class with sections and subjects:', error);
+    res.status(500).json({ message: 'Error creating class with sections and subjects', error: error.message });
   }
 });
+
 
 
 // Route to add a section to an existing class
@@ -82,24 +113,39 @@ router.post('/classes/:classId/sections', async (req, res) => {
   const { sections, schoolId } = req.body;
 
   const transaction = await sequelize.transaction();
-
   try {
-    for (const sectionName of sections) {
-      // Check if section already exists for the given class
+    for (const [sectionName, sectionData] of Object.entries(sections)) {
       const [section, created] = await Section.findOrCreate({
         where: { sectionName, classInfoId: classId, schoolId },
-        transaction,
+        defaults: { schoolId },
+        transaction
       });
+
+      if (sectionData.subjects) {
+        for (const subject of sectionData.subjects) {
+          validateDateOrder(subject);
+
+          await Subject.create({
+            sectionId: section.id,
+            subjectName: subject.subjectName,
+            academicStartDate: subject.academicStartDate,
+            academicEndDate: subject.academicEndDate,
+            revisionStartDate: subject.revisionStartDate,
+            revisionEndDate: subject.revisionEndDate
+          }, { transaction });
+        }
+      }
     }
 
     await transaction.commit();
-    res.status(201).json({ message: 'Sections added successfully' });
+    res.status(201).json({ message: 'Sections and subjects added successfully' });
   } catch (error) {
     await transaction.rollback();
-    console.error('Error adding sections:', error);
-    res.status(500).json({ message: 'Error adding sections', error: error.message });
+    console.error('Error adding sections and subjects:', error);
+    res.status(500).json({ message: 'Error adding sections and subjects', error: error.message });
   }
 });
+
 
 // Delete a class info, including its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
