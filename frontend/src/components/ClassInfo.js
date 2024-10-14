@@ -15,6 +15,8 @@ const ClassInfo = () => {
   const [revisionStartDate, setRevisionStartDate] = useState('');
   const [revisionEndDate, setRevisionEndDate] = useState('');
   const [error, setError] = useState('');
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [tempDates, setTempDates] = useState({});
 
   const sections = ['A', 'B', 'C', 'D', 'E'];
 
@@ -27,7 +29,6 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      console.log('Fetched class info:', response.data);
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -44,8 +45,7 @@ const ClassInfo = () => {
         await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
         setClassName(newClassName);
         setNewClassName('');
-        await fetchClassInfos(); 
-        console.log('Updated after adding class:', classInfos);
+        await fetchClassInfos();
       } catch (error) {
         console.error('Error adding class:', error);
         setError('Failed to add class. Please try again.');
@@ -55,14 +55,14 @@ const ClassInfo = () => {
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (new Date(academicStartDate) >= new Date(academicEndDate) ||
         new Date(academicEndDate) >= new Date(revisionStartDate) ||
         new Date(revisionStartDate) >= new Date(revisionEndDate)) {
       alert('Please ensure dates are in the correct order.');
       return;
     }
-  
+
     try {
       const newSubject = {
         subjectName: subject,
@@ -71,18 +71,17 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate,
       };
-  
+
       await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className,
         sections: {
           [section]: { subjects: [newSubject] }
         }
       });
-  
-      // Update classInfos directly without refetching
+
       const updatedClassInfos = [...classInfos];
       const classIndex = updatedClassInfos.findIndex(info => info.className === className);
-  
+
       if (classIndex >= 0) {
         const sectionData = updatedClassInfos[classIndex].sections[section] || { subjects: [] };
         sectionData.subjects.push(newSubject);
@@ -95,30 +94,48 @@ const ClassInfo = () => {
           }
         });
       }
-  
+
       setClassInfos(updatedClassInfos);
       resetForm();
-      console.log('Updated classInfos:', updatedClassInfos);
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
     }
   };
 
-  // Define handleDelete for deleting a subject
   const handleDelete = async (classId, sectionId, subjectId) => {
     try {
       await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`);
-      fetchClassInfos(); // Refresh the data
+      fetchClassInfos();
     } catch (error) {
       console.error('Error deleting subject:', error);
       setError('Failed to delete the subject. Please try again.');
     }
   };
 
-  // Define manageSessions for navigating to session management page
   const manageSessions = (classId, sectionId, subjectId) => {
     navigate(`/sessions?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`);
+  };
+
+  const handleEdit = (className, section, subject) => {
+    setEditingSubject(`${className}-${section}-${subject.subjectName}`);
+    setTempDates({
+      academicStartDate: subject.academicStartDate,
+      academicEndDate: subject.academicEndDate,
+      revisionStartDate: subject.revisionStartDate,
+      revisionEndDate: subject.revisionEndDate,
+    });
+  };
+
+  const handleSave = async (classId, sectionId, subjectId) => {
+    try {
+      await axios.put(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`, tempDates);
+      setEditingSubject(null);
+      fetchClassInfos();
+    } catch (error) {
+      console.error('Error saving subject:', error);
+      setError('Failed to save the subject. Please try again.');
+    }
   };
 
   const resetForm = () => {
@@ -202,25 +219,70 @@ const ClassInfo = () => {
           </tr>
         </thead>
         <tbody>
-          {classInfos.map((info) => (
-            Object.keys(info.sections || {}).map((sec) => (
+          {classInfos.map((info) =>
+            Object.keys(info.sections || {}).map((sec) =>
               (info.sections[sec].subjects || []).map(sub => (
                 <tr key={`${info.className}-${sec}-${sub.subjectName}`}>
                   <td>{info.className}</td>
                   <td>{sec}</td>
                   <td>{sub.subjectName}</td>
-                  <td>{new Date(sub.academicStartDate).toLocaleDateString()}</td>
-                  <td>{new Date(sub.academicEndDate).toLocaleDateString()}</td>
-                  <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
-                  <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
                   <td>
+                    {editingSubject === `${info.className}-${sec}-${sub.subjectName}` ? (
+                      <input
+                        type="date"
+                        value={tempDates.academicStartDate}
+                        onChange={(e) => setTempDates({ ...tempDates, academicStartDate: e.target.value })}
+                      />
+                    ) : (
+                      new Date(sub.academicStartDate).toLocaleDateString()
+                    )}
+                  </td>
+                  <td>
+                    {editingSubject === `${info.className}-${sec}-${sub.subjectName}` ? (
+                      <input
+                        type="date"
+                        value={tempDates.academicEndDate}
+                        onChange={(e) => setTempDates({ ...tempDates, academicEndDate: e.target.value })}
+                      />
+                    ) : (
+                      new Date(sub.academicEndDate).toLocaleDateString()
+                    )}
+                  </td>
+                  <td>
+                    {editingSubject === `${info.className}-${sec}-${sub.subjectName}` ? (
+                      <input
+                        type="date"
+                        value={tempDates.revisionStartDate}
+                        onChange={(e) => setTempDates({ ...tempDates, revisionStartDate: e.target.value })}
+                      />
+                    ) : (
+                      new Date(sub.revisionStartDate).toLocaleDateString()
+                    )}
+                  </td>
+                  <td>
+                    {editingSubject === `${info.className}-${sec}-${sub.subjectName}` ? (
+                      <input
+                        type="date"
+                        value={tempDates.revisionEndDate}
+                        onChange={(e) => setTempDates({ ...tempDates, revisionEndDate: e.target.value })}
+                      />
+                    ) : (
+                      new Date(sub.revisionEndDate).toLocaleDateString()
+                    )}
+                  </td>
+                  <td>
+                    {editingSubject === `${info.className}-${sec}-${sub.subjectName}` ? (
+                      <button onClick={() => handleSave(info.id, sec, sub.id)}>Save</button>
+                    ) : (
+                      <button onClick={() => handleEdit(info.className, sec, sub)}>Edit</button>
+                    )}
                     <button onClick={() => handleDelete(info.id, sec, sub.id)}>Delete</button>
                     <button onClick={() => manageSessions(info.id, sec, sub.id)}>Manage Sessions</button>
                   </td>
                 </tr>
               ))
-            ))
-          ))}
+            )
+          )}
         </tbody>
       </table>
     </div>
