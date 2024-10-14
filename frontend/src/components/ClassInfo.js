@@ -113,8 +113,8 @@ const ClassInfo = () => {
     }
   };
 
-  const manageSessions = (classId, sectionId, subjectId) => {
-    navigate(`/sessions?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`);
+  const manageSessions = (classId, section, subjectId) => {
+    navigate(`/schools/${schoolId}/classes/${classId}/sections/${section}/subjects/${subjectId}/sessions`);
   };
 
   const handleEdit = (className, section, subject) => {
