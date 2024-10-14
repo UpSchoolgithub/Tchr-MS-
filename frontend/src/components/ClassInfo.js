@@ -28,8 +28,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      const uniqueClasses = [...new Set(response.data.map(info => info.className))];
-      setClassInfos(uniqueClasses);
+      setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
     }
@@ -40,8 +39,7 @@ const ClassInfo = () => {
   }, [schoolId]);
 
   const handleAddClass = () => {
-    if (newClassName && !classInfos.includes(newClassName)) {
-      setClassInfos([...classInfos, newClassName]);
+    if (newClassName && !classInfos.some(info => info.className === newClassName)) {
       setClassName(newClassName);
       setNewClassName('');
       setIsAddingClass(false);
@@ -89,7 +87,7 @@ const ClassInfo = () => {
         }
       });
 
-      fetchClassInfos(); // Refresh the class info after adding a subject
+      fetchClassInfos();
       resetForm();
     } catch (error) {
       console.error('Error adding subject:', error);
@@ -98,7 +96,6 @@ const ClassInfo = () => {
   };
 
   const resetForm = () => {
-    setClassName('');
     setSection('');
     setSubject('');
     setAcademicStartDate('');
@@ -130,7 +127,7 @@ const ClassInfo = () => {
             <label>Or Select Existing Class:</label>
             <select value={className} onChange={(e) => setClassName(e.target.value)} required>
               <option value="">Select Class</option>
-              {classInfos.map((cls, index) => (
+              {[...new Set(classInfos.map(info => info.className))].map((cls, index) => (
                 <option key={index} value={cls}>{cls}</option>
               ))}
             </select>
@@ -179,6 +176,40 @@ const ClassInfo = () => {
 
         <button type="submit">Add Section and Subject</button>
       </form>
+
+      {/* Table to display the added class, section, and subjects */}
+      {classInfos.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Section</th>
+              <th>Subject</th>
+              <th>Academic Start</th>
+              <th>Academic End</th>
+              <th>Revision Start</th>
+              <th>Revision End</th>
+            </tr>
+          </thead>
+          <tbody>
+            {classInfos.map((info) =>
+              Object.entries(info.sections || {}).map(([sec, details]) =>
+                details.subjects.map(sub => (
+                  <tr key={`${info.className}-${sec}-${sub.subjectName}`}>
+                    <td>{info.className}</td>
+                    <td>{sec}</td>
+                    <td>{sub.subjectName}</td>
+                    <td>{new Date(sub.academicStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(sub.academicEndDate).toLocaleDateString()}</td>
+                    <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              )
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
