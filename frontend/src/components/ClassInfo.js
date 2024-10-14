@@ -78,7 +78,8 @@ const ClassInfo = () => {
         }
       });
 
-      fetchClassInfos(); // Refresh the list to show the latest data
+      fetchClassInfos(); // Refresh the list to reflect the new subject addition
+      resetForm();
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
@@ -104,6 +105,17 @@ const ClassInfo = () => {
 
   const handleSessionsClick = (classInfo, sec, sub) => {
     navigate(`/schools/${schoolId}/classes/${classInfo.className}/sections/${sec}/subjects/${sub.subjectName}/sessions`);
+  };
+
+  const resetForm = () => {
+    setClassName('');
+    setSection('');
+    setSubject('');
+    setAcademicStartDate('');
+    setAcademicEndDate('');
+    setRevisionStartDate('');
+    setRevisionEndDate('');
+    setEditing(null);
   };
 
   return (
