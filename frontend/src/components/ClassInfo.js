@@ -7,16 +7,15 @@ const ClassInfo = () => {
   const navigate = useNavigate();
   const [classInfos, setClassInfos] = useState([]);
   const [className, setClassName] = useState('');
+  const [newClassName, setNewClassName] = useState('');
   const [section, setSection] = useState('');
   const [subject, setSubject] = useState('');
   const [academicStartDate, setAcademicStartDate] = useState('');
   const [academicEndDate, setAcademicEndDate] = useState('');
   const [revisionStartDate, setRevisionStartDate] = useState('');
   const [revisionEndDate, setRevisionEndDate] = useState('');
-  const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
 
-  const classes = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
   const sections = ['A', 'B', 'C', 'D', 'E'];
 
   const getSubjects = (className) => {
@@ -28,6 +27,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log('Fetched class info:', response.data);
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -38,31 +38,31 @@ const ClassInfo = () => {
     fetchClassInfos();
   }, [schoolId]);
 
-  const handleSubmit = async (e) => {
+  const handleClassSubmit = async () => {
+    if (newClassName) {
+      try {
+        await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
+        setClassName(newClassName);
+        setNewClassName('');
+        await fetchClassInfos(); 
+        console.log('Updated after adding class:', classInfos);
+      } catch (error) {
+        console.error('Error adding class:', error);
+        setError('Failed to add class. Please try again.');
+      }
+    }
+  };
+
+  const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
-
-    if (editing) {
-      await handleEditSave();
-      return;
-    }
-
-    const duplicate = classInfos.some(info =>
-      info.className === className &&
-      info.sections?.[section]?.subjects?.some(sub => sub.subjectName === subject)
-    );
-
-    if (duplicate) {
-      alert('This class-section-subject combination already exists.');
-      return;
-    }
-
+  
     if (new Date(academicStartDate) >= new Date(academicEndDate) ||
         new Date(academicEndDate) >= new Date(revisionStartDate) ||
         new Date(revisionStartDate) >= new Date(revisionEndDate)) {
       alert('Please ensure dates are in the correct order.');
       return;
     }
-
+  
     try {
       const newSubject = {
         subjectName: subject,
@@ -71,126 +71,86 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate,
       };
-      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+  
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className,
         sections: {
           [section]: { subjects: [newSubject] }
         }
       });
-
-      const newClassInfo = response.data;
-      setClassInfos(prevClassInfos => {
-        const updatedInfos = [...prevClassInfos];
-        const classIndex = updatedInfos.findIndex(info => info.className === className);
-        if (classIndex > -1) {
-          const sectionData = updatedInfos[classIndex].sections[section] || { subjects: [] };
-          sectionData.subjects.push(newSubject);
-          updatedInfos[classIndex].sections[section] = sectionData;
-        } else {
-          updatedInfos.push(newClassInfo);
-        }
-        return updatedInfos;
-      });
-
+  
+      // Update classInfos directly without refetching
+      const updatedClassInfos = [...classInfos];
+      const classIndex = updatedClassInfos.findIndex(info => info.className === className);
+  
+      if (classIndex >= 0) {
+        const sectionData = updatedClassInfos[classIndex].sections[section] || { subjects: [] };
+        sectionData.subjects.push(newSubject);
+        updatedClassInfos[classIndex].sections[section] = sectionData;
+      } else {
+        updatedClassInfos.push({
+          className,
+          sections: {
+            [section]: { subjects: [newSubject] }
+          }
+        });
+      }
+  
+      setClassInfos(updatedClassInfos);
       resetForm();
+      console.log('Updated classInfos:', updatedClassInfos);
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
     }
   };
 
-  const handleEditSave = async () => {
-    if (!editing) return;
-
-    if (new Date(editing.academicStartDate) >= new Date(editing.academicEndDate) ||
-        new Date(editing.academicEndDate) >= new Date(editing.revisionStartDate) ||
-        new Date(editing.revisionStartDate) >= new Date(editing.revisionEndDate)) {
-      alert('Please ensure dates are in the correct order.');
-      return;
-    }
-
+  // Define handleDelete for deleting a subject
+  const handleDelete = async (classId, sectionId, subjectId) => {
     try {
-      const updatedSubject = {
-        subjectName: editing.subjectName,
-        academicStartDate: editing.academicStartDate,
-        academicEndDate: editing.academicEndDate,
-        revisionStartDate: editing.revisionStartDate,
-        revisionEndDate: editing.revisionEndDate,
-      };
-
-      await axios.put(`https://tms.up.school/api/sections/${editing.section}/subjects/${editing.id}`, updatedSubject);
-
-      setClassInfos(prevClassInfos => {
-        return prevClassInfos.map(info => {
-          if (info.className === editing.className && info.sections?.[editing.section]) {
-            info.sections[editing.section].subjects = info.sections[editing.section].subjects.map(sub => 
-              sub.id === editing.id ? { ...sub, ...updatedSubject } : sub
-            );
-          }
-          return info;
-        });
-      });
-
-      resetForm();
-      setEditing(null);
-    } catch (error) {
-      console.error('Error updating subject:', error);
-      setError('Failed to update subject. Please try again.');
-    }
-  };
-
-  const handleEdit = (classInfo, sec, sub) => {
-    setEditing({ ...sub, className: classInfo.className, section: sec });
-  };
-
-  const handleDelete = async (subjectId, section) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this subject?');
-    if (!confirmDelete) return;
-
-    try {
-      await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
-      setClassInfos(prevClassInfos => {
-        return prevClassInfos.map(info => {
-          if (info.sections?.[section]) {
-            info.sections[section].subjects = info.sections[section].subjects.filter(sub => sub.id !== subjectId);
-          }
-          return info;
-        });
-      });
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`);
+      fetchClassInfos(); // Refresh the data
     } catch (error) {
       console.error('Error deleting subject:', error);
-      setError('Failed to delete subject. Please try again.');
+      setError('Failed to delete the subject. Please try again.');
     }
   };
 
-  const handleSessionsClick = (classInfo, sec, sub) => {
-    navigate(`/schools/${schoolId}/classes/${classInfo.className}/sections/${sec}/subjects/${sub.subjectName}/sessions`);
+  // Define manageSessions for navigating to session management page
+  const manageSessions = (classId, sectionId, subjectId) => {
+    navigate(`/sessions?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`);
   };
 
   const resetForm = () => {
-    setClassName('');
     setSection('');
     setSubject('');
     setAcademicStartDate('');
     setAcademicEndDate('');
     setRevisionStartDate('');
     setRevisionEndDate('');
-    setEditing(null);
   };
 
   return (
     <div>
       {error && <div className="error">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Class:</label>
-          <select value={className} onChange={(e) => setClassName(e.target.value)} required>
-            <option value="">Select Class</option>
-            {classes.map((cls) => (
-              <option key={cls} value={cls}>{cls}</option>
-            ))}
-          </select>
-        </div>
+      <div>
+        <input
+          type="text"
+          placeholder="Enter new class"
+          value={newClassName}
+          onChange={(e) => setNewClassName(e.target.value)}
+        />
+        <button onClick={handleClassSubmit}>Add New Class</button>
+        <span> Or Select Existing Class:</span>
+        <select value={className} onChange={(e) => setClassName(e.target.value)}>
+          <option value="">Select Class</option>
+          {[...new Set(classInfos.map((info) => info.className))].map((cls) => (
+            <option key={cls} value={cls}>{cls}</option>
+          ))}
+        </select>
+      </div>
+
+      <form onSubmit={handleSectionSubjectSubmit}>
         <div>
           <label>Section:</label>
           <select value={section} onChange={(e) => setSection(e.target.value)} required>
@@ -225,7 +185,7 @@ const ClassInfo = () => {
           <label>Revision End Date:</label>
           <input type="date" value={revisionEndDate} onChange={(e) => setRevisionEndDate(e.target.value)} required />
         </div>
-        <button type="submit">{editing ? 'Save Changes' : 'Add Subject'}</button>
+        <button type="submit">Add Section and Subject</button>
       </form>
 
       <table>
@@ -238,7 +198,6 @@ const ClassInfo = () => {
             <th>Academic End</th>
             <th>Revision Start</th>
             <th>Revision End</th>
-            <th>Sessions</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -255,11 +214,8 @@ const ClassInfo = () => {
                   <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
                   <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
                   <td>
-                    <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
-                  </td>
-                  <td>
-                    <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
-                    <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
+                    <button onClick={() => handleDelete(info.id, sec, sub.id)}>Delete</button>
+                    <button onClick={() => manageSessions(info.id, sec, sub.id)}>Manage Sessions</button>
                   </td>
                 </tr>
               ))
