@@ -61,19 +61,17 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-// Route to create a new class
+// Route to create a new class with sections and subjects
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, sections } = req.body;
 
   const transaction = await sequelize.transaction();
   try {
-    // Create the class
     const newClass = await ClassInfo.create({ className, schoolId }, { transaction });
 
     if (sections) {
       for (const [sectionName, sectionData] of Object.entries(sections)) {
-        // Create the section
         const newSection = await Section.create(
           { sectionName, classInfoId: newClass.id, schoolId },
           { transaction }
@@ -81,7 +79,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
         if (sectionData.subjects) {
           for (const subject of sectionData.subjects) {
-            // Check for existing subject with the same class, section, and subject name
             const existingSubject = await Subject.findOne({
               where: {
                 classInfoId: newClass.id,
@@ -97,7 +94,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
               });
             }
 
-            // Validate and create the subject if no duplicate exists
             validateDateOrder(subject);
 
             await Subject.create({
@@ -124,11 +120,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-
-
-
-
-// Route to add a section to an existing class
+// Route to add sections and subjects to an existing class
 router.post('/classes/:classId/sections', async (req, res) => {
   const { classId } = req.params;
   const { sections, schoolId } = req.body;
@@ -148,6 +140,8 @@ router.post('/classes/:classId/sections', async (req, res) => {
 
           await Subject.create({
             sectionId: section.id,
+            classInfoId: classId,
+            schoolId,
             subjectName: subject.subjectName,
             academicStartDate: subject.academicStartDate,
             academicEndDate: subject.academicEndDate,
@@ -167,8 +161,7 @@ router.post('/classes/:classId/sections', async (req, res) => {
   }
 });
 
-
-// Delete a class info, including its sections and subjects
+// Route to delete a class along with its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   try {
     const classInfo = await ClassInfo.findByPk(req.params.id, {
@@ -189,6 +182,23 @@ router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting class info:', error);
     res.status(500).json({ message: 'Error deleting class info', error: error.message });
+  }
+});
+
+// Route to delete a specific subject within a section of a class
+router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId', async (req, res) => {
+  const { subjectId } = req.params;
+  try {
+    const deletedCount = await Subject.destroy({ where: { id: subjectId } });
+
+    if (deletedCount === 0) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting subject:', error);
+    res.status(500).json({ message: 'Error deleting subject', error: error.message });
   }
 });
 
