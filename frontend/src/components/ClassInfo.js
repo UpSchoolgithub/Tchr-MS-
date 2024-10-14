@@ -27,7 +27,8 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      setClassInfos(response.data); // Ensure it includes sections and subjects in the expected structure
+      console.log('Fetched class info:', response.data);
+      setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
     }
@@ -43,7 +44,8 @@ const ClassInfo = () => {
         await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
         setClassName(newClassName);
         setNewClassName('');
-        await fetchClassInfos(); // Reload class data to ensure the new class appears with the updated list
+        await fetchClassInfos(); 
+        console.log('Updated after adding class:', classInfos);
       } catch (error) {
         console.error('Error adding class:', error);
         setError('Failed to add class. Please try again.');
@@ -77,7 +79,8 @@ const ClassInfo = () => {
         }
       });
 
-      await fetchClassInfos(); // Refresh data to display the new section and subject under the correct class
+      await fetchClassInfos(); 
+      console.log('Updated after adding section/subject:', classInfos);
       resetForm();
     } catch (error) {
       console.error('Error adding subject:', error);
