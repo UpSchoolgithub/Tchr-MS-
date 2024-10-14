@@ -72,7 +72,7 @@ const ClassInfo = () => {
         revisionEndDate,
       };
   
-      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className,
         sections: {
           [section]: { subjects: [newSubject] }
@@ -84,12 +84,10 @@ const ClassInfo = () => {
       const classIndex = updatedClassInfos.findIndex(info => info.className === className);
   
       if (classIndex >= 0) {
-        // If the class exists, add the subject to the section or create the section if it doesn't exist
         const sectionData = updatedClassInfos[classIndex].sections[section] || { subjects: [] };
         sectionData.subjects.push(newSubject);
         updatedClassInfos[classIndex].sections[section] = sectionData;
       } else {
-        // If the class doesn't exist, add a new class with the section and subject
         updatedClassInfos.push({
           className,
           sections: {
@@ -98,15 +96,30 @@ const ClassInfo = () => {
         });
       }
   
-      setClassInfos(updatedClassInfos); // Update state with modified data
-      resetForm(); // Clear the form after submission
+      setClassInfos(updatedClassInfos);
+      resetForm();
       console.log('Updated classInfos:', updatedClassInfos);
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
     }
   };
-  
+
+  // Define handleDelete for deleting a subject
+  const handleDelete = async (classId, sectionId, subjectId) => {
+    try {
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`);
+      fetchClassInfos(); // Refresh the data
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      setError('Failed to delete the subject. Please try again.');
+    }
+  };
+
+  // Define manageSessions for navigating to session management page
+  const manageSessions = (classId, sectionId, subjectId) => {
+    navigate(`/sessions?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`);
+  };
 
   const resetForm = () => {
     setSection('');
@@ -201,8 +214,8 @@ const ClassInfo = () => {
                   <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
                   <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
                   <td>
-                    <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
-                    <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
+                    <button onClick={() => handleDelete(info.id, sec, sub.id)}>Delete</button>
+                    <button onClick={() => manageSessions(info.id, sec, sub.id)}>Manage Sessions</button>
                   </td>
                 </tr>
               ))
