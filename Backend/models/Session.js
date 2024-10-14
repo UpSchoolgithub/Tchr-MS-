@@ -34,24 +34,19 @@ Session.init({
       key: 'id',
     },
   },
+  numberOfSessions: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  priorityNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 }, {
   sequelize,
   modelName: 'Session',
   tableName: 'sessions',
   timestamps: true,
 });
-
-Session.associate = (models) => {
-  Session.belongsTo(models.Section, {
-    foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-  Session.belongsTo(models.Subject, {
-    foreignKey: 'subjectId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  });
-};
 
 module.exports = Session;

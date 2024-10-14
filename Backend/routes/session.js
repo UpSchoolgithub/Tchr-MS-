@@ -4,9 +4,11 @@ const path = require('path');
 const XLSX = require('xlsx');
 const Session = require('../models/Session');
 const Section = require('../models/Section');
+const Subject = require('../models/Subject'); // Add this to ensure Subject model is referenced
 
 const router = express.Router();
 
+// Set up multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
@@ -15,7 +17,6 @@ const storage = multer.diskStorage({
     cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
   }
 });
-
 const upload = multer({ storage: storage });
 
 // Fetch all sessions for a specific school, class, section, and subject
@@ -23,12 +24,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
   const { schoolId, classId, sectionName, subjectName } = req.params;
 
   try {
-    // Find the section by section name, classId, and schoolId
     const section = await Section.findOne({
       where: {
-        sectionName: sectionName,
+        sectionName,
         classInfoId: classId,
-        schoolId: schoolId
+        schoolId
       }
     });
 
@@ -36,10 +36,9 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Find the subject within the found section
     const subject = await Subject.findOne({
       where: {
-        subjectName: subjectName,
+        subjectName,
         sectionId: section.id
       }
     });
@@ -48,7 +47,6 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
       return res.status(404).json({ error: 'Subject not found' });
     }
 
-    // Fetch all sessions associated with the section and subject
     const sessions = await Session.findAll({
       where: {
         sectionId: section.id,
@@ -77,6 +75,7 @@ router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:se
     await session.update({ numberOfSessions, priorityNumber });
     res.json(session);
   } catch (error) {
+    console.error('Error updating session:', error);
     res.status(500).json({ error: 'Failed to update session' });
   }
 });
@@ -94,6 +93,7 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
     await session.destroy();
     res.status(204).end();
   } catch (error) {
+    console.error('Error deleting session:', error);
     res.status(500).json({ error: 'Failed to delete session' });
   }
 });
@@ -114,21 +114,21 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/up
     }
 
     const sessions = jsonData.map(row => ({
-      schoolId,
-      classInfoId: classId,
-      sectionId: section.id,
-      chapterName: row.ChapterName,
+      sessionDate: row.sessionDate, // Date field, update if necessary
+      topic: row.ChapterName,
       numberOfSessions: row.NumberOfSessions,
-      priorityNumber: row.PriorityNumber
+      priorityNumber: row.PriorityNumber,
+      sectionId: section.id,
+      subjectId: row.subjectId // Ensure you link to a valid subject
     }));
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
+    console.error('Error uploading sessions:', error);
     res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
-
 
 // Batch delete sessions by sectionId
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
@@ -150,6 +150,7 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions'
     await Session.destroy({ where: { sectionId: section.id } });
     res.status(204).end();
   } catch (error) {
+    console.error('Error deleting sessions:', error);
     res.status(500).json({ error: 'Failed to delete sessions' });
   }
 });
