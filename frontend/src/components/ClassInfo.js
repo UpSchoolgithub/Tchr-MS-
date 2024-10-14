@@ -29,6 +29,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log('Fetched classInfos:', response.data); // Debugging
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -43,9 +44,9 @@ const ClassInfo = () => {
     if (newClassName) {
       try {
         await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
-        setClassName(newClassName); // Set the newly added class as the selected class
-        setNewClassName(''); // Clear input field
-        fetchClassInfos(); // Refresh to include the new class in the dropdown
+        setClassName(newClassName);
+        setNewClassName('');
+        await fetchClassInfos(); // Ensure classes reload right after adding
       } catch (error) {
         console.error('Error adding class:', error);
         setError('Failed to add class. Please try again.');
@@ -79,7 +80,7 @@ const ClassInfo = () => {
         }
       });
 
-      fetchClassInfos(); // Refresh the list to reflect the new subject addition
+      await fetchClassInfos(); // Refresh after adding a subject to ensure data reloads
       resetForm();
     } catch (error) {
       console.error('Error adding subject:', error);
@@ -97,7 +98,7 @@ const ClassInfo = () => {
 
     try {
       await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
-      fetchClassInfos(); // Refresh after deletion
+      await fetchClassInfos(); // Refresh after deletion
     } catch (error) {
       console.error('Error deleting subject:', error);
       setError('Failed to delete subject. Please try again.');
