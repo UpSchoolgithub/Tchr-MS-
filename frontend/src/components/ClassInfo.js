@@ -55,14 +55,14 @@ const ClassInfo = () => {
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (new Date(academicStartDate) >= new Date(academicEndDate) ||
         new Date(academicEndDate) >= new Date(revisionStartDate) ||
         new Date(revisionStartDate) >= new Date(revisionEndDate)) {
       alert('Please ensure dates are in the correct order.');
       return;
     }
-
+  
     try {
       const newSubject = {
         subjectName: subject,
@@ -71,22 +71,42 @@ const ClassInfo = () => {
         revisionStartDate,
         revisionEndDate,
       };
-
-      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+  
+      const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className,
         sections: {
           [section]: { subjects: [newSubject] }
         }
       });
-
-      await fetchClassInfos(); 
-      console.log('Updated after adding section/subject:', classInfos);
-      resetForm();
+  
+      // Update classInfos directly without refetching
+      const updatedClassInfos = [...classInfos];
+      const classIndex = updatedClassInfos.findIndex(info => info.className === className);
+  
+      if (classIndex >= 0) {
+        // If the class exists, add the subject to the section or create the section if it doesn't exist
+        const sectionData = updatedClassInfos[classIndex].sections[section] || { subjects: [] };
+        sectionData.subjects.push(newSubject);
+        updatedClassInfos[classIndex].sections[section] = sectionData;
+      } else {
+        // If the class doesn't exist, add a new class with the section and subject
+        updatedClassInfos.push({
+          className,
+          sections: {
+            [section]: { subjects: [newSubject] }
+          }
+        });
+      }
+  
+      setClassInfos(updatedClassInfos); // Update state with modified data
+      resetForm(); // Clear the form after submission
+      console.log('Updated classInfos:', updatedClassInfos);
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
     }
   };
+  
 
   const resetForm = () => {
     setSection('');
