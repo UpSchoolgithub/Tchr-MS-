@@ -100,6 +100,15 @@ const ClassInfo = () => {
   };
 
   const handleEditSave = async () => {
+    if (!editing) return;
+
+    if (new Date(editing.academicStartDate) >= new Date(editing.academicEndDate) ||
+        new Date(editing.academicEndDate) >= new Date(editing.revisionStartDate) ||
+        new Date(editing.revisionStartDate) >= new Date(editing.revisionEndDate)) {
+      alert('Please ensure dates are in the correct order.');
+      return;
+    }
+
     try {
       const updatedSubject = {
         subjectName: editing.subjectName,
@@ -113,11 +122,10 @@ const ClassInfo = () => {
 
       setClassInfos(prevClassInfos => {
         return prevClassInfos.map(info => {
-          if (info.className === editing.className) {
-            const sec = info.sections?.[editing.section];
-            if (sec) {
-              sec.subjects = sec.subjects.map(sub => sub.id === editing.id ? { ...sub, ...updatedSubject } : sub);
-            }
+          if (info.className === editing.className && info.sections?.[editing.section]) {
+            info.sections[editing.section].subjects = info.sections[editing.section].subjects.map(sub => 
+              sub.id === editing.id ? { ...sub, ...updatedSubject } : sub
+            );
           }
           return info;
         });
@@ -143,9 +151,8 @@ const ClassInfo = () => {
       await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
       setClassInfos(prevClassInfos => {
         return prevClassInfos.map(info => {
-          const sec = info.sections?.[section];
-          if (sec) {
-            sec.subjects = sec.subjects.filter(sub => sub.id !== subjectId);
+          if (info.sections?.[section]) {
+            info.sections[section].subjects = info.sections[section].subjects.filter(sub => sub.id !== subjectId);
           }
           return info;
         });
@@ -243,35 +250,17 @@ const ClassInfo = () => {
                   <td>{info.className}</td>
                   <td>{sec}</td>
                   <td>{sub.subjectName}</td>
-                  {editing && editing.id === sub.id ? (
-                    <>
-                      <td><input type="date" name="academicStartDate" value={editing.academicStartDate} onChange={(e) => setEditing(prev => ({ ...prev, academicStartDate: e.target.value }))} /></td>
-                      <td><input type="date" name="academicEndDate" value={editing.academicEndDate} onChange={(e) => setEditing(prev => ({ ...prev, academicEndDate: e.target.value }))} /></td>
-                      <td><input type="date" name="revisionStartDate" value={editing.revisionStartDate} onChange={(e) => setEditing(prev => ({ ...prev, revisionStartDate: e.target.value }))} /></td>
-                      <td><input type="date" name="revisionEndDate" value={editing.revisionEndDate} onChange={(e) => setEditing(prev => ({ ...prev, revisionEndDate: e.target.value }))} /></td>
-                      <td>
-                        <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
-                      </td>
-                      <td>
-                        <button onClick={handleEditSave}>Save</button>
-                        <button onClick={() => setEditing(null)}>Cancel</button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td>{new Date(sub.academicStartDate).toLocaleDateString()}</td>
-                      <td>{new Date(sub.academicEndDate).toLocaleDateString()}</td>
-                      <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
-                      <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
-                      <td>
-                        <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
-                      </td>
-                      <td>
-                        <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
-                        <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
-                      </td>
-                    </>
-                  )}
+                  <td>{new Date(sub.academicStartDate).toLocaleDateString()}</td>
+                  <td>{new Date(sub.academicEndDate).toLocaleDateString()}</td>
+                  <td>{new Date(sub.revisionStartDate).toLocaleDateString()}</td>
+                  <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
+                  <td>
+                    <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
+                  </td>
+                  <td>
+                    <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
+                    <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
+                  </td>
                 </tr>
               ))
             ))
