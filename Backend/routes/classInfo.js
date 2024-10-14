@@ -161,6 +161,33 @@ router.post('/classes/:classId/sections', async (req, res) => {
   }
 });
 
+
+// Route to update an existing subject
+router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId', async (req, res) => {
+  const { subjectId } = req.params;
+  const { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate } = req.body;
+
+  try {
+    // Validate date order
+    validateDateOrder({ academicStartDate, academicEndDate, revisionStartDate, revisionEndDate });
+
+    // Update subject
+    const [updatedCount] = await Subject.update(
+      { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate },
+      { where: { id: subjectId } }
+    );
+
+    if (updatedCount === 0) {
+      return res.status(404).json({ message: 'Subject not found or no changes made' });
+    }
+
+    res.status(200).json({ message: 'Subject updated successfully' });
+  } catch (error) {
+    console.error('Error updating subject:', error);
+    res.status(500).json({ message: 'Error updating subject', error: error.message });
+  }
+});
+
 // Route to delete a class along with its sections and subjects
 router.delete('/schools/:schoolId/classes/:id', async (req, res) => {
   try {
@@ -201,5 +228,6 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/
     res.status(500).json({ message: 'Error deleting subject', error: error.message });
   }
 });
+
 
 module.exports = router;
