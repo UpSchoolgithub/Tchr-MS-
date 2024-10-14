@@ -5,9 +5,6 @@ import { useParams, Link } from 'react-router-dom';
 const SessionManagement = () => {
   const { schoolId, classId, sectionId } = useParams();
   const [sessions, setSessions] = useState([]);
-  const [chapterName, setChapterName] = useState('');
-  const [numberOfSessions, setNumberOfSessions] = useState('');
-  const [priorityNumber, setPriorityNumber] = useState('');
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
   const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
@@ -26,29 +23,8 @@ const SessionManagement = () => {
     fetchSessions();
   }, [schoolId, classId, sectionId]);
 
-  const handleSessionSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    try {
-      const response = await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`, {
-        chapterName,
-        numberOfSessions,
-        priorityNumber
-      });
-      setSessions([...sessions, response.data]);
-      setChapterName('');
-      setNumberOfSessions('');
-      setPriorityNumber('');
-    } catch (error) {
-      console.error('Error adding session:', error);
-      setError(error.response?.data?.error || 'Failed to add session.');
-    }
-  };
-
   const handleSessionUpdate = async (sessionId) => {
     setError('');
-
     try {
       const response = await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
         numberOfSessions: editingNumberOfSessions,
@@ -122,22 +98,7 @@ const SessionManagement = () => {
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
 
-      <form onSubmit={handleSessionSubmit}>
-        <div>
-          <label>Chapter Name:</label>
-          <input type="text" value={chapterName} onChange={(e) => setChapterName(e.target.value)} required />
-        </div>
-        <div>
-          <label>Number of Sessions:</label>
-          <input type="number" value={numberOfSessions} onChange={(e) => setNumberOfSessions(e.target.value)} required />
-        </div>
-        <div>
-          <label>Priority Number:</label>
-          <input type="number" value={priorityNumber} onChange={(e) => setPriorityNumber(e.target.value)} required />
-        </div>
-        <button type="submit">Add Session</button>
-      </form>
-
+      {/* File upload form only */}
       <form onSubmit={handleFileUpload}>
         <div>
           <label>Upload Sessions:</label>
