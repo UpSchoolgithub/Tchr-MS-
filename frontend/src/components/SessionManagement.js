@@ -9,17 +9,22 @@ const SessionManagement = () => {
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
   const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchSessions = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+      setSessions(response.data);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      setError(error.response?.status === 404 ? 'Sessions not found.' : 'Failed to fetch sessions.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
-        setSessions(response.data);
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-        setError('Failed to fetch sessions.');
-      }
-    };
     fetchSessions();
   }, [schoolId, classId, sectionId]);
 
@@ -28,7 +33,7 @@ const SessionManagement = () => {
     try {
       const response = await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
         numberOfSessions: editingNumberOfSessions,
-        priorityNumber: editingPriorityNumber
+        priorityNumber: editingPriorityNumber,
       });
       setSessions(sessions.map(session => (session.id === sessionId ? response.data : session)));
       setEditingSessionId(null);
@@ -74,22 +79,25 @@ const SessionManagement = () => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
     if (!file) {
-      alert('Please select a file to upload.');
+      setError('Please select a file to upload.');
       return;
     }
 
     const formData = new FormData();
     formData.append('file', file);
 
+    setIsLoading(true);
     try {
-      await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`;
+      await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
-      setSessions(response.data);
+      await fetchSessions(); // Refresh sessions list after upload
     } catch (error) {
       console.error('Error uploading file:', error);
       setError(error.response?.data?.error || 'Failed to upload file.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,8 +105,9 @@ const SessionManagement = () => {
     <div>
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
+      {isLoading && <p>Loading...</p>}
 
-      {/* File upload form only */}
+      {/* File upload form */}
       <form onSubmit={handleFileUpload}>
         <div>
           <label>Upload Sessions:</label>
@@ -107,7 +116,9 @@ const SessionManagement = () => {
         <button type="submit">Upload</button>
       </form>
 
-      <button onClick={handleDeleteAll} style={{ marginTop: '20px', backgroundColor: 'red', color: 'white' }}>Delete All</button>
+      <button onClick={handleDeleteAll} style={{ marginTop: '20px', backgroundColor: 'red', color: 'white' }}>
+        Delete All
+      </button>
 
       <table>
         <thead>
