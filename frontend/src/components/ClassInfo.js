@@ -5,16 +5,16 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 const ClassInfo = () => {
   const { schoolId } = useOutletContext();
   const navigate = useNavigate();
-  
   const [classInfos, setClassInfos] = useState([]);
-  const [newClassName, setNewClassName] = useState('');
   const [className, setClassName] = useState('');
+  const [newClassName, setNewClassName] = useState('');
   const [section, setSection] = useState('');
   const [subject, setSubject] = useState('');
   const [academicStartDate, setAcademicStartDate] = useState('');
   const [academicEndDate, setAcademicEndDate] = useState('');
   const [revisionStartDate, setRevisionStartDate] = useState('');
   const [revisionEndDate, setRevisionEndDate] = useState('');
+  const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
 
   const sections = ['A', 'B', 'C', 'D', 'E'];
@@ -25,9 +25,10 @@ const ClassInfo = () => {
       : ['Chemistry', 'Biology', 'Physics', 'Mathematics', 'Social', 'English', 'Hindi', 'Kannada'];
   };
 
+  // Fetch classes with sections and subjects
   const fetchClassInfos = async () => {
     try {
-      const response = await axios.get(`/api/schools/${schoolId}/classes`);
+      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -39,53 +40,82 @@ const ClassInfo = () => {
   }, [schoolId]);
 
   const handleClassSubmit = async () => {
-    if (!newClassName) {
-      alert("Please enter a class name");
-      return;
-    }
-
-    try {
-      await axios.post(`/api/schools/${schoolId}/classes`, { className: newClassName });
-      setNewClassName('');
-      fetchClassInfos(); // Refresh class list after adding a new class
-    } catch (error) {
-      console.error('Error adding class:', error);
-      setError('Failed to add class. Please try again.');
+    if (newClassName) {
+      try {
+        await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
+        setClassName(newClassName); // Set the newly added class as the selected class
+        setNewClassName(''); // Clear input field
+        fetchClassInfos(); // Refresh to include the new class in the dropdown
+      } catch (error) {
+        console.error('Error adding class:', error);
+        setError('Failed to add class. Please try again.');
+      }
     }
   };
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
 
-    if (!className) {
-      alert('Please select or add a class');
+    if (new Date(academicStartDate) >= new Date(academicEndDate) ||
+        new Date(academicEndDate) >= new Date(revisionStartDate) ||
+        new Date(revisionStartDate) >= new Date(revisionEndDate)) {
+      alert('Please ensure dates are in the correct order.');
       return;
     }
 
-    const newSubject = {
-      subjectName: subject,
-      academicStartDate,
-      academicEndDate,
-      revisionStartDate,
-      revisionEndDate,
-    };
-
     try {
-      await axios.post(`/api/schools/${schoolId}/classes`, {
+      const newSubject = {
+        subjectName: subject,
+        academicStartDate,
+        academicEndDate,
+        revisionStartDate,
+        revisionEndDate,
+      };
+
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className,
         sections: {
-          [section]: { subjects: [newSubject] },
-        },
+          [section]: { subjects: [newSubject] }
+        }
       });
-      fetchClassInfos(); // Refresh data
+
+      fetchClassInfos(); // Refresh the list to reflect the new subject addition
+      resetForm();
     } catch (error) {
-      console.error('Error adding section and subject:', error);
-      setError('Failed to add section and subject. Please try again.');
+      console.error('Error adding subject:', error);
+      setError('Failed to add subject. Please try again.');
+    }
+  };
+
+  const handleEdit = (classInfo, sec, sub) => {
+    setEditing({ ...sub, className: classInfo.className, section: sec });
+  };
+
+  const handleDelete = async (subjectId, section) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this subject?');
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`https://tms.up.school/api/subjects/${subjectId}`);
+      fetchClassInfos(); // Refresh after deletion
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      setError('Failed to delete subject. Please try again.');
     }
   };
 
   const handleSessionsClick = (classInfo, sec, sub) => {
     navigate(`/schools/${schoolId}/classes/${classInfo.className}/sections/${sec}/subjects/${sub.subjectName}/sessions`);
+  };
+
+  const resetForm = () => {
+    setSection('');
+    setSubject('');
+    setAcademicStartDate('');
+    setAcademicEndDate('');
+    setRevisionStartDate('');
+    setRevisionEndDate('');
+    setEditing(null);
   };
 
   return (
@@ -157,6 +187,7 @@ const ClassInfo = () => {
             <th>Revision Start</th>
             <th>Revision End</th>
             <th>Sessions</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -173,6 +204,10 @@ const ClassInfo = () => {
                   <td>{new Date(sub.revisionEndDate).toLocaleDateString()}</td>
                   <td>
                     <button onClick={() => handleSessionsClick(info, sec, sub)}>Manage Sessions</button>
+                  </td>
+                  <td>
+                    <button onClick={() => handleEdit(info, sec, sub)}>Edit</button>
+                    <button onClick={() => handleDelete(sub.id, sec)}>Delete</button>
                   </td>
                 </tr>
               ))
