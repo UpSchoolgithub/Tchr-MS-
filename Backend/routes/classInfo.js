@@ -71,9 +71,9 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     // Create the class
     const newClass = await ClassInfo.create({ className, schoolId }, { transaction });
 
-    // Create sections and subjects if provided
     if (sections) {
       for (const [sectionName, sectionData] of Object.entries(sections)) {
+        // Create the section
         const newSection = await Section.create(
           { sectionName, classInfoId: newClass.id, schoolId },
           { transaction }
@@ -81,13 +81,29 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
         if (sectionData.subjects) {
           for (const subject of sectionData.subjects) {
-            validateDateOrder(subject); // Validate date order before saving
+            // Check for existing subject with the same class, section, and subject name
+            const existingSubject = await Subject.findOne({
+              where: {
+                classInfoId: newClass.id,
+                sectionId: newSection.id,
+                subjectName: subject.subjectName
+              }
+            });
 
-            // Add classInfoId and schoolId to the Subject creation
+            if (existingSubject) {
+              await transaction.rollback();
+              return res.status(400).json({ 
+                message: `The subject ${subject.subjectName} already exists for class ${className} and section ${sectionName}.` 
+              });
+            }
+
+            // Validate and create the subject if no duplicate exists
+            validateDateOrder(subject);
+
             await Subject.create({
               sectionId: newSection.id,
-              classInfoId: newClass.id,   // Include the classInfoId
-              schoolId,                   // Include the schoolId
+              classInfoId: newClass.id,
+              schoolId,
               subjectName: subject.subjectName,
               academicStartDate: subject.academicStartDate,
               academicEndDate: subject.academicEndDate,
@@ -107,6 +123,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Error creating class with sections and subjects', error: error.message });
   }
 });
+
 
 
 
