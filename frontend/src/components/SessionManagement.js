@@ -14,6 +14,7 @@ const SessionManagement = () => {
   const fetchSessions = async () => {
     setIsLoading(true);
     try {
+      console.log(`Fetching sessions for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}`);
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
       setSessions(response.data);
     } catch (error) {
@@ -89,6 +90,7 @@ const SessionManagement = () => {
     setIsLoading(true);
     try {
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`;
+      console.log(`Uploading file to: ${uploadUrl}`);
       await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -107,7 +109,6 @@ const SessionManagement = () => {
       {error && <div className="error">{error}</div>}
       {isLoading && <p>Loading...</p>}
 
-      {/* File upload form */}
       <form onSubmit={handleFileUpload}>
         <div>
           <label>Upload Sessions:</label>
