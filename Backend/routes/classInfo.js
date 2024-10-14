@@ -83,8 +83,11 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
           for (const subject of sectionData.subjects) {
             validateDateOrder(subject); // Validate date order before saving
 
+            // Add classInfoId and schoolId to the Subject creation
             await Subject.create({
               sectionId: newSection.id,
+              classInfoId: newClass.id,   // Include the classInfoId
+              schoolId,                   // Include the schoolId
               subjectName: subject.subjectName,
               academicStartDate: subject.academicStartDate,
               academicEndDate: subject.academicEndDate,
@@ -104,6 +107,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Error creating class with sections and subjects', error: error.message });
   }
 });
+
 
 
 
