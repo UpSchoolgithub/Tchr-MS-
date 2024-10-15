@@ -121,6 +121,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 });
 
 // Route to add sections and subjects to an existing class
+// Route to add sections and subjects to an existing class
 router.post('/classes/:classId/sections', async (req, res) => {
   const { classId } = req.params;
   const { sections, schoolId } = req.body;
@@ -128,26 +129,48 @@ router.post('/classes/:classId/sections', async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     for (const [sectionName, sectionData] of Object.entries(sections)) {
-      const [section, created] = await Section.findOrCreate({
+      // Check if the section already exists with the given classId, sectionName, and schoolId
+      let section = await Section.findOne({
         where: { sectionName, classInfoId: classId, schoolId },
-        defaults: { schoolId },
         transaction
       });
 
+      // If section doesn't exist, create a new one
+      if (!section) {
+        section = await Section.create({
+          sectionName,
+          classInfoId: classId,
+          schoolId,
+        }, { transaction });
+      }
+
+      // Check and add subjects to the existing section
       if (sectionData.subjects) {
         for (const subject of sectionData.subjects) {
-          validateDateOrder(subject);
+          const existingSubject = await Subject.findOne({
+            where: {
+              sectionId: section.id,
+              classInfoId: classId,
+              subjectName: subject.subjectName,
+            },
+            transaction
+          });
 
-          await Subject.create({
-            sectionId: section.id,
-            classInfoId: classId,
-            schoolId,
-            subjectName: subject.subjectName,
-            academicStartDate: subject.academicStartDate,
-            academicEndDate: subject.academicEndDate,
-            revisionStartDate: subject.revisionStartDate,
-            revisionEndDate: subject.revisionEndDate
-          }, { transaction });
+          // Only create a new subject if it doesn't already exist
+          if (!existingSubject) {
+            validateDateOrder(subject);
+
+            await Subject.create({
+              sectionId: section.id,
+              classInfoId: classId,
+              schoolId,
+              subjectName: subject.subjectName,
+              academicStartDate: subject.academicStartDate,
+              academicEndDate: subject.academicEndDate,
+              revisionStartDate: subject.revisionStartDate,
+              revisionEndDate: subject.revisionEndDate
+            }, { transaction });
+          }
         }
       }
     }
@@ -160,6 +183,7 @@ router.post('/classes/:classId/sections', async (req, res) => {
     res.status(500).json({ message: 'Error adding sections and subjects', error: error.message });
   }
 });
+
 
 
 // Route to update an existing subject
