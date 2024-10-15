@@ -29,44 +29,26 @@ const validateParams = (params) => {
 };
 
 // Fetch sessions for a specific subject within a section and class
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions', async (req, res) => {
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   try {
-    const { schoolId, classId, sectionName, subjectId } = req.params;
-    console.log('Received parameters:', { schoolId, classId, sectionName, subjectId });
+    const { schoolId, classId, sectionId, subjectId } = req.params;
+    
+    // Check if all params are available
+    if (!schoolId || !classId || !sectionId || !subjectId) {
+      return res.status(400).json({ error: 'Required parameters are missing' });
+    }
 
-    // Convert sectionName to uppercase for consistency
-    const normalizedSectionName = sectionName.toUpperCase();
-
-    // Fetch the section by name, classId, and schoolId
-    const section = await Section.findOne({
-      where: { sectionName: normalizedSectionName, classInfoId: classId, schoolId }
+    const sessions = await Session.findAll({
+      where: { schoolId, classId, sectionId, subjectId },
+      attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber']
     });
-
-    if (!section) {
-      console.error(`Section '${normalizedSectionName}' not found in class '${classId}' for school '${schoolId}'`);
-      return res.status(404).json({ error: `Section '${normalizedSectionName}' not found.` });
-    }
-
-    console.log('Found section:', section.id);
-
-    // Use the numeric sectionId to fetch sessions
-      const sessions = await Session.findAll({
-        where: { schoolId, classId, sectionId, subjectId },
-        attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber'] // Ensure sessionDate is not included here
-      });
-
-
-    if (sessions.length === 0) {
-      console.warn('No sessions found for the specified subject and section.');
-      return res.status(404).json({ error: 'No sessions found for the specified subject and section.' });
-    }
-
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
   }
 });
+
 
 
 
