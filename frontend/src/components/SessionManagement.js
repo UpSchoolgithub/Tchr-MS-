@@ -29,6 +29,36 @@ const SessionManagement = () => {
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
 
+  const startEditing = (session) => {
+    setEditingSessionId(session.id);
+    setEditingNumberOfSessions(session.numberOfSessions);
+    setEditingPriorityNumber(session.priorityNumber);
+  };
+
+  const handleSessionUpdate = async (sessionId) => {
+    try {
+      await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
+        numberOfSessions: editingNumberOfSessions,
+        priorityNumber: editingPriorityNumber,
+      });
+      setEditingSessionId(null);
+      fetchSessions(); // Refresh the sessions list after update
+    } catch (error) {
+      console.error('Error updating session:', error);
+      setError('Failed to update session.');
+    }
+  };
+
+  const handleSessionDelete = async (sessionId) => {
+    try {
+      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+      fetchSessions(); // Refresh the sessions list after deletion
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      setError('Failed to delete session.');
+    }
+  };
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
@@ -44,7 +74,7 @@ const SessionManagement = () => {
     try {
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      fetchSessions();
+      fetchSessions(); // Refresh the sessions list after upload
     } catch (error) {
       console.error('Error uploading file:', error);
       setError('Failed to upload file.');
@@ -79,14 +109,22 @@ const SessionManagement = () => {
               <td>{session.chapterName}</td>
               <td>
                 {editingSessionId === session.id ? (
-                  <input type="number" value={editingNumberOfSessions} onChange={(e) => setEditingNumberOfSessions(e.target.value)} />
+                  <input
+                    type="number"
+                    value={editingNumberOfSessions}
+                    onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                  />
                 ) : (
                   session.numberOfSessions
                 )}
               </td>
               <td>
                 {editingSessionId === session.id ? (
-                  <input type="number" value={editingPriorityNumber} onChange={(e) => setEditingPriorityNumber(e.target.value)} />
+                  <input
+                    type="number"
+                    value={editingPriorityNumber}
+                    onChange={(e) => setEditingPriorityNumber(e.target.value)}
+                  />
                 ) : (
                   session.priorityNumber
                 )}
@@ -101,7 +139,9 @@ const SessionManagement = () => {
                   <>
                     <button onClick={() => startEditing(session)}>Edit</button>
                     <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-                    <Link to={`/sessions/${session.id}/sessionPlans`}><button>Session Plan</button></Link>
+                    <Link to={`/sessions/${session.id}/sessionPlans`}>
+                      <button>Session Plan</button>
+                    </Link>
                   </>
                 )}
               </td>
