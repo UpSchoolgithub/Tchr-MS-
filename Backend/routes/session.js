@@ -71,6 +71,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   const { schoolId, classId, sectionId, subjectId } = req.params;
 
   try {
+    // Check if a file is uploaded
     if (!req.file) {
       return res.status(400).json({ error: 'File is required for bulk upload' });
     }
@@ -80,11 +81,12 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    if (jsonData.length === 0) {
+    // Ensure that the file has data
+    if (!jsonData || jsonData.length === 0) {
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    // Map the data from JSON to match your database schema
+    // Mapping file data to database schema
     const sessions = jsonData.map(row => ({
       schoolId,
       classId,
@@ -95,6 +97,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
       priorityNumber: row.PriorityNumber || 0,
     }));
 
+    // Bulk insert the sessions into the database
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
