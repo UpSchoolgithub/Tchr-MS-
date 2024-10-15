@@ -75,61 +75,57 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
     const { schoolId, classId, sectionName, subjectId } = req.params;
-    console.log('Received parameters:', { schoolId, classId, sectionName, subjectId });
-
+    
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
     }
 
-    // Convert sectionName to uppercase for consistency
-    const normalizedSectionName = sectionName.toUpperCase();
-    
-    // Fetch the section by name, classId, and schoolId
     const section = await Section.findOne({
-      where: { sectionName: normalizedSectionName, classInfoId: classId, schoolId }
+      where: { sectionName: sectionName.toUpperCase(), classInfoId: classId, schoolId }
     });
 
     if (!section) {
-      return res.status(404).json({ error: `Section '${normalizedSectionName}' not found in class '${classId}' and school '${schoolId}'` });
+      return res.status(404).json({ error: `Section '${sectionName}' not found` });
     }
 
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
     console.log("Parsed JSON Data:", jsonData);
-    if (jsonData.length === 0) {
-      return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
+
+    const sessions = jsonData
+      .filter(row => row.ChapterName)
+      .map(row => {
+        const { ChapterName, NumberOfSessions, PriorityNumber } = row;
+        console.log("Session Data Row:", { ChapterName, NumberOfSessions, PriorityNumber });
+
+        return {
+          schoolId,
+          classId,
+          sectionId: section.id,
+          subjectId,
+          chapterName: ChapterName,
+          numberOfSessions: NumberOfSessions,
+          priorityNumber: PriorityNumber,
+        };
+      });
+
+    console.log("Sessions Ready for Bulk Insert:", sessions);
+
+    if (sessions.length === 0) {
+      return res.status(400).json({ error: 'No valid data to upload.' });
     }
-
-const sessions = jsonData
-  .filter(row => row.ChapterName) // Ensure ChapterName is not null or undefined
-  .map(row => {
-    const { ChapterName, NumberOfSessions, PriorityNumber } = row;
-    console.log("Row Data:", row); // Check if ChapterName is present here
-    return {
-      schoolId,
-      classId,
-      sectionId: section.id,
-      subjectId,
-      chapterName: ChapterName,
-      numberOfSessions: NumberOfSessions,
-      priorityNumber: PriorityNumber,
-    };
-  });
-
-
-if (sessions.length === 0) {
-  console.error('No valid sessions found after filtering. Please check your data.');
-}
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    console.error('Error uploading sessions:', error);
+    console.error("Error during bulk insert:", error);
     res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
+
 
 
 
