@@ -68,43 +68,62 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 
 // Bulk upload sessions for a subject within a section and class
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
-  const { schoolId, classId, sectionId, subjectId } = req.params;
-
   try {
-    // Check if a file is uploaded
-    if (!req.file) {
-      return res.status(400).json({ error: 'File is required for bulk upload' });
-    }
+    // Log incoming parameters
+    const { schoolId, classId, sectionId, subjectId } = req.params;
+    console.log('Parameters:', { schoolId, classId, sectionId, subjectId });
 
-    const filePath = path.join(__dirname, '../uploads', req.file.filename);
-    const workbook = XLSX.readFile(filePath);
+    // Verify file upload
+    if (!req.file) {
+      console.log('No file uploaded');
+      return res.status(400).json({ error: 'File is required' });
+    }
+    console.log('Uploaded file path:', req.file.path);
+
+    // Read and parse the Excel file
+    const workbook = XLSX.readFile(req.file.path);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    console.log('Parsed file data:', jsonData);
 
-    // Ensure that the file has data
-    if (!jsonData || jsonData.length === 0) {
+    // Check if jsonData is empty
+    if (!jsonData.length) {
+      console.log('Uploaded file is empty or contains no valid data');
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    // Mapping file data to database schema
-    const sessions = jsonData.map(row => ({
-      schoolId,
-      classId,
-      sectionId,
-      subjectId,
-      chapterName: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0,
-    }));
+    // Map jsonData to ensure required fields are present
+    const sessions = jsonData.map(row => {
+      const chapterName = row.ChapterName;
+      const numberOfSessions = row.NumberOfSessions;
+      const priorityNumber = row.PriorityNumber;
 
-    // Bulk insert the sessions into the database
+      // Check for missing fields in each row
+      if (!chapterName || !numberOfSessions || !priorityNumber) {
+        console.log('Missing fields in row:', { chapterName, numberOfSessions, priorityNumber });
+        throw new Error('All fields are required in each row');
+      }
+
+      return {
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        chapterName,
+        numberOfSessions,
+        priorityNumber
+      };
+    });
+
+    // Insert sessions into the database
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    console.error('Error uploading sessions:', error);
-    res.status(500).json({ error: 'Failed to upload sessions' });
+    console.error('Error uploading sessions:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to upload sessions' });
   }
 });
+
 
 
 
