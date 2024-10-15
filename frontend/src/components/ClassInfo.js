@@ -8,7 +8,7 @@ const ClassInfo = () => {
   const [classInfos, setClassInfos] = useState([]);
   const [className, setClassName] = useState('');
   const [newClassName, setNewClassName] = useState('');
-  const [sections, setSections] = useState([]); // Sections for the selected class
+  const [sections, setSections] = useState([]);
   const [newSectionName, setNewSectionName] = useState('');
   const [section, setSection] = useState('');
   const [subject, setSubject] = useState('');
@@ -17,8 +17,6 @@ const ClassInfo = () => {
   const [revisionStartDate, setRevisionStartDate] = useState('');
   const [revisionEndDate, setRevisionEndDate] = useState('');
   const [error, setError] = useState('');
-  const [editingSubject, setEditingSubject] = useState(null);
-  const [tempDates, setTempDates] = useState({});
 
   const getSubjects = (className) => {
     return parseInt(className, 10) <= 7
@@ -29,6 +27,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log("Fetched Class Infos:", response.data); // Debugging Log
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -39,7 +38,8 @@ const ClassInfo = () => {
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
-      setSections(response.data); // Update sections state with fetched data
+      console.log("Fetched Sections for Class:", classId, response.data); // Debugging Log
+      setSections(response.data);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
@@ -53,9 +53,10 @@ const ClassInfo = () => {
   const handleClassSubmit = async () => {
     if (newClassName) {
       try {
-        await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
+        const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
+        console.log("Added New Class:", response.data); // Debugging Log
         setNewClassName('');
-        fetchClassInfos(); // Refresh class infos
+        fetchClassInfos();
       } catch (error) {
         console.error('Error adding class:', error);
         setError('Failed to add class. Please try again.');
@@ -71,12 +72,13 @@ const ClassInfo = () => {
     }
 
     try {
-      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
-        sections: { [newSectionName.toUpperCase()]: { subjects: [] } }, // Ensure uppercase section name
+      const response = await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
+        sections: { [newSectionName.toUpperCase()]: { subjects: [] } },
         schoolId
       });
+      console.log("Added Section:", response.data); // Debugging Log
       setNewSectionName('');
-      fetchSections(selectedClass.id); // Refresh sections list for the selected class
+      fetchSections(selectedClass.id);
     } catch (error) {
       console.error('Error adding section:', error);
       setError('Failed to add section. Please try again.');
@@ -87,9 +89,9 @@ const ClassInfo = () => {
     setClassName(selectedClassName);
     const selectedClass = classInfos.find(cls => cls.className === selectedClassName);
     if (selectedClass) {
-      fetchSections(selectedClass.id); // Fetch sections for the selected class
+      fetchSections(selectedClass.id);
     } else {
-      setSections([]); // Clear sections if no class is selected
+      setSections([]);
     }
   };
 
@@ -120,11 +122,11 @@ const ClassInfo = () => {
         revisionEndDate,
       };
 
-      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
-        sections: { [section.toUpperCase()]: { subjects: [newSubject] } }, // Ensure uppercase section name
+      const response = await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
+        sections: { [section.toUpperCase()]: { subjects: [newSubject] } },
         schoolId
       });
-
+      console.log("Added Subject:", response.data); // Debugging Log
       fetchClassInfos();
       resetForm();
     } catch (error) {
@@ -209,6 +211,25 @@ const ClassInfo = () => {
         </div>
         <button type="submit">Add Section and Subject</button>
       </form>
+
+      <div>
+        <h2>Class, Section, and Subject Details:</h2>
+        {classInfos.map((info) => (
+          <div key={info.id}>
+            <h3>Class: {info.className}</h3>
+            {info.sections && Object.keys(info.sections).map(sec => (
+              <div key={sec}>
+                <p>Section: {sec}</p>
+                <ul>
+                  {info.sections[sec].subjects && info.sections[sec].subjects.map((sub) => (
+                    <li key={sub.id}>{sub.subjectName} - {sub.academicStartDate} to {sub.academicEndDate}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
