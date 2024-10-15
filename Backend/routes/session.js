@@ -75,12 +75,13 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
     const { schoolId, classId, sectionName, subjectId } = req.params;
-    validateParams(req.params);
+    console.log('Received parameters:', { schoolId, classId, sectionName, subjectId });
 
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
     }
 
+    // Convert sectionName to uppercase for consistency
     const normalizedSectionName = sectionName.toUpperCase();
     
     // Fetch the section by name, classId, and schoolId
@@ -103,8 +104,9 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
 
     const sessions = jsonData.map(row => {
       const { ChapterName, NumberOfSessions, PriorityNumber } = row;
-      if (!ChapterName || !NumberOfSessions || !PriorityNumber) {
-        console.error("Missing fields in row:", row); // Log rows without required fields
+      console.log("Parsed row data:", row);  // Log each row's data
+      if (!ChapterName) {
+        console.error("Missing chapterName in row:", row); // Log rows without chapter names
         return null;
       }
       return {
@@ -129,6 +131,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
     res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
+
 
 
 
