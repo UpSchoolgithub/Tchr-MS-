@@ -102,10 +102,11 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    const sessions = jsonData
-  .filter(row => row.ChapterName) // Ensures rows have a valid ChapterName
+const sessions = jsonData
+  .filter(row => row.ChapterName) // Ensure ChapterName is not null or undefined
   .map(row => {
     const { ChapterName, NumberOfSessions, PriorityNumber } = row;
+    console.log("Row Data:", row); // Check if ChapterName is present here
     return {
       schoolId,
       classId,
@@ -116,6 +117,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
       priorityNumber: PriorityNumber,
     };
   });
+
 
 if (sessions.length === 0) {
   console.error('No valid sessions found after filtering. Please check your data.');
