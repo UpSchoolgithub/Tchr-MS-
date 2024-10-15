@@ -66,15 +66,25 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   }
 });
 
-// Bulk upload sessions for a subject within a section and class
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
-    const { schoolId, classId, sectionId, subjectId } = req.params;
-    console.log('Received parameters:', { schoolId, classId, sectionId, subjectId });
+    const { schoolId, classId, sectionName, subjectId } = req.params;
+    console.log('Received parameters:', { schoolId, classId, sectionName, subjectId });
 
     if (!req.file) {
-      console.log('No file uploaded');
       return res.status(400).json({ error: 'File is required' });
+    }
+
+    // Convert sectionName to uppercase for consistency
+    const normalizedSectionName = sectionName.toUpperCase();
+    
+    // Fetch the section by name, classId, and schoolId
+    const section = await Section.findOne({
+      where: { sectionName: normalizedSectionName, classInfoId: classId, schoolId }
+    });
+
+    if (!section) {
+      return res.status(404).json({ error: `Section '${normalizedSectionName}' not found in class '${classId}' and school '${schoolId}'` });
     }
 
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
@@ -83,50 +93,20 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
     if (jsonData.length === 0) {
-      console.log('Uploaded file is empty or invalid');
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    // Array to collect missing fields and log data for each row
-    const errors = [];
-    const sessions = [];
+    // Prepare sessions data with the numeric sectionId
+    const sessions = jsonData.map(row => ({
+      schoolId,
+      classId,
+      sectionId: section.id, // Use the actual numeric sectionId
+      subjectId,
+      chapterName: row.ChapterName,
+      numberOfSessions: row.NumberOfSessions || 1,
+      priorityNumber: row.PriorityNumber || 0,
+    }));
 
-    jsonData.forEach((row, index) => {
-      const chapterName = row.ChapterName;
-      const numberOfSessions = row.NumberOfSessions;
-      const priorityNumber = row.PriorityNumber;
-
-      // Check for missing fields
-      const missingFields = [];
-      if (!chapterName) missingFields.push('ChapterName');
-      if (!numberOfSessions) missingFields.push('NumberOfSessions');
-      if (!priorityNumber) missingFields.push('PriorityNumber');
-
-      // Log each row's data and any missing fields
-      console.log(`Row ${index + 1} data:`, row);
-      if (missingFields.length) {
-        console.log(`Row ${index + 1} is missing fields:`, missingFields);
-        errors.push(`Row ${index + 1}: Missing fields - ${missingFields.join(', ')}`);
-      } else {
-        sessions.push({
-          schoolId,
-          classId,
-          sectionId,
-          subjectId,
-          chapterName,
-          numberOfSessions,
-          priorityNumber
-        });
-      }
-    });
-
-    // If there are missing fields, return an error with details
-    if (errors.length > 0) {
-      console.log('Errors found:', errors);
-      return res.status(400).json({ error: 'Some fields are missing', details: errors });
-    }
-
-    // Proceed with inserting sessions if no errors
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
