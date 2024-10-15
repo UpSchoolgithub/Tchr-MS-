@@ -103,15 +103,22 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
     }
 
     // Prepare sessions data with the numeric sectionId
-    const sessions = jsonData.map(row => ({
-      schoolId,
-      classId,
-      sectionId: section.id, // Use the actual numeric sectionId
-      subjectId,
-      chapterName: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0,
-    }));
+    const sessions = jsonData.map(row => {
+      if (!row.ChapterName) {
+        console.error("Missing chapterName in row:", row);
+        return null; // Or handle this error appropriately
+      }
+      return {
+        schoolId,
+        classId,
+        sectionId: section.id, // Use the actual section ID
+        subjectId,
+        chapterName: row.ChapterName, // Make sure this field is populated
+        numberOfSessions: row.NumberOfSessions || 1,
+        priorityNumber: row.PriorityNumber || 0,
+      };
+    }).filter(session => session !== null); // Filter out any invalid entries
+    
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
