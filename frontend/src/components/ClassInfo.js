@@ -56,6 +56,7 @@ const ClassInfo = () => {
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
 
+    // Ensure dates are in correct order
     if (new Date(academicStartDate) >= new Date(academicEndDate) ||
         new Date(academicEndDate) >= new Date(revisionStartDate) ||
         new Date(revisionStartDate) >= new Date(revisionEndDate)) {
@@ -64,6 +65,25 @@ const ClassInfo = () => {
     }
 
     try {
+      // Check if the section already exists
+      let sectionId;
+      const existingClass = classInfos.find(cls => cls.className === className);
+      
+      if (existingClass && existingClass.sections[section]) {
+        // Section already exists
+        sectionId = existingClass.sections[section].id;
+      } else {
+        // Add new section to existing class
+        const sectionResponse = await axios.post(`https://tms.up.school/api/classes/${existingClass.id}/sections`, {
+          sections: {
+            [section]: { subjects: [] }
+          },
+          schoolId
+        });
+        sectionId = sectionResponse.data.sections[section].id;
+      }
+
+      // Now add the subject to the existing/new section
       const newSubject = {
         subjectName: subject,
         academicStartDate,
@@ -72,34 +92,18 @@ const ClassInfo = () => {
         revisionEndDate,
       };
 
-      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
-        className,
+      await axios.post(`https://tms.up.school/api/classes/${existingClass.id}/sections`, {
         sections: {
           [section]: { subjects: [newSubject] }
-        }
+        },
+        schoolId
       });
 
-      const updatedClassInfos = [...classInfos];
-      const classIndex = updatedClassInfos.findIndex(info => info.className === className);
-
-      if (classIndex >= 0) {
-        const sectionData = updatedClassInfos[classIndex].sections[section] || { subjects: [] };
-        sectionData.subjects.push(newSubject);
-        updatedClassInfos[classIndex].sections[section] = sectionData;
-      } else {
-        updatedClassInfos.push({
-          className,
-          sections: {
-            [section]: { subjects: [newSubject] }
-          }
-        });
-      }
-
-      setClassInfos(updatedClassInfos);
+      fetchClassInfos(); // Refresh class info to reflect changes
       resetForm();
     } catch (error) {
-      console.error('Error adding subject:', error);
-      setError('Failed to add subject. Please try again.');
+      console.error('Error adding section or subject:', error);
+      setError('Failed to add section or subject. Please try again.');
     }
   };
 
