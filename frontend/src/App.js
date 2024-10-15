@@ -41,30 +41,35 @@ function App() {
         <div className="app">
           {token && <Sidebar />}
           <div className="main-content">
-            <Routes>
-              <Route path="/login" element={<LoginForm setToken={setToken} />} />
-              <Route path="/" element={<ProtectedRoute element={<Dashboard />} />} />
-              <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-              <Route path="/school" element={<ProtectedRoute element={<School />} />} />
-              <Route path="/manager" element={<ProtectedRoute element={<Manager />} />} />
-              <Route path="/create-school" element={<ProtectedRoute element={<CreateSchool />} />} />
-              <Route path="/edit-school/:id" element={<ProtectedRoute element={<EditSchool />} />}>
-                <Route path="details" element={<ProtectedRoute element={<SchoolDetails />} />} />
-                <Route path="timetable" element={<ProtectedRoute element={<TimetableSettings />} />} />
-                <Route path="calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-                <Route path="classes" element={<ProtectedRoute element={<ClassInfo />} />} />
-                <Route path="members" element={<ProtectedRoute element={<Members />} />} />
-              </Route>
-              <Route path="/schools/:schoolId/*" element={<ProtectedRoute element={<SchoolPage />} />}>
-                <Route path="classes/:classId/sections/:sectionId/sessions" element={<ProtectedRoute element={<SessionManagement />} />} />
-              </Route>
-              <Route path="/sessions/:sessionId/sessionPlans" element={<ProtectedRoute element={<SessionPlan />} />} />
-              <Route path="/add-section" element={<ProtectedRoute element={<AddSection />} />} />
-              <Route path="/logout" element={<Logout setToken={setToken} />} />
-              <Route path="/managers" element={<ProtectedRoute element={<Manager />} />} />
-              <Route path="/create-manager" element={<ProtectedRoute element={<CreateManager />} />} />
-              <Route path="/edit-manager/:managerId" element={<ProtectedRoute element={<EditManager />} />} />
-            </Routes>
+          <Routes>
+            <Route path="/login" element={<LoginForm setToken={setToken} />} />
+            <Route path="/" element={<ProtectedRoute element={<Dashboard />} />} />
+            <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+            <Route path="/school" element={<ProtectedRoute element={<School />} />} />
+            <Route path="/manager" element={<ProtectedRoute element={<Manager />} />} />
+            <Route path="/create-school" element={<ProtectedRoute element={<CreateSchool />} />} />
+            <Route path="/edit-school/:id" element={<ProtectedRoute element={<EditSchool />} />}>
+              <Route path="details" element={<ProtectedRoute element={<SchoolDetails />} />} />
+              <Route path="timetable" element={<ProtectedRoute element={<TimetableSettings />} />} />
+              <Route path="calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
+              <Route path="classes" element={<ProtectedRoute element={<ClassInfo />} />} />
+              <Route path="members" element={<ProtectedRoute element={<Members />} />} />
+            </Route>
+            
+            {/* Update this route to include the subjectId parameter */}
+            <Route path="/schools/:schoolId/*" element={<ProtectedRoute element={<SchoolPage />} />}>
+              <Route path="classes/:classId/sections/:sectionId/subjects/:subjectId/sessions" 
+                    element={<ProtectedRoute element={<SessionManagement />} />} />
+            </Route>
+            
+            <Route path="/sessions/:sessionId/sessionPlans" element={<ProtectedRoute element={<SessionPlan />} />} />
+            <Route path="/add-section" element={<ProtectedRoute element={<AddSection />} />} />
+            <Route path="/logout" element={<Logout setToken={setToken} />} />
+            <Route path="/managers" element={<ProtectedRoute element={<Manager />} />} />
+            <Route path="/create-manager" element={<ProtectedRoute element={<CreateManager />} />} />
+            <Route path="/edit-manager/:managerId" element={<ProtectedRoute element={<EditManager />} />} />
+          </Routes>
+
           </div>
         </div>
       </Router>
