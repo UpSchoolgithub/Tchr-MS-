@@ -73,13 +73,12 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     setIsLoading(true);
     try {
-      // Include the subjectId in the URL for file upload
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -92,7 +91,6 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <div>
@@ -109,51 +107,63 @@ const SessionManagement = () => {
         Delete All
       </button>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Chapter</th>
-            <th>Number of Sessions</th>
-            <th>Priority Number</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map(session => (
-            <tr key={session.id}>
-              <td>{session.chapterName}</td>
-              <td>
-                {editingSessionId === session.id ? (
-                  <input type="number" value={editingNumberOfSessions} onChange={(e) => setEditingNumberOfSessions(e.target.value)} />
-                ) : (
-                  session.numberOfSessions
-                )}
-              </td>
-              <td>
-                {editingSessionId === session.id ? (
-                  <input type="number" value={editingPriorityNumber} onChange={(e) => setEditingPriorityNumber(e.target.value)} />
-                ) : (
-                  session.priorityNumber
-                )}
-              </td>
-              <td>
-                {editingSessionId === session.id ? (
-                  <>
-                    <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
-                    <button onClick={() => setEditingSessionId(null)}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => startEditing(session)}>Edit</button>
-                    <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-                    <Link to={`/sessions/${session.id}/sessionPlans`}><button>Session Plan</button></Link>
-                  </>
-                )}
-              </td>
+      {sessions.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>Chapter</th>
+              <th>Number of Sessions</th>
+              <th>Priority Number</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sessions.map(session => (
+              <tr key={session.id}>
+                <td>{session.chapterName}</td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="number"
+                      value={editingNumberOfSessions}
+                      onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                    />
+                  ) : (
+                    session.numberOfSessions
+                  )}
+                </td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="number"
+                      value={editingPriorityNumber}
+                      onChange={(e) => setEditingPriorityNumber(e.target.value)}
+                    />
+                  ) : (
+                    session.priorityNumber
+                  )}
+                </td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <>
+                      <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
+                      <button onClick={() => setEditingSessionId(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEditing(session)}>Edit</button>
+                      <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
+                      <Link to={`/sessions/${session.id}/sessionPlans`}><button>Session Plan</button></Link>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No sessions available. Please upload or add new sessions.</p>
+      )}
     </div>
   );
 };
