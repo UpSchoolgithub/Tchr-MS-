@@ -8,6 +8,7 @@ const ClassInfo = () => {
   const [classInfos, setClassInfos] = useState([]);
   const [className, setClassName] = useState('');
   const [newClassName, setNewClassName] = useState('');
+  const [newSectionName, setNewSectionName] = useState('');
   const [section, setSection] = useState('');
   const [subject, setSubject] = useState('');
   const [academicStartDate, setAcademicStartDate] = useState('');
@@ -53,26 +54,31 @@ const ClassInfo = () => {
     }
   };
 
-  const getOrCreateSectionId = async (existingClassId, sectionName) => {
-    const existingClass = classInfos.find(cls => cls.className === className);
-    
-    // Check if the section already exists in the selected class
-    if (existingClass && existingClass.sections[sectionName]) {
-      return existingClass.sections[sectionName].id;
-    } else {
-      // Create the section if it does not exist
-      const sectionResponse = await axios.post(`https://tms.up.school/api/classes/${existingClassId}/sections`, {
-        sections: { [sectionName]: { subjects: [] } },
+  const handleSectionSubmit = async () => {
+    const selectedClass = classInfos.find(cls => cls.className === className);
+    if (!selectedClass) {
+      setError('Please select a valid class to add a section.');
+      return;
+    }
+
+    try {
+      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
+        sections: {
+          [newSectionName]: { subjects: [] }
+        },
         schoolId
       });
-      return sectionResponse.data.sections[sectionName].id;
+      setNewSectionName('');
+      fetchClassInfos(); // Refresh the class info to include the new section
+    } catch (error) {
+      console.error('Error adding section:', error);
+      setError('Failed to add section. Please try again.');
     }
   };
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
 
-    // Ensure dates are in correct order
     if (new Date(academicStartDate) >= new Date(academicEndDate) ||
         new Date(academicEndDate) >= new Date(revisionStartDate) ||
         new Date(revisionStartDate) >= new Date(revisionEndDate)) {
@@ -81,13 +87,11 @@ const ClassInfo = () => {
     }
 
     try {
-      const existingClass = classInfos.find(cls => cls.className === className);
-      if (!existingClass) {
-        setError('Selected class not found.');
+      const selectedClass = classInfos.find(cls => cls.className === className);
+      if (!selectedClass || !selectedClass.sections[section]) {
+        setError('Please ensure both class and section are selected.');
         return;
       }
-
-      const sectionId = await getOrCreateSectionId(existingClass.id, section);
 
       const newSubject = {
         subjectName: subject,
@@ -97,18 +101,18 @@ const ClassInfo = () => {
         revisionEndDate,
       };
 
-      await axios.post(`https://tms.up.school/api/classes/${existingClass.id}/sections`, {
+      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
         sections: {
           [section]: { subjects: [newSubject] }
         },
         schoolId
       });
 
-      await fetchClassInfos();
+      fetchClassInfos(); // Refresh class info to reflect changes
       resetForm();
     } catch (error) {
-      console.error('Error adding section or subject:', error);
-      setError('Failed to add section or subject. Please try again.');
+      console.error('Error adding subject:', error);
+      setError('Failed to add subject. Please try again.');
     }
   };
 
@@ -174,6 +178,16 @@ const ClassInfo = () => {
             <option key={cls} value={cls}>{cls}</option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <input
+          type="text"
+          placeholder="Enter new section"
+          value={newSectionName}
+          onChange={(e) => setNewSectionName(e.target.value)}
+        />
+        <button onClick={handleSectionSubmit}>Add New Section</button>
       </div>
 
       <form onSubmit={handleSectionSubjectSubmit}>
