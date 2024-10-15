@@ -33,22 +33,29 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
   try {
     const { schoolId, classId, sectionName, subjectId } = req.params;
 
-    // Fetch the numeric sectionId based on the sectionName
+    // Fetch the section using the name and ensure it's uppercase
     const section = await Section.findOne({
-      where: { sectionName: sectionName.toUpperCase(), classInfoId: classId, schoolId: schoolId }
+      where: {
+        sectionName: sectionName.toUpperCase(),
+        classInfoId: classId,
+        schoolId
+      }
     });
 
     if (!section) {
-      return res.status(404).json({ error: `Section '${sectionName}' not found for school ID '${schoolId}' and class ID '${classId}'` });
+      return res.status(404).json({ error: `Section '${sectionName}' not found in class '${classId}' for school '${schoolId}'` });
     }
 
-    // Fetch sessions using the numeric sectionId
+    // Use the numeric sectionId to fetch sessions
     const sessions = await Session.findAll({
-      where: { sectionId: section.id, subjectId }
+      where: {
+        sectionId: section.id,
+        subjectId
+      }
     });
 
-    if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found' });
+    if (sessions.length === 0) {
+      return res.status(404).json({ error: 'No sessions found for the specified subject and section.' });
     }
 
     res.json(sessions);
@@ -57,6 +64,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
+
 
 
 // Create a new session
