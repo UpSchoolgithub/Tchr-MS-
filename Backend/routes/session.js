@@ -20,10 +20,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Utility function for parameter validation
+// Function to validate essential parameters
 const validateParams = (params) => {
-  const { schoolId, classId, sectionId, subjectId } = params;
-  if (!schoolId || !classId || !sectionId || !subjectId) {
+  const { schoolId, classId, sectionName, subjectId } = params;
+  if (!schoolId || !classId || !sectionName || !subjectId) {
     throw new Error('Required parameters are missing');
   }
 };
@@ -75,13 +75,12 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
     const { schoolId, classId, sectionName, subjectId } = req.params;
-    console.log('Received parameters:', { schoolId, classId, sectionName, subjectId });
+    validateParams(req.params);
 
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
     }
 
-    // Convert sectionName to uppercase for consistency
     const normalizedSectionName = sectionName.toUpperCase();
     
     // Fetch the section by name, classId, and schoolId
@@ -102,32 +101,34 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    // Prepare sessions data with the numeric sectionId
     const sessions = jsonData.map(row => {
-      if (!row.ChapterName) {
-          console.error("Missing chapterName in row:", row); // Log rows without chapter names
-          return null;
+      const { ChapterName, NumberOfSessions, PriorityNumber } = row;
+      if (!ChapterName || !NumberOfSessions || !PriorityNumber) {
+        console.error("Missing fields in row:", row); // Log rows without required fields
+        return null;
       }
       return {
-          schoolId,
-          classId,
-          sectionId: section.id, 
-          subjectId,
-          chapterName: row.ChapterName, // Ensure this is correct
-          numberOfSessions: row.NumberOfSessions || 1,
-          priorityNumber: row.PriorityNumber || 0,
+        schoolId,
+        classId,
+        sectionId: section.id,
+        subjectId,
+        chapterName: ChapterName,
+        numberOfSessions: NumberOfSessions,
+        priorityNumber: PriorityNumber,
       };
-  }).filter(session => session !== null); // Filter out any invalid entries
-  
+    }).filter(session => session !== null);
+
+    if (sessions.length === 0) {
+      return res.status(400).json({ error: 'No valid data to upload. Check your file for missing fields.' });
+    }
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
     console.error('Error uploading sessions:', error);
-    res.status(500).json({ error: 'Failed to upload sessions' });
+    res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
-
 
 
 
