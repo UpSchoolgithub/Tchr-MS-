@@ -53,6 +53,22 @@ const ClassInfo = () => {
     }
   };
 
+  const getOrCreateSectionId = async (existingClassId, sectionName) => {
+    const existingClass = classInfos.find(cls => cls.className === className);
+    
+    // Check if the section already exists in the selected class
+    if (existingClass && existingClass.sections[sectionName]) {
+      return existingClass.sections[sectionName].id;
+    } else {
+      // Create the section if it does not exist
+      const sectionResponse = await axios.post(`https://tms.up.school/api/classes/${existingClassId}/sections`, {
+        sections: { [sectionName]: { subjects: [] } },
+        schoolId
+      });
+      return sectionResponse.data.sections[sectionName].id;
+    }
+  };
+
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
 
@@ -65,25 +81,14 @@ const ClassInfo = () => {
     }
 
     try {
-      // Check if the section already exists
-      let sectionId;
       const existingClass = classInfos.find(cls => cls.className === className);
-      
-      if (existingClass && existingClass.sections[section]) {
-        // Section already exists
-        sectionId = existingClass.sections[section].id;
-      } else {
-        // Add new section to existing class
-        const sectionResponse = await axios.post(`https://tms.up.school/api/classes/${existingClass.id}/sections`, {
-          sections: {
-            [section]: { subjects: [] }
-          },
-          schoolId
-        });
-        sectionId = sectionResponse.data.sections[section].id;
+      if (!existingClass) {
+        setError('Selected class not found.');
+        return;
       }
 
-      // Now add the subject to the existing/new section
+      const sectionId = await getOrCreateSectionId(existingClass.id, section);
+
       const newSubject = {
         subjectName: subject,
         academicStartDate,
@@ -99,7 +104,7 @@ const ClassInfo = () => {
         schoolId
       });
 
-      fetchClassInfos(); // Refresh class info to reflect changes
+      await fetchClassInfos();
       resetForm();
     } catch (error) {
       console.error('Error adding section or subject:', error);
