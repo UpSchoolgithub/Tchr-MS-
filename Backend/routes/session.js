@@ -71,30 +71,51 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   try {
     validateParams(req.params);
     const { schoolId, classId, sectionId, subjectId } = req.params;
+
+    if (!req.file) {
+      console.error('No file uploaded.');
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
+    console.log('File path:', filePath);
 
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+    console.log('Parsed JSON data:', jsonData);
+
     if (jsonData.length === 0) {
-      return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
+      console.error('Uploaded file is empty or has invalid data');
+      return res.status(400).json({ error: 'Uploaded file is empty or has invalid data' });
     }
 
-    const sessions = jsonData.map(row => ({
-      schoolId, classId, sectionId, subjectId,
-      chapterName: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0,
-    }));
+    const sessions = jsonData.map(row => {
+      if (!row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
+        console.error('Invalid row data:', row);
+        throw new Error('Missing required session data fields in uploaded file');
+      }
+
+      return {
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        chapterName: row.ChapterName,
+        numberOfSessions: parseInt(row.NumberOfSessions) || 1,
+        priorityNumber: parseInt(row.PriorityNumber) || 0,
+      };
+    });
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
     console.error('Error uploading sessions:', error);
-    res.status(500).json({ error: 'Failed to upload sessions' });
+    res.status(500).json({ error: error.message || 'Failed to upload sessions' });
   }
 });
+
 
 // Update a session by ID
 router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
