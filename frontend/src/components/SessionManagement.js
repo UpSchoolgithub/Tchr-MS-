@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
-  const { schoolId, classId, sectionId } = useParams();
+  const { schoolId, classId, sectionId, subjectId } = useParams();
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
@@ -15,13 +15,13 @@ const SessionManagement = () => {
     setIsLoading(true);
     setError('');
     try {
-      console.log(`Fetching sessions for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}`);
+      console.log(`Fetching sessions for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}, subjectId: ${subjectId}`);
       
-      if (!schoolId || !classId || !sectionId) {
-        throw new Error('Missing required parameters: schoolId, classId, or sectionId.');
+      if (!schoolId || !classId || !sectionId || !subjectId) {
+        throw new Error('Missing required parameters.');
       }
 
-      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -32,80 +32,31 @@ const SessionManagement = () => {
   };
 
   useEffect(() => {
-    if (schoolId && classId && sectionId) {
+    if (schoolId && classId && sectionId && subjectId) {
       fetchSessions();
     } else {
-      setError('Missing required parameters for school, class, or section.');
+      setError('Missing required parameters for school, class, section, or subject.');
     }
-  }, [schoolId, classId, sectionId]);
-
-  const handleSessionUpdate = async (sessionId) => {
-    setError('');
-    try {
-      const response = await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
-        numberOfSessions: editingNumberOfSessions,
-        priorityNumber: editingPriorityNumber,
-      });
-      setSessions(sessions.map(session => (session.id === sessionId ? response.data : session)));
-      setEditingSessionId(null);
-    } catch (error) {
-      console.error('Error updating session:', error);
-      setError(error.response?.data?.error || 'Failed to update session.');
-    }
-  };
-
-  const handleSessionDelete = async (sessionId) => {
-    setError('');
-    try {
-      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
-      setSessions(sessions.filter(session => session.id !== sessionId));
-    } catch (error) {
-      console.error('Error deleting session:', error);
-      setError('Failed to delete session.');
-    }
-  };
-
-  const handleDeleteAll = async () => {
-    setError('');
-    try {
-      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
-      setSessions([]);
-    } catch (error) {
-      console.error('Error deleting all sessions:', error);
-      setError('Failed to delete all sessions.');
-    }
-  };
-
-  const startEditing = (session) => {
-    setEditingSessionId(session.id);
-    setEditingNumberOfSessions(session.numberOfSessions);
-    setEditingPriorityNumber(session.priorityNumber);
-  };
-
-  const cancelEditing = () => {
-    setEditingSessionId(null);
-    setEditingNumberOfSessions('');
-    setEditingPriorityNumber('');
-  };
+  }, [schoolId, classId, sectionId, subjectId]);
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
     setError('');
-  
+
     if (!schoolId || !classId || !sectionId || !subjectId) {
       setError('School ID, Class ID, Section ID, and Subject ID are required for uploading.');
       return;
     }
-  
+
     const file = e.target.elements.file.files[0];
     if (!file) {
       setError('Please select a file to upload.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     setIsLoading(true);
     try {
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
@@ -121,8 +72,6 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
-  
-  
 
   return (
     <div>
