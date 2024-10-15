@@ -42,7 +42,7 @@ const SessionManagement = () => {
         priorityNumber: editingPriorityNumber,
       });
       setEditingSessionId(null);
-      fetchSessions(); // Refresh the sessions list after update
+      fetchSessions();
     } catch (error) {
       console.error('Error updating session:', error);
       setError('Failed to update session.');
@@ -52,7 +52,7 @@ const SessionManagement = () => {
   const handleSessionDelete = async (sessionId) => {
     try {
       await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
-      fetchSessions(); // Refresh the sessions list after deletion
+      fetchSessions();
     } catch (error) {
       console.error('Error deleting session:', error);
       setError('Failed to delete session.');
@@ -73,11 +73,12 @@ const SessionManagement = () => {
     setIsLoading(true);
     try {
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      fetchSessions(); // Refresh the sessions list after upload
+      const response = await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      console.log('Upload response:', response.data);
+      fetchSessions();
     } catch (error) {
       console.error('Error uploading file:', error);
-      setError('Failed to upload file.');
+      setError(error.response?.data?.error || 'Failed to upload file.');
     } finally {
       setIsLoading(false);
     }
