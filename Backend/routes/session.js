@@ -97,32 +97,29 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
+    console.log("Parsed JSON Data:", jsonData);
     if (jsonData.length === 0) {
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    const sessions = jsonData.map(row => {
-      const { ChapterName, NumberOfSessions, PriorityNumber } = row;
-      console.log("Parsed row data:", row);  // Log each row's data
-      if (!ChapterName) {
-        console.error("Missing chapterName in row:", row); // Log rows without chapter names
-        return null;
-      }
-      return {
-        schoolId,
-        classId,
-        sectionId: section.id,
-        subjectId,
-        chapterName: ChapterName,
-        numberOfSessions: NumberOfSessions,
-        priorityNumber: PriorityNumber,
-      };
-    }).filter(session => session !== null);
+    const sessions = jsonData
+  .filter(row => row.ChapterName) // Ensures rows have a valid ChapterName
+  .map(row => {
+    const { ChapterName, NumberOfSessions, PriorityNumber } = row;
+    return {
+      schoolId,
+      classId,
+      sectionId: section.id,
+      subjectId,
+      chapterName: ChapterName,
+      numberOfSessions: NumberOfSessions,
+      priorityNumber: PriorityNumber,
+    };
+  });
 
-    if (sessions.length === 0) {
-      return res.status(400).json({ error: 'No valid data to upload. Check your file for missing fields.' });
-    }
+if (sessions.length === 0) {
+  console.error('No valid sessions found after filtering. Please check your data.');
+}
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
