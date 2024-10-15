@@ -13,6 +13,7 @@ const SessionManagement = () => {
 
   const fetchSessions = async () => {
     setIsLoading(true);
+    setError('');
     try {
       console.log(`Fetching sessions for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}`);
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
@@ -26,7 +27,11 @@ const SessionManagement = () => {
   };
 
   useEffect(() => {
-    fetchSessions();
+    if (schoolId && classId && sectionId) {
+      fetchSessions();
+    } else {
+      setError('Missing required parameters for school, class, or section.');
+    }
   }, [schoolId, classId, sectionId]);
 
   const handleSessionUpdate = async (sessionId) => {
@@ -45,6 +50,7 @@ const SessionManagement = () => {
   };
 
   const handleSessionDelete = async (sessionId) => {
+    setError('');
     try {
       await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
       setSessions(sessions.filter(session => session.id !== sessionId));
@@ -55,6 +61,7 @@ const SessionManagement = () => {
   };
 
   const handleDeleteAll = async () => {
+    setError('');
     try {
       await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
       setSessions([]);
@@ -78,6 +85,7 @@ const SessionManagement = () => {
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
+    setError('');
     const file = e.target.elements.file.files[0];
     if (!file) {
       setError('Please select a file to upload.');
