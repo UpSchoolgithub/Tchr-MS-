@@ -86,23 +86,17 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
 });
 
 // Handle file upload and create sessions based on file content
+// Update the file upload route to include subject information
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   const { schoolId, classId, sectionId, subjectId } = req.params;
-  console.log('Route parameters:', { schoolId, classId, sectionId, subjectId });
-
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded.' });
-  }
 
   try {
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
-    console.log('File path:', filePath);
-
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-    console.log('Parsed JSON data:', jsonData);
 
+    // Find the section and subject based on IDs
     const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
     if (!section) {
       return res.status(404).json({ error: 'Section not found' });
@@ -110,19 +104,20 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 
     const subject = await Subject.findOne({ where: { id: subjectId, sectionId: section.id } });
     if (!subject) {
-      return res.status(404).json({ error: 'Subject not found in this section.' });
+      return res.status(404).json({ error: 'Subject not found' });
     }
 
+    // Map JSON data to session model structure
     const sessions = jsonData.map(row => ({
-      sessionDate: row.sessionDate || null,
+      sessionDate: row.sessionDate,
       topic: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0,
+      numberOfSessions: row.NumberOfSessions,
+      priorityNumber: row.PriorityNumber,
       sectionId: section.id,
-      subjectId: subject.id,
+      subjectId: subject.id // Link session to the correct subject
     }));
-    console.log('Session data to be inserted:', sessions);
 
+    // Bulk create sessions
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
@@ -130,5 +125,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
+
 
 module.exports = router;

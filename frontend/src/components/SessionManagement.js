@@ -68,27 +68,31 @@ const SessionManagement = () => {
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    setError('');
     const file = e.target.elements.file.files[0];
     if (!file) {
       setError('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', file);
+  
     setIsLoading(true);
-
     try {
+      // Include the subjectId in the URL for file upload
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      fetchSessions();
+      await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      await fetchSessions(); // Refresh sessions list after upload
     } catch (error) {
-      setError('Failed to upload file.');
+      console.error('Error uploading file:', error);
+      setError(error.response?.data?.error || 'Failed to upload file.');
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div>
