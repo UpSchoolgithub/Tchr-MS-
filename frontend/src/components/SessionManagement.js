@@ -91,24 +91,24 @@ const SessionManagement = () => {
   const handleFileUpload = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!schoolId || !classId || !sectionId) {
-      setError('School ID, Class ID, and Section ID are required for uploading.');
+  
+    if (!schoolId || !classId || !sectionName || !subjectId) {
+      setError('School ID, Class ID, Section ID, and Subject ID are required for uploading.');
       return;
     }
-
+  
     const file = e.target.elements.file.files[0];
     if (!file) {
       setError('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     setIsLoading(true);
     try {
-      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`;
+      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionName}/subjects/${subjectId}/sessions/upload`;
       console.log(`Uploading file to: ${uploadUrl}`);
       await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -121,6 +121,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div>
