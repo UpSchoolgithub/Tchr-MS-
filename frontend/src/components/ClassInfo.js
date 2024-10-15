@@ -16,6 +16,8 @@ const ClassInfo = () => {
   const [academicEndDate, setAcademicEndDate] = useState('');
   const [revisionStartDate, setRevisionStartDate] = useState('');
   const [revisionEndDate, setRevisionEndDate] = useState('');
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [tempDates, setTempDates] = useState({});
   const [error, setError] = useState('');
 
   const getSubjects = (className) => {
@@ -27,7 +29,6 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      console.log("Fetched Class Infos:", response.data);
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -38,7 +39,6 @@ const ClassInfo = () => {
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
-      console.log("Fetched Sections for Class:", classId, response.data);
       setSections(response.data);
     } catch (error) {
       console.error('Error fetching sections:', error);
@@ -53,8 +53,7 @@ const ClassInfo = () => {
   const handleClassSubmit = async () => {
     if (newClassName) {
       try {
-        const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
-        console.log("Added New Class:", response.data);
+        await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
         setNewClassName('');
         fetchClassInfos();
       } catch (error) {
@@ -72,11 +71,10 @@ const ClassInfo = () => {
     }
 
     try {
-      const response = await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
+      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
         sections: { [newSectionName.toUpperCase()]: { subjects: [] } },
         schoolId
       });
-      console.log("Added Section:", response.data);
       setNewSectionName('');
       fetchSections(selectedClass.id);
     } catch (error) {
@@ -85,7 +83,7 @@ const ClassInfo = () => {
     }
   };
 
-  const handleClassChange = async (selectedClassName) => {
+  const handleClassChange = (selectedClassName) => {
     setClassName(selectedClassName);
     const selectedClass = classInfos.find(cls => cls.className === selectedClassName);
     if (selectedClass) {
@@ -122,16 +120,42 @@ const ClassInfo = () => {
         revisionEndDate,
       };
 
-      const response = await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
+      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
         sections: { [section.toUpperCase()]: { subjects: [newSubject] } },
         schoolId
       });
-      console.log("Added Subject:", response.data);
+
       fetchClassInfos();
       resetForm();
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
+    }
+  };
+
+  const handleEditClick = (subjectId, academicStart, academicEnd, revisionStart, revisionEnd) => {
+    setEditingSubject(subjectId);
+    setTempDates({ academicStartDate: academicStart, academicEndDate: academicEnd, revisionStartDate: revisionStart, revisionEndDate: revisionEnd });
+  };
+
+  const handleSaveClick = async (classId, sectionId, subjectId) => {
+    try {
+      await axios.put(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`, tempDates);
+      setEditingSubject(null);
+      fetchClassInfos();
+    } catch (error) {
+      console.error('Error saving subject:', error);
+      setError('Failed to save the subject. Please try again.');
+    }
+  };
+
+  const handleDeleteClick = async (classId, sectionId, subjectId) => {
+    try {
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`);
+      fetchClassInfos();
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      setError('Failed to delete the subject. Please try again.');
     }
   };
 
@@ -220,24 +244,58 @@ const ClassInfo = () => {
               <th>Class</th>
               <th>Section</th>
               <th>Subject</th>
-              <th>Academic Start</th>
-              <th>Academic End</th>
-              <th>Revision Start</th>
-              <th>Revision End</th>
+              <th>Academic Start Date</th>
+              <th>Academic End Date</th>
+              <th>Revision Start Date</th>
+              <th>Revision End Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {classInfos.map((info) =>
-              Object.keys(info.sections || {}).map((sec) =>
-                (info.sections[sec].subjects || []).map((subject) => (
-                  <tr key={`${info.className}-${sec}-${subject.subjectName}`}>
+              Object.keys(info.sections || {}).map(sec =>
+                info.sections[sec].subjects.map(subject => (
+                  <tr key={subject.id}>
                     <td>{info.className}</td>
                     <td>{sec}</td>
                     <td>{subject.subjectName}</td>
-                    <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
-                    <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
-                    <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
-                    <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
+                    <td>
+                      {editingSubject === subject.id ? (
+                        <input type="date" value={tempDates.academicStartDate} onChange={(e) => setTempDates({ ...tempDates, academicStartDate: e.target.value })} />
+                      ) : (
+                        new Date(subject.academicStartDate).toLocaleDateString()
+                      )}
+                    </td>
+                    <td>
+                      {editingSubject === subject.id ? (
+                        <input type="date" value={tempDates.academicEndDate} onChange={(e) => setTempDates({ ...tempDates, academicEndDate: e.target.value })} />
+                      ) : (
+                        new Date(subject.academicEndDate).toLocaleDateString()
+                      )}
+                    </td>
+                    <td>
+                      {editingSubject === subject.id ? (
+                        <input type="date" value={tempDates.revisionStartDate} onChange={(e) => setTempDates({ ...tempDates, revisionStartDate: e.target.value })} />
+                      ) : (
+                        new Date(subject.revisionStartDate).toLocaleDateString()
+                      )}
+                    </td>
+                    <td>
+                      {editingSubject === subject.id ? (
+                        <input type="date" value={tempDates.revisionEndDate} onChange={(e) => setTempDates({ ...tempDates, revisionEndDate: e.target.value })} />
+                      ) : (
+                        new Date(subject.revisionEndDate).toLocaleDateString()
+                      )}
+                    </td>
+                    <td>
+                      {editingSubject === subject.id ? (
+                        <button onClick={() => handleSaveClick(info.id, sec, subject.id)}>Save</button>
+                      ) : (
+                        <button onClick={() => handleEditClick(subject.id, subject.academicStartDate, subject.academicEndDate, subject.revisionStartDate, subject.revisionEndDate)}>Edit</button>
+                      )}
+                      <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>Delete</button>
+                      <button onClick={() => navigate(`/schools/${schoolId}/classes/${info.id}/sections/${sec}/subjects/${subject.id}/sessions`)}>Manage Sessions</button>
+                    </td>
                   </tr>
                 ))
               )
