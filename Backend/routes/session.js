@@ -32,36 +32,37 @@ const validateParams = (params) => {
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions', async (req, res) => {
   try {
     const { schoolId, classId, sectionName, subjectId } = req.params;
+    console.log('Received parameters:', { schoolId, classId, sectionName, subjectId });
 
-    // Fetch the section using the name and ensure it's uppercase
+    // Convert sectionName to uppercase for consistency
+    const normalizedSectionName = sectionName.toUpperCase();
+
+    // Fetch the section by name, classId, and schoolId
     const section = await Section.findOne({
-      where: {
-        sectionName: sectionName.toUpperCase(),
-        classInfoId: classId,
-        schoolId
-      }
+      where: { sectionName: normalizedSectionName, classInfoId: classId, schoolId }
     });
 
     if (!section) {
-      return res.status(404).json({ error: `Section '${sectionName}' not found in class '${classId}' for school '${schoolId}'` });
+      console.error(`Section '${normalizedSectionName}' not found in class '${classId}' for school '${schoolId}'`);
+      return res.status(404).json({ error: `Section '${normalizedSectionName}' not found.` });
     }
+
+    console.log('Found section:', section.id);
 
     // Use the numeric sectionId to fetch sessions
     const sessions = await Session.findAll({
-      where: {
-        sectionId: section.id,
-        subjectId
-      }
+      where: { sectionId: section.id, subjectId }
     });
 
     if (sessions.length === 0) {
+      console.warn('No sessions found for the specified subject and section.');
       return res.status(404).json({ error: 'No sessions found for the specified subject and section.' });
     }
 
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions' });
+    res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
   }
 });
 
