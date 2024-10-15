@@ -33,7 +33,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
   try {
     const { schoolId, classId, sectionName, subjectId } = req.params;
 
-    // Convert section name to ID
+    // Fetch the numeric sectionId based on the sectionName
     const section = await Section.findOne({
       where: { sectionName: sectionName.toUpperCase(), classInfoId: classId, schoolId: schoolId }
     });
@@ -42,11 +42,15 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
       return res.status(404).json({ error: `Section '${sectionName}' not found for school ID '${schoolId}' and class ID '${classId}'` });
     }
 
-    // Use the numeric sectionId to query sessions
+    // Fetch sessions using the numeric sectionId
     const sessions = await Session.findAll({
       where: { sectionId: section.id, subjectId }
     });
-    
+
+    if (!sessions.length) {
+      return res.status(404).json({ error: 'No sessions found' });
+    }
+
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);

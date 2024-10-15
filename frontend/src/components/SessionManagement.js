@@ -15,6 +15,7 @@ const SessionManagement = () => {
     setIsLoading(true);
     setError('');
     try {
+      // Assuming you have already mapped sectionName to sectionId
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
@@ -24,6 +25,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchSessions();
