@@ -16,6 +16,11 @@ const SessionManagement = () => {
     setError('');
     try {
       console.log(`Fetching sessions for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}`);
+      
+      if (!schoolId || !classId || !sectionId) {
+        throw new Error('Missing required parameters: schoolId, classId, or sectionId.');
+      }
+
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
       setSessions(response.data);
     } catch (error) {
@@ -86,6 +91,12 @@ const SessionManagement = () => {
   const handleFileUpload = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!schoolId || !classId || !sectionId) {
+      setError('School ID, Class ID, and Section ID are required for uploading.');
+      return;
+    }
+
     const file = e.target.elements.file.files[0];
     if (!file) {
       setError('Please select a file to upload.');
