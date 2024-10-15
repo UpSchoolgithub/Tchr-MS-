@@ -29,20 +29,31 @@ const validateParams = (params) => {
 };
 
 // Fetch sessions for a specific subject within a section and class
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions', async (req, res) => {
   try {
-    validateParams(req.params);
-    const { schoolId, classId, sectionId, subjectId } = req.params;
+    const { schoolId, classId, sectionName, subjectId } = req.params;
 
-    const sessions = await Session.findAll({
-      where: { schoolId, classId, sectionId, subjectId }
+    // Convert section name to ID
+    const section = await Section.findOne({
+      where: { sectionName: sectionName.toUpperCase(), classInfoId: classId, schoolId: schoolId }
     });
+
+    if (!section) {
+      return res.status(404).json({ error: `Section '${sectionName}' not found for school ID '${schoolId}' and class ID '${classId}'` });
+    }
+
+    // Use the numeric sectionId to query sessions
+    const sessions = await Session.findAll({
+      where: { sectionId: section.id, subjectId }
+    });
+    
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
+
 
 // Create a new session
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
