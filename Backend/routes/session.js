@@ -101,47 +101,51 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
 // Handle file upload and create sessions based on file content
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   const { schoolId, classId, sectionId, subjectId } = req.params;
+  
+  console.log('Route parameters:', { schoolId, classId, sectionId, subjectId });
+
+  if (!schoolId || !classId || !sectionId || !subjectId) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+  }
+
+  if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded.' });
+  }
 
   try {
-    // Check if file is uploaded
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
-    }
+      const filePath = path.join(__dirname, '../uploads', req.file.filename);
+      const workbook = XLSX.readFile(filePath);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    const filePath = path.join(__dirname, '../uploads', req.file.filename);
-    const workbook = XLSX.readFile(filePath);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      // Fetch section and subject details from DB
+      const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
+      if (!section) {
+          return res.status(404).json({ error: 'Section not found' });
+      }
 
-    // Validate section and subject
-    const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
-    }
+      const subject = await Subject.findOne({ where: { id: subjectId, sectionId: section.id } });
+      if (!subject) {
+          return res.status(404).json({ error: 'Subject not found in this section.' });
+      }
 
-    const subject = await Subject.findOne({ where: { id: subjectId, sectionId: section.id } });
-    if (!subject) {
-      return res.status(404).json({ error: 'Subject not found in this section.' });
-    }
+      const sessions = jsonData.map(row => ({
+          sessionDate: row.sessionDate || null,
+          topic: row.ChapterName,
+          numberOfSessions: row.NumberOfSessions || 1,
+          priorityNumber: row.PriorityNumber || 0,
+          sectionId: section.id,
+          subjectId: subject.id,
+      }));
 
-    // Prepare session data from the file and validate each entry
-    const sessions = jsonData.map(row => ({
-      sessionDate: row.sessionDate || null,
-      topic: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0,
-      sectionId: section.id,
-      subjectId: subject.id,
-    }));
-
-    // Store sessions in bulk
-    await Session.bulkCreate(sessions);
-    res.status(201).json({ message: 'Sessions uploaded and created successfully' });
+      await Session.bulkCreate(sessions);
+      res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    console.error('Error uploading sessions:', error);
-    res.status(500).json({ error: 'Failed to upload sessions' });
+      console.error('Error uploading sessions:', error);
+      res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
+
 
 
 module.exports = router;
