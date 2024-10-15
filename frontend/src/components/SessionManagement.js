@@ -39,24 +39,74 @@ const SessionManagement = () => {
     }
   }, [schoolId, classId, sectionId, subjectId]);
 
+  const handleSessionUpdate = async (sessionId) => {
+    setError('');
+    try {
+      const response = await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
+        numberOfSessions: editingNumberOfSessions,
+        priorityNumber: editingPriorityNumber,
+      });
+      setSessions(sessions.map(session => (session.id === sessionId ? response.data : session)));
+      setEditingSessionId(null);
+    } catch (error) {
+      console.error('Error updating session:', error);
+      setError(error.response?.data?.error || 'Failed to update session.');
+    }
+  };
+
+  const handleSessionDelete = async (sessionId) => {
+    setError('');
+    try {
+      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+      setSessions(sessions.filter(session => session.id !== sessionId));
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      setError('Failed to delete session.');
+    }
+  };
+
+  // Define handleDeleteAll function
+  const handleDeleteAll = async () => {
+    setError('');
+    try {
+      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
+      setSessions([]);
+    } catch (error) {
+      console.error('Error deleting all sessions:', error);
+      setError('Failed to delete all sessions.');
+    }
+  };
+
+  const startEditing = (session) => {
+    setEditingSessionId(session.id);
+    setEditingNumberOfSessions(session.numberOfSessions);
+    setEditingPriorityNumber(session.priorityNumber);
+  };
+
+  const cancelEditing = () => {
+    setEditingSessionId(null);
+    setEditingNumberOfSessions('');
+    setEditingPriorityNumber('');
+  };
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     setError('');
-
+  
     if (!schoolId || !classId || !sectionId || !subjectId) {
       setError('School ID, Class ID, Section ID, and Subject ID are required for uploading.');
       return;
     }
-
+  
     const file = e.target.elements.file.files[0];
     if (!file) {
       setError('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     setIsLoading(true);
     try {
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
