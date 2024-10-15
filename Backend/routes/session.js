@@ -118,9 +118,15 @@ router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:se
 // Upload file and create sessions for a specific subject within a section and class
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   const { schoolId, classId, sectionId, subjectId } = req.params;
+  console.log('Upload parameters:', { schoolId, classId, sectionId, subjectId });
+  
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded.' });
+  }
 
   try {
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
+    console.log('File path:', filePath);
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
@@ -138,7 +144,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
       subjectId: subject.id,
       chapterName: row.ChapterName,
       numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0
+      priorityNumber: row.PriorityNumber || 0,
     }));
 
     await Session.bulkCreate(sessions);
