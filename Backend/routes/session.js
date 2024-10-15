@@ -1,158 +1,91 @@
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const XLSX = require('xlsx');
-const Session = require('../models/Session');
-const Section = require('../models/Section');
-const Subject = require('../models/Subject'); // Add this to ensure Subject model is referenced
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useParams, Link } from 'react-router-dom';
 
-const router = express.Router();
+const SessionManagement = () => {
+  const { schoolId, classId, sectionId } = useParams();
+  const [sessions, setSessions] = useState([]);
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
+  const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
-const upload = multer({ storage: storage });
+  const fetchSessions = async () => {
+    if (!schoolId || !classId || !sectionId) {
+      setError('School ID, Class ID, and Section ID are required.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions`);
+      setSessions(response.data);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      setError(error.response?.status === 404 ? 'Sessions not found.' : 'Failed to fetch sessions.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-// Fetch all sessions for a specific school, class, section, and subject
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectName/sessions', async (req, res) => {
-  const { schoolId, classId, sectionName, subjectName } = req.params;
+  useEffect(() => {
+    fetchSessions();
+  }, [schoolId, classId, sectionId]);
 
-  try {
-    const section = await Section.findOne({
-      where: {
-        sectionName,
-        classInfoId: classId,
-        schoolId
-      }
-    });
-
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    if (!classId || !sectionId) {
+      setError('Class ID and Section ID are required for uploading.');
+      return;
     }
 
-    const subject = await Subject.findOne({
-      where: {
-        subjectName,
-        sectionId: section.id
-      }
-    });
-
-    if (!subject) {
-      return res.status(404).json({ error: 'Subject not found' });
+    const file = e.target.elements.file.files[0];
+    if (!file) {
+      setError('Please select a file to upload.');
+      return;
     }
 
-    const sessions = await Session.findAll({
-      where: {
-        sectionId: section.id,
-        subjectId: subject.id
-      }
-    });
+    const formData = new FormData();
+    formData.append('file', file);
 
-    res.json(sessions);
-  } catch (error) {
-    console.error('Error fetching sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions' });
-  }
-});
-
-// Update a session by sessionId
-router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
-  const { sessionId } = req.params;
-  const { numberOfSessions, priorityNumber } = req.body;
-
-  try {
-    const session = await Session.findByPk(sessionId);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
+    setIsLoading(true);
+    try {
+      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/upload`;
+      await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      await fetchSessions(); // Refresh sessions list after upload
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setError(error.response?.data?.error || 'Failed to upload file.');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    await session.update({ numberOfSessions, priorityNumber });
-    res.json(session);
-  } catch (error) {
-    console.error('Error updating session:', error);
-    res.status(500).json({ error: 'Failed to update session' });
-  }
-});
+  // (Include other functions like handleSessionUpdate, handleSessionDelete, handleDeleteAll, startEditing, and cancelEditing as per your original code)
 
-// Delete a session by sessionId
-router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
-  const { sessionId } = req.params;
+  return (
+    <div>
+      <h2>Session Management</h2>
+      {error && <div className="error">{error}</div>}
+      {isLoading && <p>Loading...</p>}
 
-  try {
-    const session = await Session.findByPk(sessionId);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
+      <form onSubmit={handleFileUpload}>
+        <div>
+          <label>Upload Sessions:</label>
+          <input type="file" name="file" accept=".xlsx, .xls" required />
+        </div>
+        <button type="submit">Upload</button>
+      </form>
 
-    await session.destroy();
-    res.status(204).end();
-  } catch (error) {
-    console.error('Error deleting session:', error);
-    res.status(500).json({ error: 'Failed to delete session' });
-  }
-});
+      <button onClick={handleDeleteAll} style={{ marginTop: '20px', backgroundColor: 'red', color: 'white' }}>
+        Delete All
+      </button>
 
-// Handle file upload and create sessions based on file content
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/upload', upload.single('file'), async (req, res) => {
-  const { schoolId, classId, sectionId } = req.params;
+      {/* (Render table with session details and actions) */}
+    </div>
+  );
+};
 
-  try {
-    const filePath = path.join(__dirname, '../uploads', req.file.filename);
-    const workbook = XLSX.readFile(filePath);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-    const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
-    }
-
-    const sessions = jsonData.map(row => ({
-      sessionDate: row.sessionDate, // Date field, update if necessary
-      topic: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions,
-      priorityNumber: row.PriorityNumber,
-      sectionId: section.id,
-      subjectId: row.subjectId // Ensure you link to a valid subject
-    }));
-
-    await Session.bulkCreate(sessions);
-    res.status(201).json({ message: 'Sessions uploaded and created successfully' });
-  } catch (error) {
-    console.error('Error uploading sessions:', error);
-    res.status(500).json({ error: 'Failed to upload sessions' });
-  }
-});
-
-// Batch delete sessions by sectionId
-router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions', async (req, res) => {
-  const { sectionId } = req.params;
-
-  try {
-    const section = await Section.findOne({
-      where: {
-        id: sectionId,
-        classInfoId: req.params.classId,
-        schoolId: req.params.schoolId
-      }
-    });
-
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
-    }
-
-    await Session.destroy({ where: { sectionId: section.id } });
-    res.status(204).end();
-  } catch (error) {
-    console.error('Error deleting sessions:', error);
-    res.status(500).json({ error: 'Failed to delete sessions' });
-  }
-});
-
-module.exports = router;
+export default SessionManagement;
