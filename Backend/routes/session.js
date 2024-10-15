@@ -50,9 +50,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:
     console.log('Found section:', section.id);
 
     // Use the numeric sectionId to fetch sessions
-    const sessions = await Session.findAll({
-      where: { sectionId: section.id, subjectId }
-    });
+      const sessions = await Session.findAll({
+        where: { schoolId, classId, sectionId, subjectId },
+        attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber'] // Ensure sessionDate is not included here
+      });
+
 
     if (sessions.length === 0) {
       console.warn('No sessions found for the specified subject and section.');
