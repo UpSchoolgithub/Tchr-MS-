@@ -86,22 +86,28 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
     console.log('Parsed file data:', jsonData);
 
-    // Check if jsonData is empty
     if (!jsonData.length) {
       console.log('Uploaded file is empty or contains no valid data');
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    // Map jsonData to ensure required fields are present
-    const sessions = jsonData.map(row => {
+    // Array to collect error messages
+    const errors = [];
+
+    // Validate and prepare the session data
+    const sessions = jsonData.map((row, index) => {
       const chapterName = row.ChapterName;
       const numberOfSessions = row.NumberOfSessions;
       const priorityNumber = row.PriorityNumber;
 
-      // Check for missing fields in each row
-      if (!chapterName || !numberOfSessions || !priorityNumber) {
-        console.log('Missing fields in row:', { chapterName, numberOfSessions, priorityNumber });
-        throw new Error('All fields are required in each row');
+      // Check for missing fields in each row and collect errors
+      const missingFields = [];
+      if (!chapterName) missingFields.push('ChapterName');
+      if (!numberOfSessions) missingFields.push('NumberOfSessions');
+      if (!priorityNumber) missingFields.push('PriorityNumber');
+
+      if (missingFields.length) {
+        errors.push(`Row ${index + 1}: Missing fields - ${missingFields.join(', ')}`);
       }
 
       return {
@@ -115,7 +121,13 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
       };
     });
 
-    // Insert sessions into the database
+    // If there are errors, log and return them
+    if (errors.length) {
+      console.log('Errors:', errors);
+      return res.status(400).json({ error: 'Some fields are missing', details: errors });
+    }
+
+    // Insert sessions into the database if no errors
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
