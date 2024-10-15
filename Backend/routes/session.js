@@ -69,70 +69,69 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 // Bulk upload sessions for a subject within a section and class
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
-    // Log incoming parameters
     const { schoolId, classId, sectionId, subjectId } = req.params;
-    console.log('Parameters:', { schoolId, classId, sectionId, subjectId });
+    console.log('Received parameters:', { schoolId, classId, sectionId, subjectId });
 
-    // Verify file upload
     if (!req.file) {
       console.log('No file uploaded');
       return res.status(400).json({ error: 'File is required' });
     }
-    console.log('Uploaded file path:', req.file.path);
 
-    // Read and parse the Excel file
-    const workbook = XLSX.readFile(req.file.path);
+    const filePath = path.join(__dirname, '../uploads', req.file.filename);
+    const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-    console.log('Parsed file data:', jsonData);
 
-    if (!jsonData.length) {
-      console.log('Uploaded file is empty or contains no valid data');
+    if (jsonData.length === 0) {
+      console.log('Uploaded file is empty or invalid');
       return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
     }
 
-    // Array to collect error messages
+    // Array to collect missing fields and log data for each row
     const errors = [];
+    const sessions = [];
 
-    // Validate and prepare the session data
-    const sessions = jsonData.map((row, index) => {
+    jsonData.forEach((row, index) => {
       const chapterName = row.ChapterName;
       const numberOfSessions = row.NumberOfSessions;
       const priorityNumber = row.PriorityNumber;
 
-      // Check for missing fields in each row and collect errors
+      // Check for missing fields
       const missingFields = [];
       if (!chapterName) missingFields.push('ChapterName');
       if (!numberOfSessions) missingFields.push('NumberOfSessions');
       if (!priorityNumber) missingFields.push('PriorityNumber');
 
+      // Log each row's data and any missing fields
+      console.log(`Row ${index + 1} data:`, row);
       if (missingFields.length) {
+        console.log(`Row ${index + 1} is missing fields:`, missingFields);
         errors.push(`Row ${index + 1}: Missing fields - ${missingFields.join(', ')}`);
+      } else {
+        sessions.push({
+          schoolId,
+          classId,
+          sectionId,
+          subjectId,
+          chapterName,
+          numberOfSessions,
+          priorityNumber
+        });
       }
-
-      return {
-        schoolId,
-        classId,
-        sectionId,
-        subjectId,
-        chapterName,
-        numberOfSessions,
-        priorityNumber
-      };
     });
 
-    // If there are errors, log and return them
-    if (errors.length) {
-      console.log('Errors:', errors);
+    // If there are missing fields, return an error with details
+    if (errors.length > 0) {
+      console.log('Errors found:', errors);
       return res.status(400).json({ error: 'Some fields are missing', details: errors });
     }
 
-    // Insert sessions into the database if no errors
+    // Proceed with inserting sessions if no errors
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    console.error('Error uploading sessions:', error.message);
-    res.status(500).json({ error: error.message || 'Failed to upload sessions' });
+    console.error('Error uploading sessions:', error);
+    res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
 
