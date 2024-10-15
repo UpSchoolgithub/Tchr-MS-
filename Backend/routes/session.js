@@ -66,47 +66,42 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   }
 });
 
-// Bulk upload sessions for a subject within a section and class
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
+    validateParams(req.params);
     const { schoolId, classId, sectionId, subjectId } = req.params;
-
-    // Check if the section exists
-    const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
-    }
-
-    // Check if the subject exists within the section
-    const subject = await Subject.findOne({ where: { id: subjectId, sectionId: sectionId, classInfoId: classId, schoolId } });
-    if (!subject) {
-      return res.status(404).json({ error: 'Subject not found in the specified section' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
+
+    // Read the file and parse it
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    const sessions = jsonData.map(row => ({
-      schoolId,
-      classId,
-      sectionId,
-      subjectId,
-      chapterName: row.ChapterName,
-      numberOfSessions: row.NumberOfSessions || 1,
-      priorityNumber: row.PriorityNumber || 0,
-    }));
+    if (!jsonData || jsonData.length === 0) {
+      return res.status(400).json({ error: 'Uploaded file is empty or invalid' });
+    }
+
+    // Ensure that required columns exist in each row
+    const sessions = jsonData.map(row => {
+      if (!row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
+        throw new Error('Missing required fields in the uploaded file.');
+      }
+      return {
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        chapterName: row.ChapterName,
+        numberOfSessions: row.NumberOfSessions || 1,
+        priorityNumber: row.PriorityNumber || 0,
+      };
+    });
 
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
     console.error('Error uploading sessions:', error);
-    res.status(500).json({ error: 'Failed to upload sessions' });
+    res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
 
