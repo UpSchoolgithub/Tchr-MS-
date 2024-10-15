@@ -31,23 +31,21 @@ const validateParams = (params) => {
 // Fetch sessions for a specific subject within a section and class
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   try {
-    const { schoolId, classId, sectionId, subjectId } = req.params;
-    
-    // Check if all params are available
-    if (!schoolId || !classId || !sectionId || !subjectId) {
-      return res.status(400).json({ error: 'Required parameters are missing' });
-    }
+    // Extract only relevant parameters for the sessions table
+    const { sectionId, subjectId } = req.params;
 
     const sessions = await Session.findAll({
-      where: { schoolId, classId, sectionId, subjectId },
-      attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber']
+      where: { sectionId, subjectId },
+      attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber'] // Adjust attributes to match actual columns
     });
+
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
   }
 });
+
 
 
 
