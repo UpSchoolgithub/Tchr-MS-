@@ -29,6 +29,12 @@ const SessionManagement = () => {
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
 
+  const startEditing = (session) => {
+    setEditingSessionId(session.id);
+    setEditingNumberOfSessions(session.numberOfSessions);
+    setEditingPriorityNumber(session.priorityNumber);
+  };
+
   const handleSessionUpdate = async (sessionId) => {
     try {
       const response = await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
@@ -112,13 +118,15 @@ const SessionManagement = () => {
           {sessions.map(session => (
             <tr key={session.id}>
               <td>{session.chapterName}</td>
-              <td>{editingSessionId === session.id ? (
+              <td>
+                {editingSessionId === session.id ? (
                   <input type="number" value={editingNumberOfSessions} onChange={(e) => setEditingNumberOfSessions(e.target.value)} />
                 ) : (
                   session.numberOfSessions
                 )}
               </td>
-              <td>{editingSessionId === session.id ? (
+              <td>
+                {editingSessionId === session.id ? (
                   <input type="number" value={editingPriorityNumber} onChange={(e) => setEditingPriorityNumber(e.target.value)} />
                 ) : (
                   session.priorityNumber
