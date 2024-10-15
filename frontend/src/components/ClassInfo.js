@@ -72,7 +72,7 @@ const ClassInfo = () => {
 
     try {
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
-        sections: { [newSectionName]: { subjects: [] } },
+        sections: { [newSectionName.toUpperCase()]: { subjects: [] } }, // Ensure uppercase section name
         schoolId
       });
       setNewSectionName('');
@@ -121,7 +121,7 @@ const ClassInfo = () => {
       };
 
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
-        sections: { [section]: { subjects: [newSubject] } },
+        sections: { [section.toUpperCase()]: { subjects: [newSubject] } }, // Ensure uppercase section name
         schoolId
       });
 
