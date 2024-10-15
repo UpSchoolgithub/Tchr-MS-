@@ -27,7 +27,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      console.log("Fetched Class Infos:", response.data); // Debugging Log
+      console.log("Fetched Class Infos:", response.data);
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -38,7 +38,7 @@ const ClassInfo = () => {
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
-      console.log("Fetched Sections for Class:", classId, response.data); // Debugging Log
+      console.log("Fetched Sections for Class:", classId, response.data);
       setSections(response.data);
     } catch (error) {
       console.error('Error fetching sections:', error);
@@ -54,7 +54,7 @@ const ClassInfo = () => {
     if (newClassName) {
       try {
         const response = await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, { className: newClassName });
-        console.log("Added New Class:", response.data); // Debugging Log
+        console.log("Added New Class:", response.data);
         setNewClassName('');
         fetchClassInfos();
       } catch (error) {
@@ -76,7 +76,7 @@ const ClassInfo = () => {
         sections: { [newSectionName.toUpperCase()]: { subjects: [] } },
         schoolId
       });
-      console.log("Added Section:", response.data); // Debugging Log
+      console.log("Added Section:", response.data);
       setNewSectionName('');
       fetchSections(selectedClass.id);
     } catch (error) {
@@ -126,7 +126,7 @@ const ClassInfo = () => {
         sections: { [section.toUpperCase()]: { subjects: [newSubject] } },
         schoolId
       });
-      console.log("Added Subject:", response.data); // Debugging Log
+      console.log("Added Subject:", response.data);
       fetchClassInfos();
       resetForm();
     } catch (error) {
@@ -214,21 +214,36 @@ const ClassInfo = () => {
 
       <div>
         <h2>Class, Section, and Subject Details:</h2>
-        {classInfos.map((info) => (
-          <div key={info.id}>
-            <h3>Class: {info.className}</h3>
-            {info.sections && Object.keys(info.sections).map(sec => (
-              <div key={sec}>
-                <p>Section: {sec}</p>
-                <ul>
-                  {info.sections[sec].subjects && info.sections[sec].subjects.map((sub) => (
-                    <li key={sub.id}>{sub.subjectName} - {sub.academicStartDate} to {sub.academicEndDate}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        ))}
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Section</th>
+              <th>Subject</th>
+              <th>Academic Start</th>
+              <th>Academic End</th>
+              <th>Revision Start</th>
+              <th>Revision End</th>
+            </tr>
+          </thead>
+          <tbody>
+            {classInfos.map((info) =>
+              Object.keys(info.sections || {}).map((sec) =>
+                (info.sections[sec].subjects || []).map((subject) => (
+                  <tr key={`${info.className}-${sec}-${subject.subjectName}`}>
+                    <td>{info.className}</td>
+                    <td>{sec}</td>
+                    <td>{subject.subjectName}</td>
+                    <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              )
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
