@@ -99,8 +99,8 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
 });
 
 // Handle file upload and create sessions based on file content
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/upload', upload.single('file'), async (req, res) => {
-  const { schoolId, classId, sectionId } = req.params;
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
+  const { schoolId, classId, sectionId, subjectId } = req.params;
 
   try {
     // Check if file is uploaded
@@ -113,41 +113,28 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/up
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    // Find the section using the sectionId, classId, and schoolId
+    // Validate section and subject
     const section = await Section.findOne({ where: { id: sectionId, classInfoId: classId, schoolId } });
     if (!section) {
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Prepare session data from the file and validate each entry
-    const sessions = [];
-    for (const row of jsonData) {
-      if (!row.subjectName) {
-        return res.status(400).json({ error: 'Each row must contain a subjectName field.' });
-      }
-
-      const subject = await Subject.findOne({
-        where: {
-          subjectName: row.subjectName,
-          sectionId: section.id,
-        }
-      });
-
-      if (!subject) {
-        return res.status(404).json({ error: `Subject ${row.subjectName} not found in section.` });
-      }
-
-      sessions.push({
-        sessionDate: row.sessionDate || null, // Ensure the date field is optional or provide a default
-        topic: row.ChapterName,
-        numberOfSessions: row.NumberOfSessions || 1, // Default to 1 if not provided
-        priorityNumber: row.PriorityNumber || 0, // Default to 0 if not provided
-        sectionId: section.id,
-        subjectId: subject.id,
-      });
+    const subject = await Subject.findOne({ where: { id: subjectId, sectionId: section.id } });
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found in this section.' });
     }
 
-    // Store the sessions in bulk
+    // Prepare session data from the file and validate each entry
+    const sessions = jsonData.map(row => ({
+      sessionDate: row.sessionDate || null,
+      topic: row.ChapterName,
+      numberOfSessions: row.NumberOfSessions || 1,
+      priorityNumber: row.PriorityNumber || 0,
+      sectionId: section.id,
+      subjectId: subject.id,
+    }));
+
+    // Store sessions in bulk
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
@@ -155,5 +142,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/up
     res.status(500).json({ error: 'Failed to upload sessions' });
   }
 });
+
 
 module.exports = router;

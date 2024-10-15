@@ -92,7 +92,7 @@ const SessionManagement = () => {
     e.preventDefault();
     setError('');
   
-    if (!schoolId || !classId || !sectionName || !subjectId) {
+    if (!schoolId || !classId || !sectionId || !subjectId) {
       setError('School ID, Class ID, Section ID, and Subject ID are required for uploading.');
       return;
     }
@@ -108,7 +108,7 @@ const SessionManagement = () => {
   
     setIsLoading(true);
     try {
-      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionName}/subjects/${subjectId}/sessions/upload`;
+      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       console.log(`Uploading file to: ${uploadUrl}`);
       await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -121,6 +121,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
   
 
   return (
