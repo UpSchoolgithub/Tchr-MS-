@@ -12,27 +12,24 @@ const Manager = () => {
   }, []);
 
   const fetchManagers = async () => {
-    try {
-      const token = localStorage.getItem('authToken'); // Ensure token is available
-      if (!token) {
-        console.error('No token found. Redirecting to login.');
-        navigate('/login'); // Redirect to login if no token
-        return;
-      }
+    const token = localStorage.getItem('authToken');
+    console.log('Token:', token); // Check if token is present
   
+    if (!token) {
+      console.error('No token found. Redirecting to login.');
+      navigate('/login'); // Redirect to login if no token
+      return;
+    }
+  
+    try {
       const response = await axios.get('https://tms.up.school/api/managers', {
         headers: {
-          Authorization: `Bearer ${token}`, // Pass the token in the header
+          Authorization: `Bearer ${token}`, // Pass the token in the request header
         },
       });
-  
-      setManagers(response.data); // Set the managers data
+      setManagers(response.data);
     } catch (error) {
       console.error('Error fetching managers:', error.message);
-      if (error.response && error.response.status === 403) {
-        console.error('Authorization failed. Please log in again.');
-        navigate('/login'); // Redirect to login on 403 Forbidden
-      }
     }
   };
   
