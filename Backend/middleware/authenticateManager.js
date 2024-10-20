@@ -2,14 +2,12 @@ const authenticateManager = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  // Check if token exists
   if (token == null) {
     console.log('No token provided');
     return res.sendStatus(403);  // Forbidden if no token
   }
 
-  // Verify the token
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {  // 'user' is passed here
     if (err) {
       if (err.name === 'TokenExpiredError') {
         console.log('Token expired');
@@ -17,6 +15,11 @@ const authenticateManager = (req, res, next) => {
       }
       console.log('Token verification error:', err.message);
       return res.sendStatus(403);  // Forbidden if token verification fails
+    }
+
+    // Ensure 'user' is properly set before referencing it
+    if (!user) {
+      return res.status(403).json({ message: 'User is not defined in token' });
     }
 
     // Check if the user has the correct role
@@ -30,6 +33,3 @@ const authenticateManager = (req, res, next) => {
     next();  // Proceed to the next middleware
   });
 };
-
-
-module.exports = authenticateManager;
