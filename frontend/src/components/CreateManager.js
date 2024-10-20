@@ -37,15 +37,8 @@ const CreateManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('authToken');
-      
-      // Log the token for debugging
-      console.log('Token:', token);
-  
-      if (!token) {
-        setErrorMessage('No authentication token found. Please log in.');
-        return;
-      }
+      // Temporarily hardcode the token for testing
+      const token = '<your_valid_token_here>';
   
       await axios.post(
         'https://tms.up.school/api/managers',
@@ -56,18 +49,12 @@ const CreateManager = () => {
           },
         }
       );
-      navigate('/managers');  // Redirect to manager list after success
+      navigate('/managers');
     } catch (error) {
-      if (error.response && error.response.status === 403) {
-        setErrorMessage('You do not have permission to create a manager.');
-      } else if (error.response && error.response.status === 401) {
-        setErrorMessage('Unauthorized. Please log in again.');
-      } else {
-        console.error('Error saving manager account:', error.message);
-        setErrorMessage('An error occurred while saving the manager account.');
-      }
+      console.error('Error:', error.response || error.message);
     }
   };
+  
   
 
   
