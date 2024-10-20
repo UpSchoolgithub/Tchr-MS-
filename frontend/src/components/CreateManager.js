@@ -39,7 +39,7 @@ const CreateManager = () => {
     try {
       const token = localStorage.getItem('authToken');
       
-      // Log token for debugging
+      // Log the token for debugging
       console.log('Token:', token);
   
       if (!token) {
@@ -56,17 +56,19 @@ const CreateManager = () => {
           },
         }
       );
-      navigate('/managers'); // Redirect back to manager list
+      navigate('/managers');  // Redirect to the manager list on success
     } catch (error) {
       if (error.response && error.response.status === 403) {
         setErrorMessage('You do not have permission to create a manager.');
       } else if (error.response && error.response.status === 401) {
         setErrorMessage('Unauthorized. Please log in again.');
       } else {
+        console.error('Error saving manager account:', error.message);
         setErrorMessage('An error occurred while saving the manager account.');
       }
     }
   };
+  
   
 
   const handleSchoolChange = (e) => {
