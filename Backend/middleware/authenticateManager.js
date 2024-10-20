@@ -31,4 +31,6 @@ const authenticateManager = (req, res, next) => {
   });
 };
 
+console.log("Decoded user role:", user.role);
+
 module.exports = authenticateManager;
