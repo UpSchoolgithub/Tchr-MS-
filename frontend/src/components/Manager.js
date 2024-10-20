@@ -12,28 +12,29 @@ const Manager = () => {
   }, []);
 
   const fetchManagers = async () => {
+  try {
     const token = localStorage.getItem('authToken');
-    console.log('Token:', token); // Check if token is present
-  
     if (!token) {
-      console.error('No token found. Redirecting to login.');
-      navigate('/login'); // Redirect to login if no token
+      navigate('/login'); // Redirect to login if token is missing
       return;
     }
-  
-    try {
-      const response = await axios.get('https://tms.up.school/api/managers', {
-        headers: {
-          Authorization: `Bearer ${token}`, // Pass the token in the request header
-        },
-      });
-      setManagers(response.data);
-    } catch (error) {
+
+    const response = await axios.get('https://tms.up.school/api/managers', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setManagers(response.data);
+  } catch (error) {
+    if (error.response && error.response.status === 403) {
+      console.error('Token expired or invalid. Redirecting to login.');
+      navigate('/login'); // Redirect to login on 403 Forbidden
+    } else {
       console.error('Error fetching managers:', error.message);
     }
-  };
-  
-  
+  }
+};
+
   
 
   const handleEdit = (managerId) => {

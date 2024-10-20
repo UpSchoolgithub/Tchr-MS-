@@ -37,30 +37,29 @@ const CreateManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('authToken'); // Ensure token is available
-      if (!token) {
-        console.error('No token found. Redirecting to login.');
-        navigate('/login'); // Redirect to login if no token
-        return;
-      }
-  
+      const token = localStorage.getItem('authToken'); // Assuming the token is stored in localStorage
       await axios.post(
-        'https://tms.up.school/api/managers',
+        'https://tms.up.school/api/managers', 
         { name, email, phoneNumber, password, schoolIds },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Pass the token in the request headers
+            Authorization: `Bearer ${token}`, // Send the token in the request headers
           },
         }
       );
-  
-      navigate('/managers'); // Redirect back to the manager list after creation
+      navigate('/managers'); // Redirect back to manager list
     } catch (error) {
-      console.error('Error saving manager account:', error.response?.data || error.message);
-      setErrorMessage('An error occurred while saving the manager account.');
+      if (error.response && error.response.data) {
+        // Print the full response from the backend
+        console.error('Error response:', error.response.data);
+        setErrorMessage(error.response.data.message || 'An error occurred while saving the manager account.');
+      } else {
+        console.error('Error saving manager account:', error.message);
+        setErrorMessage('An error occurred while saving the manager account.');
+      }
     }
+    
   };
-  
 
   const handleSchoolChange = (e) => {
     const value = parseInt(e.target.value);
