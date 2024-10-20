@@ -56,7 +56,7 @@ const CreateManager = () => {
           },
         }
       );
-      navigate('/managers');  // Redirect to the manager list on success
+      navigate('/managers');  // Redirect to manager list after success
     } catch (error) {
       if (error.response && error.response.status === 403) {
         setErrorMessage('You do not have permission to create a manager.');
@@ -69,6 +69,7 @@ const CreateManager = () => {
     }
   };
   
+
   
 
   const handleSchoolChange = (e) => {
