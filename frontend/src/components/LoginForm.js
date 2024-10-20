@@ -20,10 +20,9 @@ const LoginForm = ({ setToken }) => {
       });
       const data = await response.json();
       if (response.ok) {
-        setToken(data.token);
-        localStorage.setItem('token', data.token);
-        setError('');
-        navigate('/dashboard');
+        localStorage.setItem('authToken', data.token); // Save the token in localStorage
+        setError(''); // Clear any errors
+        navigate('/dashboard'); // Redirect to dashboard or any protected route
       } else {
         setError(data.error);
       }
@@ -31,6 +30,7 @@ const LoginForm = ({ setToken }) => {
       setError('An error occurred');
     }
   };
+  
 
   return (
     <div className="login-container">
