@@ -37,33 +37,26 @@ const CreateManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('authToken');  // Fetch token from localStorage
-      if (!token) {
-        throw new Error('User not authenticated. Please log in again.');
-      }
-  
+      const token = localStorage.getItem('authToken'); // Assuming the token is stored in localStorage
       await axios.post(
-        'https://tms.up.school/api/managers',
+        'https://tms.up.school/api/managers', 
         { name, email, phoneNumber, password, schoolIds },
         {
           headers: {
-            Authorization: `Bearer ${token}`,  // Include the token in the request headers
+            Authorization: `Bearer ${token}`, // Send the token in the request headers
           },
         }
       );
-      navigate('/managers');  // Redirect to the manager list if successful
+      navigate('/managers'); // Redirect back to manager list
     } catch (error) {
-      if (error.response && error.response.status === 403) {
-        setErrorMessage('You do not have sufficient permissions to create a manager.');
-      } else if (error.response && error.response.status === 401) {
-        setErrorMessage('Session expired. Please log in again.');
+      if (error.response && error.response.data && Array.isArray(error.response.data.errors)) {
+        setErrorMessage(error.response.data.errors.join(', '));
       } else {
         console.error('Error saving manager account:', error.message);
         setErrorMessage('An error occurred while saving the manager account.');
       }
     }
   };
-  
 
   const handleSchoolChange = (e) => {
     const value = parseInt(e.target.value);
