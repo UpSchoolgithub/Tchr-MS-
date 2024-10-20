@@ -49,16 +49,13 @@ const CreateManager = () => {
       );
       navigate('/managers'); // Redirect back to manager list
     } catch (error) {
-      if (error.response && error.response.data) {
-        // Print the full response from the backend
-        console.error('Error response:', error.response.data);
-        setErrorMessage(error.response.data.message || 'An error occurred while saving the manager account.');
+      if (error.response && error.response.data && Array.isArray(error.response.data.errors)) {
+        setErrorMessage(error.response.data.errors.join(', '));
       } else {
         console.error('Error saving manager account:', error.message);
         setErrorMessage('An error occurred while saving the manager account.');
       }
     }
-    
   };
 
   const handleSchoolChange = (e) => {
