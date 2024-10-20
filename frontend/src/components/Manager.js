@@ -13,12 +13,18 @@ const Manager = () => {
 
   const fetchManagers = async () => {
     try {
-      const response = await axios.get('https://tms.up.school/api/managers');
+      const token = localStorage.getItem('token');  // Assuming the token is stored in localStorage
+      const response = await axios.get('https://tms.up.school/api/managers', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setManagers(response.data);
     } catch (error) {
       console.error('Error fetching managers:', error.message);
     }
   };
+  
 
   const handleEdit = (managerId) => {
     navigate(`/edit-manager/${managerId}`);  // Navigate to EditManager component with managerId
