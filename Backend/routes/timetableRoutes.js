@@ -1,3 +1,4 @@
+// routes/timetableRoutes.js
 const express = require('express');
 const {
   assignPeriod,
@@ -7,10 +8,10 @@ const {
 
 const router = express.Router();
 
-// Define the route for assigning a period
+// Route for assigning a period to the timetable
 router.post('/assign', assignPeriod);
 
-// Define the route for fetching assignments
+// Route to get assignments for a specific section and class
 router.get('/:schoolId/:classId/:sectionName/assignments', getAssignments);
 
 // Route to get the timetable for a specific teacher

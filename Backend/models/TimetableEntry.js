@@ -1,15 +1,15 @@
 // models/TimetableEntry.js
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Adjust the path if necessary
 
 class TimetableEntry extends Model {
   static associate(models) {
-    this.belongsTo(models.Teacher, { foreignKey: 'teacherId' });
-    this.belongsTo(models.Subject, { foreignKey: 'subjectId' });
-    this.belongsTo(models.School, { foreignKey: 'schoolId' });
-    this.belongsTo(models.ClassInfo, { foreignKey: 'classId' });
-    this.belongsTo(models.Section, { foreignKey: 'sectionId' }); // Use sectionId instead of combinedSectionId
-    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId' });
+    this.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.ClassInfo, { foreignKey: 'classId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Updated sectionId
+    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   }
 }
 
@@ -22,18 +22,32 @@ TimetableEntry.init({
   schoolId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'schools',
+      key: 'id',
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   classId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'classinfos',
+      key: 'id',
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
-  sectionId: {  // Replace combinedSectionId with sectionId
+  sectionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'sections', // References Section model
+      model: 'sections',
       key: 'id',
     },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   subjectId: {
     type: DataTypes.INTEGER,
@@ -42,6 +56,8 @@ TimetableEntry.init({
       model: 'subjects',
       key: 'id',
     },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   teacherId: {
     type: DataTypes.INTEGER,
@@ -50,6 +66,8 @@ TimetableEntry.init({
       model: 'teachers',
       key: 'id',
     },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   day: {
     type: DataTypes.STRING,
@@ -58,6 +76,14 @@ TimetableEntry.init({
   period: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  startTime: {
+    type: DataTypes.TIME,
+    allowNull: true,
+  },
+  endTime: {
+    type: DataTypes.TIME,
+    allowNull: true,
   },
 }, {
   sequelize,
