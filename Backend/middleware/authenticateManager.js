@@ -1,11 +1,11 @@
-require('dotenv').config();
+require('dotenv').config();  // Ensure this is loaded at the top
 const jwt = require('jsonwebtoken');
 
 const authenticateManager = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  console.log('JWT Secret in Token Verification:', process.env.JWT_SECRET);  // Log secret to verify
+  console.log('JWT Secret in Token Verification:', process.env.JWT_SECRET);  // Log secret for verification
 
   if (!token) {
     return res.status(403).json({ message: 'No token provided' });
