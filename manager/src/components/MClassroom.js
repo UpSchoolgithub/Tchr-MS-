@@ -81,7 +81,7 @@ const MClassroom = () => {
 
   const fetchSections = async (classInfoList) => {
     try {
-      const sectionRequests = classInfoList.map((classInfo) =>
+      const sectionRequests = classInfoList.map(classInfo =>
         axiosInstance.get(`/classes/${classInfo.id}/sections`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -89,8 +89,8 @@ const MClassroom = () => {
         })
       );
       const sectionResponses = await Promise.all(sectionRequests);
-      const allSections = sectionResponses.flatMap((response) => response.data);
-
+      const allSections = sectionResponses.flatMap(response => response.data);
+  
       const sectionsGrouped = allSections.reduce((acc, section) => {
         if (!acc[section.sectionName]) {
           acc[section.sectionName] = [];
@@ -98,7 +98,7 @@ const MClassroom = () => {
         acc[section.sectionName].push(section);
         return acc;
       }, {});
-
+  
       const fetchSubjects = async (sectionId) => {
         try {
           const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
@@ -112,6 +112,25 @@ const MClassroom = () => {
           return [];
         }
       };
+  
+      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
+        const sectionInfo = sectionsGrouped[sectionName];
+        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
+        const combinedSubjects = subjects.flat();
+        return {
+          sectionName,
+          sectionInfo,
+          count: sectionInfo.length,
+          subjects: combinedSubjects,
+        };
+      }));
+  
+      setSections(sectionsWithSubjects);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+    }
+  };
+  
 
       const sectionsWithSubjects = await Promise.all(
         Object.keys(sectionsGrouped).map(async (sectionName) => {
