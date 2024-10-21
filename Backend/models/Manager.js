@@ -3,6 +3,7 @@ const sequelize = require('../config/db');
 
 class Manager extends Model {
   static associate(models) {
+    // Many-to-Many relationship between Manager and School through ManagerSchools join table
     this.belongsToMany(models.School, { through: 'ManagerSchools', foreignKey: 'ManagerId' });
   }
 }

@@ -35,6 +35,8 @@ School.associate = (models) => {
   School.hasMany(models.ClassInfo, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Section, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Subject, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  School.belongsTo(Manager, { foreignKey: 'managerId' });
+
 };
 
 module.exports = School;
