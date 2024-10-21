@@ -1,12 +1,11 @@
-// models/Teacher.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
 class Teacher extends Model {
   static associate(models) {
     this.belongsTo(models.Manager, { foreignKey: 'ManagerId' });
-    this.belongsToMany(models.School, { through: 'teacher_schools' });
-    this.hasMany(models.TimetableEntry, { foreignKey: 'teacherId' });
+    this.belongsToMany(models.School, { through: 'TeacherSchools', foreignKey: 'teacherId' }); // Many-to-many association
+    this.hasMany(models.TimetableEntry, { foreignKey: 'teacherId' }); // One-to-many association with TimetableEntry
   }
 }
 
