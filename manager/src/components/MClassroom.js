@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../services/axiosInstance';
+import axiosInstance from '../services/axiosInstance';  // Ensure your axiosInstance is set up with the correct baseURL and token handling
 import { useNavigate } from 'react-router-dom';
 import { useManagerAuth } from '../context/ManagerAuthContext';
-import './MClassroom.css'; // Import the CSS file for styling
+import './MClassroom.css'; // Import any necessary CSS
 
 const MClassroom = () => {
   const { managerId, token } = useManagerAuth();
@@ -20,6 +20,7 @@ const MClassroom = () => {
       return;
     }
 
+    // Fetch schools tagged to the manager
     const fetchSchools = async () => {
       try {
         const response = await axiosInstance.get(`/managers/${managerId}/schools`, {
@@ -36,12 +37,14 @@ const MClassroom = () => {
     fetchSchools();
   }, [managerId, token]);
 
+  // Fetch classes for the selected school
   useEffect(() => {
     if (selectedSchool) {
       fetchClasses(selectedSchool);
     }
   }, [selectedSchool]);
 
+  // Fetch sections and subjects for the selected class
   useEffect(() => {
     if (selectedClass) {
       const classData = classes.find(cls => cls.className === selectedClass);
@@ -110,21 +113,19 @@ const MClassroom = () => {
         }
       };
 
-      const sectionsWithSubjects = await Promise.all(
-        Object.keys(sectionsGrouped).map(async (sectionName) => {
-          const sectionInfo = sectionsGrouped[sectionName];
-          const subjects = await Promise.all(sectionInfo.map((section) => fetchSubjects(section.id)));
-          const combinedSubjects = subjects.flat();
-          const combinedSectionId = sectionInfo.map(s => s.id).join('-');
-          return {
-            sectionName,
-            sectionInfo,
-            count: sectionInfo.length,
-            subjects: combinedSubjects,
-            combinedSectionId
-          };
-        })
-      );
+      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
+        const sectionInfo = sectionsGrouped[sectionName];
+        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
+        const combinedSubjects = subjects.flat();
+        const combinedSectionId = sectionInfo.map(s => s.id).join('-');
+        return {
+          sectionName,
+          sectionInfo,
+          count: sectionInfo.length,
+          subjects: combinedSubjects,
+          combinedSectionId
+        };
+      }));
 
       setSections(sectionsWithSubjects);
     } catch (error) {
@@ -136,7 +137,6 @@ const MClassroom = () => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
     localStorage.setItem('selectedSchool', schoolId);
-    fetchClasses(schoolId);
     setClasses([]);
     setSections([]);
     setSelectedClass(null);
