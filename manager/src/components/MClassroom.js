@@ -16,17 +16,19 @@ const MClassroom = () => {
 
   useEffect(() => {
     if (!managerId || !token) {
-      console.log("Manager ID or token is not available");
+      console.log('Manager ID or token is not available');
       return;
     }
 
+    // Fetch schools assigned to the manager
     const fetchSchools = async () => {
       try {
         const response = await axiosInstance.get(`/managers/${managerId}/schools`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+          },
         });
+        console.log('Fetched schools:', response.data); // Debugging response
         setSchools(response.data);
       } catch (error) {
         console.error('Error fetching schools:', error);
@@ -44,7 +46,7 @@ const MClassroom = () => {
 
   useEffect(() => {
     if (selectedClass) {
-      const classData = classes.find(cls => cls.className === selectedClass);
+      const classData = classes.find((cls) => cls.className === selectedClass);
       if (classData) {
         fetchSections(classData.classInfo);
       }
@@ -55,8 +57,8 @@ const MClassroom = () => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/classes`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+        },
       });
       const classesGrouped = response.data.reduce((acc, curr) => {
         if (!acc[curr.className]) {
@@ -65,12 +67,13 @@ const MClassroom = () => {
         acc[curr.className].push(curr);
         return acc;
       }, {});
-      const processedClasses = Object.keys(classesGrouped).map(className => ({
+      const processedClasses = Object.keys(classesGrouped).map((className) => ({
         className,
         classInfo: classesGrouped[className],
-        count: classesGrouped[className].length
+        count: classesGrouped[className].length,
       }));
       setClasses(processedClasses);
+      console.log('Fetched classes:', processedClasses); // Debugging classes
     } catch (error) {
       console.error('Error fetching classes:', error);
     }
@@ -78,15 +81,15 @@ const MClassroom = () => {
 
   const fetchSections = async (classInfoList) => {
     try {
-      const sectionRequests = classInfoList.map(classInfo =>
+      const sectionRequests = classInfoList.map((classInfo) =>
         axiosInstance.get(`/classes/${classInfo.id}/sections`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+          },
         })
       );
       const sectionResponses = await Promise.all(sectionRequests);
-      const allSections = sectionResponses.flatMap(response => response.data);
+      const allSections = sectionResponses.flatMap((response) => response.data);
 
       const sectionsGrouped = allSections.reduce((acc, section) => {
         if (!acc[section.sectionName]) {
@@ -100,8 +103,8 @@ const MClassroom = () => {
         try {
           const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Authorization': `Bearer ${token}`,
+            },
           });
           return response.data;
         } catch (error) {
@@ -110,22 +113,24 @@ const MClassroom = () => {
         }
       };
 
-      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
-        const sectionInfo = sectionsGrouped[sectionName];
-        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
-        const combinedSubjects = subjects.flat();
-        const combinedSectionId = sectionInfo.map(s => s.id).join('-');
-        console.log(`Combined Section ID for ${sectionName}: ${combinedSectionId}`); // Log combined section ID
-        return {
-          sectionName,
-          sectionInfo,
-          count: sectionInfo.length,
-          subjects: combinedSubjects,
-          combinedSectionId
-        };
-      }));
+      const sectionsWithSubjects = await Promise.all(
+        Object.keys(sectionsGrouped).map(async (sectionName) => {
+          const sectionInfo = sectionsGrouped[sectionName];
+          const subjects = await Promise.all(sectionInfo.map((section) => fetchSubjects(section.id)));
+          const combinedSubjects = subjects.flat();
+          const combinedSectionId = sectionInfo.map((s) => s.id).join('-');
+          return {
+            sectionName,
+            sectionInfo,
+            count: sectionInfo.length,
+            subjects: combinedSubjects,
+            combinedSectionId,
+          };
+        })
+      );
 
       setSections(sectionsWithSubjects);
+      console.log('Fetched sections with subjects:', sectionsWithSubjects); // Debugging sections and subjects
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
@@ -146,7 +151,7 @@ const MClassroom = () => {
 
   const handleClassChange = (e) => {
     const className = e.target.value;
-    const classData = classes.find(cls => cls.className === className);
+    const classData = classes.find((cls) => cls.className === className);
     if (classData) {
       const classInfoList = classData.classInfo;
       setSelectedClass(className);
@@ -165,7 +170,7 @@ const MClassroom = () => {
 
   const handleSectionSelect = () => {
     if (selectedSchool && selectedClass && selectedSection) {
-      const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+      const selectedSectionInfo = sections.find((section) => section.sectionName === selectedSection);
       if (selectedSectionInfo) {
         localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
         localStorage.setItem('combinedSectionId', selectedSectionInfo.combinedSectionId); // Store combined section IDs
@@ -176,13 +181,13 @@ const MClassroom = () => {
           selectedClass,
           selectedSection,
           subjects: selectedSectionInfo ? selectedSectionInfo.subjects : [],
-          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.combinedSectionId : ''
-        }
+          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.combinedSectionId : '',
+        },
       });
     }
   };
 
-  const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+  const selectedSectionInfo = sections.find((section) => section.sectionName === selectedSection);
 
   return (
     <div className="container">
@@ -224,7 +229,7 @@ const MClassroom = () => {
           {selectedSectionInfo && (
             <div className="subjects-container">
               {selectedSectionInfo.subjects.length > 0 ? (
-                selectedSectionInfo.subjects.map(subject => (
+                selectedSectionInfo.subjects.map((subject) => (
                   <div key={subject.id} className="subject-item">
                     <span>{subject.subjectName || 'No Subject Name'}</span>
                   </div>
@@ -235,9 +240,9 @@ const MClassroom = () => {
             </div>
           )}
         </div>
-        <button 
-          onClick={handleSectionSelect} 
-          disabled={!selectedSection} 
+        <button
+          onClick={handleSectionSelect}
+          disabled={!selectedSection}
           className="select-button"
         >
           Select Section
