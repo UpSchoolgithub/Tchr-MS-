@@ -35,7 +35,8 @@ School.init({
 School.associate = (models) => {
   // Many-to-Many relationship between School and Manager via ManagerSchools
   School.belongsToMany(models.Manager, { through: 'managerschools', foreignKey: 'SchoolId' });
-  
+  School.belongsToMany(models.Teacher, { through: 'teacher_schools', foreignKey: 'schoolId' });
+
   // Other relationships
   School.hasMany(models.ClassInfo, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Section, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
