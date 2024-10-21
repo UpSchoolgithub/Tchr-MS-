@@ -64,7 +64,7 @@ const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
-const subjectRoutes = require('./routes/subjectRoutes');
+//const subjectRoutes = require('./routes/subjectRoutes');
 
 app.use('/api/timetable', require('./routes/timetableRoutes'));
 
