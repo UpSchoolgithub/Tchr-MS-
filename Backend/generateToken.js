@@ -8,7 +8,7 @@ const payload = {
 
 const secret = process.env.JWT_SECRET || 'your_jwt_secret'; // Ensure your .env file has JWT_SECRET variable set
 const options = {
-  expiresIn: '1h' // Token validity
+  expiresIn: '30d' // Token validity
 };
 
 const token = jwt.sign(payload, secret, options);
