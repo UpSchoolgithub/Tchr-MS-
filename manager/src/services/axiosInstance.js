@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000/api',  // Update the baseURL to your backend server
+  baseURL: 'https://tms.up.school/api',  // Update this to your production backend URL
   headers: {
     'Content-Type': 'application/json',
   },
