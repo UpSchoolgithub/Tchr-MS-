@@ -1,13 +1,13 @@
-const { Manager } = require('../models'); // Assuming Sequelize models are in the models directory
+const { Manager } = require('../models');  // Adjust the path to your models
 
 const fetchSchoolsForManager = async (managerId) => {
   try {
-    // Fetch the manager with the associated schools
+    // Use Sequelize's association to fetch the manager and their associated schools
     const manager = await Manager.findByPk(managerId, {
       include: {
-        model: School,  // This assumes you have a belongsToMany association between Manager and School
-        through: { attributes: [] },  // Omit the join table data
-      }
+        model: School,  // Assumes School is correctly associated with Manager
+        through: { attributes: [] },  // Exclude the join table from the results
+      },
     });
 
     if (!manager) {
