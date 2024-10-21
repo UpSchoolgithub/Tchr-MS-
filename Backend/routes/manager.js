@@ -8,7 +8,6 @@ const authenticateManager = require('../middleware/authenticateManager');
 // Fetch all managers (protected route)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    // Include only required fields to reduce unnecessary data fetching
     const managers = await Manager.findAll({ 
       include: { model: School, attributes: ['id', 'name'] } 
     });
@@ -18,6 +17,7 @@ router.get('/', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 // Fetch all schools (you might want to protect this route)
 router.get('/schools', async (req, res) => {
@@ -131,11 +131,10 @@ router.get('/:id/schools', authenticateManager, async (req, res) => {
   const { id } = req.params;  // Manager ID from request params
 
   try {
-    // Fetch the manager along with associated schools
     const manager = await Manager.findByPk(id, {
       include: {
-        model: School,  // Include the associated schools
-        through: { attributes: [] }  // Exclude the intermediate table attributes
+        model: School,
+        through: { attributes: [] }  // Exclude the join table fields
       }
     });
 
@@ -143,13 +142,13 @@ router.get('/:id/schools', authenticateManager, async (req, res) => {
       return res.status(404).json({ message: 'Manager not found' });
     }
 
-    // Send back the schools associated with the manager
-    res.json(manager.Schools);
+    res.json(manager.Schools);  // Send back associated schools
   } catch (error) {
     console.error('Error fetching schools for manager:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 module.exports = router;
