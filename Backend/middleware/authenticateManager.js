@@ -1,17 +1,17 @@
-require('dotenv').config();  // Ensure this is loaded at the top
 const jwt = require('jsonwebtoken');
 
 const authenticateManager = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  console.log('JWT Secret in Token Verification:', process.env.JWT_SECRET);  // Log secret for verification
+  // Use a hard-coded secret temporarily for testing
+  const hardcodedSecret = '1ea5b2153c86ee0d25ec28bfdaf9f9f7a82509025f588911337e7f7366e863fa';
 
   if (!token) {
     return res.status(403).json({ message: 'No token provided' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decodedUser) => {
+  jwt.verify(token, hardcodedSecret, (err, decodedUser) => {
     if (err) {
       console.log('Token verification error:', err.message);
       return res.status(403).json({ message: 'Invalid token', error: err.message });
