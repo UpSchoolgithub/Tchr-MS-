@@ -1,12 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class Manager extends Model {
-  static associate(models) {
-    // Many-to-Many relationship between Manager and School through ManagerSchools join table
-    this.belongsToMany(models.School, { through: 'ManagerSchools', foreignKey: 'ManagerId' });
-  }
-}
+class Manager extends Model {}
 
 Manager.init({
   name: {
@@ -32,5 +27,11 @@ Manager.init({
   tableName: 'managers',
   timestamps: true,
 });
+
+// Define the associations in the associate method
+Manager.associate = (models) => {
+  // Many-to-Many relationship between Manager and School via ManagerSchools
+  Manager.belongsToMany(models.School, { through: 'managerschools', foreignKey: 'ManagerId' });
+};
 
 module.exports = Manager;
