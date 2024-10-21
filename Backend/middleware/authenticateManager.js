@@ -4,9 +4,10 @@ const authenticateManager = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  // Log the received token for debugging
+  // Log the received token and JWT secret for debugging
   console.log('Authorization Header:', authHeader);
   console.log('Extracted Token:', token);
+  console.log('JWT Secret in Token Verification:', process.env.JWT_SECRET);  // Verify the secret
 
   // Verify if the token is present
   if (!token) {
@@ -35,7 +36,8 @@ const authenticateManager = (req, res, next) => {
     }
 
     // Check if the user has the correct role
-    if (decodedUser.role !== 'SuperManager' && decodedUser.role !== 'Admin') {
+    const allowedRoles = ['SuperManager', 'Admin'];  // Adjust roles as needed
+    if (!allowedRoles.includes(decodedUser.role)) {
       console.log('User does not have sufficient permissions:', decodedUser.role);
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
