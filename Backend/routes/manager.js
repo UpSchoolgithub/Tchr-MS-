@@ -128,17 +128,28 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
 // Fetch schools tagged to a specific manager
 router.get('/:id/schools', authenticateManager, async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params;  // Manager ID from request params
+
   try {
-    const manager = await Manager.findByPk(id, { include: School });
+    // Fetch the manager along with associated schools
+    const manager = await Manager.findByPk(id, {
+      include: {
+        model: School,  // Include the associated schools
+        through: { attributes: [] }  // Exclude the intermediate table attributes
+      }
+    });
+
     if (!manager) {
       return res.status(404).json({ message: 'Manager not found' });
     }
+
+    // Send back the schools associated with the manager
     res.json(manager.Schools);
   } catch (error) {
     console.error('Error fetching schools for manager:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 module.exports = router;
