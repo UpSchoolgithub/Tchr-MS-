@@ -8,8 +8,12 @@ const authenticateManager = require('../middleware/authenticateManager');
 // Fetch all managers (protected route)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const managers = await Manager.findAll({ 
-      include: { model: School, attributes: ['id', 'name'] } 
+    const managers = await Manager.findAll({
+      include: {
+        model: School,
+        attributes: ['id', 'name'],
+        through: { attributes: [] } // Exclude the join table fields like createdAt, updatedAt
+      }
     });
     res.json(managers);
   } catch (error) {
@@ -131,10 +135,11 @@ router.get('/:id/schools', authenticateManager, async (req, res) => {
   const { id } = req.params;  // Manager ID from request params
 
   try {
+    // Fetch the manager along with associated schools
     const manager = await Manager.findByPk(id, {
       include: {
-        model: School,
-        through: { attributes: [] }  // Exclude the join table fields
+        model: School,  // Include the associated schools
+        through: { attributes: [] }  // Exclude the intermediate table attributes
       }
     });
 
@@ -142,13 +147,13 @@ router.get('/:id/schools', authenticateManager, async (req, res) => {
       return res.status(404).json({ message: 'Manager not found' });
     }
 
-    res.json(manager.Schools);  // Send back associated schools
+    // Send back the schools associated with the manager
+    res.json(manager.Schools);
   } catch (error) {
     console.error('Error fetching schools for manager:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
-
 
 
 module.exports = router;
