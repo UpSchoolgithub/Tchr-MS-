@@ -8,7 +8,10 @@ const authenticateManager = require('../middleware/authenticateManager');
 // Fetch all managers (protected route)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const managers = await Manager.findAll({ include: School });
+    // Include only required fields to reduce unnecessary data fetching
+    const managers = await Manager.findAll({ 
+      include: { model: School, attributes: ['id', 'name'] } 
+    });
     res.json(managers);
   } catch (error) {
     console.error('Error fetching managers:', error);
@@ -16,7 +19,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// Fetch all schools
+// Fetch all schools (you might want to protect this route)
 router.get('/schools', async (req, res) => {
   try {
     const schools = await School.findAll();
@@ -31,7 +34,9 @@ router.get('/schools', async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const manager = await Manager.findByPk(id, { include: School });
+    const manager = await Manager.findByPk(id, { 
+      include: { model: School, attributes: ['id', 'name'] }
+    });
     if (!manager) {
       return res.status(404).json({ message: 'Manager not found' });
     }
@@ -47,13 +52,19 @@ router.post('/', authenticateToken, async (req, res) => {
   const { name, email, phoneNumber, password, schoolIds } = req.body;
 
   try {
+    // Check if email already exists (ensure email is unique in the database schema)
+    const existingManager = await Manager.findOne({ where: { email } });
+    if (existingManager) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create the manager in the database
     const newManager = await Manager.create({ name, email, phoneNumber, password: hashedPassword });
 
-    // Set schools for the manager if provided
+    // Assign schools if provided
     if (schoolIds && schoolIds.length > 0) {
       const schools = await School.findAll({ where: { id: schoolIds } });
       await newManager.setSchools(schools);
@@ -64,16 +75,8 @@ router.post('/', authenticateToken, async (req, res) => {
     res.status(201).json({ id, name: managerName, email: managerEmail, phoneNumber: managerPhone });
 
   } catch (error) {
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      const errors = error.errors.map(e => e.message);
-      res.status(400).json({ message: 'Validation error', errors });
-    } else if (error.name === 'SequelizeValidationError') {
-      const validationErrors = error.errors.map(e => e.message);
-      res.status(400).json({ message: 'Validation error', errors: validationErrors });
-    } else {
-      console.error('Error creating manager:', error);
-      res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
+    console.error('Error creating manager:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
@@ -102,13 +105,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     res.json({ message: 'Manager updated successfully', manager });
   } catch (error) {
-    if (error.name === 'SequelizeValidationError') {
-      const validationErrors = error.errors.map(e => e.message);
-      res.status(400).json({ message: 'Validation error', errors: validationErrors });
-    } else {
-      console.error('Error updating manager:', error);
-      res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
+    console.error('Error updating manager:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
