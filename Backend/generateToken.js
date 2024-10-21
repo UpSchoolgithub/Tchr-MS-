@@ -1,16 +1,16 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const payload = {
-  id: 4,  // Change this to the manager's ID
-  email: 'upscho2ol@gmail.com'  // Change this to the manager's email
+  id: 4,  // Your payload data (e.g., manager's ID)
+  email: 'upscho2ol@gmail.com'  // Adjust as necessary
 };
 
-// Use the same secret from .env file
 const secret = process.env.JWT_SECRET || 'your_jwt_secret';
 console.log('JWT Secret in Token Generation:', secret);  // Log secret to verify
 
 const options = {
-  expiresIn: '30d'  // Set token expiration
+  expiresIn: '30d'  // Set token expiration time
 };
 
 const token = jwt.sign(payload, secret, options);
