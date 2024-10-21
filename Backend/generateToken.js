@@ -1,14 +1,16 @@
 const jwt = require('jsonwebtoken');
 
 const payload = {
-  // Your payload data
-  id: 4, // Change to your manager id or appropriate user id
-  email: 'upscho2ol@gmail.com' // Change to your manager email
+  id: 4,  // Change this to the manager's ID
+  email: 'upscho2ol@gmail.com'  // Change this to the manager's email
 };
 
-const secret = process.env.JWT_SECRET || 'your_jwt_secret'; // Ensure your .env file has JWT_SECRET variable set
+// Use the same secret from .env file
+const secret = process.env.JWT_SECRET || 'your_jwt_secret';
+console.log('JWT Secret in Token Generation:', secret);  // Log secret to verify
+
 const options = {
-  expiresIn: '30d' // Token validity
+  expiresIn: '30d'  // Set token expiration
 };
 
 const token = jwt.sign(payload, secret, options);
