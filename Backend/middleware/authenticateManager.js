@@ -8,9 +8,10 @@ const authenticateManager = (req, res, next) => {
   console.log('Authorization Header:', authHeader);
   console.log('Extracted Token:', token);
 
-  if (token == null) {
+  // Verify if the token is present
+  if (!token) {
     console.log('No token provided');
-    return res.sendStatus(403);  // Forbidden if no token
+    return res.status(403).json({ message: 'No token provided' });  // Forbidden if no token
   }
 
   // Verify the token
@@ -21,16 +22,16 @@ const authenticateManager = (req, res, next) => {
         return res.status(401).json({ message: 'Token expired', expired: true });
       }
       console.log('Token verification error:', err.message);
-      return res.sendStatus(403);  // Forbidden if token verification fails
+      return res.status(403).json({ message: 'Invalid token', error: err.message });  // Forbidden if token verification fails
     }
 
-    // Log the decoded token payload
+    // Log the decoded token payload for debugging
     console.log('Decoded JWT Payload:', decodedUser);
 
-    // Check if the decoded token contains the user
-    if (!decodedUser) {
-      console.log('No user found in token');
-      return res.status(403).json({ message: 'No user found in token' });
+    // Ensure the decoded token has the required fields
+    if (!decodedUser || !decodedUser.role || !decodedUser.id) {
+      console.log('Invalid token payload');
+      return res.status(403).json({ message: 'Invalid token payload' });
     }
 
     // Check if the user has the correct role
