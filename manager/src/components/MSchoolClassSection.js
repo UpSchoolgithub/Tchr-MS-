@@ -171,36 +171,36 @@ const MSchoolClassSection = () => {
   };
 
   const handleAssignPeriod = async (e) => {
-    e.preventDefault();
-    try {
-      const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
-      const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
-  
-      // Make sure sectionId is correctly defined
-      const sectionId = await getSectionIdByName(sectionName); // You can implement this based on sectionName
-  
-      const requestData = {
-        schoolId,
-        classId,
-        sectionId,  // Define and pass sectionId here
-        teacherId: selectedTeacher,
-        subjectId: selectedSubject,
-        day: selectedPeriod.day,
-        period: selectedPeriod.period,
-        startTime,
-        endTime
-      };
-  
-      const response = await axiosInstance.post('/timetable/assign', requestData);
-  
-      setSuccessMessage('Assignment added successfully!');
-      setShowReloadButton(true);
-    } catch (error) {
-      console.error('Error assigning period:', error.response || error);
-      setError('Failed to assign period. Please try again.');
-    }
-  };
-  
+  e.preventDefault();
+  try {
+    const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
+    const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
+
+    // Make sure sectionId is correctly defined
+    const sectionId = await getSectionIdByName(sectionName); // You can implement this based on sectionName
+
+    const requestData = {
+      schoolId,
+      classId,
+      sectionId,  // Define and pass sectionId here
+      teacherId: selectedTeacher,
+      subjectId: selectedSubject,
+      day: selectedPeriod.day,
+      period: selectedPeriod.period,
+      startTime,
+      endTime
+    };
+
+    const response = await axiosInstance.post('/timetable/assign', requestData);
+
+    setSuccessMessage('Assignment added successfully!');
+    setShowReloadButton(true);
+  } catch (error) {
+    console.error('Error assigning period:', error.response || error);
+    setError('Failed to assign period. Please try again.');
+  }
+};
+
   
   
   
