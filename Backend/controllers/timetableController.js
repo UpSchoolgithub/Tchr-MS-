@@ -1,11 +1,13 @@
 const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
-const { Op } = require('sequelize');
+//const { Op } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 // Controller function to assign a period
 exports.assignPeriod = async (req, res) => {
-  console.log("Received request to assign period:", req.body);  // Add this log
-  
+  // Log the incoming request
+  console.log("Received request to assign period:", req.body);
+
+  // Destructure the request body
   const { schoolId, classId, sectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
   // Validate required fields
@@ -13,29 +15,31 @@ exports.assignPeriod = async (req, res) => {
     return res.status(400).json({ error: 'All fields, including startTime and endTime, are required.' });
   }
 
-  const transaction = await sequelize.transaction();
-  console.log("Transaction started...");  // Add this log
-
   try {
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
     // Check if the class exists
     const classExists = await ClassInfo.findByPk(classId, { transaction });
     if (!classExists) {
+      console.log("Class does not exist with classId:", classId);
       await transaction.rollback();
       return res.status(400).json({ error: 'Invalid classId. Class does not exist.' });
     }
 
-    // Check if a timetable entry already exists for the given period
+    // Check if a timetable entry already exists for the same period
     const existingEntry = await TimetableEntry.findOne({
       where: { schoolId, classId, sectionId, day, period },
       transaction
     });
 
     if (existingEntry) {
+      console.log("Timetable entry already exists for this period.");
       await transaction.rollback();
       return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
     }
 
-    // Create a new timetable entry
+    // Create the new timetable entry
     const newEntry = await TimetableEntry.create({
       schoolId,
       classId,
@@ -50,14 +54,14 @@ exports.assignPeriod = async (req, res) => {
 
     // Commit the transaction
     await transaction.commit();
-    console.log("Transaction committed...");  // Add this log
+    console.log("Transaction committed.");
 
-    // Respond with the newly created entry
-    res.status(201).json(newEntry);
+    // Return the newly created entry
+    return res.status(201).json(newEntry);
   } catch (error) {
-    await transaction.rollback();
-    console.error('Error assigning period:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Log and handle errors
+    console.error("Error assigning period:", error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
