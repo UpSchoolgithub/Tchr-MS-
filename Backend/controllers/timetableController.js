@@ -1,6 +1,7 @@
 const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/db');
+const { Section } = require('../models');
 
 // Controller function to assign a period
 exports.assignPeriod = async (req, res) => {
@@ -231,6 +232,27 @@ exports.deleteTimetableEntry = async (req, res) => {
     res.status(200).json({ message: 'Timetable entry deleted successfully.' });
   } catch (error) {
     console.error('Error deleting timetable entry:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Controller function to fetch sections by class and school
+exports.getSectionsByClass = async (req, res) => {
+  const { schoolId, classId } = req.params;
+
+  try {
+    // Find sections by schoolId and classId
+    const sections = await Section.findAll({
+      where: { schoolId, classInfoId: classId }
+    });
+
+    if (!sections.length) {
+      return res.status(404).json({ message: 'No sections found for this class.' });
+    }
+
+    res.status(200).json(sections);
+  } catch (error) {
+    console.error('Error fetching sections:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

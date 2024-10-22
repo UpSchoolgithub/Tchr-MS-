@@ -3,7 +3,8 @@ const express = require('express');
 const {
   assignPeriod,
   getAssignments,
-  getTeacherTimetable
+  getTeacherTimetable,
+  getSectionsByClass  // Import the newly created controller function
 } = require('../controllers/timetableController'); // Import the required functions from the timetableController
 
 const router = express.Router();
@@ -16,5 +17,8 @@ router.get('/:schoolId/:classId/:sectionName/assignments', getAssignments);
 
 // Route to get the timetable for a specific teacher
 router.get('/teachers/:teacherId/timetable', getTeacherTimetable);
+
+// New route to get sections for a specific class and school
+router.get('/schools/:schoolId/classes/:classId/sections', getSectionsByClass);
 
 module.exports = router;
