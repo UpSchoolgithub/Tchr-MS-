@@ -10,6 +10,7 @@ Modal.setAppElement('#root');
 
 const MSchoolClassSection = () => {
   const { schoolId, classId, sectionName } = useParams();
+  console.log('Class ID:', classId); // Check what is being passed
   const navigate = useNavigate();
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [holidays, setHolidays] = useState([]);

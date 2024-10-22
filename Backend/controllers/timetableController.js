@@ -242,7 +242,7 @@ exports.getSectionsByClass = async (req, res) => {
   try {
     // Find sections by schoolId and classId
     const sections = await Section.findAll({
-      where: { schoolId, classInfoId: classId } // Ensure correct mapping
+      where: { schoolId, classInfoId: classId }
     });
 
     if (!sections.length) {
