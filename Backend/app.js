@@ -54,7 +54,7 @@ const calendarRoutes = require('./routes/calendar');
 //const timetableRoutes = require('./routes/mtimetable'); // Ensure this line is present
 const subjectRoutes = require('./routes/Msubjects');
 const mteacherRoutes = require('./routes/mteacherRoutes');
-const timetableRoutes = require('./routes/timetableRoutes');
+//const timetableRoutes = require('./routes/timetableRoutes');
 //const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
@@ -65,6 +65,7 @@ const sectionsRouter = require('./routes/students');
 const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
 //const subjectRoutes = require('./routes/subjectRoutes');
+const timetableRoutes = require('./routes/timetableRoutes'); // Import your timetable routes
 
 app.use('/api/timetable', require('./routes/timetableRoutes'));
 
