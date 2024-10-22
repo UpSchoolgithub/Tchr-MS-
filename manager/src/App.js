@@ -69,12 +69,16 @@ function AppContent() {
             <Route path="/view-teachers" element={<ProtectedRoute element={<MViewTeachers />} />} />
             <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
             <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
-            <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
+
+            {/* Use classId 116 directly in the routes */}
+            <Route path="/dashboard/school/:schoolId/class/116/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
+            
+            {/* Teacher routes */}
             <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
             <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
             <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
-            <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
-            
+            <Route path="/dashboard/school/:schoolId/class/116/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
+
             {/* TeacherTimetable Route */}
             <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
 
