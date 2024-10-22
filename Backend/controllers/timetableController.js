@@ -1,5 +1,4 @@
-// controllers/timetableController.js
-const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher } = require('../models');
+const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/db');
 
@@ -166,6 +165,72 @@ exports.getTeacherTimetable = async (req, res) => {
     res.json(formattedTimetable);
   } catch (error) {
     console.error('Error fetching teacher timetable:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Controller function to get all sections for a given class
+exports.getSectionsByClassId = async (req, res) => {
+  const { schoolId, classId } = req.params;
+
+  try {
+    const sections = await Section.findAll({
+      where: { classInfoId: classId, schoolId }
+    });
+
+    if (!sections.length) {
+      return res.status(404).json({ message: 'No sections found for this class.' });
+    }
+
+    res.status(200).json(sections);
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Controller function to update an existing timetable entry
+exports.updateTimetableEntry = async (req, res) => {
+  const { id } = req.params;
+  const { subjectId, teacherId, day, period, startTime, endTime } = req.body;
+
+  try {
+    const entry = await TimetableEntry.findByPk(id);
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Timetable entry not found.' });
+    }
+
+    entry.subjectId = subjectId || entry.subjectId;
+    entry.teacherId = teacherId || entry.teacherId;
+    entry.day = day || entry.day;
+    entry.period = period || entry.period;
+    entry.startTime = startTime || entry.startTime;
+    entry.endTime = endTime || entry.endTime;
+
+    await entry.save();
+    res.status(200).json(entry);
+  } catch (error) {
+    console.error('Error updating timetable entry:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Controller function to delete a timetable entry
+exports.deleteTimetableEntry = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const entry = await TimetableEntry.findByPk(id);
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Timetable entry not found.' });
+    }
+
+    await entry.destroy();
+    res.status(200).json({ message: 'Timetable entry deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting timetable entry:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
