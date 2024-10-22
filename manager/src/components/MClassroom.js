@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../services/axiosInstance';  // Ensure axiosInstance is set up with baseURL and token handling
+import axiosInstance from '../services/axiosInstance';  // Ensure your axiosInstance is set up with the correct baseURL and token handling
 import { useNavigate } from 'react-router-dom';
 import { useManagerAuth } from '../context/ManagerAuthContext';
 import './MClassroom.css'; // Import any necessary CSS
@@ -7,11 +7,11 @@ import './MClassroom.css'; // Import any necessary CSS
 const MClassroom = () => {
   const { managerId, token } = useManagerAuth();
   const [schools, setSchools] = useState([]);
-  const [selectedSchool, setSelectedSchool] = useState(localStorage.getItem('selectedSchool') || null);
+  const [selectedSchool, setSelectedSchool] = useState(localStorage.getItem('selectedSchool') || '');
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(localStorage.getItem('selectedClass') || null);
-  const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || null);
+  const [selectedClass, setSelectedClass] = useState(localStorage.getItem('selectedClass') || '');
+  const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || '');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,7 +81,6 @@ const MClassroom = () => {
 
   const fetchSections = async (classInfoList) => {
     try {
-      // Fetch sections for each class in the list
       const sectionRequests = classInfoList.map(classInfo =>
         axiosInstance.get(`/classes/${classInfo.id}/sections`, {
           headers: {
@@ -90,15 +89,11 @@ const MClassroom = () => {
         })
       );
 
-      // Wait for all section requests to complete
       const sectionResponses = await Promise.all(sectionRequests);
-
-      // Combine all section responses into one array
       const allSections = sectionResponses.flatMap(response => response.data);
 
       console.log('Fetched Sections:', allSections);  // Log fetched sections
 
-      // For each section, fetch its subjects
       const sectionsWithSubjects = await Promise.all(allSections.map(async (section) => {
         const subjects = await fetchSubjects(section.id);  // Fetch subjects using sectionId
         return {
@@ -136,8 +131,8 @@ const MClassroom = () => {
     localStorage.setItem('selectedSchool', schoolId);
     setClasses([]);  // Reset classes and sections
     setSections([]);
-    setSelectedClass(null);
-    setSelectedSection(null);
+    setSelectedClass('');
+    setSelectedSection('');
     localStorage.removeItem('selectedClass');
     localStorage.removeItem('selectedSection');
   };
@@ -151,7 +146,7 @@ const MClassroom = () => {
       localStorage.setItem('selectedClass', classId); // Store classId in local storage
       fetchSections(classInfoList); // Pass classInfo to fetch sections
       setSections([]);
-      setSelectedSection(null);
+      setSelectedSection('');
       localStorage.removeItem('selectedSection');
     }
   };
