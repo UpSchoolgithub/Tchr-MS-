@@ -2,10 +2,6 @@ const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, T
 //const { Op } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-// Controller function to assign a period
-const { TimetableEntry, ClassInfo } = require('../models');  // Ensure models are imported correctly
-const { sequelize } = require('../config/db');  // Import sequelize for transaction management
-
 exports.assignPeriod = async (req, res) => {
   // Log the incoming request
   console.log("Received request to assign period:", req.body);
