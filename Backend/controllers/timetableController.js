@@ -7,33 +7,34 @@ exports.assignPeriod = async (req, res) => {
 
   const { schoolId, classId, sectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
-  // Validate that all necessary fields are provided
   if (!schoolId || !classId || !sectionId || !subjectId || !teacherId || !day || !period || !startTime || !endTime) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
   try {
     const transaction = await sequelize.transaction();
+    console.log("Transaction started...");
 
-    // Check if the class exists
     const classExists = await ClassInfo.findByPk(classId, { transaction });
     if (!classExists) {
+      console.log("Class does not exist with classId:", classId);
       await transaction.rollback();
       return res.status(400).json({ error: 'Class does not exist.' });
     }
 
-    // Check if a timetable entry already exists for this period
+    console.log("Class exists:", classExists);
+
     const existingEntry = await TimetableEntry.findOne({
       where: { schoolId, classId, sectionId, day, period },
       transaction
     });
 
     if (existingEntry) {
+      console.log("Timetable entry already exists for this period.");
       await transaction.rollback();
-      return res.status(409).json({ error: 'Timetable entry for this period already exists.' });
+      return res.status(409).json({ error: 'Timetable entry already exists.' });
     }
 
-    // Create new timetable entry
     const newEntry = await TimetableEntry.create({
       schoolId,
       classId,
@@ -46,16 +47,18 @@ exports.assignPeriod = async (req, res) => {
       endTime
     }, { transaction });
 
-    // Commit the transaction
-    await transaction.commit();
+    console.log("New timetable entry created:", newEntry);
 
-    // Respond with the newly created entry
+    await transaction.commit();
+    console.log("Transaction committed.");
+
     return res.status(201).json(newEntry);
   } catch (error) {
-    console.error('Error assigning period:', error);
+    console.error("Error during period assignment:", error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
