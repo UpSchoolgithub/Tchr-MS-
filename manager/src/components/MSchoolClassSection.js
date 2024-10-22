@@ -171,10 +171,11 @@ const MSchoolClassSection = () => {
   };
   const getSectionIdByName = async (schoolId, classId, sectionName) => {
     try {
-      // Ensure the correct classId is used here
+      // Ensure the correct classId (116 in your case) is passed here
       const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections`);
       const sections = response.data;
       
+      // Match the sectionName to get the sectionId
       const section = sections.find(sec => sec.sectionName === sectionName);
       if (section) {
         return section.id;
@@ -186,6 +187,7 @@ const MSchoolClassSection = () => {
       throw error;
     }
   };
+  
   
 
   const fetchSectionIdByName = async () => {
@@ -201,36 +203,37 @@ const MSchoolClassSection = () => {
   
   
   const handleAssignPeriod = async (e) => {
-  e.preventDefault();
-  try {
-    const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
-    const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
-
-    // Fetch the sectionId using the new function
-    const sectionId = await getSectionIdByName(schoolId, classId, sectionName);
-    console.log("Fetched sectionId:", sectionId);
-
-    // Ensure that sectionId is passed in the request
-    const requestData = {
-      schoolId,
-      classId,
-      sectionId,  // Pass the fetched sectionId here
-      teacherId: selectedTeacher,
-      subjectId: selectedSubject,
-      day: selectedPeriod.day,
-      period: selectedPeriod.period,
-      startTime,
-      endTime
-    };
-
-    const response = await axiosInstance.post('/timetable/assign', requestData);
-    setSuccessMessage('Assignment added successfully!');
-    setShowReloadButton(true);
-  } catch (error) {
-    console.error('Error assigning period:', error.response || error);
-    setError('Failed to assign period. Please try again.');
-  }
-};
+    e.preventDefault();
+    try {
+      const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
+      const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
+  
+      // Fetch the correct sectionId using the updated function
+      const sectionId = await getSectionIdByName(schoolId, classId, sectionName);
+      console.log("Fetched sectionId:", sectionId);
+  
+      // Ensure that sectionId is passed in the request
+      const requestData = {
+        schoolId,
+        classId,
+        sectionId,  // Pass the fetched sectionId here
+        teacherId: selectedTeacher,
+        subjectId: selectedSubject,
+        day: selectedPeriod.day,
+        period: selectedPeriod.period,
+        startTime,
+        endTime
+      };
+  
+      const response = await axiosInstance.post('/timetable/assign', requestData);
+      setSuccessMessage('Assignment added successfully!');
+      setShowReloadButton(true);
+    } catch (error) {
+      console.error('Error assigning period:', error.response || error);
+      setError('Failed to assign period. Please try again.');
+    }
+  };
+  
 
   
   
