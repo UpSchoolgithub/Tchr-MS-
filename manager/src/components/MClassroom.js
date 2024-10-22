@@ -7,11 +7,11 @@ import './MClassroom.css'; // Import any necessary CSS
 const MClassroom = () => {
   const { managerId, token } = useManagerAuth();
   const [schools, setSchools] = useState([]);
-  const [selectedSchool, setSelectedSchool] = useState(localStorage.getItem('selectedSchool') || '');
+  const [selectedSchool, setSelectedSchool] = useState(localStorage.getItem('selectedSchool') || null);
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(localStorage.getItem('selectedClass') || '');
-  const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || '');
+  const [selectedClass, setSelectedClass] = useState(localStorage.getItem('selectedClass') || null);
+  const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const MClassroom = () => {
   // Fetch sections and subjects for the selected class
   useEffect(() => {
     if (selectedClass) {
-      const classData = classes.find(cls => cls.classInfo.some(info => info.id === selectedClass));
+      const classData = classes.find(cls => cls.className === selectedClass);
       if (classData) {
         fetchSections(classData.classInfo);
       }
@@ -88,40 +88,48 @@ const MClassroom = () => {
           }
         })
       );
-
       const sectionResponses = await Promise.all(sectionRequests);
       const allSections = sectionResponses.flatMap(response => response.data);
 
-      console.log('Fetched Sections:', allSections);  // Log fetched sections
+      const sectionsGrouped = allSections.reduce((acc, section) => {
+        if (!acc[section.sectionName]) {
+          acc[section.sectionName] = [];
+        }
+        acc[section.sectionName].push(section);
+        return acc;
+      }, {});
 
-      const sectionsWithSubjects = await Promise.all(allSections.map(async (section) => {
-        const subjects = await fetchSubjects(section.id);  // Fetch subjects using sectionId
+      const fetchSubjects = async (sectionId) => {
+        try {
+          const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          return response.data;
+        } catch (error) {
+          console.error(`Error fetching subjects for section ${sectionId}:`, error);
+          return [];
+        }
+      };
+
+      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
+        const sectionInfo = sectionsGrouped[sectionName];
+        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
+        const combinedSubjects = subjects.flat();
+        const combinedSectionId = sectionInfo.map(s => s.id).join('-');
         return {
-          sectionName: section.sectionName,   // Section name
-          sectionId: section.id,              // Section ID
-          subjects: subjects,                 // Subjects fetched for the section
-          count: subjects.length              // Number of subjects in this section
+          sectionName,
+          sectionInfo,
+          count: sectionInfo.length,
+          subjects: combinedSubjects,
+          combinedSectionId
         };
       }));
 
-      setSections(sectionsWithSubjects);  // Update state with sections and their subjects
+      setSections(sectionsWithSubjects);
     } catch (error) {
       console.error('Error fetching sections:', error);
-    }
-  };
-
-  // Helper function to fetch subjects for a section by sectionId
-  const fetchSubjects = async (sectionId) => {
-    try {
-      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;  // Return subjects for the section
-    } catch (error) {
-      console.error(`Error fetching subjects for section ${sectionId}:`, error);
-      return [];
     }
   };
 
@@ -129,24 +137,24 @@ const MClassroom = () => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
     localStorage.setItem('selectedSchool', schoolId);
-    setClasses([]);  // Reset classes and sections
+    setClasses([]);
     setSections([]);
-    setSelectedClass('');
-    setSelectedSection('');
+    setSelectedClass(null);
+    setSelectedSection(null);
     localStorage.removeItem('selectedClass');
     localStorage.removeItem('selectedSection');
   };
 
   const handleClassChange = (e) => {
-    const classId = e.target.value;  // Use classId instead of className
-    const classData = classes.find(cls => cls.classInfo.some(info => info.id === classId)); // Adjust logic if needed to find class by ID
+    const className = e.target.value;
+    const classData = classes.find(cls => cls.className === className);
     if (classData) {
       const classInfoList = classData.classInfo;
-      setSelectedClass(classId); // Use classId for state management
-      localStorage.setItem('selectedClass', classId); // Store classId in local storage
-      fetchSections(classInfoList); // Pass classInfo to fetch sections
+      setSelectedClass(className);
+      localStorage.setItem('selectedClass', className);
+      fetchSections(classInfoList);
       setSections([]);
-      setSelectedSection('');
+      setSelectedSection(null);
       localStorage.removeItem('selectedSection');
     }
   };
@@ -158,62 +166,60 @@ const MClassroom = () => {
 
   const handleSectionSelect = () => {
     if (selectedSchool && selectedClass && selectedSection) {
-      const selectedSectionInfo = sections.find(section => section.sectionId === parseInt(selectedSection));
+      const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
       if (selectedSectionInfo) {
         localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
+        localStorage.setItem('combinedSectionId', selectedSectionInfo.combinedSectionId); // Store combined section IDs
       }
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSectionInfo.sectionId}`, {  // Use sectionId for navigation
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSection}`, {
         state: {
           selectedSchool,
           selectedClass,
-          selectedSection: selectedSectionInfo.sectionName,
+          selectedSection,
           subjects: selectedSectionInfo ? selectedSectionInfo.subjects : [],
-          sectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
+          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.combinedSectionId : ''
         }
       });
     }
   };
 
-  const selectedSectionInfo = sections.find(section => section.sectionId === parseInt(selectedSection));
+  const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
 
   return (
     <div className="container">
       <div className="classroom-container">
         <h1>Select School, Class, and Section</h1>
         <div className="form-group">
-  <label htmlFor="schoolSelect">School:</label>
-  <select id="schoolSelect" onChange={handleSchoolChange} value={selectedSchool || ''}>
-    <option value="" disabled>Select School</option>
-    {schools.map((school) => (
-      <option key={school.id} value={school.id}>{school.name}</option>
-    ))}
-  </select>
-</div>
-
-<div className="form-group">
-  <label htmlFor="classSelect">Class:</label>
-  <select id="classSelect" onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
-    <option value="" disabled>Select Class</option>
-    {classes.map((cls) => (
-      <option key={cls.className} value={cls.classInfo[0].id}>
-        {cls.className} ({cls.count})
-      </option>
-    ))}
-  </select>
-</div>
-
-<div className="form-group">
-  <label htmlFor="sectionSelect">Section:</label>
-  <select id="sectionSelect" onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
-    <option value="" disabled>Select Section</option>
-    {sections.map((section) => (
-      <option key={section.sectionId} value={section.sectionId}>
-        {section.sectionName} ({section.count} subjects)
-      </option>
-    ))}
-  </select>
-</div>
-
+          <label>School:</label>
+          <select onChange={handleSchoolChange} value={selectedSchool || ''}>
+            <option value="" disabled>Select School</option>
+            {schools.map((school) => (
+              <option key={school.id} value={school.id}>{school.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Class:</label>
+          <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
+            <option value="" disabled>Select Class</option>
+            {classes.map((cls) => (
+              <option key={cls.className} value={cls.className}>
+                {cls.className} ({cls.count})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Section:</label>
+          <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
+            <option value="" disabled>Select Section</option>
+            {sections.map((section) => (
+              <option key={section.sectionName} value={section.sectionName}>
+                {section.sectionName} ({section.count})
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <h3>Subjects:</h3>
           {selectedSectionInfo && (
