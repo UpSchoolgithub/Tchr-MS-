@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../services/axiosInstance';  // Ensure your axiosInstance is set up with the correct baseURL and token handling
+import axiosInstance from '../services/axiosInstance';  // Ensure axiosInstance is set up with baseURL and token handling
 import { useNavigate } from 'react-router-dom';
 import { useManagerAuth } from '../context/ManagerAuthContext';
 import './MClassroom.css'; // Import any necessary CSS
@@ -89,15 +89,15 @@ const MClassroom = () => {
           }
         })
       );
-      
+
       // Wait for all section requests to complete
       const sectionResponses = await Promise.all(sectionRequests);
-      
+
       // Combine all section responses into one array
       const allSections = sectionResponses.flatMap(response => response.data);
-  
+
       console.log('Fetched Sections:', allSections);  // Log fetched sections
-  
+
       // For each section, fetch its subjects
       const sectionsWithSubjects = await Promise.all(allSections.map(async (section) => {
         const subjects = await fetchSubjects(section.id);  // Fetch subjects using sectionId
@@ -108,13 +108,13 @@ const MClassroom = () => {
           count: subjects.length              // Number of subjects in this section
         };
       }));
-  
+
       setSections(sectionsWithSubjects);  // Update state with sections and their subjects
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
-  
+
   // Helper function to fetch subjects for a section by sectionId
   const fetchSubjects = async (sectionId) => {
     try {
@@ -129,14 +129,12 @@ const MClassroom = () => {
       return [];
     }
   };
-  
-  
-  
+
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
     localStorage.setItem('selectedSchool', schoolId);
-    setClasses([]);
+    setClasses([]);  // Reset classes and sections
     setSections([]);
     setSelectedClass(null);
     setSelectedSection(null);
@@ -165,7 +163,7 @@ const MClassroom = () => {
 
   const handleSectionSelect = () => {
     if (selectedSchool && selectedClass && selectedSection) {
-      const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+      const selectedSectionInfo = sections.find(section => section.sectionId === parseInt(selectedSection));
       if (selectedSectionInfo) {
         localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
       }
@@ -173,7 +171,7 @@ const MClassroom = () => {
         state: {
           selectedSchool,
           selectedClass,
-          selectedSection,
+          selectedSection: selectedSectionInfo.sectionName,
           subjects: selectedSectionInfo ? selectedSectionInfo.subjects : [],
           sectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
         }
@@ -181,7 +179,7 @@ const MClassroom = () => {
     }
   };
 
-  const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+  const selectedSectionInfo = sections.find(section => section.sectionId === parseInt(selectedSection));
 
   return (
     <div className="container">
@@ -210,14 +208,13 @@ const MClassroom = () => {
         <div className="form-group">
           <label>Section:</label>
           <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
-  <option value="" disabled>Select Section</option>
-  {sections.map((section) => (
-    <option key={section.sectionId} value={section.sectionId}>
-      {section.sectionName} ({section.count} subjects)
-    </option>
-  ))}
-</select>
-
+            <option value="" disabled>Select Section</option>
+            {sections.map((section) => (
+              <option key={section.sectionId} value={section.sectionId}>
+                {section.sectionName} ({section.count} subjects)
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <h3>Subjects:</h3>
