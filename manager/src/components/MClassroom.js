@@ -81,6 +81,7 @@ const MClassroom = () => {
 
   const fetchSections = async (classInfoList) => {
     try {
+      // Fetch sections for each class in the list
       const sectionRequests = classInfoList.map(classInfo =>
         axiosInstance.get(`/classes/${classInfo.id}/sections`, {
           headers: {
@@ -88,51 +89,48 @@ const MClassroom = () => {
           }
         })
       );
+      
+      // Wait for all section requests to complete
       const sectionResponses = await Promise.all(sectionRequests);
+      
+      // Combine all section responses into one array
       const allSections = sectionResponses.flatMap(response => response.data);
   
-      console.log('Fetched Sections:', allSections); // Add this line to see the response in the console
+      console.log('Fetched Sections:', allSections);  // Log fetched sections
   
-      const sectionsGrouped = allSections.reduce((acc, section) => {
-        if (!acc[section.sectionName]) {
-          acc[section.sectionName] = [];
-        }
-        acc[section.sectionName].push(section);
-        return acc;
-      }, {});
-  
-      const fetchSubjects = async (sectionId) => {
-        try {
-          const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          return response.data;
-        } catch (error) {
-          console.error(`Error fetching subjects for section ${sectionId}:`, error);
-          return [];
-        }
-      };
-  
-      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
-        const sectionInfo = sectionsGrouped[sectionName];
-        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
-        const combinedSubjects = subjects.flat();
+      // For each section, fetch its subjects
+      const sectionsWithSubjects = await Promise.all(allSections.map(async (section) => {
+        const subjects = await fetchSubjects(section.id);  // Fetch subjects using sectionId
         return {
-          sectionName,
-          sectionInfo,
-          count: sectionInfo.length,
-          subjects: combinedSubjects,
-          sectionId: sectionInfo[0]?.id  // Directly use sectionId here
+          sectionName: section.sectionName,   // Section name
+          sectionId: section.id,              // Section ID
+          subjects: subjects,                 // Subjects fetched for the section
+          count: subjects.length              // Number of subjects in this section
         };
       }));
   
-      setSections(sectionsWithSubjects);
+      setSections(sectionsWithSubjects);  // Update state with sections and their subjects
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
+  
+  // Helper function to fetch subjects for a section by sectionId
+  const fetchSubjects = async (sectionId) => {
+    try {
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data;  // Return subjects for the section
+    } catch (error) {
+      console.error(`Error fetching subjects for section ${sectionId}:`, error);
+      return [];
+    }
+  };
+  
+  
   
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
@@ -212,13 +210,14 @@ const MClassroom = () => {
         <div className="form-group">
           <label>Section:</label>
           <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
-            <option value="" disabled>Select Section</option>
-            {sections.map((section) => (
-              <option key={section.sectionId} value={section.sectionName}>
-                {section.sectionName} ({section.count})
-              </option>
-            ))}
-          </select>
+  <option value="" disabled>Select Section</option>
+  {sections.map((section) => (
+    <option key={section.sectionId} value={section.sectionId}>
+      {section.sectionName} ({section.count} subjects)
+    </option>
+  ))}
+</select>
+
         </div>
         <div>
           <h3>Subjects:</h3>
