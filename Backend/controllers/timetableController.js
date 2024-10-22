@@ -1,6 +1,6 @@
 const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
 //const { Op } = require('sequelize');
-const { sequelize } = require('../config/db');
+const sequelize = require('../config/db');  // Import sequelize directly
 
 exports.assignPeriod = async (req, res) => {
   console.log("Received request to assign period:", req.body);
