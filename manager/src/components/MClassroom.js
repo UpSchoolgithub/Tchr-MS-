@@ -90,7 +90,9 @@ const MClassroom = () => {
       );
       const sectionResponses = await Promise.all(sectionRequests);
       const allSections = sectionResponses.flatMap(response => response.data);
-
+  
+      console.log('Fetched Sections:', allSections); // Add this line to see the response in the console
+  
       const sectionsGrouped = allSections.reduce((acc, section) => {
         if (!acc[section.sectionName]) {
           acc[section.sectionName] = [];
@@ -98,7 +100,7 @@ const MClassroom = () => {
         acc[section.sectionName].push(section);
         return acc;
       }, {});
-
+  
       const fetchSubjects = async (sectionId) => {
         try {
           const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
@@ -112,7 +114,7 @@ const MClassroom = () => {
           return [];
         }
       };
-
+  
       const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
         const sectionInfo = sectionsGrouped[sectionName];
         const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
@@ -125,13 +127,13 @@ const MClassroom = () => {
           sectionId: sectionInfo[0]?.id  // Directly use sectionId here
         };
       }));
-
+  
       setSections(sectionsWithSubjects);
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
-
+  
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
