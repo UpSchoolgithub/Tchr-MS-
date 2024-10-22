@@ -188,6 +188,16 @@ const MSchoolClassSection = () => {
     }
   };
 
+  const fetchSectionId = async () => {
+    try {
+      const response = await axiosInstance.get(`/your-section-endpoint`);
+      const sectionId = response.data.id; // Ensure this is correct
+      return sectionId;
+    } catch (error) {
+      console.error('Error fetching sectionId:', error);
+    }
+  };
+  
   const handleAssignPeriod = async (e) => {
   e.preventDefault();
   try {
