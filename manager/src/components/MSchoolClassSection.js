@@ -188,15 +188,17 @@ const MSchoolClassSection = () => {
     }
   };
 
-  const fetchSectionId = async () => {
+  const fetchSectionIdByName = async () => {
     try {
-      const response = await axiosInstance.get(`/your-section-endpoint`);
-      const sectionId = response.data.id; // Ensure this is correct
-      return sectionId;
+      // Update the classId to the correct value (116 in this case)
+      const response = await axiosInstance.get(`/schools/${schoolId}/classes/116/sections`);
+      const sections = response.data;
+      // Proceed with logic to handle the sections
     } catch (error) {
       console.error('Error fetching sectionId:', error);
     }
   };
+  
   
   const handleAssignPeriod = async (e) => {
   e.preventDefault();
