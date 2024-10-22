@@ -59,23 +59,14 @@ exports.assignPeriod = async (req, res) => {
 
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
-  const { schoolId, classId, sectionName } = req.params;
+  const { schoolId, classId, sectionId } = req.params;
 
   try {
-    const section = await Section.findOne({
-      where: { schoolId, classInfoId: classId, sectionName }
-    });
-
-    if (!section) {
-      return res.status(404).json({ message: 'Section not found.' });
-    }
-
     const assignments = await TimetableEntry.findAll({
-      where: { schoolId, classId, sectionId: section.id },
+      where: { schoolId, classId, sectionId },
       include: [
         { model: Teacher, attributes: ['name'] },
-        { model: Subject, attributes: ['subjectName'] },
-        { model: Section, attributes: ['sectionName'] }
+        { model: Subject, attributes: ['subjectName'] }
       ],
       order: [['day', 'ASC'], ['period', 'ASC']]
     });
@@ -90,6 +81,7 @@ exports.getAssignments = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Controller function to get timetable settings for a school
 exports.getTimetableSettings = async (req, res) => {
@@ -188,6 +180,7 @@ exports.getSectionsByClassId = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Controller function to update an existing timetable entry
 exports.updateTimetableEntry = async (req, res) => {

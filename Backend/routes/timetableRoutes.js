@@ -21,4 +21,6 @@ router.get('/teachers/:teacherId/timetable', getTeacherTimetable);
 // New route to get sections for a specific class and school
 router.get('/schools/:schoolId/classes/:classId/sections', getSectionsByClass);
 
+// Route for fetching timetable by sectionId
+router.get('/timetable/:schoolId/:classId/:sectionId/assignments', getAssignments);
 module.exports = router;

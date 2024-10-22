@@ -138,7 +138,10 @@ const MSchoolClassSection = () => {
   const fetchAssignments = async () => {
     if (!subjects.length || !teachers.length) return; // Ensure teachers and subjects are loaded
     try {
-      const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionName}/assignments`);
+      // Replace sectionName with sectionId
+      const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionId}/assignments`);
+      
+      // Process the response data and map the assignments to their respective periods
       const assignments = response.data.reduce((acc, entry) => {
         const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
         const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown Subject' };
@@ -150,12 +153,14 @@ const MSchoolClassSection = () => {
         };
         return acc;
       }, {});
+  
       setAssignedPeriods(assignments);  // Set the assignments to assignedPeriods
     } catch (error) {
       setError('Error fetching assignments.');
       console.error('Error fetching assignments:', error);
     }
   };
+  
   
 
   const handleCloseModal = () => {

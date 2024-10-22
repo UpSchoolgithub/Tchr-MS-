@@ -47,7 +47,7 @@ const MClassroom = () => {
   // Fetch sections and subjects for the selected class
   useEffect(() => {
     if (selectedClass) {
-      const classData = classes.find(cls => cls.className === selectedClass);
+      const classData = classes.find(cls => cls.classInfo.some(info => info.id === selectedClass));
       if (classData) {
         fetchSections(classData.classInfo);
       }
@@ -117,13 +117,12 @@ const MClassroom = () => {
         const sectionInfo = sectionsGrouped[sectionName];
         const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
         const combinedSubjects = subjects.flat();
-        const combinedSectionId = sectionInfo.map(s => s.id).join('-');
         return {
           sectionName,
           sectionInfo,
           count: sectionInfo.length,
           subjects: combinedSubjects,
-          combinedSectionId
+          sectionId: sectionInfo[0]?.id  // Directly use sectionId here
         };
       }));
 
@@ -146,13 +145,13 @@ const MClassroom = () => {
   };
 
   const handleClassChange = (e) => {
-    const className = e.target.value;
-    const classData = classes.find(cls => cls.className === className);
+    const classId = e.target.value;  // Use classId instead of className
+    const classData = classes.find(cls => cls.classInfo.some(info => info.id === classId)); // Adjust logic if needed to find class by ID
     if (classData) {
       const classInfoList = classData.classInfo;
-      setSelectedClass(className);
-      localStorage.setItem('selectedClass', className);
-      fetchSections(classInfoList);
+      setSelectedClass(classId); // Use classId for state management
+      localStorage.setItem('selectedClass', classId); // Store classId in local storage
+      fetchSections(classInfoList); // Pass classInfo to fetch sections
       setSections([]);
       setSelectedSection(null);
       localStorage.removeItem('selectedSection');
@@ -169,15 +168,14 @@ const MClassroom = () => {
       const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
       if (selectedSectionInfo) {
         localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
-        localStorage.setItem('combinedSectionId', selectedSectionInfo.combinedSectionId); // Store combined section IDs
       }
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSection}`, {
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSectionInfo.sectionId}`, {  // Use sectionId for navigation
         state: {
           selectedSchool,
           selectedClass,
           selectedSection,
           subjects: selectedSectionInfo ? selectedSectionInfo.subjects : [],
-          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.combinedSectionId : ''
+          sectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
         }
       });
     }
@@ -203,7 +201,7 @@ const MClassroom = () => {
           <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
             <option value="" disabled>Select Class</option>
             {classes.map((cls) => (
-              <option key={cls.className} value={cls.className}>
+              <option key={cls.className} value={cls.classInfo[0].id}>
                 {cls.className} ({cls.count})
               </option>
             ))}
@@ -214,7 +212,7 @@ const MClassroom = () => {
           <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
             <option value="" disabled>Select Section</option>
             {sections.map((section) => (
-              <option key={section.sectionName} value={section.sectionName}>
+              <option key={section.sectionId} value={section.sectionName}>
                 {section.sectionName} ({section.count})
               </option>
             ))}
