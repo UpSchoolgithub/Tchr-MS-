@@ -547,7 +547,8 @@ app.use('/api', subjectRoutes);
 //app.use('/api/teacher', teacherAuthRoutes);
 //app.use('/api/teacher', teacherRoutes);
 //app.use('/api/teachers', teachersRoutes);
-app.use('/api/timetable', timetableRoutes);
+//app.use('/api/timetable', timetableRoutes);
+app.use('/api', timetableRoutes);
 
 // Fallback for undefined routes
 app.use((req, res) => {

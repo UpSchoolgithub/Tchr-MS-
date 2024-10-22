@@ -57,6 +57,7 @@ exports.assignPeriod = async (req, res) => {
   }
 };
 
+
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
   const { schoolId, classId, sectionId } = req.params;

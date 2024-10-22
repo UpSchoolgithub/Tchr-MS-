@@ -79,26 +79,25 @@ const MClassroom = () => {
     }
   };
 
-  const fetchSections = async (classInfoList) => {
+  const fetchSections = async (classId) => {
     try {
-      const sectionRequests = classInfoList.map(classInfo =>
-        axiosInstance.get(`/classes/${classInfo.id}/sections`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-      );
-      const sectionResponses = await Promise.all(sectionRequests);
-      const allSections = sectionResponses.flatMap(response => response.data);
-
-      const sectionsGrouped = allSections.reduce((acc, section) => {
+      const response = await axiosInstance.get(`/classes/${classId}/sections`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const sections = response.data;
+      
+      // Process sections
+      const sectionsGrouped = sections.reduce((acc, section) => {
         if (!acc[section.sectionName]) {
           acc[section.sectionName] = [];
         }
         acc[section.sectionName].push(section);
         return acc;
       }, {});
-
+  
+      // Fetch subjects for each section
       const fetchSubjects = async (sectionId) => {
         try {
           const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
@@ -112,7 +111,7 @@ const MClassroom = () => {
           return [];
         }
       };
-
+  
       const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
         const sectionInfo = sectionsGrouped[sectionName];
         const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
@@ -126,12 +125,13 @@ const MClassroom = () => {
           combinedSectionId
         };
       }));
-
+  
       setSections(sectionsWithSubjects);
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
+  
 
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
@@ -152,12 +152,19 @@ const MClassroom = () => {
       const classInfoList = classData.classInfo;
       setSelectedClass(className);
       localStorage.setItem('selectedClass', className);
-      fetchSections(classInfoList);
+  
+      // Extract classId and store it
+      const classId = classInfoList.length > 0 ? classInfoList[0].id : null;
+      if (classId) {
+        fetchSections(classId);
+      }
+      
       setSections([]);
       setSelectedSection(null);
       localStorage.removeItem('selectedSection');
     }
   };
+  
 
   const handleSectionChange = (e) => {
     setSelectedSection(e.target.value);
