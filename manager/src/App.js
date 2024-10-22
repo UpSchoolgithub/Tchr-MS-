@@ -77,7 +77,7 @@ function AppContent() {
             <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
             <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
             <Route path="/teachers/edit/:id" element={<ProtectedRoute element={<EditTeacher />} />} />
-            <Route path="/dashboard/school/:schoolId/class/116/section/:sectionName/calendar" element={<ProtectedRoute element={<SchoolCalendar />} />} />
+            <Route path="/dashboard/school/:schoolId/class/116/section/:sectionName" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
 
             {/* TeacherTimetable Route */}
             <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
