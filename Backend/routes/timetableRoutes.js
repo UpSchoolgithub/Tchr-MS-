@@ -14,10 +14,8 @@ router.get('/assign', (req, res) => {
 });
 
 // Route for assigning a period to the timetable (POST /api/assign)
-router.post('/assign', (req, res) => {
-  console.log("Assign POST route reached");
-  res.status(200).json({ message: "POST assign is working!" });
-});
+router.post('/assign', assignPeriod);
+
 
 
 // Route to get assignments for a specific section and class (GET /api/:schoolId/:classId/:sectionName/assignments)

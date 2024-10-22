@@ -2,43 +2,41 @@ const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, T
 //const { Op } = require('sequelize');
 const { sequelize } = require('../config/db');
 
+const { TimetableEntry, ClassInfo } = require('../models');  // Ensure models are imported correctly
+const { sequelize } = require('../config/db');  // Ensure Sequelize instance is imported
+
 exports.assignPeriod = async (req, res) => {
-  // Log the incoming request
   console.log("Received request to assign period:", req.body);
 
-  // Destructure the request body
   const { schoolId, classId, sectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
-  // Validate required fields
+  // Validate that all necessary fields are provided
   if (!schoolId || !classId || !sectionId || !subjectId || !teacherId || !day || !period || !startTime || !endTime) {
-    return res.status(400).json({ error: 'All fields, including startTime and endTime, are required.' });
+    return res.status(400).json({ error: 'All fields are required.' });
   }
 
   try {
-    // Start a transaction
     const transaction = await sequelize.transaction();
 
     // Check if the class exists
     const classExists = await ClassInfo.findByPk(classId, { transaction });
     if (!classExists) {
-      console.log("Class does not exist with classId:", classId);
       await transaction.rollback();
-      return res.status(400).json({ error: 'Invalid classId. Class does not exist.' });
+      return res.status(400).json({ error: 'Class does not exist.' });
     }
 
-    // Check if a timetable entry already exists for the same period
+    // Check if a timetable entry already exists for this period
     const existingEntry = await TimetableEntry.findOne({
       where: { schoolId, classId, sectionId, day, period },
       transaction
     });
 
     if (existingEntry) {
-      console.log("Timetable entry already exists for this period.");
       await transaction.rollback();
-      return res.status(409).json({ error: 'A timetable entry for this period already exists.' });
+      return res.status(409).json({ error: 'Timetable entry for this period already exists.' });
     }
 
-    // Create the new timetable entry
+    // Create new timetable entry
     const newEntry = await TimetableEntry.create({
       schoolId,
       classId,
@@ -53,17 +51,15 @@ exports.assignPeriod = async (req, res) => {
 
     // Commit the transaction
     await transaction.commit();
-    console.log("Transaction committed.");
 
-    // Return the newly created entry
+    // Respond with the newly created entry
     return res.status(201).json(newEntry);
   } catch (error) {
-    // Log and handle errors
-    await transaction.rollback();
-    console.error("Error assigning period:", error);
+    console.error('Error assigning period:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
