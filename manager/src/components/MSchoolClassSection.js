@@ -169,6 +169,24 @@ const MSchoolClassSection = () => {
     setIsModalOpen(true);
     setIsEditWarningOpen(false);
   };
+  const getSectionIdByName = async (schoolId, classId, sectionName) => {
+    try {
+      // Fetch sections for the given classId and schoolId
+      const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections`);
+      const sections = response.data;
+  
+      // Find the section matching the sectionName
+      const section = sections.find(sec => sec.sectionName === sectionName);
+      if (section) {
+        return section.id;  // Return the sectionId
+      } else {
+        throw new Error('Section not found');
+      }
+    } catch (error) {
+      console.error('Error fetching sectionId:', error);
+      throw error;  // Throw the error to handle it where this function is called
+    }
+  };
 
   const handleAssignPeriod = async (e) => {
   e.preventDefault();
@@ -176,13 +194,15 @@ const MSchoolClassSection = () => {
     const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
     const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
 
-    // Make sure sectionId is correctly defined
-    const sectionId = await getSectionIdByName(sectionName); // You can implement this based on sectionName
+    // Fetch the sectionId using the new function
+    const sectionId = await getSectionIdByName(schoolId, classId, sectionName);
+    console.log("Fetched sectionId:", sectionId);
 
+    // Ensure that sectionId is passed in the request
     const requestData = {
       schoolId,
       classId,
-      sectionId,  // Define and pass sectionId here
+      sectionId,  // Pass the fetched sectionId here
       teacherId: selectedTeacher,
       subjectId: selectedSubject,
       day: selectedPeriod.day,
@@ -192,7 +212,6 @@ const MSchoolClassSection = () => {
     };
 
     const response = await axiosInstance.post('/timetable/assign', requestData);
-
     setSuccessMessage('Assignment added successfully!');
     setShowReloadButton(true);
   } catch (error) {
@@ -201,11 +220,6 @@ const MSchoolClassSection = () => {
   }
 };
 
-  
-  
-  
-
-  
   
   
   
