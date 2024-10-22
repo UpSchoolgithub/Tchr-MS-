@@ -171,22 +171,22 @@ const MSchoolClassSection = () => {
   };
   const getSectionIdByName = async (schoolId, classId, sectionName) => {
     try {
-      // Fetch sections for the given classId and schoolId
+      // Ensure the correct classId is used here
       const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections`);
       const sections = response.data;
-  
-      // Find the section matching the sectionName
+      
       const section = sections.find(sec => sec.sectionName === sectionName);
       if (section) {
-        return section.id;  // Return the sectionId
+        return section.id;
       } else {
         throw new Error('Section not found');
       }
     } catch (error) {
       console.error('Error fetching sectionId:', error);
-      throw error;  // Throw the error to handle it where this function is called
+      throw error;
     }
   };
+  
 
   const fetchSectionIdByName = async () => {
     try {
