@@ -1,7 +1,6 @@
 const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Section } = require('../models');
 
 // Controller function to assign a period
 exports.assignPeriod = async (req, res) => {
