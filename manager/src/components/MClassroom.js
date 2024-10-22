@@ -181,36 +181,39 @@ const MClassroom = () => {
       <div className="classroom-container">
         <h1>Select School, Class, and Section</h1>
         <div className="form-group">
-          <label>School:</label>
-          <select onChange={handleSchoolChange} value={selectedSchool || ''}>
-            <option value="" disabled>Select School</option>
-            {schools.map((school) => (
-              <option key={school.id} value={school.id}>{school.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Class:</label>
-          <select onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
-            <option value="" disabled>Select Class</option>
-            {classes.map((cls) => (
-              <option key={cls.className} value={cls.classInfo[0].id}>
-                {cls.className} ({cls.count})
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Section:</label>
-          <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
-            <option value="" disabled>Select Section</option>
-            {sections.map((section) => (
-              <option key={section.sectionId} value={section.sectionId}>
-                {section.sectionName} ({section.count} subjects)
-              </option>
-            ))}
-          </select>
-        </div>
+  <label htmlFor="schoolSelect">School:</label>
+  <select id="schoolSelect" onChange={handleSchoolChange} value={selectedSchool || ''}>
+    <option value="" disabled>Select School</option>
+    {schools.map((school) => (
+      <option key={school.id} value={school.id}>{school.name}</option>
+    ))}
+  </select>
+</div>
+
+<div className="form-group">
+  <label htmlFor="classSelect">Class:</label>
+  <select id="classSelect" onChange={handleClassChange} value={selectedClass || ''} disabled={!selectedSchool}>
+    <option value="" disabled>Select Class</option>
+    {classes.map((cls) => (
+      <option key={cls.className} value={cls.classInfo[0].id}>
+        {cls.className} ({cls.count})
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="form-group">
+  <label htmlFor="sectionSelect">Section:</label>
+  <select id="sectionSelect" onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
+    <option value="" disabled>Select Section</option>
+    {sections.map((section) => (
+      <option key={section.sectionId} value={section.sectionId}>
+        {section.sectionName} ({section.count} subjects)
+      </option>
+    ))}
+  </select>
+</div>
+
         <div>
           <h3>Subjects:</h3>
           {selectedSectionInfo && (
