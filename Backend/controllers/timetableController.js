@@ -4,6 +4,8 @@ const { sequelize } = require('../config/db');
 
 // Controller function to assign a period
 exports.assignPeriod = async (req, res) => {
+  console.log("Received request to assign period:", req.body);  // Add this log
+  
   const { schoolId, classId, sectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
   // Validate required fields
@@ -12,6 +14,7 @@ exports.assignPeriod = async (req, res) => {
   }
 
   const transaction = await sequelize.transaction();
+  console.log("Transaction started...");  // Add this log
 
   try {
     // Check if the class exists
@@ -47,6 +50,7 @@ exports.assignPeriod = async (req, res) => {
 
     // Commit the transaction
     await transaction.commit();
+    console.log("Transaction committed...");  // Add this log
 
     // Respond with the newly created entry
     res.status(201).json(newEntry);
@@ -56,6 +60,7 @@ exports.assignPeriod = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 // Controller function to get assignments for a section
