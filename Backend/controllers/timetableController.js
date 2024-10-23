@@ -22,8 +22,6 @@ exports.assignPeriod = async (req, res) => {
       return res.status(400).json({ error: 'Class does not exist.' });
     }
 
-    console.log("Class exists:", classExists);
-
     const existingEntry = await TimetableEntry.findOne({
       where: { schoolId, classId, sectionId, day, period },
       transaction
@@ -107,7 +105,6 @@ exports.getTeacherTimetable = async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    // Fetch direct timetable entries where the teacher is assigned
     const directTimetable = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
@@ -118,7 +115,6 @@ exports.getTeacherTimetable = async (req, res) => {
       ],
     });
 
-    // Fetch timetable entries from TeacherTimetable where the teacher is assigned
     const teacherTimetableEntries = await TeacherTimetable.findAll({
       where: { teacherId },
       include: [
