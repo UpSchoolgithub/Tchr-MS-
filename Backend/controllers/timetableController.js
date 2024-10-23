@@ -1,7 +1,7 @@
 const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
-//const { Op } = require('sequelize');
-const sequelize = require('../config/db');  // Import sequelize directly
+const sequelize = require('../config/db');  // Import sequelize for transactions
 
+// Controller function to assign a period
 exports.assignPeriod = async (req, res) => {
   console.log("Received request to assign period:", req.body);
 
@@ -11,8 +11,8 @@ exports.assignPeriod = async (req, res) => {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
+  const transaction = await sequelize.transaction();  // Start transaction
   try {
-    const transaction = await sequelize.transaction();
     console.log("Transaction started...");
 
     const classExists = await ClassInfo.findByPk(classId, { transaction });
@@ -54,15 +54,11 @@ exports.assignPeriod = async (req, res) => {
 
     return res.status(201).json(newEntry);
   } catch (error) {
+    await transaction.rollback();
     console.error("Error during period assignment:", error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
@@ -82,13 +78,12 @@ exports.getAssignments = async (req, res) => {
       return res.status(404).json({ message: 'No assignments found for this section.' });
     }
 
-    res.status(200).json(assignments);
+    return res.status(200).json(assignments);
   } catch (error) {
     console.error('Error fetching assignments:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 // Controller function to get timetable settings for a school
 exports.getTimetableSettings = async (req, res) => {
@@ -100,10 +95,10 @@ exports.getTimetableSettings = async (req, res) => {
       return res.status(404).json({ error: 'Timetable settings not found.' });
     }
 
-    res.status(200).json(timetableSettings);
+    return res.status(200).json(timetableSettings);
   } catch (error) {
     console.error('Error fetching timetable settings:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -140,8 +135,6 @@ exports.getTeacherTimetable = async (req, res) => {
     });
 
     const combinedTimetable = teacherTimetableEntries.map(entry => entry.TimetableEntry);
-
-    // Combine direct and combined timetable entries
     const timetable = [...directTimetable, ...combinedTimetable];
 
     if (!timetable.length) {
@@ -161,10 +154,10 @@ exports.getTeacherTimetable = async (req, res) => {
       endTime: entry.endTime || null,
     }));
 
-    res.json(formattedTimetable);
+    return res.status(200).json(formattedTimetable);
   } catch (error) {
     console.error('Error fetching teacher timetable:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -181,13 +174,12 @@ exports.getSectionsByClassId = async (req, res) => {
       return res.status(404).json({ message: 'No sections found for this class.' });
     }
 
-    res.status(200).json(sections);
+    return res.status(200).json(sections);
   } catch (error) {
     console.error('Error fetching sections:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 // Controller function to update an existing timetable entry
 exports.updateTimetableEntry = async (req, res) => {
@@ -209,10 +201,10 @@ exports.updateTimetableEntry = async (req, res) => {
     entry.endTime = endTime || entry.endTime;
 
     await entry.save();
-    res.status(200).json(entry);
+    return res.status(200).json(entry);
   } catch (error) {
     console.error('Error updating timetable entry:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -228,10 +220,10 @@ exports.deleteTimetableEntry = async (req, res) => {
     }
 
     await entry.destroy();
-    res.status(200).json({ message: 'Timetable entry deleted successfully.' });
+    return res.status(200).json({ message: 'Timetable entry deleted successfully.' });
   } catch (error) {
     console.error('Error deleting timetable entry:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -240,7 +232,6 @@ exports.getSectionsByClass = async (req, res) => {
   const { schoolId, classId } = req.params;
 
   try {
-    // Find sections by schoolId and classId
     const sections = await Section.findAll({
       where: { schoolId, classInfoId: classId }
     });
@@ -249,9 +240,9 @@ exports.getSectionsByClass = async (req, res) => {
       return res.status(404).json({ message: 'No sections found for this class.' });
     }
 
-    res.status(200).json(sections);
+    return res.status(200).json(sections);
   } catch (error) {
     console.error('Error fetching sections:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
