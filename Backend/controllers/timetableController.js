@@ -3,32 +3,27 @@ const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, T
 const sequelize = require('../config/db');  // Import sequelize directly
 
 exports.assignPeriod = async (req, res) => {
-  // Log the incoming request data
   console.log("Received request to assign period:", req.body);
 
   const { schoolId, classId, sectionId, subjectId, teacherId, day, period, startTime, endTime } = req.body;
 
-  // Log the validation of request data
   if (!schoolId || !classId || !sectionId || !subjectId || !teacherId || !day || !period || !startTime || !endTime) {
-    console.log("Validation failed, missing required fields.");
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
   try {
-    // Start a transaction and log it
     const transaction = await sequelize.transaction();
     console.log("Transaction started...");
 
-    // Check if the class exists and log the result
     const classExists = await ClassInfo.findByPk(classId, { transaction });
     if (!classExists) {
       console.log("Class does not exist with classId:", classId);
       await transaction.rollback();
       return res.status(400).json({ error: 'Class does not exist.' });
     }
+
     console.log("Class exists:", classExists);
 
-    // Check if a timetable entry already exists and log the result
     const existingEntry = await TimetableEntry.findOne({
       where: { schoolId, classId, sectionId, day, period },
       transaction
@@ -40,7 +35,6 @@ exports.assignPeriod = async (req, res) => {
       return res.status(409).json({ error: 'Timetable entry already exists.' });
     }
 
-    // Create the new timetable entry and log it
     const newEntry = await TimetableEntry.create({
       schoolId,
       classId,
@@ -52,21 +46,18 @@ exports.assignPeriod = async (req, res) => {
       startTime,
       endTime
     }, { transaction });
+
     console.log("New timetable entry created:", newEntry);
 
-    // Commit the transaction and log it
     await transaction.commit();
     console.log("Transaction committed.");
 
-    // Return the newly created entry
     return res.status(201).json(newEntry);
   } catch (error) {
-    // Log the error details
     console.error("Error during period assignment:", error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 
 
