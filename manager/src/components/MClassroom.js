@@ -44,12 +44,15 @@ const MClassroom = () => {
     }
   }, [selectedSchool]);
 
-  // Fetch sections and subjects for the selected class
+  // Fetch sections for the selected class
   useEffect(() => {
     if (selectedClass) {
       const classData = classes.find(cls => cls.className === selectedClass);
       if (classData) {
-        fetchSections(classData.classInfo);
+        const classId = classData.classInfo.length > 0 ? classData.classInfo[0].id : null;
+        if (classId) {
+          fetchSections(classId);
+        }
       }
     }
   }, [selectedClass, classes]);
@@ -81,61 +84,44 @@ const MClassroom = () => {
 
   const fetchSections = async (classId) => {
     try {
-      console.log("Fetching sections for classId:", classId); // Add this log
+      console.log("Fetching sections for classId:", classId);
       const response = await axiosInstance.get(`/classes/${classId}/sections`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      console.log("Fetched sections:", response.data); // Log fetched sections
+      console.log("Fetched sections:", response.data);
       const sections = response.data;
       
-      // Process sections
-      const sectionsGrouped = sections.reduce((acc, section) => {
-        if (!acc[section.sectionName]) {
-          acc[section.sectionName] = [];
-        }
-        acc[section.sectionName].push(section);
-        return acc;
-      }, {});
-  
-      // Fetch subjects for each section
-      const fetchSubjects = async (sectionId) => {
-        try {
-          const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          return response.data;
-        } catch (error) {
-          console.error(`Error fetching subjects for section ${sectionId}:`, error);
-          return [];
-        }
-      };
-  
-      const sectionsWithSubjects = await Promise.all(Object.keys(sectionsGrouped).map(async sectionName => {
-        const sectionInfo = sectionsGrouped[sectionName];
-        const subjects = await Promise.all(sectionInfo.map(section => fetchSubjects(section.id)));
-        const combinedSubjects = subjects.flat();
-        const combinedSectionId = sectionInfo.map(s => s.id).join('-');
+      const sectionsWithSubjects = await Promise.all(sections.map(async section => {
+        const subjects = await fetchSubjects(section.id);
         return {
-          sectionName,
-          sectionInfo,
-          count: sectionInfo.length,
-          subjects: combinedSubjects,
-          combinedSectionId
+          sectionName: section.sectionName,
+          sectionId: section.id,
+          subjects
         };
       }));
-  
-      console.log("Processed sections with subjects:", sectionsWithSubjects); // Log final sections with subjects
+
+      console.log("Processed sections with subjects:", sectionsWithSubjects);
       setSections(sectionsWithSubjects);
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
-  
-  
+
+  const fetchSubjects = async (sectionId) => {
+    try {
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching subjects for section ${sectionId}:`, error);
+      return [];
+    }
+  };
 
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
@@ -153,14 +139,11 @@ const MClassroom = () => {
     const className = e.target.value;
     const classData = classes.find(cls => cls.className === className);
     if (classData) {
-      const classInfoList = classData.classInfo;
+      const classId = classData.classInfo.length > 0 ? classData.classInfo[0].id : null;
       setSelectedClass(className);
       localStorage.setItem('selectedClass', className);
-  
-      // Extract classId and pass it correctly
-      const classId = classInfoList.length > 0 ? classInfoList[0].id : null;
+
       if (classId) {
-        console.log("Selected classId:", classId); // Add this log
         fetchSections(classId);
       }
       
@@ -169,8 +152,6 @@ const MClassroom = () => {
       localStorage.removeItem('selectedSection');
     }
   };
-  
-  
 
   const handleSectionChange = (e) => {
     setSelectedSection(e.target.value);
@@ -182,7 +163,7 @@ const MClassroom = () => {
       const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
       if (selectedSectionInfo) {
         localStorage.setItem('selectedSubjects', JSON.stringify(selectedSectionInfo.subjects));
-        localStorage.setItem('combinedSectionId', selectedSectionInfo.combinedSectionId); // Store combined section IDs
+        localStorage.setItem('combinedSectionId', selectedSectionInfo.sectionId); // Store section ID
       }
       navigate(`/dashboard/school/${selectedSchool}/class/${selectedClass}/section/${selectedSection}`, {
         state: {
@@ -190,7 +171,7 @@ const MClassroom = () => {
           selectedClass,
           selectedSection,
           subjects: selectedSectionInfo ? selectedSectionInfo.subjects : [],
-          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.combinedSectionId : ''
+          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
         }
       });
     }
@@ -227,8 +208,8 @@ const MClassroom = () => {
           <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClass}>
             <option value="" disabled>Select Section</option>
             {sections.map((section) => (
-              <option key={section.sectionName} value={section.sectionName}>
-                {section.sectionName} ({section.count})
+              <option key={section.sectionId} value={section.sectionName}>
+                {section.sectionName}
               </option>
             ))}
           </select>
