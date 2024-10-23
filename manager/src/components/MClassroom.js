@@ -81,11 +81,13 @@ const MClassroom = () => {
 
   const fetchSections = async (classId) => {
     try {
+      console.log("Fetching sections for classId:", classId); // Add this log
       const response = await axiosInstance.get(`/classes/${classId}/sections`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      console.log("Fetched sections:", response.data); // Log fetched sections
       const sections = response.data;
       
       // Process sections
@@ -126,11 +128,13 @@ const MClassroom = () => {
         };
       }));
   
+      console.log("Processed sections with subjects:", sectionsWithSubjects); // Log final sections with subjects
       setSections(sectionsWithSubjects);
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
+  
   
 
   const handleSchoolChange = (e) => {
@@ -153,9 +157,10 @@ const MClassroom = () => {
       setSelectedClass(className);
       localStorage.setItem('selectedClass', className);
   
-      // Extract classId and store it
+      // Extract classId and pass it correctly
       const classId = classInfoList.length > 0 ? classInfoList[0].id : null;
       if (classId) {
+        console.log("Selected classId:", classId); // Add this log
         fetchSections(classId);
       }
       
@@ -164,6 +169,7 @@ const MClassroom = () => {
       localStorage.removeItem('selectedSection');
     }
   };
+  
   
 
   const handleSectionChange = (e) => {
