@@ -71,6 +71,7 @@ exports.getAssignments = async (req, res) => {
       ],
       order: [['day', 'ASC'], ['period', 'ASC']]
     });
+    console.log('Assignments fetched:', assignments);
 
     if (!assignments.length) {
       return res.status(404).json({ message: 'No assignments found for this section.' });
