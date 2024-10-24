@@ -143,7 +143,7 @@ const MClassroom = () => {
     }
   };
 
-  const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+  const selectedSectionInfo = selectedSection ? sections.find(section => section.sectionName === selectedSection) : null;
 
   return (
     <div className="container">
@@ -184,7 +184,7 @@ const MClassroom = () => {
           <h3>Subjects:</h3>
           {selectedSectionInfo && (
             <div className="subjects-container">
-              {selectedSectionInfo.subjects.length > 0 ? (
+              {selectedSectionInfo.subjects && selectedSectionInfo.subjects.length > 0 ? (
                 selectedSectionInfo.subjects.map(subject => (
                   <div key={subject.id} className="subject-item">
                     <span>{subject.subjectName || 'No Subject Name'}</span>
