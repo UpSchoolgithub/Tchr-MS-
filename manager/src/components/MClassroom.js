@@ -155,11 +155,11 @@ const MClassroom = () => {
   const handleSectionSelect = () => {
     if (selectedSchool && selectedClassId && selectedSection) {
       const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${selectedSection}`, {
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${selectedSectionInfo.sectionId}`, {
         state: {
           selectedSchool,
           selectedClass: selectedClassId,
-          selectedSection,
+          selectedSection: selectedSectionInfo.sectionId, // Use section ID instead of name
           combinedSectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
         }
       });
