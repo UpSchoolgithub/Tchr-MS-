@@ -143,9 +143,10 @@ useEffect(() => {
     if (!subjects.length || !teachers.length) return; // Ensure teachers and subjects are loaded
 
     try {
+        // Fetch assignments from the API
         const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionId}/assignments`);
-        console.log('Fetched assignments:', response.data); // Log the fetched assignments
-
+        
+        // Process the response data and map the assignments to their respective periods
         const assignments = response.data.reduce((acc, entry) => {
             const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
             const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown Subject' };
@@ -153,17 +154,16 @@ useEffect(() => {
                 teacher: teacher.name,
                 teacherId: entry.teacherId,
                 subject: subject.subjectName,
-                subjectId: subject.id,
+                subjectId: subject.id // Ensure subject ID is included
             };
             return acc;
         }, {});
 
-        setAssignedPeriods(assignments);
+        setAssignedPeriods(assignments);  // Set the assignments to assignedPeriods
     } catch (error) {
         console.error('Error fetching assignments:', error);
     }
 };
-
 
   
 
@@ -298,8 +298,6 @@ useEffect(() => {
   });
 
   const renderTable = () => {
-    console.log('Assigned periods:', assignedPeriods); // Log assigned periods
-
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
         return <p>No timetable settings available</p>;
     }
@@ -329,8 +327,8 @@ useEffect(() => {
                                 {periodName} <br />
                                 {periodTime}
                             </td>
-                            {days.map((day) => {
-                                const periodAssignment = assignedPeriods[`${day}-${period}`];
+                            {days.map((day, dayIndex) => {
+                                const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
 
                                 return (
                                     <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
@@ -352,7 +350,6 @@ useEffect(() => {
         </table>
     );
 };
-
 
   
             
