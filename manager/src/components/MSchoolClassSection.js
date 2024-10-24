@@ -9,7 +9,7 @@ import './MSchoolClassSection.css';
 Modal.setAppElement('#root');
 
 const MSchoolClassSection = () => {
-  const { schoolId, classId, sectionName } = useParams();
+  const { schoolId, classId, sectionId } = useParams();
   console.log('Class ID:', classId); // Check what is being passed
   const navigate = useNavigate();
   const [calendarEvents, setCalendarEvents] = useState([]);
@@ -29,7 +29,7 @@ const MSchoolClassSection = () => {
   const [selectedPeriod, setSelectedPeriod] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState(null);
-  const [combinedSectionId, setCombinedSectionId] = useState('');
+  //const [combinedSectionId, setCombinedSectionId] = useState('');
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showReloadButton, setShowReloadButton] = useState(false);
@@ -41,22 +41,21 @@ const MSchoolClassSection = () => {
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
     if (storedSubjects) {
-      setSubjects(storedSubjects);
+        setSubjects(storedSubjects);
     }
-    const combinedId = `${schoolId}-${classId}-${sectionName}`;
-    setCombinedSectionId(combinedId);
+    // Removed combinedId logic
     fetchCalendarEventsAndHolidays(schoolId);
     fetchTeachers(schoolId);
-    fetchSubjects(schoolId); // Fetch subjects before fetching assignments
+    fetchSubjects(sectionId); // Fetch subjects using sectionId
     fetchTimetableSettings(schoolId);
-  }, [schoolId, sectionName]);
+}, [schoolId, sectionId]); // Use sectionId instead of sectionName
 
-  useEffect(() => {
+useEffect(() => {
     if (teachers.length > 0 && timetableSettings && Object.keys(assignedPeriods).length > 0) {
-      fetchAssignments();
+        fetchAssignments();
     }
-  }, [teachers, timetableSettings, combinedSectionId]);
-  
+}, [teachers, timetableSettings, sectionId]); // Use sectionId instead of combinedSectionId
+
   useEffect(() => {
     axiosInstance.get(`/schools/${schoolId}`)
       .then(response => {
