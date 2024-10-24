@@ -296,56 +296,84 @@ useEffect(() => {
 
   const renderTable = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
-        return <p>No timetable settings available</p>;
+      return <p>No timetable settings available</p>;
     }
-
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let reservedTimeInserted = false;
   
     return (
-        <table className="timetable-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    {days.map(day => (
-                        <th key={day}>{day}</th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {periods.map((period, index) => {
-                    const startEndTime = timetableSettings.periodTimings[index];
-                    if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
-                        return null;
-                    }
-
-                    const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+      <table className="timetable-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            {days.map(day => (
+              <th key={day}>{day}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            if (!startEndTime || typeof startEndTime.start !== 'string' || typeof startEndTime.end !== 'string') {
+              return null;
+            }
+  
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+            const periodName = `Period ${period}`;
+            const isReservedTime = timetableSettings.reserveTimeStart === startEndTime.start &&
+                                   timetableSettings.reserveTimeEnd === startEndTime.end;
+  
+            if (isReservedTime && reservedTimeInserted) {
+              return null;
+            }
+            if (isReservedTime) {
+              reservedTimeInserted = true;
+            }
+  
+            return (
+              <tr key={index}>
+                <td>
+                  {periodName} <br />
+                  {periodTime}
+                </td>
+                {days.map((day, dayIndex) => {
+                  if (isReservedTime) {
                     return (
-                        <tr key={index}>
-                            <td>{`Period ${period} ${periodTime}`}</td>
-                            {days.map(day => {
-                                const periodAssignment = assignedPeriods[`${day}-${period}`]; // Reference based on day and period
-                                return (
-                                    <td key={`${day}-${period}`}>
-                                        {periodAssignment ? (
-                                            <div>
-                                                <div>{periodAssignment.teacher}</div>
-                                                <div>{periodAssignment.subject}</div>
-                                            </div>
-                                        ) : (
-                                            <span className="add-icon">+</span>
-                                        )}
-                                    </td>
-                                );
-                            })}
-                        </tr>
+                      <td
+                        key={day}
+                        colSpan={days.length}
+                        className="merged-row"
+                        style={{ textAlign: 'center' }}
+                      >
+                        Reserved Time
+                      </td>
                     );
+                  }
+  
+                  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+  
+                  return (
+                    <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
+                      {periodAssignment ? (
+                        <>
+                          <div>{periodAssignment.teacher}</div>
+                          <div>{periodAssignment.subject}</div>
+                        </>
+                      ) : (
+                        <span className="add-icon">+</span>
+                      )}
+                    </td>
+                  );
                 })}
-            </tbody>
-        </table>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     );
-};
-
+  };
   
             
   
