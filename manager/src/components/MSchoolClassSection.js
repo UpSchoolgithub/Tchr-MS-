@@ -213,15 +213,18 @@ useEffect(() => {
   
   
   const handleAssignPeriod = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent the default form submission
+
     try {
+        // Get start and end times for the selected period
         const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
         const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
 
+        // Prepare the request data for the API
         const requestData = {
             schoolId,
             classId,
-            sectionId,  // Pass the fetched sectionId here
+            sectionId,  // Pass the sectionId here
             teacherId: selectedTeacher,
             subjectId: selectedSubject,
             day: selectedPeriod.day,
@@ -230,9 +233,13 @@ useEffect(() => {
             endTime
         };
 
+        // Send the assignment request to the server
         const response = await axiosInstance.post('/timetable/assign', requestData);
+        
+        // Set success message and refetch assignments to update the table
         setSuccessMessage('Assignment added successfully!');
-        setShowReloadButton(true);
+        await fetchAssignments(); // Refetch assignments to ensure the state is updated
+        
         handleCloseModal(); // Close the modal after assigning
     } catch (error) {
         console.error('Error assigning period:', error.response || error);
