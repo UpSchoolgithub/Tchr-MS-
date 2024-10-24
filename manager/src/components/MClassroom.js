@@ -152,6 +152,20 @@ const MClassroom = () => {
     }
   };
 
+  const handleSectionSelect = () => {
+    if (selectedSchool && selectedClassId && selectedSection) {
+      const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${selectedSection}`, {
+        state: {
+          selectedSchool,
+          selectedClass: selectedClassId,
+          selectedSection,
+          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
+        }
+      });
+    }
+  };
+
   const selectedSectionInfo = selectedSection ? sections.find(section => section.sectionName === selectedSection) : null;
 
   return (
