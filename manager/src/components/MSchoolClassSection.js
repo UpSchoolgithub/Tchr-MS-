@@ -43,10 +43,11 @@ const MSchoolClassSection = () => {
     if (storedSubjects) {
         setSubjects(storedSubjects);
     }
-    // Removed combinedId logic
     fetchCalendarEventsAndHolidays(schoolId);
     fetchTeachers(schoolId);
-    fetchSubjects(sectionId); // Fetch subjects using sectionId
+    fetchSubjects(sectionId).then(fetchedSubjects => {
+        setSubjects(fetchedSubjects); // Update state with fetched subjects
+    });
     fetchTimetableSettings(schoolId);
 }, [schoolId, sectionId]); // Use sectionId instead of sectionName
 
@@ -92,17 +93,14 @@ useEffect(() => {
 
   const fetchSubjects = async (sectionId) => {
     try {
-      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data; // Return subjects from response
+        const response = await axiosInstance.get(`/sections/${sectionId}/subjects`); // Remove token if not needed
+        return response.data;
     } catch (error) {
-      console.error(`Error fetching subjects for section ${sectionId}:`, error);
-      return [];
+        console.error(`Error fetching subjects for section ${sectionId}:`, error);
+        return [];
     }
-  };
+};
+
 
   const fetchTimetableSettings = async (schoolId) => {
     try {
@@ -215,34 +213,31 @@ useEffect(() => {
   const handleAssignPeriod = async (e) => {
     e.preventDefault();
     try {
-      const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
-      const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
-  
-      // Fetch the correct sectionId using the updated function
-      const sectionId = await getSectionIdByName(schoolId, classId, sectionName);
-      console.log("Fetched sectionId:", sectionId);
-  
-      // Ensure that sectionId is passed in the request
-      const requestData = {
-        schoolId,
-        classId,
-        sectionId,  // Pass the fetched sectionId here
-        teacherId: selectedTeacher,
-        subjectId: selectedSubject,
-        day: selectedPeriod.day,
-        period: selectedPeriod.period,
-        startTime,
-        endTime
-      };
-  
-      const response = await axiosInstance.post('/timetable/assign', requestData);
-      setSuccessMessage('Assignment added successfully!');
-      setShowReloadButton(true);
+        const startTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.start;
+        const endTime = timetableSettings.periodTimings[selectedPeriod.period - 1]?.end;
+
+        const requestData = {
+            schoolId,
+            classId,
+            sectionId,  // Pass the fetched sectionId here
+            teacherId: selectedTeacher,
+            subjectId: selectedSubject,
+            day: selectedPeriod.day,
+            period: selectedPeriod.period,
+            startTime,
+            endTime
+        };
+
+        const response = await axiosInstance.post('/timetable/assign', requestData);
+        setSuccessMessage('Assignment added successfully!');
+        setShowReloadButton(true);
+        handleCloseModal(); // Close the modal after assigning
     } catch (error) {
-      console.error('Error assigning period:', error.response || error);
-      setError('Failed to assign period. Please try again.');
+        console.error('Error assigning period:', error.response || error);
+        setError('Failed to assign period. Please try again.');
     }
-  };
+};
+
   
 
   
@@ -452,7 +447,7 @@ const downloadTimetableAsPDF = () => {
   doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
   doc.setFontSize(14);
   doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-  const classSectionText = `Class: ${classId}    Section: ${sectionName}`;
+  const classSectionText = `Class: ${classId}    Section ID: ${sectionId}`; // Use sectionId
   doc.setFontSize(12);
   doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
 
