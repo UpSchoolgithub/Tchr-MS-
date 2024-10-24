@@ -485,8 +485,8 @@ return (
           <span className="line">{classId}</span>
         </div>
         <div className="section-info">
-          <span className="label">Section :</span>
-          <span className="line">{sectionName}</span>
+          <span className="label">Section ID :</span>
+          <span className="line">{sectionId}</span> {/* Change here */}
         </div>
       </div>
       <h1>{schoolName}</h1>
@@ -500,7 +500,7 @@ return (
           <h3>Class and Section Details</h3>
           <p>School ID: {schoolId}</p>
           <p>Class ID: {classId}</p>
-          <p>Section Name: {sectionName}</p>
+          <p>Section ID: {sectionId}</p> {/* Change here */}
         </div>
         <div className="subjects">
           <h3>Subjects:</h3>
