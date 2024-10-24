@@ -91,12 +91,17 @@ const MSchoolClassSection = () => {
     }
   };
 
-  const fetchSubjects = async (schoolId) => {
+  const fetchSubjects = async (sectionId) => {
     try {
-      const response = await axiosInstance.get(`/schools/${schoolId}/subjects`);
-      setSubjects(response.data);
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data; // Return subjects from response
     } catch (error) {
-      console.error('Error fetching subjects:', error);
+      console.error(`Error fetching subjects for section ${sectionId}:`, error);
+      return [];
     }
   };
 

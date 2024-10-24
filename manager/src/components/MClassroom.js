@@ -10,6 +10,7 @@ const MClassroom = () => {
   const [selectedSchool, setSelectedSchool] = useState(localStorage.getItem('selectedSchool') || null);
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
+  const [subjects, setSubjects] = useState([]); // State for subjects
   const [selectedClassId, setSelectedClassId] = useState(null); // State for selected class ID
   const [selectedClassName, setSelectedClassName] = useState(null); // State for selected class name
   const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || null);
@@ -94,12 +95,27 @@ const MClassroom = () => {
     }
   };
 
+  const fetchSubjects = async (sectionId) => {
+    try {
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data; // Return subjects from response
+    } catch (error) {
+      console.error(`Error fetching subjects for section ${sectionId}:`, error);
+      return [];
+    }
+  };
+
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
     localStorage.setItem('selectedSchool', schoolId);
     setClasses([]);
     setSections([]);
+    setSubjects([]); // Clear subjects when changing school
     setSelectedClassId(null);
     setSelectedSection(null);
     localStorage.removeItem('selectedClass');
@@ -117,29 +133,22 @@ const MClassroom = () => {
       fetchSections(classId);
       setSections([]);
       setSelectedSection(null);
+      setSubjects([]); // Clear subjects when changing class
       localStorage.removeItem('selectedSection');
     }
   };
 
-  const handleSectionChange = (e) => {
-    setSelectedSection(e.target.value);
-    localStorage.setItem('selectedSection', e.target.value);
-  };
-
-  const handleSectionSelect = () => {
-    if (selectedSchool && selectedClassId && selectedSection) {
-      const selectedSectionInfo = sections.find(section => section.sectionName === selectedSection);
-      if (selectedSectionInfo) {
-        localStorage.setItem('combinedSectionId', selectedSectionInfo.sectionId); // Store section ID
-      }
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${selectedSection}`, {
-        state: {
-          selectedSchool,
-          selectedClass: selectedClassId,
-          selectedSection,
-          combinedSectionId: selectedSectionInfo ? selectedSectionInfo.sectionId : ''
-        }
-      });
+  // Fetch subjects in handleSectionChange
+  const handleSectionChange = async (e) => {
+    const sectionName = e.target.value;
+    setSelectedSection(sectionName);
+    localStorage.setItem('selectedSection', sectionName);
+  
+    // Fetch subjects for the selected section
+    const selectedSectionInfo = sections.find(section => section.sectionName === sectionName);
+    if (selectedSectionInfo) {
+      const subjects = await fetchSubjects(selectedSectionInfo.sectionId);
+      setSubjects(subjects); // Update state with fetched subjects
     }
   };
 
@@ -180,22 +189,21 @@ const MClassroom = () => {
             ))}
           </select>
         </div>
+        
+        {/* Render subjects */}
         <div>
           <h3>Subjects:</h3>
-          {selectedSectionInfo && (
-            <div className="subjects-container">
-              {selectedSectionInfo.subjects && selectedSectionInfo.subjects.length > 0 ? (
-                selectedSectionInfo.subjects.map(subject => (
-                  <div key={subject.id} className="subject-item">
-                    <span>{subject.subjectName || 'No Subject Name'}</span>
-                  </div>
-                ))
-              ) : (
-                <p>No subjects found for this section.</p>
-              )}
-            </div>
+          {subjects.length > 0 ? (
+            subjects.map(subject => (
+              <div key={subject.id} className="subject-item">
+                <span>{subject.subjectName || 'No Subject Name'}</span>
+              </div>
+            ))
+          ) : (
+            <p>No subjects found for this section.</p>
           )}
         </div>
+        
         <button 
           onClick={handleSectionSelect} 
           disabled={!selectedSection} 
