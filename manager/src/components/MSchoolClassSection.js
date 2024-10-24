@@ -11,6 +11,8 @@ Modal.setAppElement('#root');
 const MSchoolClassSection = () => {
   const { schoolId, classId, sectionId } = useParams();
   console.log('Class ID:', classId); // Check what is being passed
+  console.log('Class ID:', classId);
+  console.log('Section ID:', sectionId);
   const navigate = useNavigate();
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [holidays, setHolidays] = useState([]);
@@ -41,12 +43,12 @@ const MSchoolClassSection = () => {
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
     if (storedSubjects) {
-        setSubjects(storedSubjects);
+      setSubjects(storedSubjects);
     }
     fetchCalendarEventsAndHolidays(schoolId);
     fetchTeachers(schoolId);
     fetchSubjects(sectionId).then(fetchedSubjects => {
-        setSubjects(fetchedSubjects); // Update state with fetched subjects
+      setSubjects(fetchedSubjects); // Update state with fetched subjects
     });
     fetchTimetableSettings(schoolId);
 }, [schoolId, sectionId]); // Use sectionId instead of sectionName
@@ -93,13 +95,13 @@ useEffect(() => {
 
   const fetchSubjects = async (sectionId) => {
     try {
-        const response = await axiosInstance.get(`/sections/${sectionId}/subjects`); // Remove token if not needed
-        return response.data;
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`);
+      return response.data; // Ensure this returns the expected data
     } catch (error) {
-        console.error(`Error fetching subjects for section ${sectionId}:`, error);
-        return [];
+      console.error(`Error fetching subjects for section ${sectionId}:`, error);
+      return [];
     }
-};
+  };
 
 
   const fetchTimetableSettings = async (schoolId) => {
@@ -472,7 +474,7 @@ const downloadTimetableAsPDF = () => {
     },
   });
 
-  const filename = `Timetable_${classId}_${sectionName}.pdf`;
+  const filename = `Timetable_${classId}_${sectionId}.pdf`; // Change from sectionName to sectionId
   doc.save(filename);
 };
   
