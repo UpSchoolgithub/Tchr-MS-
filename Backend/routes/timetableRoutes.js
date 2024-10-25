@@ -19,7 +19,7 @@ router.post('/assign', assignPeriod);
 
 
 // Route to get assignments for a specific section and class (GET /api/:schoolId/:classId/:sectionName/assignments)
-router.get('/:schoolId/:classId/:sectionName/assignments', getAssignments);
+//router.get('/:schoolId/:classId/:sectionName/assignments', getAssignments);
 
 // Route to get the timetable for a specific teacher (GET /api/teachers/:teacherId/timetable)
 router.get('/teachers/:teacherId/timetable', getTeacherTimetable);
@@ -28,10 +28,8 @@ router.get('/teachers/:teacherId/timetable', getTeacherTimetable);
 router.get('/schools/:schoolId/classes/:classId/sections', getSectionsByClass);
 
 // Route for fetching timetable assignments by sectionId (GET /api/timetable/:schoolId/:classId/:sectionId/assignments)
-router.get('/timetable/:schoolId/:classId/:sectionId/assignments', (req, res) => {
-  console.log('Params received:', req.params);
-  res.status(200).json(req.params);
-});
+router.get('/timetable/:schoolId/:classId/:sectionId/assignments', getAssignments);
+
 
 
 router.get('/test', (req, res) => {
