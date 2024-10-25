@@ -29,9 +29,10 @@ router.get('/schools/:schoolId/classes/:classId/sections', getSectionsByClass);
 
 // Route for fetching timetable assignments by sectionId (GET /api/timetable/:schoolId/:classId/:sectionId/assignments)
 router.get('/timetable/:schoolId/:classId/:sectionId/assignments', (req, res) => {
-  console.log('Request Object:', req);
-  res.status(200).json({ message: "Check logs for request object details" });
+  console.log('Params received:', req.params);
+  res.status(200).json(req.params);
 });
+
 
 router.get('/test', (req, res) => {
   res.status(200).json({ message: 'Test route works!' });
