@@ -441,34 +441,35 @@ useEffect(() => {
     const rows = [];
     const timeline = [];
   
-    // Add periods and breaks to the timeline
+    // Loop over each period and add timing
     periods.forEach((period, index) => {
-      const startEndTime = timetableSettings.periodTimings[index];
-      if (startEndTime) {
-        timeline.push({ type: 'period', period, time: startEndTime });
+      const periodTiming = timetableSettings.periodTimings[index];
+      const periodTimeText = periodTiming ? `${periodTiming.start} - ${periodTiming.end}` : 'No Time';
   
-        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-        }
+      // Add the period time to the timeline array
+      timeline.push({ type: 'period', period, time: periodTimeText });
   
-        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-        }
+      // Add breaks based on conditions
+      if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+        timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
+      }
   
-        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-        }
+      if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
+        timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
+      }
+  
+      if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
+        timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
       }
     });
   
-    // Add reserved time
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
   
     // Add rows to the PDF
     timeline.forEach(entry => {
-      const row = [entry.time];
+      const row = [entry.time];  // This will now correctly display the formatted time
       if (entry.type === 'period') {
         days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
@@ -519,6 +520,7 @@ useEffect(() => {
     const filename = `Timetable_${className || classId}_${sectionName || sectionId}.pdf`;
     doc.save(filename);
   };
+  
   
   
   
