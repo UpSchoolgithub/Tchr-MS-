@@ -421,6 +421,7 @@ useEffect(() => {
     const rows = [];
     const timeline = [];
   
+    // Loop over each period and add timing
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
       if (startEndTime) {
@@ -444,8 +445,9 @@ useEffect(() => {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
   
+    // Loop over timeline to generate rows for the PDF table
     timeline.forEach(entry => {
-      const row = [`${entry.time.start} - ${entry.time.end}`];
+      const row = [entry.time ? `${entry.time}` : ''];
       if (entry.type === 'period') {
         days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
@@ -460,14 +462,18 @@ useEffect(() => {
   
     const columns = ['Time', ...days];
   
+    // Title and Header
     doc.setFontSize(18);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
     doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-    const classSectionText = `Class: ${classId}    Section ID: ${sectionId}`;
+  
+    // Fetch class name and section name instead of classId and sectionId
+    const classSectionText = `Class: ${className}    Section: ${sectionName}`;
     doc.setFontSize(12);
     doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
   
+    // Timetable Table
     doc.autoTable({
       startY: 45,
       head: [columns],
@@ -489,9 +495,10 @@ useEffect(() => {
       },
     });
   
-    const filename = `Timetable_${classId}_${sectionId}.pdf`;
+    const filename = `Timetable_${className}_${sectionName}.pdf`; // Use className and sectionName
     doc.save(filename);
   };
+  
   
   
 return (
