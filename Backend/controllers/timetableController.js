@@ -61,6 +61,7 @@ exports.assignPeriod = async (req, res) => {
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
   const { schoolId, classId, sectionId } = req.params;
+  console.log('Fetching assignments for:', { schoolId, classId, sectionId });
 
   try {
     const assignments = await TimetableEntry.findAll({
@@ -83,6 +84,7 @@ exports.getAssignments = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Controller function to get timetable settings for a school
 exports.getTimetableSettings = async (req, res) => {
