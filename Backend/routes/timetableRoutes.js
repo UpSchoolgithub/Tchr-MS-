@@ -30,7 +30,8 @@ router.get('/schools/:schoolId/classes/:classId/sections', getSectionsByClass);
 // Route for fetching timetable assignments by sectionId (GET /api/timetable/:schoolId/:classId/:sectionId/assignments)
 router.get('/timetable/:schoolId/:classId/:sectionId/assignments', (req, res) => {
   console.log('Params received:', req.params);
-  return res.status(200).json(req.params);
+  res.status(200).json(req.params);  // Respond with the parameters
 });
+
 
 module.exports = router;
