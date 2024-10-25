@@ -45,21 +45,21 @@ const MSchoolClassSection = () => {
   const [sectionName, setSectionName] = useState('');
   
   // In timetable of fetching class and section names based on IDs
-useEffect(() => {
-  async function fetchClassAndSectionDetails() {
-    try {
-      const classResponse = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}`);
-      setClassName(classResponse.data.className);
-
-      const sectionResponse = await axiosInstance.get(`/sections/${sectionId}`);
-      setSectionName(sectionResponse.data.sectionName);
-    } catch (error) {
-      console.error('Error fetching class and section details:', error);
-    }
-  }
-
-  fetchClassAndSectionDetails();
-}, [schoolId, classId, sectionId]);
+  useEffect(() => {
+    const fetchClassAndSectionDetails = async () => {
+      try {
+        const classResponse = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}`);
+        setClassName(classResponse.data.className);  // Assuming className is available
+  
+        const sectionResponse = await axiosInstance.get(`/sections/${sectionId}`);
+        setSectionName(sectionResponse.data.sectionName);  // Assuming sectionName is available
+      } catch (error) {
+        console.error('Error fetching class and section details:', error);
+      }
+    };
+  
+    fetchClassAndSectionDetails();
+  }, [schoolId, classId, sectionId]);
   
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
@@ -441,7 +441,7 @@ useEffect(() => {
     const rows = [];
     const timeline = [];
   
-    // Loop over each period and add timing
+    // Add periods and breaks to the timeline
     periods.forEach((period, index) => {
       const startEndTime = timetableSettings.periodTimings[index];
       if (startEndTime) {
@@ -461,13 +461,14 @@ useEffect(() => {
       }
     });
   
+    // Add reserved time
     if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
   
-    // Loop over timeline to generate rows for the PDF table
+    // Add rows to the PDF
     timeline.forEach(entry => {
-      const row = [entry.time ? `${entry.time}` : ''];
+      const row = [entry.time];
       if (entry.type === 'period') {
         days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
@@ -482,14 +483,14 @@ useEffect(() => {
   
     const columns = ['Time', ...days];
   
-    // Title and Header
+    // Add headers and title to PDF
     doc.setFontSize(18);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
     doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
   
-    // Use className and sectionName
-    const classSectionText = `Class: ${className}    Section: ${sectionName}`;
+    // Use className and sectionName instead of classId and sectionId
+    const classSectionText = `Class: ${className || classId}    Section: ${sectionName || sectionId}`;
     doc.setFontSize(12);
     doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
   
@@ -515,9 +516,10 @@ useEffect(() => {
       },
     });
   
-    const filename = `Timetable_${className}_${sectionName}.pdf`; // Use className and sectionName for file name
+    const filename = `Timetable_${className || classId}_${sectionName || sectionId}.pdf`;
     doc.save(filename);
   };
+  
   
   
   
@@ -526,14 +528,15 @@ return (
   <div className="container">
     <div className="header">
       <div className="school-info">
-        <div className="class-info">
-          <span className="label">Class :</span>
-          <span className="line">{classId}</span>
-        </div>
-        <div className="section-info">
-          <span className="label">Section ID :</span>
-          <span className="line">{sectionId}</span> {/* Change here */}
-        </div>
+      <div className="class-info">
+        <span className="label">Class :</span>
+        <span className="line">{className || classId}</span> {/* Show className if available, else fallback to classId */}
+      </div>
+      <div className="section-info">
+        <span className="label">Section :</span>
+        <span className="line">{sectionName || sectionId}</span> {/* Show sectionName if available, else fallback to sectionId */}
+      </div>
+
       </div>
       <h1>{schoolName}</h1>
       <button className="more-details-button" onClick={() => setShowDetails(!showDetails)}>
