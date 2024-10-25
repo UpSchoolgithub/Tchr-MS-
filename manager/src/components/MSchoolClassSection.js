@@ -302,58 +302,89 @@ useEffect(() => {
 
   const renderTable = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
-        return <p>No timetable settings available</p>;
+      return <p>No timetable settings available</p>;
     }
-
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
+  
     return (
-        <table className="timetable-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    {days.map(day => (
-                        <th key={day}>{day}</th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {periods.map((period, index) => {
-                    const startEndTime = timetableSettings.periodTimings[index];
-                    const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
-                    const periodName = `Period ${period}`;
-
+      <table className="timetable-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            {days.map(day => (
+              <th key={day}>{day}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+            const periodName = `Period ${period}`;
+  
+            return (
+              <>
+                <tr key={index}>
+                  <td>
+                    {periodName} <br />
+                    {periodTime}
+                  </td>
+                  {days.map((day, dayIndex) => {
+                    const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+  
                     return (
-                        <tr key={index}>
-                            <td>
-                                {periodName} <br />
-                                {periodTime}
-                            </td>
-                            {days.map((day, dayIndex) => {
-                              const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-
-                              return (
-                                <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
-                                  {periodAssignment ? (
-                                    <>
-                                      <div>{periodAssignment.teacher}</div>
-                                      <div>{periodAssignment.subject}</div>
-                                    </>
-                                  ) : (
-                                    <span className="add-icon">+</span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                        </tr>
+                      <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
+                        {periodAssignment ? (
+                          <>
+                            <div>{periodAssignment.teacher}</div>
+                            <div>{periodAssignment.subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )}
+                      </td>
                     );
-                })}
-            </tbody>
-        </table>
+                  })}
+                </tr>
+  
+                {/* Add Breaks After Certain Periods */}
+                {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
+                  <tr key="short-break-1">
+                    <td>{`${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`}</td>
+                    <td colSpan={days.length}>SHORT BREAK 1</td>
+                  </tr>
+                )}
+  
+                {index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && (
+                  <tr key="lunch">
+                    <td>{`${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`}</td>
+                    <td colSpan={days.length}>LUNCH</td>
+                  </tr>
+                )}
+  
+                {index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && (
+                  <tr key="short-break-2">
+                    <td>{`${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`}</td>
+                    <td colSpan={days.length}>SHORT BREAK 2</td>
+                  </tr>
+                )}
+  
+                {index === 6 && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
+                  <tr key="reserved-time">
+                    <td>{`${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`}</td>
+                    <td colSpan={days.length}>RESERVED TIME</td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
+        </tbody>
+      </table>
     );
-};
-
+  };
+  
   
             
   
@@ -378,89 +409,90 @@ useEffect(() => {
 
 
 
-const downloadTimetableAsPDF = () => {
-  if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
-    alert('No timetable settings available to download.');
-    return;
-  }
-
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const rows = [];
-  const timeline = [];
-
-  periods.forEach((period, index) => {
-    const startEndTime = timetableSettings.periodTimings[index];
-    if (startEndTime) {
-      timeline.push({ type: 'period', period, time: startEndTime });
-
-      if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-        timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-      }
-  
-      if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-        timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-      }
-  
-      if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-        timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-      }
+  const downloadTimetableAsPDF = () => {
+    if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
+      alert('No timetable settings available to download.');
+      return;
     }
-  });
-
-  if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-    timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-  }
-
-  timeline.forEach(entry => {
-    const row = [`${entry.time}`];
-    if (entry.type === 'period') {
-      days.forEach(day => {
-        const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
-        const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-        row.push(entryText);
-      });
-    } else {
-      row.push(entry.label);
+  
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const rows = [];
+    const timeline = [];
+  
+    periods.forEach((period, index) => {
+      const startEndTime = timetableSettings.periodTimings[index];
+      if (startEndTime) {
+        timeline.push({ type: 'period', period, time: startEndTime });
+  
+        if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
+        }
+  
+        if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
+          timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
+        }
+  
+        if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
+          timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
+        }
+      }
+    });
+  
+    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
+      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
-    rows.push(row);
-  });
-
-  const columns = ['Time', ...days];
-
-  doc.setFontSize(18);
-  doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-  doc.setFontSize(14);
-  doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-  const classSectionText = `Class: ${classId}    Section ID: ${sectionId}`; // Use sectionId
-  doc.setFontSize(12);
-  doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
-
-  doc.autoTable({
-    startY: 45,
-    head: [columns],
-    body: rows,
-    theme: 'grid',
-    styles: {
-      halign: 'center',
-      valign: 'middle',
-      lineWidth: 0.1,
-    },
-    headStyles: {
-      fillColor: [0, 0, 0],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      halign: 'center',
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245],
-    },
-  });
-
-  const filename = `Timetable_${classId}_${sectionId}.pdf`; // Change from sectionName to sectionId
-  doc.save(filename);
-};
+  
+    timeline.forEach(entry => {
+      const row = [`${entry.time.start} - ${entry.time.end}`];
+      if (entry.type === 'period') {
+        days.forEach(day => {
+          const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
+          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+          row.push(entryText);
+        });
+      } else {
+        row.push(entry.label);
+      }
+      rows.push(row);
+    });
+  
+    const columns = ['Time', ...days];
+  
+    doc.setFontSize(18);
+    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+    const classSectionText = `Class: ${classId}    Section ID: ${sectionId}`;
+    doc.setFontSize(12);
+    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
+  
+    doc.autoTable({
+      startY: 45,
+      head: [columns],
+      body: rows,
+      theme: 'grid',
+      styles: {
+        halign: 'center',
+        valign: 'middle',
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [0, 0, 0],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+    });
+  
+    const filename = `Timetable_${classId}_${sectionId}.pdf`;
+    doc.save(filename);
+  };
+  
   
 return (
   <div className="container">
