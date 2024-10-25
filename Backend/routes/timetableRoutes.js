@@ -33,6 +33,9 @@ router.get('/timetable/:schoolId/:classId/:sectionId/assignments', (req, res) =>
   res.status(200).json({ message: "Check logs for request object details" });
 });
 
+router.get('/test', (req, res) => {
+  res.status(200).json({ message: 'Test route works!' });
+});
 
 
 module.exports = router;
