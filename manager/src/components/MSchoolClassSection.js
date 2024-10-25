@@ -159,6 +159,7 @@ useEffect(() => {
   const formatTime = (date) => {
     return date.toTimeString().split(' ')[0].substring(0, 5); // Extracts only the HH:MM part
   };
+  
 
   const fetchAssignments = async () => {
     if (!subjects.length || !teachers.length) return; // Ensure teachers and subjects are loaded
