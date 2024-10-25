@@ -60,10 +60,29 @@ exports.assignPeriod = async (req, res) => {
 
 // Controller function to get assignments for a section
 exports.getAssignments = async (req, res) => {
+  // Log the start of the function
+  console.log('Entering getAssignments function');
+
+  // Log request params
+  console.log('Request params:', req.params);
+
   const { schoolId, classId, sectionId } = req.params;
-  console.log('Fetching assignments for:', { schoolId, classId, sectionId });
+
+  // Log extracted parameters
+  console.log('Extracted parameters:', { schoolId, classId, sectionId });
+
+  // Check if any required parameters are missing
+  if (!schoolId || !classId || !sectionId) {
+    console.error('Missing parameters:', { schoolId, classId, sectionId });
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
 
   try {
+    // Log the query that will be executed
+    console.log('Executing findAll query for TimetableEntry:', {
+      where: { schoolId, classId, sectionId }
+    });
+
     const assignments = await TimetableEntry.findAll({
       where: { schoolId, classId, sectionId },
       include: [
@@ -72,18 +91,27 @@ exports.getAssignments = async (req, res) => {
       ],
       order: [['day', 'ASC'], ['period', 'ASC']]
     });
-    console.log('Assignments fetched:', assignments);
 
+    // Log the result of the findAll query
+    console.log('Assignments fetched from database:', assignments);
+
+    // Check if no assignments were found
     if (!assignments.length) {
+      console.log('No assignments found for this section:', { schoolId, classId, sectionId });
       return res.status(404).json({ message: 'No assignments found for this section.' });
     }
 
+    // Log success and return the response
+    console.log('Returning assignments:', assignments);
     return res.status(200).json(assignments);
   } catch (error) {
-    console.error('Error fetching assignments:', error);
+    // Log the error message and stack trace
+    console.error('Error occurred during findAll query:', error.message);
+    console.error('Error stack trace:', error.stack);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 // Controller function to get timetable settings for a school
