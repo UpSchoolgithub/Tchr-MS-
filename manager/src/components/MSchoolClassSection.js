@@ -41,6 +41,26 @@ const MSchoolClassSection = () => {
   const [teacherFilter, setTeacherFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
 
+  const [className, setClassName] = useState('');
+  const [sectionName, setSectionName] = useState('');
+  
+  // In timetable of fetching class and section names based on IDs
+useEffect(() => {
+  async function fetchClassAndSectionDetails() {
+    try {
+      const classResponse = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}`);
+      setClassName(classResponse.data.className);
+
+      const sectionResponse = await axiosInstance.get(`/sections/${sectionId}`);
+      setSectionName(sectionResponse.data.sectionName);
+    } catch (error) {
+      console.error('Error fetching class and section details:', error);
+    }
+  }
+
+  fetchClassAndSectionDetails();
+}, [schoolId, classId, sectionId]);
+  
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
     if (storedSubjects) {
@@ -468,7 +488,7 @@ useEffect(() => {
     doc.setFontSize(14);
     doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
   
-    // Fetch class name and section name instead of classId and sectionId
+    // Use className and sectionName
     const classSectionText = `Class: ${className}    Section: ${sectionName}`;
     doc.setFontSize(12);
     doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
@@ -495,9 +515,10 @@ useEffect(() => {
       },
     });
   
-    const filename = `Timetable_${className}_${sectionName}.pdf`; // Use className and sectionName
+    const filename = `Timetable_${className}_${sectionName}.pdf`; // Use className and sectionName for file name
     doc.save(filename);
   };
+  
   
   
   
