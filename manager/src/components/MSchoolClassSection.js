@@ -36,6 +36,7 @@ const MSchoolClassSection = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showReloadButton, setShowReloadButton] = useState(false);
   const [schoolName, setSchoolName] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const [teacherFilter, setTeacherFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
@@ -54,10 +55,10 @@ const MSchoolClassSection = () => {
 }, [schoolId, sectionId]); // Use sectionId instead of sectionName
 
 useEffect(() => {
-    if (teachers.length > 0 && timetableSettings && Object.keys(assignedPeriods).length > 0) {
-        fetchAssignments();
-    }
-}, [teachers, timetableSettings, sectionId]); // Use sectionId instead of combinedSectionId
+  if (teachers.length > 0 && timetableSettings && subjects.length > 0) {
+    fetchAssignments();
+  }
+}, [teachers, timetableSettings, subjects, sectionId]);// Use sectionId instead of combinedSectionId
 
   useEffect(() => {
     axiosInstance.get(`/schools/${schoolId}`)
@@ -141,29 +142,31 @@ useEffect(() => {
 
   const fetchAssignments = async () => {
     if (!subjects.length || !teachers.length) return; // Ensure teachers and subjects are loaded
-
+  
     try {
-        // Fetch assignments from the API
-        const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionId}/assignments`);
-        
-        // Process the response data and map the assignments to their respective periods
-        const assignments = response.data.reduce((acc, entry) => {
-            const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
-            const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown Subject' };
-            acc[`${entry.day}-${entry.period}`] = {
-                teacher: teacher.name,
-                teacherId: entry.teacherId,
-                subject: subject.subjectName,
-                subjectId: subject.id // Ensure subject ID is included
-            };
-            return acc;
-        }, {});
-
-        setAssignedPeriods(assignments);  // Set the assignments to assignedPeriods
+      setLoading(true); // Set loading state before the request
+      const response = await axiosInstance.get(`/timetable/${schoolId}/${classId}/${sectionId}/assignments`);
+      
+      const assignments = response.data.reduce((acc, entry) => {
+        const teacher = teachers.find(t => t.id === entry.teacherId) || { name: 'Unknown Teacher' };
+        const subject = subjects.find(s => s.id === entry.subjectId) || { subjectName: 'Unknown Subject' };
+        acc[`${entry.day}-${entry.period}`] = {
+          teacher: teacher.name,
+          teacherId: entry.teacherId,
+          subject: subject.subjectName,
+          subjectId: subject.id
+        };
+        return acc;
+      }, {});
+  
+      setAssignedPeriods(assignments);
+      setLoading(false); // Set loading to false after data is fetched
     } catch (error) {
-        console.error('Error fetching assignments:', error);
+      console.error('Error fetching assignments:', error);
+      setError('Failed to fetch assignments.');
+      setLoading(false);
     }
-};
+  };
 
   
 
@@ -328,20 +331,20 @@ useEffect(() => {
                                 {periodTime}
                             </td>
                             {days.map((day, dayIndex) => {
-                                const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+                              const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
 
-                                return (
-                                    <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
-                                        {periodAssignment ? (
-                                            <>
-                                                <div>{periodAssignment.teacher}</div>
-                                                <div>{periodAssignment.subject}</div>
-                                            </>
-                                        ) : (
-                                            <span className="add-icon">+</span>
-                                        )}
-                                    </td>
-                                );
+                              return (
+                                <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
+                                  {periodAssignment ? (
+                                    <>
+                                      <div>{periodAssignment.teacher}</div>
+                                      <div>{periodAssignment.subject}</div>
+                                    </>
+                                  ) : (
+                                    <span className="add-icon">+</span>
+                                  )}
+                                </td>
+                              );
                             })}
                         </tr>
                     );
