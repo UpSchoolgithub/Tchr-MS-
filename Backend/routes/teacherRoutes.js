@@ -7,7 +7,7 @@ const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
 
-// Create a new teacher
+// 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
   const { name, email, phone, password, schoolIds } = req.body;
 
@@ -43,7 +43,7 @@ router.post('/', authenticateManager, async (req, res) => {
   }
 });
 
-// Teacher login route
+// 2. Teacher login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -59,7 +59,6 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({ id: teacher.id, isTeacher: true }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
     res.json({ token, teacherId: teacher.id });
   } catch (error) {
     console.error('Error during login:', error);
@@ -67,7 +66,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Fetch all teachers (protected for managers)
+// 3. Fetch all teachers (protected for managers)
 router.get('/', authenticateManager, async (req, res) => {
   try {
     const teachers = await Teacher.findAll({
@@ -83,7 +82,7 @@ router.get('/', authenticateManager, async (req, res) => {
   }
 });
 
-// Fetch a single teacher by ID (protected for managers)
+// 4. Fetch a single teacher by ID (protected for managers)
 router.get('/:id', authenticateManager, async (req, res) => {
   try {
     const teacher = await Teacher.findByPk(req.params.id, {
@@ -102,7 +101,7 @@ router.get('/:id', authenticateManager, async (req, res) => {
   }
 });
 
-// Update a teacher (protected for managers)
+// 5. Update a teacher (protected for managers)
 router.put('/:id', authenticateManager, async (req, res) => {
   const { id } = req.params;
   const { name, email, phone, password, schoolIds } = req.body;
@@ -132,7 +131,7 @@ router.put('/:id', authenticateManager, async (req, res) => {
   }
 });
 
-// Delete a teacher (protected for managers)
+// 6. Delete a teacher (protected for managers)
 router.delete('/:id', authenticateManager, async (req, res) => {
   const { id } = req.params;
 
@@ -150,9 +149,13 @@ router.delete('/:id', authenticateManager, async (req, res) => {
   }
 });
 
-// Fetch timetable for a specific teacher (protected for teachers)
+// 7. Fetch timetable for the logged-in teacher (protected for teachers)
 router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) => {
   const { teacherId } = req.params;
+
+  if (req.user.id !== parseInt(teacherId, 10)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
 
   try {
     const timetable = await TimetableEntry.findAll({
@@ -181,7 +184,7 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
   }
 });
 
-// Fetch sessions for a specific date for the logged-in teacher
+// 8. Fetch sessions for a specific date for the logged-in teacher
 router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   const teacherId = req.user.id;
   const dateParam = req.query.date;
