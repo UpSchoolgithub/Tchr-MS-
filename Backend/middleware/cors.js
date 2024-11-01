@@ -1,4 +1,4 @@
-// middleware/cors.js
+// File: middleware/cors.js
 const cors = require('cors');
 
 const allowedOrigins = [
@@ -10,11 +10,10 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: (origin, callback) => {
-        console.log(`Origin of request: ${origin}`);
         if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
+            callback(null, true); // Allow request
         } else {
-            callback(new Error('Not allowed by CORS'), false);
+            callback(new Error('Not allowed by CORS')); // Block request
         }
     },
     credentials: true,
