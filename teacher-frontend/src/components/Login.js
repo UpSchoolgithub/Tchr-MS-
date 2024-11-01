@@ -5,17 +5,18 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const { login } = useTeacherAuth();
   const navigate = useNavigate();
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Reset error before login attempt
     try {
       await login(email, password);
       navigate('/dashboard');
     } catch (error) {
-      setError('Login failed. Please check your credentials.');
+      setError(error.message || 'Login failed. Please check your credentials.');
     }
   };
 
