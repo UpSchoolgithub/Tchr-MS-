@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
 
 const TeacherAuthContext = createContext();
@@ -12,8 +12,23 @@ export const useTeacherAuth = () => {
 };
 
 const TeacherAuthProvider = ({ children }) => {
-  const [teacherId, setTeacherId] = useState(null);
+  const [teacherId, setTeacherId] = useState(localStorage.getItem('teacherId') || null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
+
+  useEffect(() => {
+    // Sync state with localStorage in case of any changes
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+
+    if (teacherId) {
+      localStorage.setItem('teacherId', teacherId);
+    } else {
+      localStorage.removeItem('teacherId');
+    }
+  }, [token, teacherId]);
 
   const login = async (email, password) => {
     try {
@@ -21,7 +36,6 @@ const TeacherAuthProvider = ({ children }) => {
       const { token, teacherId } = response.data;
       setToken(token);
       setTeacherId(teacherId);
-      localStorage.setItem('token', token); // Save token to localStorage
     } catch (error) {
       throw new Error('Login failed');
     }
@@ -31,6 +45,7 @@ const TeacherAuthProvider = ({ children }) => {
     setToken(null);
     setTeacherId(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('teacherId');
   };
 
   return (
