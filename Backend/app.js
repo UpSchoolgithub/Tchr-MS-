@@ -532,7 +532,7 @@ app.use('/api', schoolRoutes);
 //app.use('/api/timetable', timetableRoutes); // Base path for timetable routes
 //app.use('/api/students', studentRoutes);
 //app.use('/students', studentRoutes); // Ensure this path matches your frontend API calls
-app.use('/api/attendance', attendanceRoutes);
+appf.use('/api/attendance', attendanceRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/tests', testRoutes);
 app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used in Postman
@@ -546,7 +546,7 @@ app.use('/api', subjectRoutes);
 
 // Teacher Routes
 //app.use('/api/teacher', teacherAuthRoutes);
-//app.use('/api/teacher', teacherRoutes);
+app.use('/api/teacher', teacherRoutes);
 //app.use('/api/teachers', teachersRoutes);
 //app.use('/api/timetable', timetableRoutes);
 app.use('/api', timetableRoutes);
