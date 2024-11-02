@@ -543,27 +543,28 @@ return (
       </button>
     </div>
     {showDetails && (
-      <div className="details-section">
-        <div className="details">
-          <h3>Class and Section Details</h3>
-          <p>School ID: {schoolId}</p>
-          <p>Class ID: {classId}</p>
-          <p>Section ID: {sectionId}</p> {/* Change here */}
-        </div>
-        <div className="subjects">
-          <h3>Subjects:</h3>
-          {subjects.length > 0 ? (
-            subjects.map(subject => (
-              <div key={subject.id} className="subject">
-                <span>{subject.subjectName || 'No Subject Name'}</span>
-              </div>
-            ))
-          ) : (
-            <p>No subjects found for this section.</p>
-          )}
-        </div>
-      </div>
-    )}
+  <div className="details-section">
+    <div className="details">
+      <h3>Class and Section Details</h3>
+      <p>School ID: {schoolId}</p>
+      <p>Class: {className || classId}</p> {/* Use className instead of classId */}
+      <p>Section: {sectionName || sectionId}</p> {/* Use sectionName instead of sectionId */}
+    </div>
+    <div className="subjects">
+      <h3>Subjects:</h3>
+      {subjects.length > 0 ? (
+        subjects.map(subject => (
+          <div key={subject.id} className="subject">
+            <span>{subject.subjectName || 'No Subject Name'}</span>
+          </div>
+        ))
+      ) : (
+        <p>No subjects found for this section.</p>
+      )}
+    </div>
+  </div>
+)}
+
     <div className="buttons">
       <button onClick={handleShowCalendar}>School Calendar</button>
       <button onClick={handleShowTimetable}>Timetable</button>
