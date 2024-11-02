@@ -220,4 +220,40 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
+// Fetch timetable for a specific teacher
+router.get('/timetable/:teacherId', async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    const timetable = await Timetable.findAll({
+      where: { teacherId },
+      include: [
+        {
+          model: ClassInfo,
+          attributes: ['className'],
+        },
+        {
+          model: Section,
+          attributes: ['sectionName'],
+        },
+        {
+          model: Subject,
+          attributes: ['subjectName'],
+        },
+      ],
+      order: [['day', 'ASC'], ['period', 'ASC']], // Order by day and period
+    });
+
+    if (!timetable.length) {
+      return res.status(404).json({ message: 'No timetable found for this teacher' });
+    }
+
+    res.status(200).json(timetable);
+  } catch (error) {
+    console.error('Error fetching teacher timetable:', error);
+    res.status(500).json({ message: 'Error fetching timetable', error });
+  }
+});
+
+
 module.exports = router;
