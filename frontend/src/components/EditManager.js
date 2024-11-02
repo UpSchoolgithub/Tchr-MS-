@@ -81,6 +81,16 @@ const EditManager = () => {
     setAvailableSchools(availableSchools.filter(school => school.id !== schoolId));
   };
 
+  const handleSchoolRemove = (schoolId) => {
+    setFormData(prevState => ({
+      ...prevState,
+      schoolIds: prevState.schoolIds.filter(id => id !== schoolId)
+    }));
+    const removedSchool = assignedSchools.find(school => school.id === schoolId);
+    setAvailableSchools([...availableSchools, removedSchool]);
+    setAssignedSchools(assignedSchools.filter(school => school.id !== schoolId));
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
@@ -169,100 +179,102 @@ const EditManager = () => {
           <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required />
         </div>
         
-        <div>
-          <label>Assigned Schools</label>
-          <div className="search-and-sort">
-            <span className="sort-arrow" onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>&#8593;&#8595;</span>
-            <span className="search-icon" onClick={() => setShowSearchAssigned(!showSearchAssigned)}>🔍</span>
-            {showSearchAssigned && (
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchAssigned}
-                onChange={(e) => setSearchAssigned(e.target.value)}
-                className="search-box"
-              />
-            )}
-          </div>
-          <table className="assigned-schools-table">
-            <thead>
-              <tr>
-                <th>School ID <span className="sort-arrow" onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>&#8593;&#8595;</span></th>
-                <th>School Name</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedAssignedSchools.map(school => (
-                <tr key={school.id}>
-                  <td>{school.id}</td>
-                  <td>{school.name}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div>
-          <button type="button" onClick={() => setShowAssignSchool(!showAssignSchool)}>
+        <div className="assigned-schools-header">
+          <h3>Assigned Schools</h3>
+          <button type="button" onClick={() => setShowAssignSchool(!showAssignSchool)} className="assign-new-school-button">
             Assign New School
           </button>
-          {showAssignSchool && (
-            <div className="school-checkboxes">
-              <div className="search-and-sort">
-                <span className="sort-arrow" onClick={() => setSortAvailableAsc(!sortAvailableAsc)}>&#8593;&#8595;</span>
-                <span className="search-icon" onClick={() => setShowSearchAvailable(!showSearchAvailable)}>🔍</span>
-                {showSearchAvailable && (
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchAvailable}
-                    onChange={(e) => setSearchAvailable(e.target.value)}
-                    className="search-box"
-                  />
-                )}
-              </div>
-              <table className="available-schools-table">
-                <thead>
-                  <tr>
-                    <th>Select</th>
-                    <th>School Name</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedAvailableSchools.map(school => (
-                    <tr key={school.id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          onChange={() => handleSchoolAssign(school.id)}
-                        />
-                      </td>
-                      <td>{school.name}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="pagination-controls">
-                <button
-                  type="button"
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 0}
-                  className="small-pagination-button"
-                >
-                  &#8249;
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextPage}
-                  disabled={endIndex >= availableSchools.length}
-                  className="small-pagination-button"
-                >
-                  &#8250;
-                </button>
-              </div>
-            </div>
+        </div>
+        <div className="search-and-sort">
+          <span className="search-icon" onClick={() => setShowSearchAssigned(!showSearchAssigned)}>🔍</span>
+          {showSearchAssigned && (
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchAssigned}
+              onChange={(e) => setSearchAssigned(e.target.value)}
+              className="search-box"
+            />
           )}
         </div>
+        <table className="assigned-schools-table">
+          <thead>
+            <tr>
+              <th>School ID <span className="sort-arrow" onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>&#8593;&#8595;</span></th>
+              <th>School Name <span className="sort-arrow" onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>&#8593;&#8595;</span></th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedAssignedSchools.map(school => (
+              <tr key={school.id}>
+                <td>{school.id}</td>
+                <td>{school.name}</td>
+                <td>
+                  <button type="button" onClick={() => handleSchoolRemove(school.id)} className="remove-button">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {showAssignSchool && (
+          <div className="school-checkboxes">
+            <div className="search-and-sort">
+              <span className="search-icon" onClick={() => setShowSearchAvailable(!showSearchAvailable)}>🔍</span>
+              {showSearchAvailable && (
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchAvailable}
+                  onChange={(e) => setSearchAvailable(e.target.value)}
+                  className="search-box"
+                />
+              )}
+            </div>
+            <table className="available-schools-table">
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>School Name <span className="sort-arrow" onClick={() => setSortAvailableAsc(!sortAvailableAsc)}>&#8593;&#8595;</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedAvailableSchools.map(school => (
+                  <tr key={school.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        onChange={() => handleSchoolAssign(school.id)}
+                      />
+                    </td>
+                    <td>{school.name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="pagination-controls">
+              <button
+                type="button"
+                onClick={handlePreviousPage}
+                disabled={currentPage === 0}
+                className="small-pagination-button"
+              >
+                &#8249;
+              </button>
+              <button
+                type="button"
+                onClick={handleNextPage}
+                disabled={endIndex >= availableSchools.length}
+                className="small-pagination-button"
+              >
+                &#8250;
+              </button>
+            </div>
+          </div>
+        )}
         
         <button type="submit" className="save-button">Update Manager</button>
         <button type="button" className="delete-button" onClick={handleDelete}>Delete Manager</button>
