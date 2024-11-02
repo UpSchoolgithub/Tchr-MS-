@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { sequelize } = require('../models'); // Ensure you have this line to import sequelize properly
 const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
