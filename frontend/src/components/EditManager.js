@@ -16,6 +16,8 @@ const EditManager = () => {
   const [availableSchools, setAvailableSchools] = useState([]);
   const [showAssignSchool, setShowAssignSchool] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const schoolsPerPage = 7;
 
   useEffect(() => {
     fetchManagerDetails();
@@ -117,6 +119,23 @@ const EditManager = () => {
     }
   };
 
+  // Pagination controls
+  const startIndex = currentPage * schoolsPerPage;
+  const endIndex = startIndex + schoolsPerPage;
+  const paginatedSchools = availableSchools.slice(startIndex, endIndex);
+
+  const handleNextPage = () => {
+    if (endIndex < availableSchools.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <div className="edit-manager-container">
       <h2>Edit Manager Account</h2>
@@ -146,13 +165,35 @@ const EditManager = () => {
           </button>
           {showAssignSchool && (
             <div className="school-checkboxes">
-              {availableSchools.map(school => (
-                <div key={school.id}>
-                  <button type="button" onClick={() => handleSchoolAssign(school.id)}>
-                    {school.name}
-                  </button>
-                </div>
-              ))}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Select</th>
+                    <th>School Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedSchools.map(school => (
+                    <tr key={school.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          onChange={() => handleSchoolAssign(school.id)}
+                        />
+                      </td>
+                      <td>{school.name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="pagination-controls">
+                <button type="button" onClick={handlePreviousPage} disabled={currentPage === 0}>
+                  Previous
+                </button>
+                <button type="button" onClick={handleNextPage} disabled={endIndex >= availableSchools.length}>
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
