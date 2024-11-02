@@ -17,6 +17,10 @@ const EditManager = () => {
   const [showAssignSchool, setShowAssignSchool] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [searchAssigned, setSearchAssigned] = useState('');
+  const [searchAvailable, setSearchAvailable] = useState('');
+  const [sortAssignedAsc, setSortAssignedAsc] = useState(true);
+  const [sortAvailableAsc, setSortAvailableAsc] = useState(true);
   const schoolsPerPage = 7;
 
   useEffect(() => {
@@ -136,6 +140,15 @@ const EditManager = () => {
     }
   };
 
+  // Sorting and filtering
+  const sortedAssignedSchools = [...assignedSchools].sort((a, b) => {
+    return sortAssignedAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+  }).filter(school => school.name.toLowerCase().includes(searchAssigned.toLowerCase()));
+
+  const sortedAvailableSchools = paginatedSchools.sort((a, b) => {
+    return sortAvailableAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+  }).filter(school => school.name.toLowerCase().includes(searchAvailable.toLowerCase()));
+
   return (
     <div className="edit-manager-container">
       <h2>Edit Manager Account</h2>
@@ -153,19 +166,60 @@ const EditManager = () => {
           <label>Phone Number</label>
           <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required />
         </div>
+        
         <div>
           <label>Assigned Schools</label>
-          <ul>
-            {assignedSchools.map(school => (
-              <li key={school.id}>{school.name}</li>
-            ))}
-          </ul>
+          <div className="search-and-sort">
+            <button onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>Sort</button>
+            <button onClick={() => setSearchAssigned('')}>🔍</button>
+            {searchAssigned !== '' && (
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchAssigned}
+                onChange={(e) => setSearchAssigned(e.target.value)}
+                className="search-box"
+              />
+            )}
+          </div>
+          <table className="assigned-schools-table">
+            <thead>
+              <tr>
+                <th>School ID</th>
+                <th>School Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedAssignedSchools.map(school => (
+                <tr key={school.id}>
+                  <td>{school.id}</td>
+                  <td>{school.name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div>
           <button type="button" onClick={() => setShowAssignSchool(!showAssignSchool)}>
             Assign New School
           </button>
           {showAssignSchool && (
             <div className="school-checkboxes">
-              <table>
+              <div className="search-and-sort">
+                <button onClick={() => setSortAvailableAsc(!sortAvailableAsc)}>Sort</button>
+                <button onClick={() => setSearchAvailable('')}>🔍</button>
+                {searchAvailable !== '' && (
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchAvailable}
+                    onChange={(e) => setSearchAvailable(e.target.value)}
+                    className="search-box"
+                  />
+                )}
+              </div>
+              <table className="available-schools-table">
                 <thead>
                   <tr>
                     <th>Select</th>
@@ -173,7 +227,7 @@ const EditManager = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedSchools.map(school => (
+                  {sortedAvailableSchools.map(school => (
                     <tr key={school.id}>
                       <td>
                         <input
@@ -187,16 +241,27 @@ const EditManager = () => {
                 </tbody>
               </table>
               <div className="pagination-controls">
-                <button type="button" onClick={handlePreviousPage} disabled={currentPage === 0}>
-                  Previous
+                <button
+                  type="button"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 0}
+                  className="small-pagination-button"
+                >
+                  &#8249;
                 </button>
-                <button type="button" onClick={handleNextPage} disabled={endIndex >= availableSchools.length}>
-                  Next
+                <button
+                  type="button"
+                  onClick={handleNextPage}
+                  disabled={endIndex >= availableSchools.length}
+                  className="small-pagination-button"
+                >
+                  &#8250;
                 </button>
               </div>
             </div>
           )}
         </div>
+        
         <button type="submit" className="save-button">Update Manager</button>
         <button type="button" className="delete-button" onClick={handleDelete}>Delete Manager</button>
       </form>

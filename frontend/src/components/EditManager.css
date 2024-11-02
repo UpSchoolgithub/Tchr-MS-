@@ -1,96 +1,33 @@
-/* EditManager.css */
+.search-and-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
 
-.edit-manager-container {
-    width: 60%;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f7f7f7;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .edit-manager-container h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-  }
-  
-  .edit-manager-container form {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .edit-manager-container label {
-    margin-bottom: 8px;
-    font-weight: bold;
-  }
-  
-  .edit-manager-container input[type="text"],
-  .edit-manager-container input[type="email"],
-  .edit-manager-container input[type="tel"],
-  .edit-manager-container input[type="password"] {
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .manager-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-  
-  .manager-table th,
-  .manager-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .manager-table th {
-    background-color: #f0f0f0;
-  }
-  
-  .pagination-save-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .save-button,
-  .delete-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    margin: 5px;
-  }
-  
-  .save-button {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .delete-button {
-    background-color: #dc3545;
-    color: white;
-  }
-  
-  .save-button:hover {
-    background-color: #218838;
-  }
-  
-  .delete-button:hover {
-    background-color: #c82333;
-  }
-  
-  .error {
-    color: red;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
+.search-and-sort button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.search-box {
+  padding: 2px 5px;
+  font-size: 1rem;
+}
+
+.small-pagination-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0 5px;
+  padding: 0;
+}
+
+.small-pagination-button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
