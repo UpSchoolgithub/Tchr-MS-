@@ -133,7 +133,8 @@ exports.getTimetableSettings = async (req, res) => {
 
 // Controller function to get a teacher's timetable
 
- exports.getTeacherTimetable = async (req, res) => {
+ // Final resolved code without conflict markers
+exports.getTeacherTimetable = async (req, res) => {
   const { teacherId } = req.params;
   console.log('Fetching timetable for teacherId:', teacherId);
 
@@ -146,31 +147,17 @@ exports.getTimetableSettings = async (req, res) => {
         { model: Section, attributes: ['sectionName'] },
         { model: Subject, attributes: ['subjectName'] },
       ],
-      order: [['day', 'ASC'], ['period', 'ASC']]
+      order: [['day', 'ASC'], ['period', 'ASC']],
     });
 
     if (!timetable.length) {
-      console.log('No timetable entries found for teacherId:', teacherId);
       return res.status(404).json({ message: 'No timetable found for this teacher.' });
     }
 
-    const formattedTimetable = timetable.map(entry => ({
-      id: entry.id,
-      day: entry.day,
-      period: entry.period,
-      schoolName: entry.School ? entry.School.name : 'N/A',
-      className: entry.ClassInfo ? entry.ClassInfo.className : 'N/A',
-      sectionName: entry.Section ? entry.Section.sectionName : 'N/A',
-      subjectName: entry.Subject ? entry.Subject.subjectName : 'N/A',
-      startTime: entry.startTime,
-      endTime: entry.endTime
-    }));
-
-    console.log('Returning timetable for teacherId:', teacherId);
-    return res.status(200).json(formattedTimetable);
+    return res.status(200).json(timetable);
   } catch (error) {
-    console.error('Error fetching teacher timetable:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error fetching timetable:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
