@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sequelize } = require('../models'); // Ensure you have this line to import sequelize properly
+const { TimetableEntry } = require('../models'); // Ensure you have this line to import sequelize properly
 const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -226,12 +226,12 @@ router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, re
   const { teacherId } = req.params;
 
   try {
-    const [results] = await sequelize.query(
-      `SELECT * FROM timetable_entries WHERE teacherId = :teacherId ORDER BY day ASC, period ASC`,
-      { replacements: { teacherId }, type: sequelize.QueryTypes.SELECT }
-    );
+    const results = await TimetableEntry.findAll({
+      where: { teacherId: parseInt(teacherId) }, // Ensure teacherId is treated as an integer
+      order: [['day', 'ASC'], ['period', 'ASC']]
+    });
 
-    if (!results.length) {
+    if (results.length === 0) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
@@ -241,6 +241,5 @@ router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, re
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
-
 
 module.exports = router;
