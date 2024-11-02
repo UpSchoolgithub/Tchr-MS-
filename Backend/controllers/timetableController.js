@@ -132,7 +132,8 @@ exports.getTimetableSettings = async (req, res) => {
 };
 
 // Controller function to get a teacher's timetable
-exports.getTeacherTimetable = async (req, res) => {
+//
+ exports.getTeacherTimetable = async (req, res) => {
   const { teacherId } = req.params;
   console.log('Fetching timetable for teacherId:', teacherId);
 
