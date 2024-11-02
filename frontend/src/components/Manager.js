@@ -90,59 +90,59 @@ const Manager = () => {
   };
 
   return (
-    <div className="manager-container">
-      <div className="manager-list">
-        <h2>Managers</h2>
-        <div className="controls">
-          <input
-            type="text"
-            placeholder="Search by name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-bar"
-          />
-          <button className="save-button" onClick={handleCreateManager}>Create Manager</button>
-        </div>
-        <table className="manager-table">
-          <thead>
-            <tr>
-              <th onClick={toggleSort} style={{ cursor: 'pointer' }}>
-                Name {sortAsc ? '▲' : '▼'}
-              </th>
-              <th>Email</th>
-              <th>Phone Number</th>
-              <th>Schools</th>
-              <th>Actions</th>
+  <div className="manager-container">
+    <div className="manager-list">
+      <h2>Managers</h2>
+      <div className="controls">
+        <input
+          type="text"
+          placeholder="Search by name"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-bar"
+        />
+        <button className="save-button" onClick={handleCreateManager}>Create Manager</button>
+      </div>
+      <table className="manager-table">
+        <thead>
+          <tr>
+            <th onClick={toggleSort} style={{ cursor: 'pointer' }}>
+              Name {sortAsc ? '▲' : '▼'}
+            </th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Schools</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredManagers.slice(startIndex, endIndex).map((manager) => (
+            <tr key={manager.id}>
+              <td>{manager.name}</td>
+              <td>{manager.email}</td>
+              <td>{manager.phoneNumber}</td>
+              <td>{manager.Schools.map(school => school.name).join(', ')}</td>
+              <td>
+                <div className="action-buttons">
+                  <button className="edit" onClick={() => handleEdit(manager.id)}>Edit</button>
+                  <button className="delete" onClick={() => handleDelete(manager.id, manager.Schools.length)}>Delete</button>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredManagers.slice(startIndex, endIndex).map((manager) => (
-              <tr key={manager.id}>
-                <td>{manager.name}</td>
-                <td>{manager.email}</td>
-                <td>{manager.phoneNumber}</td>
-                <td>{manager.Schools.map(school => school.name).join(', ')}</td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="edit" onClick={() => handleEdit(manager.id)}>Edit</button>
-                    <button className="delete" onClick={() => handleDelete(manager.id, manager.Schools.length)}>Delete</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="pagination-controls">
-          <button onClick={handlePreviousPage} disabled={currentPage === 0} className="pagination-arrow">
-            &#8249;
-          </button>
-          <button onClick={handleNextPage} disabled={endIndex >= filteredManagers.length} className="pagination-arrow">
-            &#8250;
-          </button>
-        </div>
+          ))}
+        </tbody>
+      </table>
+      <div className="pagination-controls">
+        <button onClick={handlePreviousPage} disabled={currentPage === 0} className="pagination-arrow">
+          &#8249;
+        </button>
+        <button onClick={handleNextPage} disabled={endIndex >= filteredManagers.length} className="pagination-arrow">
+          &#8250;
+        </button>
       </div>
     </div>
-  );
-  
+  </div>
+);
+};
 
 export default Manager;
