@@ -259,6 +259,5 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
 });
 
 router.get('/:teacherId/timetable', authenticateTeacherToken, teacherController.getTeacherTimetable);
-router.get('/teachers', teacherController.getTeachers);
 
 module.exports = router;
