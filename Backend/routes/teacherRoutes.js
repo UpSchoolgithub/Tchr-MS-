@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
+const authenticateTeacherOrManager = require('../middleware/authenticateTeacherOrManager'); // Import the new middleware
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -219,20 +220,6 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
-// Middleware to allow access for either teacher or manager
-const authenticateTeacherOrManager = (req, res, next) => {
-  authenticateTeacherToken(req, res, (teacherErr) => {
-    if (!teacherErr) return next();
-
-    authenticateManager(req, res, (managerErr) => {
-      if (!managerErr) return next();
-
-      res.status(403).json({ message: 'Access denied: not a teacher or manager' });
-    });
-  });
-};
-
-// Fetch timetable for a specific teacher (accessible to both teachers and managers)
 router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
   const { teacherId } = req.params;
 
