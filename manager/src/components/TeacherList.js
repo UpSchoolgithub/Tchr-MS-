@@ -33,8 +33,10 @@ const TeacherList = () => {
     setLoading(true);
     setError(null);
     setSelectedTeacher(teacherName);
-  
-    console.log("Using token:", localStorage.getItem('yourTokenKey')); // Adjust this to wherever you store the token
+
+    // Log token for debugging
+    const token = localStorage.getItem('authToken');  // Make sure this key matches the key you set
+    console.log("Using token:", token); 
   
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
@@ -46,7 +48,7 @@ const TeacherList = () => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchTeachers();
   }, []);

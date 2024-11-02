@@ -1,19 +1,21 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://tms.up.school/api',  // Update this to your production backend URL
+  baseURL: 'https://tms.up.school/api',  // Ensure this is the correct base URL for your API
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Optional: Add request/response interceptors for token handling
+// Interceptor to add token to request headers
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');  // Make sure this key matches the one you used in TeacherList.js
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export default axiosInstance;
