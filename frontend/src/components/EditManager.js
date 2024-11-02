@@ -16,13 +16,10 @@ const EditManager = () => {
   const [availableSchools, setAvailableSchools] = useState([]);
   const [showAssignSchool, setShowAssignSchool] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [searchAssigned, setSearchAssigned] = useState('');
-  const [searchAvailable, setSearchAvailable] = useState('');
+  const [currentAssignedPage, setCurrentAssignedPage] = useState(0);
+  const [currentAvailablePage, setCurrentAvailablePage] = useState(0);
   const [sortAssignedAsc, setSortAssignedAsc] = useState(true);
   const [sortAvailableAsc, setSortAvailableAsc] = useState(true);
-  const [showSearchAssigned, setShowSearchAssigned] = useState(false);
-  const [showSearchAvailable, setShowSearchAvailable] = useState(false);
   const schoolsPerPage = 7;
 
   useEffect(() => {
@@ -135,31 +132,47 @@ const EditManager = () => {
     }
   };
 
-  // Pagination controls
-  const startIndex = currentPage * schoolsPerPage;
-  const endIndex = startIndex + schoolsPerPage;
-  const paginatedSchools = availableSchools.slice(startIndex, endIndex);
+  // Pagination controls for Assigned and Available Schools
+  const assignedStartIndex = currentAssignedPage * schoolsPerPage;
+  const assignedEndIndex = assignedStartIndex + schoolsPerPage;
+  const paginatedAssignedSchools = assignedSchools.slice(assignedStartIndex, assignedEndIndex);
 
-  const handleNextPage = () => {
-    if (endIndex < availableSchools.length) {
-      setCurrentPage(currentPage + 1);
+  const availableStartIndex = currentAvailablePage * schoolsPerPage;
+  const availableEndIndex = availableStartIndex + schoolsPerPage;
+  const paginatedAvailableSchools = availableSchools.slice(availableStartIndex, availableEndIndex);
+
+  const handleNextAssignedPage = () => {
+    if (assignedEndIndex < assignedSchools.length) {
+      setCurrentAssignedPage(currentAssignedPage + 1);
     }
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
+  const handlePreviousAssignedPage = () => {
+    if (currentAssignedPage > 0) {
+      setCurrentAssignedPage(currentAssignedPage - 1);
     }
   };
 
-  // Sorting and filtering
-  const sortedAssignedSchools = [...assignedSchools].sort((a, b) => {
+  const handleNextAvailablePage = () => {
+    if (availableEndIndex < availableSchools.length) {
+      setCurrentAvailablePage(currentAvailablePage + 1);
+    }
+  };
+
+  const handlePreviousAvailablePage = () => {
+    if (currentAvailablePage > 0) {
+      setCurrentAvailablePage(currentAvailablePage - 1);
+    }
+  };
+
+  // Sorting
+  const sortedAssignedSchools = [...paginatedAssignedSchools].sort((a, b) => {
     return sortAssignedAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-  }).filter(school => school.name.toLowerCase().includes(searchAssigned.toLowerCase()));
+  });
 
-  const sortedAvailableSchools = paginatedSchools.sort((a, b) => {
+  const sortedAvailableSchools = [...paginatedAvailableSchools].sort((a, b) => {
     return sortAvailableAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-  }).filter(school => school.name.toLowerCase().includes(searchAvailable.toLowerCase()));
+  });
 
   return (
     <div className="edit-manager-container">
@@ -185,18 +198,7 @@ const EditManager = () => {
             Assign New School
           </button>
         </div>
-        <div className="search-and-sort">
-          <span className="search-icon" onClick={() => setShowSearchAssigned(!showSearchAssigned)}>🔍</span>
-          {showSearchAssigned && (
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchAssigned}
-              onChange={(e) => setSearchAssigned(e.target.value)}
-              className="search-box"
-            />
-          )}
-        </div>
+
         <table className="assigned-schools-table">
           <thead>
             <tr>
@@ -220,20 +222,17 @@ const EditManager = () => {
           </tbody>
         </table>
 
+        <div className="pagination-controls">
+          <button type="button" onClick={handlePreviousAssignedPage} disabled={currentAssignedPage === 0} className="small-pagination-button">
+            &#8249;
+          </button>
+          <button type="button" onClick={handleNextAssignedPage} disabled={assignedEndIndex >= assignedSchools.length} className="small-pagination-button">
+            &#8250;
+          </button>
+        </div>
+
         {showAssignSchool && (
           <div className="school-checkboxes">
-            <div className="search-and-sort">
-              <span className="search-icon" onClick={() => setShowSearchAvailable(!showSearchAvailable)}>🔍</span>
-              {showSearchAvailable && (
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchAvailable}
-                  onChange={(e) => setSearchAvailable(e.target.value)}
-                  className="search-box"
-                />
-              )}
-            </div>
             <table className="available-schools-table">
               <thead>
                 <tr>
@@ -256,20 +255,10 @@ const EditManager = () => {
               </tbody>
             </table>
             <div className="pagination-controls">
-              <button
-                type="button"
-                onClick={handlePreviousPage}
-                disabled={currentPage === 0}
-                className="small-pagination-button"
-              >
+              <button type="button" onClick={handlePreviousAvailablePage} disabled={currentAvailablePage === 0} className="small-pagination-button">
                 &#8249;
               </button>
-              <button
-                type="button"
-                onClick={handleNextPage}
-                disabled={endIndex >= availableSchools.length}
-                className="small-pagination-button"
-              >
+              <button type="button" onClick={handleNextAvailablePage} disabled={availableEndIndex >= availableSchools.length} className="small-pagination-button">
                 &#8250;
               </button>
             </div>
