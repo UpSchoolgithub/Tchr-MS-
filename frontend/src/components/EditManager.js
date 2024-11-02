@@ -12,7 +12,9 @@ const EditManager = () => {
     phoneNumber: '',
     schoolIds: []
   });
-  const [schools, setSchools] = useState([]);
+  const [assignedSchools, setAssignedSchools] = useState([]);
+  const [availableSchools, setAvailableSchools] = useState([]);
+  const [showAssignSchool, setShowAssignSchool] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
@@ -22,14 +24,20 @@ const EditManager = () => {
 
   const fetchManagerDetails = async () => {
     try {
-      const response = await axios.get(`https://tms.up.school/api/managers/${managerId}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`https://tms.up.school/api/managers/${managerId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       const managerData = response.data;
       setFormData({
         name: managerData.name,
         email: managerData.email,
         phoneNumber: managerData.phoneNumber,
-        schoolIds: managerData.Schools.map(school => school.id) // Assuming Schools is an array of associated schools
+        schoolIds: managerData.Schools.map(school => school.id)
       });
+      setAssignedSchools(managerData.Schools);
     } catch (error) {
       console.error('Error fetching manager details:', error.message);
       setErrorMessage('Error fetching manager details.');
@@ -38,12 +46,31 @@ const EditManager = () => {
 
   const fetchSchools = async () => {
     try {
-      const response = await axios.get('https://tms.up.school/api/managers/schools');
-      setSchools(response.data);
+      const token = localStorage.getItem('token');
+      const response = await axios.get('https://tms.up.school/api/managers/schools', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const allSchools = response.data;
+      const untaggedSchools = allSchools.filter(
+        school => !formData.schoolIds.includes(school.id)
+      );
+      setAvailableSchools(untaggedSchools);
     } catch (error) {
       console.error('Error fetching schools:', error.message);
       setErrorMessage('Error fetching schools.');
     }
+  };
+
+  const handleSchoolAssign = (schoolId) => {
+    setFormData(prevState => ({
+      ...prevState,
+      schoolIds: [...prevState.schoolIds, schoolId]
+    }));
+    const assignedSchool = availableSchools.find(school => school.id === schoolId);
+    setAssignedSchools([...assignedSchools, assignedSchool]);
+    setAvailableSchools(availableSchools.filter(school => school.id !== schoolId));
   };
 
   const handleInputChange = (e) => {
@@ -54,26 +81,16 @@ const EditManager = () => {
     }));
   };
 
-  const handleSchoolChange = (e) => {
-    const value = parseInt(e.target.value);
-    if (e.target.checked) {
-      setFormData(prevState => ({
-        ...prevState,
-        schoolIds: [...prevState.schoolIds, value]
-      }));
-    } else {
-      setFormData(prevState => ({
-        ...prevState,
-        schoolIds: prevState.schoolIds.filter(id => id !== value)
-      }));
-    }
-  };
-
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`https://tms.up.school/api/managers/${managerId}`, formData);
-      navigate('/managers'); // Redirect back to manager list after update
+      const token = localStorage.getItem('token');
+      await axios.put(`https://tms.up.school/api/managers/${managerId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      navigate('/managers');
     } catch (error) {
       if (error.response && error.response.data) {
         setErrorMessage(error.response.data.errors.join(', '));
@@ -87,8 +104,13 @@ const EditManager = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this manager?')) {
       try {
-        await axios.delete(`https://tms.up.school/api/managers/${managerId}`);
-        navigate('/managers'); // Redirect back to manager list after deletion
+        const token = localStorage.getItem('token');
+        await axios.delete(`https://tms.up.school/api/managers/${managerId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        navigate('/managers');
       } catch (error) {
         console.error('Error deleting manager:', error.message);
       }
@@ -113,20 +135,26 @@ const EditManager = () => {
           <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required />
         </div>
         <div>
-          <label>Schools</label>
-          <div className="school-checkboxes">
-            {schools.map(school => (
-              <div key={school.id}>
-                <input
-                  type="checkbox"
-                  value={school.id}
-                  checked={formData.schoolIds.includes(school.id)}
-                  onChange={handleSchoolChange}
-                />
-                <label>{school.name}</label>
-              </div>
+          <label>Assigned Schools</label>
+          <ul>
+            {assignedSchools.map(school => (
+              <li key={school.id}>{school.name}</li>
             ))}
-          </div>
+          </ul>
+          <button type="button" onClick={() => setShowAssignSchool(!showAssignSchool)}>
+            Assign New School
+          </button>
+          {showAssignSchool && (
+            <div className="school-checkboxes">
+              {availableSchools.map(school => (
+                <div key={school.id}>
+                  <button type="button" onClick={() => handleSchoolAssign(school.id)}>
+                    {school.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <button type="submit" className="save-button">Update Manager</button>
         <button type="button" className="delete-button" onClick={handleDelete}>Delete Manager</button>
