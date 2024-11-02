@@ -72,3 +72,45 @@
   cursor: pointer;
   font-size: 0.9rem;
 }
+
+.assigned-schools-table,
+.available-schools-table {
+  width: 50%; /* Set the table to a specific width */
+  margin-left: 0; /* Align the table to the left */
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.assigned-schools-header,
+.school-checkboxes {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  width: 50%; /* Match the width of the table */
+}
+
+.assign-new-school-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-left: auto; /* Align the button to the right of its container */
+}
+
+.assigned-schools-table th,
+.assigned-schools-table td,
+.available-schools-table th,
+.available-schools-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.remove-button {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
