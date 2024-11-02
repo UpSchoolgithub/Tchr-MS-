@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
+import './TeacherTimetable.css';
 
 const TeacherTimetable = () => {
   const { teacherId } = useParams();
   const [timetable, setTimetable] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -13,9 +15,11 @@ const TeacherTimetable = () => {
         const response = await axiosInstance.get(`/timetable/teachers/${teacherId}/timetable`);
         console.log('API Response:', response.data); // Log the entire API response
         setTimetable(response.data);
+        setLoading(false);
       } catch (err) {
         setError('Failed to load timetable');
         console.error('Error fetching timetable:', err);
+        setLoading(false);
       }
     };
 
@@ -23,7 +27,6 @@ const TeacherTimetable = () => {
   }, [teacherId]);
 
   const formatTime = (startTime, endTime) => {
-    console.log('Start Time:', startTime, 'End Time:', endTime); // Log startTime and endTime
     if (!startTime || !endTime) return 'N/A';
     const format = (time) => {
       const date = new Date(time);
@@ -43,6 +46,10 @@ const TeacherTimetable = () => {
     return acc;
   }, {});
 
+  if (loading) {
+    return <div>Loading timetable...</div>;
+  }
+
   if (error) {
     return <div className="error">{error}</div>;
   }
@@ -52,10 +59,10 @@ const TeacherTimetable = () => {
   }
 
   return (
-    <div>
+    <div className="teacher-timetable">
       <h2>Teacher Timetable</h2>
       {Object.keys(groupedTimetable).map((day) => (
-        <div key={day}>
+        <div key={day} className="timetable-day">
           <h3>{day}</h3>
           <table>
             <thead>
@@ -73,10 +80,10 @@ const TeacherTimetable = () => {
                 .map((entry) => (
                   <tr key={entry.id}>
                     <td>{formatTime(entry.startTime, entry.endTime)}</td>
-                    <td>{entry.schoolName}</td>
-                    <td>{entry.className}</td>
-                    <td>{entry.sectionName}</td>
-                    <td>{entry.subjectName}</td>
+                    <td>{entry.schoolName || 'N/A'}</td>
+                    <td>{entry.className || 'N/A'}</td>
+                    <td>{entry.sectionName || 'N/A'}</td>
+                    <td>{entry.subjectName || 'N/A'}</td>
                   </tr>
                 ))}
             </tbody>

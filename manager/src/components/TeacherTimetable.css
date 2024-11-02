@@ -1,41 +1,42 @@
-.teacher-timetable-container {
+.teacher-timetable {
+  font-family: Arial, sans-serif;
   padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.teacher-timetable-container h2 {
+.teacher-timetable h2 {
   text-align: center;
-  margin-bottom: 20px;
+  color: #333;
 }
 
-.timetable-table {
+.timetable-day h3 {
+  margin-top: 20px;
+  color: #444;
+}
+
+.teacher-timetable table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-top: 10px;
 }
 
-.timetable-table th,
-.timetable-table td {
-  border: 1px solid #ddd;
+.teacher-timetable th,
+.teacher-timetable td {
   padding: 8px;
   text-align: center;
+  border: 1px solid #ddd;
 }
 
-.timetable-table th {
-  background-color: #4CAF50;
-  color: white;
+.teacher-timetable th {
+  background-color: #f4f4f4;
+  font-weight: bold;
 }
 
-.timetable-table td {
-  background-color: #ffffff;
+.teacher-timetable tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
-.timetable-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-.timetable-table tr:hover {
-  background-color: #ddd;
+.error {
+  color: red;
+  text-align: center;
+  margin-top: 20px;
 }
