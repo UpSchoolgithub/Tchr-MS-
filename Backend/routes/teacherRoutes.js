@@ -219,7 +219,8 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
-router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) => {
+// Route accessible for managers
+router.get('/manager/:teacherId/timetable', authenticateManager, async (req, res) => {
   const { teacherId } = req.params;
 
   try {
@@ -241,6 +242,7 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+
 
 
 
