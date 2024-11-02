@@ -123,8 +123,10 @@ const Manager = () => {
                 <td>{manager.phoneNumber}</td>
                 <td>{manager.Schools.map(school => school.name).join(', ')}</td>
                 <td>
-                  <button className="edit" onClick={() => handleEdit(manager.id)}>Edit</button>
-                  <button className="delete" onClick={() => handleDelete(manager.id, manager.Schools.length)}>Delete</button>
+                  <div className="action-buttons">
+                    <button className="edit" onClick={() => handleEdit(manager.id)}>Edit</button>
+                    <button className="delete" onClick={() => handleDelete(manager.id, manager.Schools.length)}>Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -141,6 +143,6 @@ const Manager = () => {
       </div>
     </div>
   );
-};
+  
 
 export default Manager;
