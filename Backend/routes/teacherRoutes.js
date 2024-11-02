@@ -226,7 +226,7 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
     const timetable = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
-        { model: School, attributes: ['name'] },  // No alias needed if none specified in model
+        { model: School, attributes: ['name'], as: 'School' },  // Use 'School' as alias to match Sequelize's expectation
         { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
         { model: Section, attributes: ['sectionName'], as: 'section' },
         { model: Subject, attributes: ['subjectName'], as: 'subject' }
@@ -236,10 +236,11 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
 
     res.status(200).json(timetable);
   } catch (error) {
-    console.error('Error fetching teacher timetable:', error);  // Log error in server
-    res.status(500).json({ error: 'Internal server error', details: error.message }); // Include error message in response
+    console.error('Error fetching teacher timetable:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+
 
 
 
