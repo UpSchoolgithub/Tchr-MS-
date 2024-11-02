@@ -209,4 +209,42 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
+router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    const timetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' },
+        { model: School, attributes: ['name'], as: 'school' }
+      ],
+      order: [['day', 'ASC'], ['period', 'ASC']]
+    });
+
+    if (!timetable) {
+      return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
+    }
+
+    const formattedTimetable = timetable.map(entry => ({
+      id: entry.id,
+      day: entry.day,
+      period: entry.period,
+      schoolName: entry.school?.name || 'N/A',
+      className: entry.classInfo?.className || 'N/A',
+      sectionName: entry.section?.sectionName || 'N/A',
+      subjectName: entry.subject?.subjectName || 'N/A',
+      startTime: entry.startTime,
+      endTime: entry.endTime
+    }));
+
+    res.status(200).json(formattedTimetable);
+  } catch (error) {
+    console.error('Error fetching timetable:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
