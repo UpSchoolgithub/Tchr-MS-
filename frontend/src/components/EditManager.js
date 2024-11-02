@@ -21,6 +21,8 @@ const EditManager = () => {
   const [searchAvailable, setSearchAvailable] = useState('');
   const [sortAssignedAsc, setSortAssignedAsc] = useState(true);
   const [sortAvailableAsc, setSortAvailableAsc] = useState(true);
+  const [showSearchAssigned, setShowSearchAssigned] = useState(false);
+  const [showSearchAvailable, setShowSearchAvailable] = useState(false);
   const schoolsPerPage = 7;
 
   useEffect(() => {
@@ -170,9 +172,9 @@ const EditManager = () => {
         <div>
           <label>Assigned Schools</label>
           <div className="search-and-sort">
-            <button onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>Sort</button>
-            <button onClick={() => setSearchAssigned('')}>🔍</button>
-            {searchAssigned !== '' && (
+            <span className="sort-arrow" onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>&#8593;&#8595;</span>
+            <span className="search-icon" onClick={() => setShowSearchAssigned(!showSearchAssigned)}>🔍</span>
+            {showSearchAssigned && (
               <input
                 type="text"
                 placeholder="Search..."
@@ -185,7 +187,7 @@ const EditManager = () => {
           <table className="assigned-schools-table">
             <thead>
               <tr>
-                <th>School ID</th>
+                <th>School ID <span className="sort-arrow" onClick={() => setSortAssignedAsc(!sortAssignedAsc)}>&#8593;&#8595;</span></th>
                 <th>School Name</th>
               </tr>
             </thead>
@@ -207,9 +209,9 @@ const EditManager = () => {
           {showAssignSchool && (
             <div className="school-checkboxes">
               <div className="search-and-sort">
-                <button onClick={() => setSortAvailableAsc(!sortAvailableAsc)}>Sort</button>
-                <button onClick={() => setSearchAvailable('')}>🔍</button>
-                {searchAvailable !== '' && (
+                <span className="sort-arrow" onClick={() => setSortAvailableAsc(!sortAvailableAsc)}>&#8593;&#8595;</span>
+                <span className="search-icon" onClick={() => setShowSearchAvailable(!showSearchAvailable)}>🔍</span>
+                {showSearchAvailable && (
                   <input
                     type="text"
                     placeholder="Search..."
