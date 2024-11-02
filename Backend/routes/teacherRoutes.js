@@ -226,16 +226,22 @@ router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, re
   const { teacherId } = req.params;
 
   try {
-    const results = await TimetableEntry.findAll({
-      where: { teacherId: parseInt(teacherId) }, // Ensure teacherId is treated as an integer
+    const timetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: School, attributes: ['name'], as: 'school' },
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' }
+      ],
       order: [['day', 'ASC'], ['period', 'ASC']]
     });
 
-    if (results.length === 0) {
+    if (!timetable.length) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
-    res.status(200).json(results);
+    res.status(200).json(timetable);
   } catch (error) {
     console.error('Error fetching timetable:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
