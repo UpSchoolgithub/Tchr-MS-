@@ -147,11 +147,10 @@ router.delete('/:id', authenticateManager, async (req, res) => {
 
 // 7. Fetch timetable for a specific teacher (public endpoint, requires authentication)
 router.get('/:teacherId/timetable', async (req, res) => {
-  const { teacherId } = req.params;
-
+  console.log("Fetching timetable for teacher:", req.params.teacherId);
   try {
     const timetable = await TimetableEntry.findAll({
-      where: { teacherId },
+      where: { teacherId: req.params.teacherId },
       include: [
         { model: School, attributes: ['name'], as: 'school' },
         { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
@@ -161,28 +160,18 @@ router.get('/:teacherId/timetable', async (req, res) => {
       order: [['day', 'ASC'], ['period', 'ASC']],
     });
 
+    console.log("Timetable data fetched:", timetable);
     if (!timetable.length) {
       return res.status(404).json({ message: 'No timetable found for this teacher.' });
     }
 
-    const formattedTimetable = timetable.map(entry => ({
-      id: entry.id,
-      day: entry.day,
-      period: entry.period,
-      schoolName: entry.school ? entry.school.name : 'N/A',
-      className: entry.classInfo ? entry.classInfo.className : 'N/A',
-      sectionName: entry.section ? entry.section.sectionName : 'N/A',
-      subjectName: entry.subject ? entry.subject.subjectName : 'N/A',
-      startTime: entry.startTime,
-      endTime: entry.endTime,
-    }));
-
-    res.status(200).json(formattedTimetable);
+    res.status(200).json(timetable);
   } catch (error) {
-    console.error('Error fetching teacher timetable:', error);
+    console.error("Error in fetching timetable:", error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // 8. Fetch sessions for a specific date for the logged-in teacher
 router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
