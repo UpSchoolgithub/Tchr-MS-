@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useOutletContext } from 'react-router-dom';
 import Modal from 'react-modal';
+import './Members.css';
 
 const Members = () => {
   const { schoolId } = useOutletContext(); // Use the context to get schoolId
