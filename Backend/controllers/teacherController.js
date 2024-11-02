@@ -35,3 +35,17 @@ exports.getTeacherTimetable = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+exports.getTeachers = async (req, res) => {
+  try {
+    const teachers = await Teacher.findAll({
+      include: [
+        { model: School, attributes: ['name'], as: 'Schools' }  // Ensure the alias matches your frontend mapping
+      ]
+    });
+    res.status(200).json(teachers);
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
+    res.status(500).json({ error: 'Failed to fetch teachers' });
+  }
+};
