@@ -1,4 +1,3 @@
-//Backend\controllers\timetableController.js
 const { TimetableEntry, TeacherTimetable, Section, ClassInfo, School, Subject, Teacher, TimetableSettings } = require('../models');
 const sequelize = require('../config/db');  // Import sequelize for transactions
 
@@ -133,7 +132,61 @@ exports.getTimetableSettings = async (req, res) => {
 };
 
 // Controller function to get a teacher's timetable
+exports.getTeacherTimetable = async (req, res) => {
+  const { teacherId } = req.params;
 
+  try {
+    const directTimetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: School, attributes: ['name'] },
+        { model: ClassInfo, attributes: ['className'] },
+        { model: Section, attributes: ['sectionName'] },
+        { model: Subject, attributes: ['subjectName'] },
+      ],
+    });
+
+    const teacherTimetableEntries = await TeacherTimetable.findAll({
+      where: { teacherId },
+      include: [
+        {
+          model: TimetableEntry,
+          include: [
+            { model: School, attributes: ['name'] },
+            { model: ClassInfo, attributes: ['className'] },
+            { model: Section, attributes: ['sectionName'] },
+            { model: Subject, attributes: ['subjectName'] },
+          ],
+        },
+      ],
+    });
+
+    const combinedTimetable = teacherTimetableEntries.map(entry => entry.TimetableEntry);
+    const timetable = [...directTimetable, ...combinedTimetable];
+
+    if (!timetable.length) {
+      return res.status(404).json({ message: 'No timetable found for this teacher.' });
+    }
+
+    const formattedTimetable = timetable.map(entry => ({
+      id: entry.id,
+      day: entry.day,
+      period: entry.period,
+      time: `Period ${entry.period}`,
+      schoolName: entry.School ? entry.School.name : 'Unknown School',
+      className: entry.ClassInfo ? entry.ClassInfo.className : 'Unknown Class',
+      sectionName: entry.Section ? entry.Section.sectionName : 'Unknown Section',
+      subjectName: entry.Subject ? entry.Subject.subjectName : 'Unknown Subject',
+      startTime: entry.startTime || null,
+      endTime: entry.endTime || null,
+    }));
+
+    return res.status(200).json(formattedTimetable);
+  } catch (error) {
+    console.error('Error fetching teacher timetable:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 // Controller function to get all sections for a given class
 exports.getSectionsByClassId = async (req, res) => {
@@ -220,4 +273,3 @@ exports.getSectionsByClass = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
