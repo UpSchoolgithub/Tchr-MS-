@@ -1,4 +1,3 @@
-// File: middleware/cors.js
 const cors = require('cors');
 
 const allowedOrigins = [
@@ -11,14 +10,14 @@ const allowedOrigins = [
 const corsOptions = {
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true); // Allow request
+            callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS')); // Block request
+            callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'Accept'],
     optionsSuccessStatus: 200
 };
 

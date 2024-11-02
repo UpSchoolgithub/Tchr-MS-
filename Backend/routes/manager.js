@@ -12,15 +12,17 @@ router.get('/', authenticateToken, async (req, res) => {
       include: {
         model: School,
         attributes: ['id', 'name'],
-        through: { attributes: [] } // Exclude the join table fields like createdAt, updatedAt
+        through: { attributes: [] }
       }
     });
+    console.log('Managers with Schools:', JSON.stringify(managers, null, 2)); // Log managers with schools
     res.json(managers);
   } catch (error) {
     console.error('Error fetching managers:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 // Fetch all schools (you might want to protect this route)
