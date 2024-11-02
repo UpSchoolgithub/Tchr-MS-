@@ -114,3 +114,40 @@
     color: white;
   }
   
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .search-bar {
+    padding: 5px;
+    font-size: 1rem;
+  }
+  
+  .manager-table th {
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  
+  .pagination-button {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 1rem;
+    cursor: pointer;
+    margin: 0 5px;
+  }
+  
+  .pagination-button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+  }
+  

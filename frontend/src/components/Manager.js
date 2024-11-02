@@ -85,6 +85,10 @@ const Manager = () => {
     .filter(manager => manager.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
 
+  const toggleSort = () => {
+    setSortAsc(!sortAsc);
+  };
+
   return (
     <div className="manager-container">
       <div className="manager-list">
@@ -97,15 +101,14 @@ const Manager = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-bar"
           />
-          <button onClick={() => setSortAsc(!sortAsc)} className="sort-button">
-            Sort by Name {sortAsc ? '▲' : '▼'}
-          </button>
           <button className="save-button" onClick={handleCreateManager}>Create Manager</button>
         </div>
         <table className="manager-table">
           <thead>
             <tr>
-              <th>Name</th>
+              <th onClick={toggleSort} style={{ cursor: 'pointer' }}>
+                Name {sortAsc ? '▲' : '▼'}
+              </th>
               <th>Email</th>
               <th>Phone Number</th>
               <th>Schools</th>
