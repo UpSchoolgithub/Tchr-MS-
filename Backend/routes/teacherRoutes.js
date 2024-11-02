@@ -223,22 +223,21 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
   const { teacherId } = req.params;
 
   try {
-    // Fetch directly from TimetableEntry without any associations
-    const timetable = await TimetableEntry.findAll({
-      where: { teacherId },
-      attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'schoolId', 'classId', 'sectionId', 'subjectId'],
-      order: [['day', 'ASC'], ['period', 'ASC']]
-    });
+    const [results] = await sequelize.query(
+      `SELECT id, day, period, startTime, endTime, schoolId, classId, sectionId, subjectId
+       FROM timetable_entries
+       WHERE teacherId = :teacherId
+       ORDER BY day ASC, period ASC`,
+      { replacements: { teacherId }, type: sequelize.QueryTypes.SELECT }
+    );
 
-    // Check if any entries are found
-    if (!timetable.length) {
-      console.log(`No timetable entries found for teacher ID: ${teacherId}`);
+    if (!results.length) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
-    res.status(200).json(timetable);
+    res.status(200).json(results);
   } catch (error) {
-    console.error('Error fetching timetable directly:', error);
+    console.error('Error fetching timetable with raw SQL:', error.stack);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
