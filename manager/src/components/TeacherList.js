@@ -7,6 +7,8 @@ const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [loading, setLoading] = useState(false); // Loading state for fetching timetable
+  const [error, setError] = useState(null); // Error state for handling fetch errors
   const navigate = useNavigate();
 
   const fetchTeachers = async () => {
@@ -28,12 +30,18 @@ const TeacherList = () => {
   };
 
   const handleViewTimetable = async (teacherId, teacherName) => {
+    setLoading(true); // Set loading to true while fetching timetable
+    setError(null); // Reset error state before fetching
+    setSelectedTeacher(teacherName);
+
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
       setTimetable(response.data);
-      setSelectedTeacher(teacherName);
     } catch (error) {
       console.error('Error fetching timetable:', error);
+      setError('Could not fetch the timetable. Please try again later.');
+    } finally {
+      setLoading(false); // Set loading to false after fetching
     }
   };
 
@@ -71,36 +79,45 @@ const TeacherList = () => {
         </tbody>
       </table>
 
-      {/* Display the timetable for the selected teacher */}
-      {selectedTeacher && timetable.length > 0 && (
+      {/* Display the timetable or error/loading messages for the selected teacher */}
+      {selectedTeacher && (
         <div className="teacher-timetable">
           <h2>Timetable for {selectedTeacher}</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Day</th>
-                <th>Period</th>
-                <th>Time</th>
-                <th>School</th>
-                <th>Class</th>
-                <th>Section</th>
-                <th>Subject</th>
-              </tr>
-            </thead>
-            <tbody>
-              {timetable.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{entry.day}</td>
-                  <td>{entry.period}</td>
-                  <td>{`${entry.startTime} - ${entry.endTime}`}</td>
-                  <td>{entry.schoolName}</td>
-                  <td>{entry.className}</td>
-                  <td>{entry.sectionName}</td>
-                  <td>{entry.subjectName}</td>
+          
+          {loading ? (
+            <p>Loading timetable...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : timetable.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Period</th>
+                  <th>Time</th>
+                  <th>School</th>
+                  <th>Class</th>
+                  <th>Section</th>
+                  <th>Subject</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {timetable.map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{entry.day}</td>
+                    <td>{entry.period}</td>
+                    <td>{`${entry.startTime} - ${entry.endTime}`}</td>
+                    <td>{entry.schoolName}</td>
+                    <td>{entry.className}</td>
+                    <td>{entry.sectionName}</td>
+                    <td>{entry.subjectName}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No timetable entries found for this teacher.</p>
+          )}
         </div>
       )}
     </div>
