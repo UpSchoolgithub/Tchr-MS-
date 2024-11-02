@@ -30,10 +30,12 @@ const TeacherList = () => {
   };
 
   const handleViewTimetable = async (teacherId, teacherName) => {
-    setLoading(true); // Set loading to true while fetching timetable
-    setError(null); // Reset error state before fetching
+    setLoading(true);
+    setError(null);
     setSelectedTeacher(teacherName);
-
+  
+    console.log("Using token:", localStorage.getItem('yourTokenKey')); // Adjust this to wherever you store the token
+  
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
       setTimetable(response.data);
@@ -41,10 +43,10 @@ const TeacherList = () => {
       console.error('Error fetching timetable:', error);
       setError('Could not fetch the timetable. Please try again later.');
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchTeachers();
   }, []);
