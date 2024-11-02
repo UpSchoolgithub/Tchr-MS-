@@ -131,11 +131,11 @@ const Manager = () => {
           </tbody>
         </table>
         <div className="pagination-controls">
-          <button onClick={handlePreviousPage} disabled={currentPage === 0} className="pagination-button">
-            Previous
+          <button onClick={handlePreviousPage} disabled={currentPage === 0} className="pagination-arrow">
+            &#8249;
           </button>
-          <button onClick={handleNextPage} disabled={endIndex >= filteredManagers.length} className="pagination-button">
-            Next
+          <button onClick={handleNextPage} disabled={endIndex >= filteredManagers.length} className="pagination-arrow">
+            &#8250;
           </button>
         </div>
       </div>
