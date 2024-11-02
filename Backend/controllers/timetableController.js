@@ -133,34 +133,6 @@ exports.getTimetableSettings = async (req, res) => {
 
 // Controller function to get a teacher's timetable
 
- // Final resolved code without conflict markers
-exports.getTeacherTimetable = async (req, res) => {
-  const { teacherId } = req.params;
-  console.log('Fetching timetable for teacherId:', teacherId);
-
-  try {
-    const timetable = await TimetableEntry.findAll({
-      where: { teacherId },
-      include: [
-        { model: School, attributes: ['name'] },
-        { model: ClassInfo, attributes: ['className'] },
-        { model: Section, attributes: ['sectionName'] },
-        { model: Subject, attributes: ['subjectName'] },
-      ],
-      order: [['day', 'ASC'], ['period', 'ASC']],
-    });
-
-    if (!timetable.length) {
-      return res.status(404).json({ message: 'No timetable found for this teacher.' });
-    }
-
-    return res.status(200).json(timetable);
-  } catch (error) {
-    console.error('Error fetching timetable:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
 
 // Controller function to get all sections for a given class
 exports.getSectionsByClassId = async (req, res) => {
