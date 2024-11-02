@@ -13,34 +13,31 @@ const Manager = () => {
 
   const fetchManagers = async () => {
     try {
-      const token = localStorage.getItem('token');  // Assuming the token is stored in localStorage
+      const token = localStorage.getItem('token');
       if (!token) {
         console.error('No token found, please log in.');
         return;
       }
   
-      // Make the request to the API with Authorization header
       const response = await axios.get('https://tms.up.school/api/managers', {
         headers: {
-          Authorization: `Bearer ${token}`  // Add the token in the Authorization header
+          Authorization: `Bearer ${token}`
         }
       });
   
-      console.log('Fetched Managers:', response.data);  // Display managers for debugging
-      setManagers(response.data);  // Assuming setManagers is defined to update your state
+      setManagers(response.data);
     } catch (error) {
       console.error('Error fetching managers:', error.message);
   
-      // Handle token expiration error
-      if (error.response && error.response.status === 401) {
-        if (error.response.data.expired) {
-          alert('Your session has expired. Please log in again.');
-          // Redirect to login page or prompt user to reauthenticate
-          // navigate('/login');  // Assuming you're using a router to navigate
-        }
+      // Handle token expiration
+      if (error.response && error.response.status === 403) {
+        alert('Your session has expired. Please log in again.');
+        // Navigate to the login page
+        navigate('/login');
       }
     }
   };
+  
   
 
   const handleEdit = (managerId) => {
