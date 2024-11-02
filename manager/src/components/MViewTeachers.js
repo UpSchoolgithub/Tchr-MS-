@@ -4,22 +4,15 @@ import axios from 'axios';
 const MViewTeachers = ({ teachers }) => {
   const [timetable, setTimetable] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleViewTimetable = async (teacherId, teacherName) => {
-    setLoading(true); 
-    setError(''); 
-    setSelectedTeacher(teacherName); 
-
     try {
+      // Call the API to fetch the timetable for the selected teacher
       const response = await axios.get(`/api/teachers/${teacherId}/timetable`);
-      setTimetable(response.data); 
-    } catch (err) {
-      setError('Error fetching timetable'); 
-      console.error('Error fetching timetable:', err);
-    } finally {
-      setLoading(false); 
+      setTimetable(response.data); // Store the timetable data in state
+      setSelectedTeacher(teacherName); // Store the teacher’s name for display
+    } catch (error) {
+      console.error('Error fetching timetable:', error);
     }
   };
 
@@ -47,9 +40,7 @@ const MViewTeachers = ({ teachers }) => {
         </tbody>
       </table>
 
-      {loading && <p>Loading timetable...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
+      {/* Display the timetable for the selected teacher */}
       {selectedTeacher && timetable.length > 0 && (
         <div className="teacher-timetable">
           <h2>Timetable for {selectedTeacher}</h2>
@@ -70,7 +61,7 @@ const MViewTeachers = ({ teachers }) => {
                 <tr key={entry.id}>
                   <td>{entry.day}</td>
                   <td>{entry.period}</td>
-                  <td>{entry.startTime} - {entry.endTime}</td>
+                  <td>{`${entry.startTime} - ${entry.endTime}`}</td>
                   <td>{entry.schoolName}</td>
                   <td>{entry.className}</td>
                   <td>{entry.sectionName}</td>
@@ -80,10 +71,6 @@ const MViewTeachers = ({ teachers }) => {
             </tbody>
           </table>
         </div>
-      )}
-
-      {selectedTeacher && !loading && timetable.length === 0 && !error && (
-        <p>No timetable entries found for {selectedTeacher}.</p>
       )}
     </div>
   );
