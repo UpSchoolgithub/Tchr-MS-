@@ -442,15 +442,12 @@ useEffect(() => {
     const rows = [];
     const timeline = [];
   
-    // Loop over each period and add timing
     periods.forEach((period, index) => {
       const periodTiming = timetableSettings.periodTimings[index];
       const periodTimeText = periodTiming ? `${periodTiming.start} - ${periodTiming.end}` : 'No Time';
   
-      // Add the period time to the timeline array
       timeline.push({ type: 'period', period, time: periodTimeText });
   
-      // Add breaks based on conditions
       if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
         timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
       }
@@ -468,9 +465,8 @@ useEffect(() => {
       timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
     }
   
-    // Add rows to the PDF
     timeline.forEach(entry => {
-      const row = [entry.time];  // This will now correctly display the formatted time
+      const row = [entry.time];
       if (entry.type === 'period') {
         days.forEach(day => {
           const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
@@ -485,7 +481,6 @@ useEffect(() => {
   
     const columns = ['Time', ...days];
   
-    // Add headers and title to PDF
     doc.setFontSize(18);
     doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
@@ -521,6 +516,7 @@ useEffect(() => {
     const filename = `Timetable_${className || classId}_${sectionName || sectionId}.pdf`;
     doc.save(filename);
   };
+  
   
   
   
