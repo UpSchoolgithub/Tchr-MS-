@@ -107,10 +107,10 @@ const TeacherList = () => {
                     <td>{entry.day}</td>
                     <td>{entry.period}</td>
                     <td>{`${entry.startTime} - ${entry.endTime}`}</td>
-                    <td>{entry.schoolName}</td>
-                    <td>{entry.className}</td>
-                    <td>{entry.sectionName}</td>
-                    <td>{entry.subjectName}</td>
+                    <td>{entry.schoolName || "N/A"}</td>
+                    <td>{entry.className || "N/A"}</td>
+                    <td>{entry.sectionName || "N/A"}</td>
+                    <td>{entry.subjectName || "N/A"}</td>
                   </tr>
                 ))}
               </tbody>
