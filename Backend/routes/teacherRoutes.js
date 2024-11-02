@@ -35,10 +35,6 @@ router.post('/', authenticateManager, async (req, res) => {
     res.status(201).json(newTeacher);
   } catch (error) {
     console.error('Error creating teacher:', error);
-    if (error.name === 'SequelizeValidationError') {
-      const errors = error.errors.map(e => e.message);
-      return res.status(400).json({ message: 'Validation error', errors });
-    }
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -149,38 +145,42 @@ router.delete('/:id', authenticateManager, async (req, res) => {
   }
 });
 
-// 7. Fetch timetable for the logged-in teacher (protected for teachers)
-router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) => {
+// 7. Fetch timetable for a specific teacher (public endpoint, requires authentication)
+router.get('/:teacherId/timetable', async (req, res) => {
   const { teacherId } = req.params;
-
-  if (req.user.id !== parseInt(teacherId, 10)) {
-    return res.status(403).json({ message: 'Access denied' });
-  }
 
   try {
     const timetable = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
-        { model: ClassInfo, attributes: ['name'] },
-        { model: Section, attributes: ['name'] },
-        { model: Subject, attributes: ['name'] },
+        { model: School, attributes: ['name'], as: 'school' },
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' },
       ],
-      order: [['day', 'ASC'], ['time', 'ASC']],
+      order: [['day', 'ASC'], ['period', 'ASC']],
     });
+
+    if (!timetable.length) {
+      return res.status(404).json({ message: 'No timetable found for this teacher.' });
+    }
 
     const formattedTimetable = timetable.map(entry => ({
       id: entry.id,
       day: entry.day,
-      className: entry.ClassInfo.name,
-      sectionName: entry.Section.name,
-      subjectName: entry.Subject.name,
-      time: entry.time,
+      period: entry.period,
+      schoolName: entry.school ? entry.school.name : 'N/A',
+      className: entry.classInfo ? entry.classInfo.className : 'N/A',
+      sectionName: entry.section ? entry.section.sectionName : 'N/A',
+      subjectName: entry.subject ? entry.subject.subjectName : 'N/A',
+      startTime: entry.startTime,
+      endTime: entry.endTime,
     }));
 
-    res.json(formattedTimetable);
+    res.status(200).json(formattedTimetable);
   } catch (error) {
-    console.error('Error fetching timetable:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error fetching teacher timetable:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -195,20 +195,20 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
     const sessions = await TimetableEntry.findAll({
       where: { teacherId, day: dayOfWeek },
       include: [
-        { model: ClassInfo, attributes: ['name'] },
-        { model: Section, attributes: ['name'] },
-        { model: Subject, attributes: ['name'] },
-        { model: School, attributes: ['name'] },
+        { model: School, attributes: ['name'], as: 'school' },
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' },
       ],
     });
 
     const formattedSessions = sessions.map(session => ({
       id: session.id,
-      className: session.ClassInfo ? session.ClassInfo.name : '',
-      section: session.Section ? session.Section.name : '',
-      subject: session.Subject ? session.Subject.name : '',
+      className: session.classInfo ? session.classInfo.className : '',
+      sectionName: session.section ? session.section.sectionName : '',
+      subjectName: session.subject ? session.subject.subjectName : '',
       duration: session.duration || '',
-      schoolName: session.School ? session.School.name : '',
+      schoolName: session.school ? session.school.name : '',
       sessionStarted: false,
       sessionEnded: false,
     }));
@@ -217,41 +217,6 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Fetch timetable for a specific teacher
-router.get('/:teacherId/timetable', async (req, res) => {
-  const { teacherId } = req.params;
-
-  try {
-    const timetable = await TimetableEntry.findAll({
-      where: { teacherId },
-      include: [
-        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
-        { model: Section, attributes: ['sectionName'], as: 'section' },
-        { model: Subject, attributes: ['subjectName'], as: 'subject' },
-        { model: School, attributes: ['name'], as: 'school' }
-      ],
-      order: [['day', 'ASC'], ['period', 'ASC']]
-    });
-
-    const formattedTimetable = timetable.map(entry => ({
-      id: entry.id,
-      day: entry.day,
-      period: entry.period,
-      schoolName: entry.school ? entry.school.name : 'N/A',
-      className: entry.classInfo ? entry.classInfo.className : 'N/A',
-      sectionName: entry.section ? entry.section.sectionName : 'N/A',
-      subjectName: entry.subject ? entry.subject.subjectName : 'N/A',
-      startTime: entry.startTime,
-      endTime: entry.endTime
-    }));
-
-    res.status(200).json(formattedTimetable);
-  } catch (error) {
-    console.error('Error fetching teacher timetable:', error);
-    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
