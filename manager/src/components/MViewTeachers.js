@@ -4,8 +4,12 @@ import axios from 'axios';
 const MViewTeachers = ({ teachers }) => {
   const [timetable, setTimetable] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleViewTimetable = async (teacherId, teacherName) => {
+    setLoading(true); // Start loading
+    setError(null); // Reset any previous errors
     try {
       // Call the API to fetch the timetable for the selected teacher
       const response = await axios.get(`/api/teachers/${teacherId}/timetable`);
@@ -13,6 +17,9 @@ const MViewTeachers = ({ teachers }) => {
       setSelectedTeacher(teacherName); // Store the teacher’s name for display
     } catch (error) {
       console.error('Error fetching timetable:', error);
+      setError('Failed to fetch timetable'); // Set error message
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -39,6 +46,10 @@ const MViewTeachers = ({ teachers }) => {
           ))}
         </tbody>
       </table>
+
+      {/* Loading, Error, and Timetable Display */}
+      {loading && <p>Loading timetable...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {/* Display the timetable for the selected teacher */}
       {selectedTeacher && timetable.length > 0 && (
@@ -71,6 +82,11 @@ const MViewTeachers = ({ teachers }) => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Message if no timetable entries found */}
+      {selectedTeacher && timetable.length === 0 && !loading && !error && (
+        <p>No timetable entries found for {selectedTeacher}.</p>
       )}
     </div>
   );
