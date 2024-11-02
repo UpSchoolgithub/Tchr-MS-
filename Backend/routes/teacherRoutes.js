@@ -223,18 +223,21 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
   const { teacherId } = req.params;
 
   try {
+    console.log("Fetching timetable for teacher ID:", teacherId); // Debug log
     const timetable = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
+        { model: School, attributes: ['name'], as: 'school' },
         { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
         { model: Section, attributes: ['sectionName'], as: 'section' },
-        { model: Subject, attributes: ['subjectName'], as: 'subject' },
-        { model: School, attributes: ['name'], as: 'school' }
+        { model: Subject, attributes: ['subjectName'], as: 'subject' }
       ],
       order: [['day', 'ASC'], ['period', 'ASC']]
     });
 
-    if (!timetable) {
+    console.log("Timetable entries fetched:", timetable); // Debug log
+
+    if (!timetable.length) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
@@ -242,20 +245,21 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
       id: entry.id,
       day: entry.day,
       period: entry.period,
-      schoolName: entry.school?.name || 'N/A',
-      className: entry.classInfo?.className || 'N/A',
-      sectionName: entry.section?.sectionName || 'N/A',
-      subjectName: entry.subject?.subjectName || 'N/A',
+      schoolName: entry.school ? entry.school.name : 'N/A',
+      className: entry.classInfo ? entry.classInfo.className : 'N/A',
+      sectionName: entry.section ? entry.section.sectionName : 'N/A',
+      subjectName: entry.subject ? entry.subject.subjectName : 'N/A',
       startTime: entry.startTime,
       endTime: entry.endTime
     }));
 
     res.status(200).json(formattedTimetable);
   } catch (error) {
-    console.error('Error fetching timetable:', error);
+    console.error('Error fetching timetable:', error); // Log full error
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 module.exports = router;
