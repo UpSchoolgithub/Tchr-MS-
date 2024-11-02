@@ -49,10 +49,10 @@ const MSchoolClassSection = () => {
     const fetchClassAndSectionDetails = async () => {
       try {
         const classResponse = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}`);
-        setClassName(classResponse.data.className);  // Assuming className is available
-  
+        setClassName(classResponse.data.className);  // Ensure this is the correct field
+        
         const sectionResponse = await axiosInstance.get(`/sections/${sectionId}`);
-        setSectionName(sectionResponse.data.sectionName);  // Assuming sectionName is available
+        setSectionName(sectionResponse.data.sectionName);  // Ensure this is the correct field
       } catch (error) {
         console.error('Error fetching class and section details:', error);
       }
@@ -60,6 +60,7 @@ const MSchoolClassSection = () => {
   
     fetchClassAndSectionDetails();
   }, [schoolId, classId, sectionId]);
+  
   
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
