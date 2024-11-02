@@ -221,16 +221,13 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
-// Fetch timetable for a specific teacher (accessible to both teachers and managers)
+// Fetch timetable for a specific teacher
 router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
   const { teacherId } = req.params;
 
   try {
     const [results] = await sequelize.query(
-      `SELECT id, day, period, startTime, endTime, schoolId, classId, sectionId, subjectId
-       FROM timetable_entries
-       WHERE teacherId = :teacherId
-       ORDER BY day ASC, period ASC`,
+      `SELECT * FROM timetable_entries WHERE teacherId = :teacherId ORDER BY day ASC, period ASC`,
       { replacements: { teacherId }, type: sequelize.QueryTypes.SELECT }
     );
 
@@ -240,11 +237,10 @@ router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, re
 
     res.status(200).json(results);
   } catch (error) {
-    console.error('Error fetching timetable with raw SQL:', error.stack);
+    console.error('Error fetching timetable:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
-
 
 
 module.exports = router;
