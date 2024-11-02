@@ -219,8 +219,21 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
-// Route accessible for managers
-router.get('/manager/:teacherId/timetable', authenticateManager, async (req, res) => {
+// Middleware to allow access for either teacher or manager
+const authenticateTeacherOrManager = (req, res, next) => {
+  authenticateTeacherToken(req, res, (teacherErr) => {
+    if (!teacherErr) return next();
+
+    authenticateManager(req, res, (managerErr) => {
+      if (!managerErr) return next();
+
+      res.status(403).json({ message: 'Access denied: not a teacher or manager' });
+    });
+  });
+};
+
+// Fetch timetable for a specific teacher (accessible to both teachers and managers)
+router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
   const { teacherId } = req.params;
 
   try {
@@ -242,9 +255,6 @@ router.get('/manager/:teacherId/timetable', authenticateManager, async (req, res
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
-
-
-
 
 
 
