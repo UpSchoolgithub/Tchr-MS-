@@ -220,6 +220,7 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
+// Fetch timetable for a specific teacher (accessible to both teachers and managers)
 router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
   const { teacherId } = req.params;
 
@@ -242,7 +243,6 @@ router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, re
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
-
 
 
 
