@@ -5,6 +5,8 @@ import './TeacherList.css';
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
+  const [timetable, setTimetable] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const navigate = useNavigate();
 
   const fetchTeachers = async () => {
@@ -25,8 +27,14 @@ const TeacherList = () => {
     }
   };
 
-  const handleViewTimetable = (teacherId) => {
-    navigate(`/schools/timetable/teacher/${teacherId}`);
+  const handleViewTimetable = async (teacherId, teacherName) => {
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
+      setTimetable(response.data);
+      setSelectedTeacher(teacherName);
+    } catch (error) {
+      console.error('Error fetching timetable:', error);
+    }
   };
 
   useEffect(() => {
@@ -43,6 +51,7 @@ const TeacherList = () => {
             <th>Name</th>
             <th>Schools</th>
             <th>Actions</th>
+            <th>Timetable</th>
           </tr>
         </thead>
         <tbody>
@@ -53,12 +62,47 @@ const TeacherList = () => {
               <td>
                 <button className="edit-button" onClick={() => navigate(`/teachers/edit/${teacher.id}`)}>Edit</button>
                 <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
-                <button className="view-button" onClick={() => handleViewTimetable(teacher.id)}>View Timetable</button>
+              </td>
+              <td>
+                <button className="view-button" onClick={() => handleViewTimetable(teacher.id, teacher.name)}>Timetable</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Display the timetable for the selected teacher */}
+      {selectedTeacher && timetable.length > 0 && (
+        <div className="teacher-timetable">
+          <h2>Timetable for {selectedTeacher}</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Period</th>
+                <th>Time</th>
+                <th>School</th>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Subject</th>
+              </tr>
+            </thead>
+            <tbody>
+              {timetable.map((entry) => (
+                <tr key={entry.id}>
+                  <td>{entry.day}</td>
+                  <td>{entry.period}</td>
+                  <td>{`${entry.startTime} - ${entry.endTime}`}</td>
+                  <td>{entry.schoolName}</td>
+                  <td>{entry.className}</td>
+                  <td>{entry.sectionName}</td>
+                  <td>{entry.subjectName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
