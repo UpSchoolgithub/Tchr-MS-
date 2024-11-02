@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
+const teacherController = require('../controllers/teacherController');
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -256,5 +257,7 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+router.get('/:teacherId/timetable', authenticateTeacherToken, teacherController.getTeacherTimetable);
 
 module.exports = router;
