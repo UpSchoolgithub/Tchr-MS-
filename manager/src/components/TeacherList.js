@@ -6,6 +6,7 @@ import jwt_decode from 'jwt-decode';
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
+  const [timetable, setTimetable] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -45,6 +46,30 @@ const TeacherList = () => {
     }
   };
 
+  const handleViewTimetable = async (teacherId, teacherName) => {
+    setLoading(true);
+    setError(null);
+    setSelectedTeacher(teacherName);
+
+    const token = localStorage.getItem('authToken');
+    const validation = validateToken(token);
+    if (!validation.valid) {
+      setError(validation.error);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
+      setTimetable(response.data);
+    } catch (error) {
+      console.error('Error fetching timetable:', error);
+      setError('Could not fetch the timetable. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchTeachers();
   }, []);
@@ -59,6 +84,7 @@ const TeacherList = () => {
             <th>Name</th>
             <th>Schools</th>
             <th>Actions</th>
+            <th>Timetable</th>
           </tr>
         </thead>
         <tbody>
@@ -70,12 +96,59 @@ const TeacherList = () => {
                 <button className="edit-button" onClick={() => navigate(`/teachers/edit/${teacher.id}`)}>Edit</button>
                 <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
               </td>
+              <td>
+                <button className="view-button" onClick={() => handleViewTimetable(teacher.id, teacher.name)}>Timetable</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Timetable and error sections removed as the "Timetable" button is no longer present */}
+      {selectedTeacher && (
+        <div className="teacher-timetable">
+          <h2>Timetable for {selectedTeacher}</h2>
+          
+          {loading ? (
+            <p>Loading timetable...</p>
+          ) : error ? (
+            <div>
+              <p className="error-message">{error}</p>
+              <button className="retry-button" onClick={() => handleViewTimetable(selectedTeacher.id, selectedTeacher.name)}>
+                Retry
+              </button>
+            </div>
+          ) : timetable.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Period</th>
+                  <th>Time</th>
+                  <th>School</th>
+                  <th>Class</th>
+                  <th>Section</th>
+                  <th>Subject</th>
+                </tr>
+              </thead>
+              <tbody>
+                {timetable.map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{entry.day}</td>
+                    <td>{entry.period}</td>
+                    <td>{`${entry.startTime} - ${entry.endTime}`}</td>
+                    <td>{entry.schoolName || "N/A"}</td>
+                    <td>{entry.className || "N/A"}</td>
+                    <td>{entry.sectionName || "N/A"}</td>
+                    <td>{entry.subjectName || "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No timetable entries found for this teacher.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
