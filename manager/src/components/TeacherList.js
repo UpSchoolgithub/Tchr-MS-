@@ -37,24 +37,16 @@ const TeacherList = () => {
   
     const token = localStorage.getItem('authToken');
     if (token) {
-      try {
-        const decodedToken = jwtDecode(token);  // Using jwtDecode alias
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (decodedToken.exp < currentTime) {
-          console.error("Token has expired");
-          setError('Session expired. Please log in again.');
-          setLoading(false);
-          return;
-        }
-        console.log("Using token:", token);
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        setError('Failed to decode token. Please try again.');
+      const decodedToken = jwt_decode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decodedToken.exp < currentTime) {
+        console.error("Token has expired");
+        setError('Session expired. Please log in again.');
         setLoading(false);
         return;
       }
     } else {
-      console.log("No token found");
+      console.error("No token found in localStorage");
       setError('No authorization token found. Please log in.');
       setLoading(false);
       return;

@@ -8,10 +8,10 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken'); // Ensure token is correctly stored
+  const token = localStorage.getItem('authToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log("Token sent with request:", token);  // Log token for verification
+    console.log("Token sent with request:", token);  // Log to verify token
   } else {
     console.error("No token found in localStorage");
   }

@@ -19,8 +19,8 @@ const authenticateTeacherOrManager = (req, res, next) => {
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    // Log the decoded token to see its contents
-    console.log("Decoded token payload:", decoded);
+    // Log the decoded token to inspect the payload and verify roles
+    console.log("Decoded token:", decoded);
 
     // Check for either teacher or manager role
     if (!decoded.isTeacher && !decoded.isManager) {
