@@ -1,20 +1,19 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://tms.up.school/api',  // Ensure this is the correct base URL for your API
+  baseURL: 'https://tms.up.school/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor to add token to request headers
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');  // Ensure this matches your token key
+  const token = localStorage.getItem('authToken'); // Ensure token is correctly stored
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log("Token sent with request:", token);  // Add this line to log the token
+    console.log("Token sent with request:", token);  // Log token for verification
   } else {
-    console.log("No token found");
+    console.error("No token found in localStorage");
   }
   return config;
 });
