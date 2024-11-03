@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import './TeacherList.css';
-import jwt_decode from 'jwt-decode'; // Corrected import statement
+import jwt_decode from 'jwt-decode';
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
@@ -12,27 +12,21 @@ const TeacherList = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Function to validate JWT token
   const validateToken = (token) => {
-    if (!token) {
-      console.error("No authorization token found in localStorage");
-      return { valid: false, error: 'No authorization token found. Please log in.' };
-    }
-  
+    if (!token) return { valid: false, error: 'No authorization token found. Please log in.' };
+
     try {
       const decodedToken = jwt_decode(token);
       const currentTime = Math.floor(Date.now() / 1000);
       if (decodedToken.exp < currentTime) {
-        console.error("Token has expired");
         return { valid: false, error: 'Session expired. Please log in again.' };
       }
       return { valid: true, decodedToken };
     } catch (error) {
-      console.error("Token decoding failed:", error);
+      console.error("Error decoding token:", error);
       return { valid: false, error: 'Failed to decode token. Please try again.' };
     }
   };
-  
 
   const fetchTeachers = async () => {
     try {
