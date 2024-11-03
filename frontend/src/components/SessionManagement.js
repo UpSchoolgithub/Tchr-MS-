@@ -69,7 +69,7 @@ const SessionManagement = () => {
  
     setIsLoading(true);
     try {
-      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       console.log('Upload URL:', uploadUrl); // Ensure sectionId is in the URL
       const response = await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
