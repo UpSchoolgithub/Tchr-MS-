@@ -25,8 +25,6 @@ Session.init({
       model: 'sections',
       key: 'id',
     },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
   },
   subjectId: {
     type: DataTypes.INTEGER,
@@ -35,12 +33,6 @@ Session.init({
       model: 'subjects',
       key: 'id',
     },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  },
-  chapterName: {  // Adding the chapterName field here
-    type: DataTypes.STRING,
-    allowNull: true,  // Set to true if chapterName can be null
   },
   numberOfSessions: {
     type: DataTypes.INTEGER,
@@ -56,11 +48,5 @@ Session.init({
   tableName: 'sessions',
   timestamps: true,
 });
-
-// Define associations
-Session.associate = (models) => {
-  Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-};
 
 module.exports = Session;
