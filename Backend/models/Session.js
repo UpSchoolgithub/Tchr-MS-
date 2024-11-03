@@ -38,6 +38,10 @@ Session.init({
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   },
+  chapterName: {  // Adding the chapterName field here
+    type: DataTypes.STRING,
+    allowNull: true,  // Set to true if chapterName can be null
+  },
   numberOfSessions: {
     type: DataTypes.INTEGER,
     allowNull: false,
