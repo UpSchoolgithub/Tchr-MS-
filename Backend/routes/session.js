@@ -27,7 +27,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber']
+      attributes: ['id', 'sectionId', 'subjectId', 'chapterName', 'numberOfSessions', 'priorityNumber'] // Added 'chapterName' for completeness
     });
 
     res.json(sessions);
@@ -81,7 +81,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     console.log("Parsed JSON Data:", jsonData);
 
     const sessions = jsonData
-      .filter(row => row.ChapterName)
+      .filter(row => row.ChapterName && row.NumberOfSessions && row.PriorityNumber) // Validate rows
       .map(row => {
         const { ChapterName, NumberOfSessions, PriorityNumber } = row;
         console.log("Session Data Row:", { ChapterName, NumberOfSessions, PriorityNumber });

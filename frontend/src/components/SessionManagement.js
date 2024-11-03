@@ -13,19 +13,15 @@ const SessionManagement = () => {
 
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
-    setIsLoading(true);
-    setError('');
     try {
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions. Please try again later.');
-    } finally {
-      setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
