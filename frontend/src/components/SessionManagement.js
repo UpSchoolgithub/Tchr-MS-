@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
-  const { schoolId, classId, sectionId, subjectId } = useParams();
+  const { schoolId, classId, sectionId, subjectId } = useParams(); // Ensure sectionId is retrieved here
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
@@ -11,6 +11,7 @@ const SessionManagement = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     setIsLoading(true);
     setError('');

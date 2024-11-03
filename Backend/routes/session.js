@@ -20,23 +20,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Function to validate essential parameters
-const validateParams = (params) => {
-  const { schoolId, classId, sectionName, subjectId } = params;
-  if (!schoolId || !classId || !sectionName || !subjectId) {
-    throw new Error('Required parameters are missing');
-  }
-};
-
 // Fetch sessions for a specific subject within a section and class
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   try {
-    // Extract only relevant parameters for the sessions table
     const { sectionId, subjectId } = req.params;
 
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber'] // Adjust attributes to match actual columns
+      attributes: ['id', 'sectionId', 'subjectId', 'numberOfSessions', 'priorityNumber']
     });
 
     res.json(sessions);
@@ -46,14 +37,9 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
   }
 });
 
-
-
-
-
 // Create a new session
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   try {
-    validateParams(req.params);
     const { schoolId, classId, sectionId, subjectId } = req.params;
     const { chapterName, numberOfSessions, priorityNumber } = req.body;
 
@@ -72,15 +58,16 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   }
 });
 
+// Upload sessions in bulk from an Excel file
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
     const { schoolId, classId, sectionId, subjectId } = req.params;
-    
+
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
     }
 
-    const section = await Section.findByPk(sectionId); // Lookup by sectionId instead of sectionName
+    const section = await Section.findByPk(sectionId); // Lookup by sectionId
 
     if (!section) {
       return res.status(404).json({ error: `Section with ID '${sectionId}' not found` });
@@ -102,7 +89,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
         return {
           schoolId,
           classId,
-          sectionId: section.id,
+          sectionId,
           subjectId,
           chapterName: ChapterName,
           numberOfSessions: NumberOfSessions,
@@ -123,10 +110,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
-
-
-
-
 
 // Update a session by ID
 router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
