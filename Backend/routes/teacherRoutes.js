@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
+const teacherController = require('../controllers/teacherController');
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -147,39 +148,39 @@ router.delete('/:id', authenticateManager, async (req, res) => {
 
 // 7. Fetch timetable for a specific teacher (public endpoint, requires authentication)
 // Adjusted endpoint in teacherRoutes.js
-//router.get('/:teacherId/timetable', async (req, res) => {
- // const { teacherId } = req.params;
+router.get('/:teacherId/timetable', async (req, res) => {
+  const { teacherId } = req.params;
 
- // try {
- //   const timetable = await TimetableEntry.findAll({
-  //    where: { teacherId },
-  //    include: [
-  //      { model: School, attributes: ['name'], as: 'school' },
-   //     { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
-  //      { model: Section, attributes: ['sectionName'], as: 'section' },
-  //      { model: Subject, attributes: ['subjectName'], as: 'subject' }
-   //   ],
-  //    order: [['day', 'ASC'], ['period', 'ASC']]
-  //  });
+  try {
+    const timetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: School, attributes: ['name'], as: 'school' },
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' }
+      ],
+      order: [['day', 'ASC'], ['period', 'ASC']]
+    });
 
-   // const formattedTimetable = timetable.map(entry => ({
-  //    id: entry.id,
-   //   day: entry.day,
-   //   period: entry.period,
-  //    schoolName: entry.school ? entry.school.name : 'N/A',
-   //   className: entry.classInfo ? entry.classInfo.className : 'N/A',
-   //   sectionName: entry.section ? entry.section.sectionName : 'N/A',
-   //   subjectName: entry.subject ? entry.subject.subjectName : 'N/A',
-   //   startTime: entry.startTime,
-   //   endTime: entry.endTime
-   // }));
+    const formattedTimetable = timetable.map(entry => ({
+      id: entry.id,
+      day: entry.day,
+      period: entry.period,
+      schoolName: entry.school ? entry.school.name : 'N/A',
+      className: entry.classInfo ? entry.classInfo.className : 'N/A',
+      sectionName: entry.section ? entry.section.sectionName : 'N/A',
+      subjectName: entry.subject ? entry.subject.subjectName : 'N/A',
+      startTime: entry.startTime,
+      endTime: entry.endTime
+    }));
 
- //   res.status(200).json(formattedTimetable);
- // } catch (error) {
- //   console.error('Error fetching teacher timetable:', error);
- //   res.status(500).json({ error: 'Internal server error' });
- // }
-//});
+    res.status(200).json(formattedTimetable);
+  } catch (error) {
+    console.error('Error fetching teacher timetable:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 
@@ -223,28 +224,40 @@ router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) =
   const { teacherId } = req.params;
 
   try {
-    const [results] = await sequelize.query(
-      `SELECT id, day, period, startTime, endTime, schoolId, classId, sectionId, subjectId
-       FROM timetable_entries
-       WHERE teacherId = :teacherId
-       ORDER BY day ASC, period ASC`,
-      { replacements: { teacherId }, type: sequelize.QueryTypes.SELECT }
-    );
+    const timetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' },
+        { model: School, attributes: ['name'], as: 'school' }
+      ],
+      order: [['day', 'ASC'], ['period', 'ASC']]
+    });
 
-    if (!results.length) {
+    if (!timetable) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
-    res.status(200).json(results);
+    const formattedTimetable = timetable.map(entry => ({
+      id: entry.id,
+      day: entry.day,
+      period: entry.period,
+      schoolName: entry.school?.name || 'N/A',
+      className: entry.classInfo?.className || 'N/A',
+      sectionName: entry.section?.sectionName || 'N/A',
+      subjectName: entry.subject?.subjectName || 'N/A',
+      startTime: entry.startTime,
+      endTime: entry.endTime
+    }));
+
+    res.status(200).json(formattedTimetable);
   } catch (error) {
-    console.error('Error fetching timetable with raw SQL:', error.stack);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error fetching timetable:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-
-
-
+router.get('/:teacherId/timetable', authenticateTeacherToken, teacherController.getTeacherTimetable);
 
 module.exports = router;
