@@ -294,19 +294,7 @@ const ClassInfo = () => {
                         <button onClick={() => handleEditClick(subject.id, subject.academicStartDate, subject.academicEndDate, subject.revisionStartDate, subject.revisionEndDate)}>Edit</button>
                       )}
                       <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>Delete</button>
-                      <button 
-                        onClick={() => {
-                          const sectionId = sections.find(section => section.sectionName === sec)?.id; // Get sectionId based on sectionName
-                          if (sectionId) {
-                            navigate(`/schools/${schoolId}/classes/${info.id}/sections/${sectionId}/subjects/${subject.id}/sessions`);
-                          } else {
-                            console.error("Section ID not found for section name:", sec);
-                          }
-                        }}
-                      >
-                        Manage Sessions
-                      </button>
-
+                      <button onClick={() => navigate(`/schools/${schoolId}/classes/${info.id}/sections/${sec}/subjects/${subject.id}/sessions`)}>Manage Sessions</button>
                     </td>
                   </tr>
                 ))
