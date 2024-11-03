@@ -15,18 +15,16 @@ const SessionManagement = () => {
     setIsLoading(true);
     setError('');
     try {
-      // Assuming you have already mapped sectionName to sectionId
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
-      setError('Failed to fetch sessions.');
+      setError('Failed to fetch sessions. Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
   
-
   useEffect(() => {
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
@@ -47,7 +45,7 @@ const SessionManagement = () => {
       fetchSessions();
     } catch (error) {
       console.error('Error updating session:', error);
-      setError('Failed to update session.');
+      setError('Failed to update session. Please check your input and try again.');
     }
   };
 
@@ -57,7 +55,7 @@ const SessionManagement = () => {
       fetchSessions();
     } catch (error) {
       console.error('Error deleting session:', error);
-      setError('Failed to delete session.');
+      setError('Failed to delete session. Please try again later.');
     }
   };
 
@@ -80,7 +78,7 @@ const SessionManagement = () => {
       fetchSessions();
     } catch (error) {
       console.error('Error uploading file:', error);
-      setError(error.response?.data?.error || 'Failed to upload file.');
+      setError(error.response?.data?.error || 'Failed to upload file. Please try again.');
     } finally {
       setIsLoading(false);
     }

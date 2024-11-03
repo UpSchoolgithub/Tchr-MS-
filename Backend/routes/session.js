@@ -72,20 +72,18 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   }
 });
 
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionName/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
   try {
-    const { schoolId, classId, sectionName, subjectId } = req.params;
+    const { schoolId, classId, sectionId, subjectId } = req.params;
     
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
     }
 
-    const section = await Section.findOne({
-      where: { sectionName: sectionName.toUpperCase(), classInfoId: classId, schoolId }
-    });
+    const section = await Section.findByPk(sectionId); // Lookup by sectionId instead of sectionName
 
     if (!section) {
-      return res.status(404).json({ error: `Section '${sectionName}' not found` });
+      return res.status(404).json({ error: `Section with ID '${sectionId}' not found` });
     }
 
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
