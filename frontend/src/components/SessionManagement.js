@@ -63,19 +63,19 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     setIsLoading(true);
     try {
-      // Use sectionId in the URL
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      console.log('Upload URL:', uploadUrl); // Debugging line
+      console.log('Upload URL:', uploadUrl); // Ensure sectionId is in the URL
       const response = await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       console.log('Upload response:', response.data);
+      fetchSessions();
     } catch (error) {
       console.error('Error uploading file:', error);
       setError(error.response?.data?.error || 'Failed to upload file. Please try again.');
@@ -83,6 +83,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div>
