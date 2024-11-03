@@ -62,6 +62,7 @@ const MSchoolClassSection = () => {
   }, [schoolId, classId, sectionId]);
   
   
+  
   useEffect(() => {
     const storedSubjects = JSON.parse(localStorage.getItem('selectedSubjects'));
     if (storedSubjects) {
@@ -124,6 +125,7 @@ useEffect(() => {
       return [];
     }
   };
+  
 
 
   const fetchTimetableSettings = async (schoolId) => {
