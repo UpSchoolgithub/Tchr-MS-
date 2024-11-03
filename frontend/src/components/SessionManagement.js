@@ -69,10 +69,12 @@ const SessionManagement = () => {
 
     setIsLoading(true);
     try {
+      // Use sectionId in the URL
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      const response = await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const response = await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       console.log('Upload response:', response.data);
-      fetchSessions();
     } catch (error) {
       console.error('Error uploading file:', error);
       setError(error.response?.data?.error || 'Failed to upload file. Please try again.');
@@ -85,8 +87,6 @@ const SessionManagement = () => {
     <div>
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
-      {isLoading && <p>Loading...</p>}
-
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
         <button type="submit">Upload</button>
