@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import './TeacherList.css';
+import jwt_decode from 'jwt-decode';
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
@@ -33,10 +34,25 @@ const TeacherList = () => {
     setLoading(true);
     setError(null);
     setSelectedTeacher(teacherName);
-
-    // Log token for debugging
-    const token = localStorage.getItem('authToken');  // Make sure this key matches the key you set
-    console.log("Using token:", token); 
+  
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // Decode token to check its expiration
+      const decodedToken = jwt_decode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decodedToken.exp < currentTime) {
+        console.error("Token has expired");
+        setError('Session expired. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      console.log("Using token:", token);
+    } else {
+      console.log("No token found");
+      setError('No authorization token found. Please log in.');
+      setLoading(false);
+      return;
+    }
   
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
