@@ -37,11 +37,18 @@ const TeacherList = () => {
   
     const token = localStorage.getItem('authToken');
     if (token) {
-      const decodedToken = jwt_decode(token);
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decodedToken.exp < currentTime) {
-        console.error("Token has expired");
-        setError('Session expired. Please log in again.');
+      try {
+        const decodedToken = jwt_decode(token);  // Correct function call
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (decodedToken.exp < currentTime) {
+          console.error("Token has expired");
+          setError('Session expired. Please log in again.');
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        setError('Failed to decode token. Please try again.');
         setLoading(false);
         return;
       }
