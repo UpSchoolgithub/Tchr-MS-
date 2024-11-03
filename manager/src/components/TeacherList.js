@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import './TeacherList.css';
-import jwt_decode as jwtDecode from 'jwt-decode';
+import jwt_decode from 'jwt-decode'; // Corrected import statement
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
@@ -17,7 +17,7 @@ const TeacherList = () => {
     if (!token) return { valid: false, error: 'No authorization token found. Please log in.' };
 
     try {
-      const decodedToken = jwtDecode(token);
+      const decodedToken = jwt_decode(token); // Use jwt_decode directly
       const currentTime = Math.floor(Date.now() / 1000);
       if (decodedToken.exp < currentTime) {
         return { valid: false, error: 'Session expired. Please log in again.' };
