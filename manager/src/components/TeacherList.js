@@ -14,19 +14,25 @@ const TeacherList = () => {
 
   // Function to validate JWT token
   const validateToken = (token) => {
-    if (!token) return { valid: false, error: 'No authorization token found. Please log in.' };
-
+    if (!token) {
+      console.error("No authorization token found in localStorage");
+      return { valid: false, error: 'No authorization token found. Please log in.' };
+    }
+  
     try {
-      const decodedToken = jwt_decode(token); // Use jwt_decode directly
+      const decodedToken = jwt_decode(token);
       const currentTime = Math.floor(Date.now() / 1000);
       if (decodedToken.exp < currentTime) {
+        console.error("Token has expired");
         return { valid: false, error: 'Session expired. Please log in again.' };
       }
       return { valid: true, decodedToken };
     } catch (error) {
+      console.error("Token decoding failed:", error);
       return { valid: false, error: 'Failed to decode token. Please try again.' };
     }
   };
+  
 
   const fetchTeachers = async () => {
     try {
