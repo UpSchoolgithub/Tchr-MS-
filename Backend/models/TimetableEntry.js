@@ -4,14 +4,15 @@ const sequelize = require('../config/db'); // Adjust the path if necessary
 
 class TimetableEntry extends Model {
   static associate(models) {
-    this.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.belongsTo(models.ClassInfo, { foreignKey: 'classId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Updated sectionId
-    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Teacher, { foreignKey: 'teacherId', as: 'teacher', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Subject, { foreignKey: 'subjectId', as: 'subject', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.School, { foreignKey: 'schoolId', as: 'school', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.ClassInfo, { foreignKey: 'classId', as: 'classInfo', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Section, { foreignKey: 'sectionId', as: 'section', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId', as: 'teacherTimetables', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   }
 }
+
 
 TimetableEntry.init({
   id: {
