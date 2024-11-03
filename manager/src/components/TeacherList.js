@@ -37,7 +37,6 @@ const TeacherList = () => {
   
     const token = localStorage.getItem('authToken');
     if (token) {
-      // Decode token to check its expiration
       const decodedToken = jwt_decode(token);
       const currentTime = Math.floor(Date.now() / 1000);
       if (decodedToken.exp < currentTime) {
@@ -64,6 +63,7 @@ const TeacherList = () => {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchTeachers();
