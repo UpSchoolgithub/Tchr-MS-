@@ -14,13 +14,16 @@ const SessionManagement = () => {
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     try {
-      const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
+      const fetchUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
+      const response = await axios.get(fetchUrl);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions. Please try again later.');
     }
   };
+  
+  
   
 
   useEffect(() => {
