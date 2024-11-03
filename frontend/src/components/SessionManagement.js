@@ -71,6 +71,7 @@ const SessionManagement = () => {
     try {
       // Use sectionId in the URL
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      console.log('Upload URL:', uploadUrl); // Debugging line
       const response = await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });

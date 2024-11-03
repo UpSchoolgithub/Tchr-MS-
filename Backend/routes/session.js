@@ -81,21 +81,23 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     console.log("Parsed JSON Data:", jsonData);
 
     const sessions = jsonData
-      .filter(row => row.ChapterName && row.NumberOfSessions && row.PriorityNumber) // Validate rows
-      .map(row => {
-        const { ChapterName, NumberOfSessions, PriorityNumber } = row;
-        console.log("Session Data Row:", { ChapterName, NumberOfSessions, PriorityNumber });
+  .filter(row => {
+    if (!row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
+      console.warn("Skipping row due to missing fields:", row);
+      return false;
+    }
+    return true;
+  })
+  .map(row => ({
+    schoolId,
+    classId,
+    sectionId,
+    subjectId,
+    chapterName: row.ChapterName,
+    numberOfSessions: row.NumberOfSessions,
+    priorityNumber: row.PriorityNumber,
+  }));
 
-        return {
-          schoolId,
-          classId,
-          sectionId,
-          subjectId,
-          chapterName: ChapterName,
-          numberOfSessions: NumberOfSessions,
-          priorityNumber: PriorityNumber,
-        };
-      });
 
     console.log("Sessions Ready for Bulk Insert:", sessions);
 
