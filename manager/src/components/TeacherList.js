@@ -2,15 +2,31 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import './TeacherList.css';
-import jwt_decode from 'jwt-decode';
+import jwt_decode as jwtDecode from 'jwt-decode';
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [loading, setLoading] = useState(false); // Loading state for fetching timetable
-  const [error, setError] = useState(null); // Error state for handling fetch errors
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Function to validate JWT token
+  const validateToken = (token) => {
+    if (!token) return { valid: false, error: 'No authorization token found. Please log in.' };
+
+    try {
+      const decodedToken = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decodedToken.exp < currentTime) {
+        return { valid: false, error: 'Session expired. Please log in again.' };
+      }
+      return { valid: true, decodedToken };
+    } catch (error) {
+      return { valid: false, error: 'Failed to decode token. Please try again.' };
+    }
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -34,31 +50,15 @@ const TeacherList = () => {
     setLoading(true);
     setError(null);
     setSelectedTeacher(teacherName);
-  
+
     const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        const decodedToken = jwt_decode(token);  // Correct function call without `.default`
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (decodedToken.exp < currentTime) {
-          console.error("Token has expired");
-          setError('Session expired. Please log in again.');
-          setLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        setError('Failed to decode token. Please try again.');
-        setLoading(false);
-        return;
-      }
-    } else {
-      console.error("No token found in localStorage");
-      setError('No authorization token found. Please log in.');
+    const validation = validateToken(token);
+    if (!validation.valid) {
+      setError(validation.error);
       setLoading(false);
       return;
     }
-  
+
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/timetable`);
       setTimetable(response.data);
@@ -69,9 +69,6 @@ const TeacherList = () => {
       setLoading(false);
     }
   };
-  
-  
-  
 
   useEffect(() => {
     fetchTeachers();
@@ -107,7 +104,6 @@ const TeacherList = () => {
         </tbody>
       </table>
 
-      {/* Display the timetable or error/loading messages for the selected teacher */}
       {selectedTeacher && (
         <div className="teacher-timetable">
           <h2>Timetable for {selectedTeacher}</h2>
@@ -115,7 +111,12 @@ const TeacherList = () => {
           {loading ? (
             <p>Loading timetable...</p>
           ) : error ? (
-            <p className="error-message">{error}</p>
+            <div>
+              <p className="error-message">{error}</p>
+              <button className="retry-button" onClick={() => handleViewTimetable(selectedTeacher.id, selectedTeacher.name)}>
+                Retry
+              </button>
+            </div>
           ) : timetable.length > 0 ? (
             <table>
               <thead>
