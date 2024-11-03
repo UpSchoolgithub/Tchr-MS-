@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import './TeacherList.css';
-import { jwtDecode } from 'jwt-decode';
+const jwt = require('jsonwebtoken');
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
