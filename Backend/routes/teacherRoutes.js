@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-//const { sequelize } = require('../models'); // Ensure you have this line to import sequelize properly
 const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
-const authenticateTeacherOrManager = require('../middleware/authenticateTeacherOrManager'); // Import the new middleware
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -221,25 +219,32 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
-// Fetch timetable for a specific teacher
-router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
+router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    const results = await TimetableEntry.findAll({
-      where: { teacherId: parseInt(teacherId) }, // Ensure teacherId is treated as an integer
-      order: [['day', 'ASC'], ['period', 'ASC']]
-    });
+    const [results] = await sequelize.query(
+      `SELECT id, day, period, startTime, endTime, schoolId, classId, sectionId, subjectId
+       FROM timetable_entries
+       WHERE teacherId = :teacherId
+       ORDER BY day ASC, period ASC`,
+      { replacements: { teacherId }, type: sequelize.QueryTypes.SELECT }
+    );
 
-    if (results.length === 0) {
+    if (!results.length) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
     res.status(200).json(results);
   } catch (error) {
-    console.error('Error fetching timetable:', error);
+    console.error('Error fetching timetable with raw SQL:', error.stack);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+
+
+
+
+
 
 module.exports = router;
