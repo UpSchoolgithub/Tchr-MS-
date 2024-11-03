@@ -38,7 +38,7 @@ const TeacherList = () => {
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
-        const decodedToken = jwt_decode(token);  // Correct function call
+        const decodedToken = jwt_decode(token);  // Correct function call without `.default`
         const currentTime = Math.floor(Date.now() / 1000);
         if (decodedToken.exp < currentTime) {
           console.error("Token has expired");
@@ -69,6 +69,7 @@ const TeacherList = () => {
       setLoading(false);
     }
   };
+  
   
   
 
