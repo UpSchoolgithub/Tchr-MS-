@@ -336,7 +336,6 @@ useEffect(() => {
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-      console.log("Parsed Reserve Day Data:", reserveDay); // Log reserve day data
     } catch (e) {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
@@ -344,7 +343,6 @@ useEffect(() => {
   
     // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
-    console.log("Last Period End:", lastPeriodEnd); // Log last period end time
   
     return (
       <table className="timetable-table">
@@ -373,7 +371,7 @@ useEffect(() => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
   
-                    // Check if reserved time is within the current period
+                    // Check if reserved time overlaps with the current period
                     const isReserved = reservedTime && reservedTime.open &&
                       startEndTime.start <= reservedTime.end &&
                       startEndTime.end >= reservedTime.start;
@@ -381,7 +379,9 @@ useEffect(() => {
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
                         {isReserved ? (
-                          <span className="reserved">Reserved Time</span>
+                          <span className="reserved">
+                            Reserved Time ({reservedTime.start} - {reservedTime.end})
+                          </span>
                         ) : periodAssignment ? (
                           <>
                             <div>{periodAssignment.teacher}</div>
@@ -421,29 +421,32 @@ useEffect(() => {
           })}
   
           {/* Explicit Row for Reserved Times After Last Period */}
-          <tr>
-            <td>{`${lastPeriodEnd} - Reserved Time`}</td>
-            {days.map(day => {
-              const reservedTime = reserveDay[day];
-              const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
+          {Object.keys(reserveDay).some(day => reserveDay[day].start >= lastPeriodEnd) && (
+            <tr>
+              <td>{`${lastPeriodEnd} - Reserved Time`}</td>
+              {days.map(day => {
+                const reservedTime = reserveDay[day];
+                const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
   
-              return (
-                <td key={day}>
-                  {isAfterSchoolHours ? (
-                    <div className="reserved">
-                      Reserved Time ({reservedTime.start} - {reservedTime.end})
-                    </div>
-                  ) : (
-                    <span>-</span> // Placeholder if no reserved time
-                  )}
-                </td>
-              );
-            })}
-          </tr>
+                return (
+                  <td key={day}>
+                    {isAfterSchoolHours ? (
+                      <div className="reserved">
+                        Reserved Time ({reservedTime.start} - {reservedTime.end})
+                      </div>
+                    ) : (
+                      <span>-</span> // Placeholder if no reserved time
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          )}
         </tbody>
       </table>
     );
   };
+  
   
   
   
