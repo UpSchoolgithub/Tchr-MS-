@@ -302,19 +302,20 @@ const ClassInfo = () => {
                       )}
                       <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>Delete</button>
                       <button 
-  onClick={() => {
-    const selectedClass = classInfos.find(cls => cls.className === className);
-    const selectedSection = selectedClass?.Sections?.find(sec => sec.sectionName === sec);
+                        onClick={() => {
+                          const selectedClass = classInfos.find(cls => cls.className === className);
+                          const sectionData = selectedClass?.sections?.[sec];
 
-    if (selectedSection) {
-      navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${selectedSection.id}/subjects/${subject.id}/sessions`);
-    } else {
-      console.error("Section ID not found for section name:", sec);
-    }
-  }}
->
-  Manage Sessions
-</button>
+                          if (sectionData && sectionData.id) {
+                            navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`);
+                          } else {
+                            console.error("Section ID not found for section name:", sec);
+                          }
+                        }}
+                      >
+                        Manage Sessions
+                      </button>
+
 
                     </td>
                   </tr>
