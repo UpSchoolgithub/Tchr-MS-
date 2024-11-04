@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
-  const { schoolId, classId, sectionId, subjectId } = useParams(); // Ensure sectionId is retrieved here
+  const { schoolId, classId, sectionId, subjectId } = useParams();
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
@@ -13,24 +13,21 @@ const SessionManagement = () => {
 
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
-    const fetchSessions = async () => {
-      setIsLoading(true);
-      setError('');
-      try {
-        const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
-        console.log("Fetching sessions from URL:", url);
-        const response = await axios.get(url);
-        console.log("Sessions response:", response.data); // Check if 'chapterName' is included
-        setSessions(response.data);
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-        setError('Failed to fetch sessions. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-  
+    setIsLoading(true);
+    setError('');
+    try {
+      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
+      console.log("Fetching sessions from URL:", url);
+      const response = await axios.get(url);
+      console.log("Sessions response:", response.data); // Check if 'chapterName' is included
+      setSessions(response.data);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      setError('Failed to fetch sessions. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   useEffect(() => {
     fetchSessions();
@@ -98,7 +95,6 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <div>
@@ -121,31 +117,31 @@ const SessionManagement = () => {
           </tr>
         </thead>
         <tbody>
-  {sessions.map(session => (
-    <tr key={session.id}>
-      <td>{session.chapterName || 'N/A'}</td> {/* Ensure chapterName is displayed here */}
-      <td>
-        {editingSessionId === session.id ? (
-          <input
-            type="number"
-            value={editingNumberOfSessions}
-            onChange={(e) => setEditingNumberOfSessions(e.target.value)}
-          />
-        ) : (
-          session.numberOfSessions
-        )}
-      </td>
-      <td>
-        {editingSessionId === session.id ? (
-          <input
-            type="number"
-            value={editingPriorityNumber}
-            onChange={(e) => setEditingPriorityNumber(e.target.value)}
-          />
-        ) : (
-          session.priorityNumber
-        )}
-      </td>
+          {sessions.map(session => (
+            <tr key={session.id}>
+              <td>{session.chapterName || 'N/A'}</td> {/* Ensure chapterName is displayed here */}
+              <td>
+                {editingSessionId === session.id ? (
+                  <input
+                    type="number"
+                    value={editingNumberOfSessions}
+                    onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                  />
+                ) : (
+                  session.numberOfSessions
+                )}
+              </td>
+              <td>
+                {editingSessionId === session.id ? (
+                  <input
+                    type="number"
+                    value={editingPriorityNumber}
+                    onChange={(e) => setEditingPriorityNumber(e.target.value)}
+                  />
+                ) : (
+                  session.priorityNumber
+                )}
+              </td>
               <td>
                 {editingSessionId === session.id ? (
                   <>
