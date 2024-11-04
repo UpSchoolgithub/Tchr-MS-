@@ -332,6 +332,9 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
+    // Parse the reserveDay JSON string to get specific reserved timings per day
+    const reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -357,11 +360,11 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                    
-                    // Check if this period overlaps with reserved time for the specific day
-                    const isReserved = timetableSettings.reserveDay?.[day]?.open &&
-                      startEndTime.start >= timetableSettings.reserveDay[day].start &&
-                      startEndTime.end <= timetableSettings.reserveDay[day].end;
+  
+                    // Check if this period is within the reserved time for the specific day
+                    const isReserved = reserveDay[day]?.open &&
+                      startEndTime.start >= reserveDay[day].start &&
+                      startEndTime.end <= reserveDay[day].end;
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
