@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sequelize } = require('../models'); // Ensure you have this line to import sequelize properly
+//const { sequelize } = require('../models'); // Ensure you have this line to import sequelize properly
 const { Teacher, TimetableEntry, ClassInfo, Section, Subject, School } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -221,30 +221,31 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
   }
 });
 
-// Fetch timetable for a specific teacher (accessible to both teachers and managers)
+// Fetch timetable for a specific teacher
 router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    const [results] = await sequelize.query(
-      `SELECT id, day, period, startTime, endTime, schoolId, classId, sectionId, subjectId
-       FROM timetable_entries
-       WHERE teacherId = :teacherId
-       ORDER BY day ASC, period ASC`,
-      { replacements: { teacherId }, type: sequelize.QueryTypes.SELECT }
-    );
+    const timetable = await TimetableEntry.findAll({
+      where: { teacherId },
+      include: [
+        { model: School, attributes: ['name'], as: 'school' },
+        { model: ClassInfo, attributes: ['className'], as: 'classInfo' },
+        { model: Section, attributes: ['sectionName'], as: 'section' },
+        { model: Subject, attributes: ['subjectName'], as: 'subject' }
+      ],
+      order: [['day', 'ASC'], ['period', 'ASC']]
+    });
 
-    if (!results.length) {
+    if (!timetable.length) {
       return res.status(404).json({ message: 'No timetable entries found for this teacher.' });
     }
 
-    res.status(200).json(results);
+    res.status(200).json(timetable);
   } catch (error) {
-    console.error('Error fetching timetable with raw SQL:', error.stack);
+    console.error('Error fetching timetable:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
-
-
 
 module.exports = router;
