@@ -341,6 +341,9 @@ useEffect(() => {
       reserveDay = {};
     }
   
+    // Determine the end time of the last period to check for after-school reserved times
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -368,7 +371,7 @@ useEffect(() => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
   
-                    // Check if the reserved time overlaps with this period
+                    // Check if reserved time is within the school hours
                     const isReserved = reservedTime && reservedTime.open &&
                       startEndTime.start <= reservedTime.end &&
                       startEndTime.end >= reservedTime.start;
@@ -413,6 +416,20 @@ useEffect(() => {
                 )}
               </React.Fragment>
             );
+          })}
+  
+          {/* Add Reserved Time Row for Times Outside of School Hours */}
+          {days.map(day => {
+            const reservedTime = reserveDay[day];
+            if (reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd) {
+              return (
+                <tr key={`reserved-time-${day}`}>
+                  <td>{`${reservedTime.start} - ${reservedTime.end}`}</td>
+                  <td colSpan={days.length}>RESERVED TIME ({day})</td>
+                </tr>
+              );
+            }
+            return null;
           })}
         </tbody>
       </table>
