@@ -342,7 +342,7 @@ useEffect(() => {
     }
   
     // Determine the end time of the last period
-    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
   
     return (
       <table className="timetable-table">
