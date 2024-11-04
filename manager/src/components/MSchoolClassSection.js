@@ -357,7 +357,10 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                    const isReserved = timetableSettings.reservedTimes?.[day]?.includes(period);
+                    const isReserved = timetableSettings.reserveDay[day] && 
+                                        timetableSettings.reserveDay[day].some(
+                                          timeSlot => startEndTime.start >= timeSlot.start && startEndTime.end <= timeSlot.end
+                                        );
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
@@ -411,6 +414,7 @@ useEffect(() => {
       </table>
     );
   };
+  
   
   
             
