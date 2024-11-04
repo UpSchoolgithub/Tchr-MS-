@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 
@@ -13,15 +13,19 @@ const SessionManagement = () => {
 
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
+    setIsLoading(true);
+    setError('');
     try {
       const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
@@ -63,17 +67,14 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     setIsLoading(true);
     try {
       const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      console.log('Upload URL:', uploadUrl); // Ensure sectionId is in the URL
-      const response = await axios.post(uploadUrl, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       console.log('Upload response:', response.data);
       fetchSessions();
     } catch (error) {
@@ -88,6 +89,8 @@ const SessionManagement = () => {
     <div>
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
+      {isLoading && <p>Loading...</p>}
+
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
         <button type="submit">Upload</button>
