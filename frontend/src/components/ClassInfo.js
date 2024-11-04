@@ -29,12 +29,14 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log("Class Infos with Sections:", response.data);  // Debugging line
       setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
       setError('Error fetching class data');
     }
   };
+  
 
   const fetchSections = async (classId) => {
     try {
@@ -300,17 +302,20 @@ const ClassInfo = () => {
                       )}
                       <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>Delete</button>
                       <button 
-                        onClick={() => {
-                          const selectedSection = sections.find(sec => sec.sectionName === sec);
-                          if (selectedSection) {
-                            navigate(`/schools/${schoolId}/classes/${info.id}/sections/${selectedSection.id}/subjects/${subject.id}/sessions`);
-                          } else {
-                            console.error("Section ID not found for section name:", sec);
-                          }
-                        }}
-                      >
-                        Manage Sessions
-                      </button>
+  onClick={() => {
+    const selectedClass = classInfos.find(cls => cls.className === className);
+    const selectedSection = selectedClass?.Sections?.find(sec => sec.sectionName === sec);
+
+    if (selectedSection) {
+      navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${selectedSection.id}/subjects/${subject.id}/sessions`);
+    } else {
+      console.error("Section ID not found for section name:", sec);
+    }
+  }}
+>
+  Manage Sessions
+</button>
+
                     </td>
                   </tr>
                 ))
