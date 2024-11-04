@@ -16,25 +16,16 @@ const SessionPlans = () => {
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
-        const sessionResponse = await axios.get(`https://tms.up.school/api/sessions/${sessionId}`);
-        setNumberOfSessions(sessionResponse.data.numberOfSessions);
-
         const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
         console.log('Session Plans Response:', response.data);
-
-        response.data.forEach(plan => {
-          console.log(`Session Number: ${plan.sessionNumber}, Topics:`, plan.Topics);
-        });
-
         setSessionPlans(response.data);
-
+    
         const initialTopics = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.Topics ? plan.Topics : [];
+          acc[plan.sessionNumber] = plan.planDetails || []; // Use planDetails directly
           return acc;
         }, {});
-        console.log('Initial Topics:', initialTopics);
         setTopics(initialTopics);
-
+        
         if (response.data.length > 0) {
           setUploadDisabled(true);
         }
@@ -43,6 +34,7 @@ const SessionPlans = () => {
         setError('Failed to fetch session plans.');
       }
     };
+    
 
     fetchSessionPlans();
   }, [sessionId]);
@@ -84,20 +76,23 @@ const SessionPlans = () => {
       const planDetails = JSON.stringify(topics[sessionNumber]);
       const response = await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
       console.log('Response:', response.data);
+      
       setSessionPlans(prevState => {
-        const newState = prevState.map(plan => {
+        return prevState.map(plan => {
           if (plan.id === sessionPlanId) {
-            return { ...plan, Topics: topics[sessionNumber], planDetails };
+            return { ...plan, planDetails: JSON.parse(planDetails) }; // Correctly update planDetails
           }
           return plan;
         });
-        return newState;
       });
+      
       setEditing(prevEditing => ({ ...prevEditing, [sessionNumber]: false }));
     } catch (error) {
       console.error('Error saving topic:', error);
+      setError('Failed to save topic. Please try again.');
     }
   };
+  
 
   const handleDeleteSessionPlan = async (planId) => {
     try {
@@ -185,7 +180,7 @@ const SessionPlans = () => {
             {[...Array(numberOfSessions)].map((_, index) => {
               const sessionNumber = index + 1;
               const existingPlan = sessionPlans.find(plan => plan.sessionNumber === sessionNumber);
-              const topicsForSession = Array.isArray(topics[sessionNumber]) ? topics[sessionNumber] : [];
+              const topicsForSession = Array.isArray(topics[sessionNumber]) ? topics[sessionNumber] : existingPlan?.planDetails || [];
 
               return (
                 <React.Fragment key={sessionNumber}>
