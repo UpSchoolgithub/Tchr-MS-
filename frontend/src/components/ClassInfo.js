@@ -39,12 +39,17 @@ const ClassInfo = () => {
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
-      setSections(response.data);
+      const updatedSections = response.data.map(section => ({
+        id: section.id,
+        sectionName: section.sectionName
+      }));
+      setSections(updatedSections);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
     }
   };
+  
 
   useEffect(() => {
     fetchClassInfos();
@@ -296,9 +301,9 @@ const ClassInfo = () => {
                       <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>Delete</button>
                       <button 
                         onClick={() => {
-                          const sectionId = sections.find(section => section.sectionName === sec)?.id; // Get sectionId based on sectionName
-                          if (sectionId) {
-                            navigate(`/schools/${schoolId}/classes/${info.id}/sections/${sectionId}/subjects/${subject.id}/sessions`);
+                          const selectedSection = sections.find(sec => sec.sectionName === sec);
+                          if (selectedSection) {
+                            navigate(`/schools/${schoolId}/classes/${info.id}/sections/${selectedSection.id}/subjects/${subject.id}/sessions`);
                           } else {
                             console.error("Section ID not found for section name:", sec);
                           }
@@ -306,7 +311,6 @@ const ClassInfo = () => {
                       >
                         Manage Sessions
                       </button>
-
                     </td>
                   </tr>
                 ))
