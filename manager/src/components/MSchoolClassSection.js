@@ -418,14 +418,18 @@ useEffect(() => {
             );
           })}
   
-          {/* Add Reserved Time Row for Times Outside of School Hours */}
-          {days.map(day => {
+          {/* Add Reserved Time Row for Times Outside of School Hours for Specific Days */}
+          {Object.keys(reserveDay).map(day => {
             const reservedTime = reserveDay[day];
             if (reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd) {
               return (
                 <tr key={`reserved-time-${day}`}>
                   <td>{`${reservedTime.start} - ${reservedTime.end}`}</td>
-                  <td colSpan={days.length}>RESERVED TIME ({day})</td>
+                  {days.map(d => (
+                    <td key={`reserved-${day}-${d}`}>
+                      {d === day ? <span className="reserved">Reserved Time</span> : null}
+                    </td>
+                  ))}
                 </tr>
               );
             }
