@@ -373,7 +373,7 @@ useEffect(() => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
   
-                    // Check if reserved time is within the current period
+                    // Check if reserved time overlaps with the current period
                     const isReserved = reservedTime && reservedTime.open &&
                       startEndTime.start <= reservedTime.end &&
                       startEndTime.end >= reservedTime.start;
@@ -381,7 +381,9 @@ useEffect(() => {
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
                         {isReserved ? (
-                          <span className="reserved">Reserved Time</span>
+                          <span className="reserved">
+                            Reserved Time ({reservedTime.start} - {reservedTime.end})
+                          </span>
                         ) : periodAssignment ? (
                           <>
                             <div>{periodAssignment.teacher}</div>
@@ -444,6 +446,7 @@ useEffect(() => {
       </table>
     );
   };
+  
   
   
   
