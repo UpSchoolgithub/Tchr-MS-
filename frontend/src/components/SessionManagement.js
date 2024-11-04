@@ -67,23 +67,32 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     setIsLoading(true);
+    setError(''); // Clear any previous errors
+    
     try {
-      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      const response = await axios.post(uploadUrl, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      console.log("Uploading to URL:", uploadUrl);
+      console.log("File:", file);
+  
+      const response = await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+  
       console.log('Upload response:', response.data);
-      fetchSessions();
+      fetchSessions(); // Refresh session data after successful upload
     } catch (error) {
-      console.error('Error uploading file:', error);
-      setError(error.response?.data?.error || 'Failed to upload file. Please try again.');
+      console.error('Error uploading file:', error.response ? error.response.data : error.message);
+      setError(error.response?.data?.message || 'Failed to upload file. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div>
