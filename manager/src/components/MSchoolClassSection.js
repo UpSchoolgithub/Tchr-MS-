@@ -342,7 +342,7 @@ useEffect(() => {
     }
   
     // Determine the end time of the last period
-    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
   
     return (
       <table className="timetable-table">
@@ -432,7 +432,7 @@ useEffect(() => {
                   <td key={day}>
                     {isAfterSchoolHours ? (
                       <div className="reserved">
-                        Reserved Time ({reservedTime.start} - {reservedTime.end})
+                        {`${reservedTime.start} - ${reservedTime.end}`}
                       </div>
                     ) : (
                       <span>-</span> // Placeholder if no reserved time
@@ -446,6 +446,7 @@ useEffect(() => {
       </table>
     );
   };
+
   
   
   
