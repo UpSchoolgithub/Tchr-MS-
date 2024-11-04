@@ -349,18 +349,21 @@ useEffect(() => {
             const periodName = `Period ${period}`;
   
             return (
-              <>
-                <tr key={index}>
+              <React.Fragment key={index}>
+                <tr>
                   <td>
                     {periodName} <br />
                     {periodTime}
                   </td>
-                  {days.map((day, dayIndex) => {
+                  {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+                    const isReserved = timetableSettings.reservedTimes?.[day]?.includes(period);
   
                     return (
-                      <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
-                        {periodAssignment ? (
+                      <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
+                        {isReserved ? (
+                          <span className="reserved">Reserved</span>
+                        ) : periodAssignment ? (
                           <>
                             <div>{periodAssignment.teacher}</div>
                             <div>{periodAssignment.subject}</div>
@@ -401,7 +404,7 @@ useEffect(() => {
                     <td colSpan={days.length}>RESERVED TIME</td>
                   </tr>
                 )}
-              </>
+              </React.Fragment>
             );
           })}
         </tbody>
