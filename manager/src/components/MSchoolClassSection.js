@@ -332,8 +332,10 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    // Parse reserveDay field
-    const reserveDays = JSON.parse(timetableSettings.reserveDay || '{}');
+    // Parse the reserveDay field as JSON
+    const reserveDays = typeof timetableSettings.reserveDay === 'string'
+        ? JSON.parse(timetableSettings.reserveDay)
+        : timetableSettings.reserveDay;
 
     return (
         <table className="timetable-table">
@@ -361,7 +363,7 @@ useEffect(() => {
                                 {days.map(day => {
                                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
 
-                                    // Check if this period is within reserved time for the specific day
+                                    // Check if this period falls within reserved time for the specific day
                                     const dayReserve = reserveDays[day];
                                     const isReserved = dayReserve?.open &&
                                         startEndTime.start >= dayReserve.start &&
@@ -405,13 +407,6 @@ useEffect(() => {
                                     <td colSpan={days.length}>SHORT BREAK 2</td>
                                 </tr>
                             )}
-
-                            {index === 6 && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
-                                <tr key="reserved-time">
-                                    <td>{`${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`}</td>
-                                    <td colSpan={days.length}>RESERVED TIME</td>
-                                </tr>
-                            )}
                         </React.Fragment>
                     );
                 })}
@@ -419,6 +414,7 @@ useEffect(() => {
         </table>
     );
 };
+
 
 
 
