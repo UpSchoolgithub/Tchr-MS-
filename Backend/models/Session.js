@@ -10,6 +10,10 @@ Session.init({
     autoIncrement: true,
     primaryKey: true,
   },
+  chapterName: {  // Add this field
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   sessionDate: {
     type: DataTypes.DATE,
     allowNull: false,
