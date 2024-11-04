@@ -332,9 +332,16 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
-    // Parse reserved days and times
-    const reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-    console.log("Parsed reserveDay:", reserveDay); // Debugging log
+    // Safely parse reserveDay object
+    let reserveDay;
+    try {
+      reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+    } catch (e) {
+      console.error('Error parsing reserveDay:', e);
+      reserveDay = {};
+    }
+  
+    console.log("Parsed reserveDay object:", reserveDay);
   
     return (
       <table className="timetable-table">
@@ -362,18 +369,18 @@ useEffect(() => {
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
-                    
-                    // Check if current period falls within the reserved time
+  
+                    // Match current period's time with reserved time
                     const isReserved = reservedTime && reservedTime.open &&
                       startEndTime.start >= reservedTime.start &&
                       startEndTime.end <= reservedTime.end;
   
-                    console.log(`Day: ${day}, Period: ${period}, isReserved: ${isReserved}`);
+                    console.log(`Day: ${day}, Period: ${period}, Start: ${startEndTime.start}, End: ${startEndTime.end}, Reserved Start: ${reservedTime?.start}, Reserved End: ${reservedTime?.end}, isReserved: ${isReserved}`);
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
                         {isReserved ? (
-                          <span className="reserved">Reserved</span>
+                          <span className="reserved">Reserved Time</span>
                         ) : periodAssignment ? (
                           <>
                             <div>{periodAssignment.teacher}</div>
@@ -412,16 +419,19 @@ useEffect(() => {
             );
           })}
   
-          {/* Add Reserved Times After Regular Timetable */}
+          {/* Render Additional Reserved Time Rows for Periods Outside Regular Schedule */}
           {days.map(day => {
             const reservedTime = reserveDay[day];
             if (reservedTime && reservedTime.open) {
-              const schoolEndTime = timetableSettings.schoolEndTime;
               const reservedStartTime = reservedTime.start;
               const reservedEndTime = reservedTime.end;
   
-              // Check if reserved time is beyond regular school timings
-              if (reservedStartTime >= schoolEndTime) {
+              // Only add a reserved row if the reserved time is outside regular periods
+              const isOutsideSchedule = !timetableSettings.periodTimings.some(
+                timing => timing.start <= reservedStartTime && timing.end >= reservedEndTime
+              );
+  
+              if (isOutsideSchedule) {
                 return (
                   <tr key={`reserved-${day}`}>
                     <td>{`${reservedStartTime} - ${reservedEndTime}`}</td>
