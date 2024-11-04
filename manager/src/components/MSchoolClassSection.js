@@ -420,7 +420,7 @@ useEffect(() => {
             );
           })}
   
-          {/* Always Render Row for Reserved Times After Last Period */}
+          {/* Reserved Time Row After Last Period */}
           <tr>
             <td>{`${lastPeriodEnd} - Reserved Time`}</td>
             {days.map(day => {
