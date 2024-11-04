@@ -336,7 +336,6 @@ useEffect(() => {
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-      console.log("Parsed reserveDay:", reserveDay); // Debugging statement
     } catch (e) {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
@@ -344,7 +343,6 @@ useEffect(() => {
   
     // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
-    console.log("Last Period End Time:", lastPeriodEnd); // Debugging statement
   
     return (
       <table className="timetable-table">
@@ -373,16 +371,10 @@ useEffect(() => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
   
-                    // Check if reserved time is within the school hours
+                    // Check if reserved time is within the current period
                     const isReserved = reservedTime && reservedTime.open &&
                       startEndTime.start <= reservedTime.end &&
                       startEndTime.end >= reservedTime.start;
-  
-                    console.log(`Period ${period} on ${day}:`, {
-                      isReserved,
-                      reservedTime,
-                      startEndTime,
-                    }); // Debugging statement
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
@@ -426,11 +418,10 @@ useEffect(() => {
             );
           })}
   
-          {/* Additional row for reserved times outside school hours */}
+          {/* Separate row for reserved times outside school hours */}
           {days.map(day => {
             const reservedTime = reserveDay[day];
             if (reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd) {
-              console.log(`Reserved Time After School Hours for ${day}:`, reservedTime); // Debugging statement
               return (
                 <tr key={`reserved-time-${day}`}>
                   <td>{`${reservedTime.start} - ${reservedTime.end}`}</td>
