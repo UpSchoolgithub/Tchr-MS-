@@ -358,10 +358,11 @@ useEffect(() => {
                                 {days.map(day => {
                                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
 
-                                    // Check if this period overlaps with reserved time for the specific day
-                                    const isReserved = timetableSettings.reserveDay?.[day]?.open &&
-                                        startEndTime.start >= timetableSettings.reserveDay[day].start &&
-                                        startEndTime.end <= timetableSettings.reserveDay[day].end;
+                                    // Check if this period is within the reserved time range for the specific day
+                                    const dayReserve = timetableSettings.reserveDay && timetableSettings.reserveDay[day];
+                                    const isReserved = dayReserve?.open &&
+                                        startEndTime.start >= dayReserve.start &&
+                                        startEndTime.end <= dayReserve.end;
 
                                     return (
                                         <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
@@ -415,6 +416,7 @@ useEffect(() => {
         </table>
     );
 };
+
 
   
   
