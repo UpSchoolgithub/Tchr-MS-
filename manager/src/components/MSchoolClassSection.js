@@ -332,17 +332,19 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
-    // Safely parse reserveDay object
+    // Parse reserveDay object safely
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+      console.log("Parsed reserveDay:", reserveDay); // Debugging statement
     } catch (e) {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
     }
   
-    // Determine the end time of the last period to check for after-school reserved times
+    // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
+    console.log("Last Period End Time:", lastPeriodEnd); // Debugging statement
   
     return (
       <table className="timetable-table">
@@ -376,6 +378,12 @@ useEffect(() => {
                       startEndTime.start <= reservedTime.end &&
                       startEndTime.end >= reservedTime.start;
   
+                    console.log(`Period ${period} on ${day}:`, {
+                      isReserved,
+                      reservedTime,
+                      startEndTime,
+                    }); // Debugging statement
+  
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
                         {isReserved ? (
@@ -393,7 +401,7 @@ useEffect(() => {
                   })}
                 </tr>
   
-                {/* Add Breaks After Certain Periods */}
+                {/* Breaks */}
                 {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
                   <tr key="short-break-1">
                     <td>{`${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`}</td>
@@ -418,10 +426,11 @@ useEffect(() => {
             );
           })}
   
-          {/* Add Reserved Time Row for Times Outside of School Hours for Specific Days */}
-          {Object.keys(reserveDay).map(day => {
+          {/* Additional row for reserved times outside school hours */}
+          {days.map(day => {
             const reservedTime = reserveDay[day];
             if (reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd) {
+              console.log(`Reserved Time After School Hours for ${day}:`, reservedTime); // Debugging statement
               return (
                 <tr key={`reserved-time-${day}`}>
                   <td>{`${reservedTime.start} - ${reservedTime.end}`}</td>
