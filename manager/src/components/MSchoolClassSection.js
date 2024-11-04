@@ -326,111 +326,88 @@ useEffect(() => {
 
   const renderTable = () => {
     if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
-        return <p>No timetable settings available</p>;
+      return <p>No timetable settings available</p>;
     }
-
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
-
-    console.log("Reserved Days:", timetableSettings.reserveDay);
-
+  
     return (
-        <table className="timetable-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    {days.map(day => (
-                        <th key={day}>{day}</th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {periods.map((period, index) => {
-                    const startEndTime = timetableSettings.periodTimings[index];
-                    const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
-                    const periodName = `Period ${period}`;
-
+      <table className="timetable-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            {days.map(day => (
+              <th key={day}>{day}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {periods.map((period, index) => {
+            const startEndTime = timetableSettings.periodTimings[index];
+            const periodTime = `${startEndTime.start} - ${startEndTime.end}`;
+            const periodName = `Period ${period}`;
+  
+            return (
+              <>
+                <tr key={index}>
+                  <td>
+                    {periodName} <br />
+                    {periodTime}
+                  </td>
+                  {days.map((day, dayIndex) => {
+                    const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+  
                     return (
-                        <React.Fragment key={index}>
-                            <tr>
-                                <td>
-                                    {periodName} <br />
-                                    {periodTime}
-                                </td>
-                                {days.map(day => {
-                                    const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                                    const reserveInfo = timetableSettings.reserveDay?.[day];
-                                    const isReserved = reserveInfo?.open &&
-                                        startEndTime.start >= reserveInfo.start &&
-                                        startEndTime.end <= reserveInfo.end;
-
-                                    return (
-                                        <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
-                                            {isReserved ? (
-                                                <span className="reserved">Reserved Time</span>
-                                            ) : periodAssignment ? (
-                                                <>
-                                                    <div>{periodAssignment.teacher}</div>
-                                                    <div>{periodAssignment.subject}</div>
-                                                </>
-                                            ) : (
-                                                <span className="add-icon">+</span>
-                                            )}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-
-                            {/* Add Breaks After Certain Periods */}
-                            {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
-                                <tr key="short-break-1">
-                                    <td>{`${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`}</td>
-                                    <td colSpan={days.length}>SHORT BREAK 1</td>
-                                </tr>
-                            )}
-
-                            {index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && (
-                                <tr key="lunch">
-                                    <td>{`${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`}</td>
-                                    <td colSpan={days.length}>LUNCH</td>
-                                </tr>
-                            )}
-
-                            {index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && (
-                                <tr key="short-break-2">
-                                    <td>{`${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`}</td>
-                                    <td colSpan={days.length}>SHORT BREAK 2</td>
-                                </tr>
-                            )}
-                        </React.Fragment>
+                      <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
+                        {periodAssignment ? (
+                          <>
+                            <div>{periodAssignment.teacher}</div>
+                            <div>{periodAssignment.subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )}
+                      </td>
                     );
-                })}
-
-                {/* Add additional rows for reserved times outside school hours */}
-                {Object.keys(timetableSettings.reserveDay).map(day => {
-                    const reserveInfo = timetableSettings.reserveDay[day];
-
-                    // Check if the reserved time is outside school hours
-                    if (reserveInfo.open && reserveInfo.start >= lastPeriodEnd) {
-                        return (
-                            <tr key={`reserved-${day}`}>
-                                <td>{`${reserveInfo.start} - ${reserveInfo.end}`}</td>
-                                {days.map(d => (
-                                    <td key={`reserved-${day}-${d}`}>
-                                        {d === day ? <span className="reserved">Reserved Time</span> : null}
-                                    </td>
-                                ))}
-                            </tr>
-                        );
-                    }
-                    return null;
-                })}
-            </tbody>
-        </table>
+                  })}
+                </tr>
+  
+                {/* Add Breaks After Certain Periods */}
+                {index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime && (
+                  <tr key="short-break-1">
+                    <td>{`${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}`}</td>
+                    <td colSpan={days.length}>SHORT BREAK 1</td>
+                  </tr>
+                )}
+  
+                {index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime && (
+                  <tr key="lunch">
+                    <td>{`${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}`}</td>
+                    <td colSpan={days.length}>LUNCH</td>
+                  </tr>
+                )}
+  
+                {index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime && (
+                  <tr key="short-break-2">
+                    <td>{`${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}`}</td>
+                    <td colSpan={days.length}>SHORT BREAK 2</td>
+                  </tr>
+                )}
+  
+                {index === 6 && timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd && (
+                  <tr key="reserved-time">
+                    <td>{`${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}`}</td>
+                    <td colSpan={days.length}>RESERVED TIME</td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
+        </tbody>
+      </table>
     );
-};
-
+  };
   
   
             
