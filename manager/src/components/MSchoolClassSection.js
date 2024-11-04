@@ -422,7 +422,8 @@ useEffect(() => {
   
           {/* Explicit Row for Reserved Times After Last Period */}
           <tr>
-            <td>{`${lastPeriodEnd} - Reserved Time`}</td>
+            {/* Display the reserved time range clearly in the Time column */}
+            <td>{reserveDay.Monday && reserveDay.Monday.start && `${reserveDay.Monday.start} - ${reserveDay.Monday.end}`}</td>
             {days.map(day => {
               const reservedTime = reserveDay[day];
               const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
@@ -431,7 +432,7 @@ useEffect(() => {
                 <td key={day}>
                   {isAfterSchoolHours ? (
                     <div className="reserved">
-                      Reserved Time ({reservedTime.start} - {reservedTime.end})
+                      {`${reservedTime.start} - ${reservedTime.end}`} {/* Display exact reserved time */}
                     </div>
                   ) : (
                     <span>-</span> // Placeholder if no reserved time
