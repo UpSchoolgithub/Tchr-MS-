@@ -420,7 +420,7 @@ useEffect(() => {
   
           {/* Reserved Times After Last Period */}
           <tr>
-            <td>{lastPeriodEnd} - {Object.values(reserveDay).some(rt => rt.open && rt.start >= lastPeriodEnd) ? "End of Reserved Times" : ""}</td>
+            <td>{`${lastPeriodEnd} -`}</td>
             {days.map(day => {
               const reservedTime = reserveDay[day];
               const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
