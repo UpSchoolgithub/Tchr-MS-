@@ -16,7 +16,7 @@ const SessionManagement = () => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
+      const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -25,6 +25,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
   
   useEffect(() => {
     fetchSessions();
