@@ -332,13 +332,12 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    // Parse the reserveDay field as JSON if it is a string
+    // Parse `reserveDay` if it's a JSON string
     const reserveDays = typeof timetableSettings.reserveDay === 'string'
         ? JSON.parse(timetableSettings.reserveDay)
         : timetableSettings.reserveDay;
 
-    // Debugging log to verify reserveDays content
-    console.log('Parsed reserveDays:', reserveDays);
+    console.log('Parsed reserveDays:', reserveDays); // Debugging: Show parsed reserveDays
 
     return (
         <table className="timetable-table">
@@ -366,14 +365,13 @@ useEffect(() => {
                                 {days.map(day => {
                                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
 
-                                    // Check if this period falls within reserved time for the specific day
+                                    // Check if the period is reserved for the specific day
                                     const dayReserve = reserveDays?.[day];
                                     const isReserved = dayReserve?.open &&
-                                        startEndTime.start >= dayReserve.start &&
-                                        startEndTime.end <= dayReserve.end;
+                                        startEndTime.start === dayReserve.start &&
+                                        startEndTime.end === dayReserve.end;
 
-                                    // Debugging log to verify if isReserved is correctly set
-                                    console.log(`Day: ${day}, Period: ${period}, Start-End: ${startEndTime.start} - ${startEndTime.end}, Reserved: ${isReserved}`);
+                                    console.log(`Day: ${day}, Period: ${period}, Reserved: ${isReserved}`); // Debugging output
 
                                     return (
                                         <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
