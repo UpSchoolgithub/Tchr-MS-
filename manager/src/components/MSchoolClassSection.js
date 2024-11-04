@@ -336,6 +336,7 @@ useEffect(() => {
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+      console.log("Parsed Reserve Day Data:", reserveDay); // Log reserve day data
     } catch (e) {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
@@ -343,6 +344,7 @@ useEffect(() => {
   
     // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
+    console.log("Last Period End:", lastPeriodEnd); // Log last period end time
   
     return (
       <table className="timetable-table">
@@ -418,9 +420,9 @@ useEffect(() => {
             );
           })}
   
-          {/* Reserved Times After Last Period */}
+          {/* Explicit Row for Reserved Times After Last Period */}
           <tr>
-            <td>{`${lastPeriodEnd} -`}</td>
+            <td>{`${lastPeriodEnd} - Reserved Time`}</td>
             {days.map(day => {
               const reservedTime = reserveDay[day];
               const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
@@ -432,7 +434,7 @@ useEffect(() => {
                       Reserved Time ({reservedTime.start} - {reservedTime.end})
                     </div>
                   ) : (
-                    <span>-</span> // Display a placeholder if no reserved time
+                    <span>-</span> // Placeholder if no reserved time
                   )}
                 </td>
               );
