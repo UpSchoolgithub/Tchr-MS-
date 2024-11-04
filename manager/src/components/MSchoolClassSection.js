@@ -428,7 +428,9 @@ useEffect(() => {
               return (
                 <td key={day}>
                   {isAfterSchoolHours ? (
-                    <div className="reserved">Reserved Time ({reservedTime.start} - {reservedTime.end})</div>
+                    <div className="reserved">
+                      Reserved Time ({reservedTime.start} - {reservedTime.end})
+                    </div>
                   ) : (
                     <span>-</span> // Display a placeholder if no reserved time
                   )}
