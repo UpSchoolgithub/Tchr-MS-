@@ -381,11 +381,7 @@ useEffect(() => {
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
                         {isReserved ? (
-                          <span className="reserved">
-                            {reservedTime.start && reservedTime.end
-                              ? `${reservedTime.start} - ${reservedTime.end}`
-                              : "Reserved Time"}
-                          </span>
+                          <span className="reserved">Reserved Time</span>
                         ) : periodAssignment ? (
                           <>
                             <div>{periodAssignment.teacher}</div>
