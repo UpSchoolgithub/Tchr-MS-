@@ -341,8 +341,6 @@ useEffect(() => {
       reserveDay = {};
     }
   
-    console.log("Parsed reserveDay object:", reserveDay);
-  
     return (
       <table className="timetable-table">
         <thead>
@@ -370,12 +368,10 @@ useEffect(() => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
   
-                    // Match current period's time with reserved time
+                    // Check if the reserved time overlaps with this period
                     const isReserved = reservedTime && reservedTime.open &&
-                      startEndTime.start >= reservedTime.start &&
-                      startEndTime.end <= reservedTime.end;
-  
-                    console.log(`Day: ${day}, Period: ${period}, Start: ${startEndTime.start}, End: ${startEndTime.end}, Reserved Start: ${reservedTime?.start}, Reserved End: ${reservedTime?.end}, isReserved: ${isReserved}`);
+                      startEndTime.start <= reservedTime.end &&
+                      startEndTime.end >= reservedTime.start;
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
@@ -418,35 +414,10 @@ useEffect(() => {
               </React.Fragment>
             );
           })}
-  
-          {/* Render Additional Reserved Time Rows for Periods Outside Regular Schedule */}
-          {days.map(day => {
-            const reservedTime = reserveDay[day];
-            if (reservedTime && reservedTime.open) {
-              const reservedStartTime = reservedTime.start;
-              const reservedEndTime = reservedTime.end;
-  
-              // Only add a reserved row if the reserved time is outside regular periods
-              const isOutsideSchedule = !timetableSettings.periodTimings.some(
-                timing => timing.start <= reservedStartTime && timing.end >= reservedEndTime
-              );
-  
-              if (isOutsideSchedule) {
-                return (
-                  <tr key={`reserved-${day}`}>
-                    <td>{`${reservedStartTime} - ${reservedEndTime}`}</td>
-                    <td colSpan={days.length}>RESERVED TIME ({day})</td>
-                  </tr>
-                );
-              }
-            }
-            return null;
-          })}
         </tbody>
       </table>
     );
   };
-  
   
   
   
