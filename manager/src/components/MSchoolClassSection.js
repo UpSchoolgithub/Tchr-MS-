@@ -332,6 +332,9 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+    // Parse reserveDay field
+    const reserveDays = JSON.parse(timetableSettings.reserveDay || '{}');
+
     return (
         <table className="timetable-table">
             <thead>
@@ -358,8 +361,8 @@ useEffect(() => {
                                 {days.map(day => {
                                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
 
-                                    // Check if this period is within the reserved time range for the specific day
-                                    const dayReserve = timetableSettings.reserveDay && timetableSettings.reserveDay[day];
+                                    // Check if this period is within reserved time for the specific day
+                                    const dayReserve = reserveDays[day];
                                     const isReserved = dayReserve?.open &&
                                         startEndTime.start >= dayReserve.start &&
                                         startEndTime.end <= dayReserve.end;
@@ -416,6 +419,7 @@ useEffect(() => {
         </table>
     );
 };
+
 
 
   
