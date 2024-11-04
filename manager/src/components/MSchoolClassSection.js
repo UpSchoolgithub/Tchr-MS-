@@ -336,7 +336,6 @@ useEffect(() => {
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-      console.log("Parsed Reserve Day Data:", reserveDay); // Log reserve day data
     } catch (e) {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
@@ -344,7 +343,6 @@ useEffect(() => {
   
     // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
-    console.log("Last Period End:", lastPeriodEnd); // Log last period end time
   
     return (
       <table className="timetable-table">
@@ -420,32 +418,27 @@ useEffect(() => {
             );
           })}
   
-          {/* Explicit Row for Reserved Times After Last Period */}
-          <tr>
-            {/* Display the reserved time range clearly in the Time column */}
-            <td>{reserveDay.Monday && reserveDay.Monday.start && `${reserveDay.Monday.start} - ${reserveDay.Monday.end}`}</td>
-            {days.map(day => {
-              const reservedTime = reserveDay[day];
-              const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
-  
+          {/* Separate row for reserved times outside school hours */}
+          {days.map(day => {
+            const reservedTime = reserveDay[day];
+            if (reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd) {
               return (
-                <td key={day}>
-                  {isAfterSchoolHours ? (
-                    <div className="reserved">
-                      {`${reservedTime.start} - ${reservedTime.end}`} {/* Display exact reserved time */}
-                    </div>
-                  ) : (
-                    <span>-</span> // Placeholder if no reserved time
-                  )}
-                </td>
+                <tr key={`reserved-time-${day}`}>
+                  <td>{`${reservedTime.start} - ${reservedTime.end}`}</td>
+                  {days.map(d => (
+                    <td key={`reserved-${day}-${d}`}>
+                      {d === day ? <span className="reserved">Reserved Time</span> : null}
+                    </td>
+                  ))}
+                </tr>
               );
-            })}
-          </tr>
+            }
+            return null;
+          })}
         </tbody>
       </table>
     );
   };
-  
   
   
   
