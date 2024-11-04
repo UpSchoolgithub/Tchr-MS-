@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 
@@ -14,17 +14,13 @@ const SessionManagement = () => {
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     try {
-      const fetchUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
-      const response = await axios.get(fetchUrl);
+      const response = await axios.get(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions. Please try again later.');
     }
   };
-  
-  
-  
 
   useEffect(() => {
     fetchSessions();
@@ -67,13 +63,13 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
- 
+  
     const formData = new FormData();
     formData.append('file', file);
- 
+  
     setIsLoading(true);
     try {
-      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      const uploadUrl = `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       console.log('Upload URL:', uploadUrl); // Ensure sectionId is in the URL
       const response = await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -86,9 +82,7 @@ const SessionManagement = () => {
     } finally {
       setIsLoading(false);
     }
- };
- 
- 
+  };
 
   return (
     <div>
