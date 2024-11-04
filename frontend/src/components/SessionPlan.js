@@ -16,11 +16,10 @@ const SessionPlans = () => {
     const fetchSessionPlans = async () => {
       try {
         const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
-        console.log('Session Plans Response:', response.data);
         setSessionPlans(response.data);
-
+    
         const initialTopics = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.planDetails || []; // Use planDetails directly
+          acc[plan.sessionNumber] = plan.planDetails || [];
           return acc;
         }, {});
         setTopics(initialTopics);
@@ -46,11 +45,9 @@ const SessionPlans = () => {
     }));
   };
 
-  const handleAddTopic = (sessionNumber, order) => {
-    const newTopic = "";
+  const handleAddTopic = (sessionNumber) => {
     setTopics(prevState => {
-      const updatedTopics = [...(prevState[sessionNumber] || [])];
-      updatedTopics.splice(order, 0, newTopic);
+      const updatedTopics = [...(prevState[sessionNumber] || []), ""];
       return {
         ...prevState,
         [sessionNumber]: updatedTopics,
@@ -77,7 +74,7 @@ const SessionPlans = () => {
       setSessionPlans(prevState => {
         return prevState.map(plan => {
           if (plan.id === sessionPlanId) {
-            return { ...plan, planDetails: JSON.parse(planDetails) }; // Correctly update planDetails
+            return { ...plan, planDetails: JSON.parse(planDetails) };
           }
           return plan;
         });
@@ -87,15 +84,6 @@ const SessionPlans = () => {
     } catch (error) {
       console.error('Error saving topic:', error);
       setError('Failed to save topic. Please try again.');
-    }
-  };
-
-  const handleDeleteSessionPlan = async (planId) => {
-    try {
-      await axios.delete(`https://tms.up.school/api/sessionPlans/${planId}`);
-      setSessionPlans(sessionPlans.filter(plan => plan.id !== planId));
-    } catch (error) {
-      console.error('Error deleting topic:', error);
     }
   };
 
@@ -177,7 +165,7 @@ const SessionPlans = () => {
                 <tr>
                   <td>{plan.sessionNumber}</td>
                   <td>
-                    {plan.planDetails?.map((topic, i) => (
+                    {topics[plan.sessionNumber]?.map((topic, i) => (
                       <div key={i} className="topic-input">
                         <input
                           type="text"
@@ -204,7 +192,7 @@ const SessionPlans = () => {
                 </tr>
                 <tr>
                   <td colSpan="3">
-                    <button onClick={() => handleAddTopic(plan.sessionNumber, plan.planDetails?.length || 0)}>+</button>
+                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>+</button>
                   </td>
                 </tr>
               </React.Fragment>
