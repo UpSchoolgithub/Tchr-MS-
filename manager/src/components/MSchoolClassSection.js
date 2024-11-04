@@ -342,7 +342,7 @@ useEffect(() => {
     }
   
     // Determine the end time of the last period
-    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
   
     return (
       <table className="timetable-table">
@@ -420,33 +420,31 @@ useEffect(() => {
             );
           })}
   
-          {/* Explicit Row for Reserved Times After Last Period */}
-          {Object.keys(reserveDay).some(day => reserveDay[day].start >= lastPeriodEnd) && (
-            <tr>
-              <td>{`${lastPeriodEnd} - Reserved Time`}</td>
-              {days.map(day => {
-                const reservedTime = reserveDay[day];
-                const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
+          {/* Always Render Row for Reserved Times After Last Period */}
+          <tr>
+            <td>{`${lastPeriodEnd} - Reserved Time`}</td>
+            {days.map(day => {
+              const reservedTime = reserveDay[day];
+              const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
   
-                return (
-                  <td key={day}>
-                    {isAfterSchoolHours ? (
-                      <div className="reserved">
-                        {`${reservedTime.start} - ${reservedTime.end}`}
-                      </div>
-                    ) : (
-                      <span>-</span> // Placeholder if no reserved time
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          )}
+              return (
+                <td key={day}>
+                  {isAfterSchoolHours ? (
+                    <div className="reserved">
+                      {`${reservedTime.start} - ${reservedTime.end}`}
+                    </div>
+                  ) : (
+                    <span>-</span> // Placeholder if no reserved time
+                  )}
+                </td>
+              );
+            })}
+          </tr>
         </tbody>
       </table>
     );
   };
-
+  
   
   
   
