@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import '../styles.css';
- 
+
 const SessionPlans = () => {
   const { sessionId } = useParams();
   const [sessionPlans, setSessionPlans] = useState([]);
-  const [numberOfSessions, setNumberOfSessions] = useState(0);
   const [topics, setTopics] = useState({});
   const [editing, setEditing] = useState({});
   const [error, setError] = useState('');
@@ -19,7 +18,7 @@ const SessionPlans = () => {
         const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
         console.log('Session Plans Response:', response.data);
         setSessionPlans(response.data);
-    
+
         const initialTopics = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails || []; // Use planDetails directly
           return acc;
@@ -35,7 +34,6 @@ const SessionPlans = () => {
       }
     };
     
-
     fetchSessionPlans();
   }, [sessionId]);
 
@@ -74,8 +72,7 @@ const SessionPlans = () => {
   const handleSaveTopic = async (sessionPlanId, sessionNumber) => {
     try {
       const planDetails = JSON.stringify(topics[sessionNumber]);
-      const response = await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
-      console.log('Response:', response.data);
+      await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
       
       setSessionPlans(prevState => {
         return prevState.map(plan => {
@@ -92,7 +89,6 @@ const SessionPlans = () => {
       setError('Failed to save topic. Please try again.');
     }
   };
-  
 
   const handleDeleteSessionPlan = async (planId) => {
     try {
@@ -144,7 +140,6 @@ const SessionPlans = () => {
       });
       setFile(null);
       const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
-      console.log('Uploaded Session Plans:', response.data);
       setSessionPlans(response.data);
       setUploadDisabled(true);
     } catch (error) {
@@ -177,51 +172,43 @@ const SessionPlans = () => {
             </tr>
           </thead>
           <tbody>
-            {[...Array(numberOfSessions)].map((_, index) => {
-              const sessionNumber = index + 1;
-              const existingPlan = sessionPlans.find(plan => plan.sessionNumber === sessionNumber);
-              const topicsForSession = Array.isArray(topics[sessionNumber]) ? topics[sessionNumber] : existingPlan?.planDetails || [];
-
-              return (
-                <React.Fragment key={sessionNumber}>
-                  <tr>
-                    <td>{sessionNumber}</td>
-                    <td>
-                      {topicsForSession.map((topic, i) => (
-                        <div key={i} className="topic-input">
-                          <input
-                            type="text"
-                            value={topic}
-                            onChange={(e) => handleInputChange(sessionNumber, i, e.target.value)}
-                            disabled={!editing[sessionNumber]}
-                          />
-                          {editing[sessionNumber] && (
-                            <button onClick={() => handleDeleteTopic(sessionNumber, i)}>-</button>
-                          )}
-                        </div>
-                      ))}
-                    </td>
-                    <td>
-                      {editing[sessionNumber] ? (
-                        <>
-                          <button onClick={() => handleSaveTopic(existingPlan ? existingPlan.id : null, sessionNumber)}>Save</button>
-                          <button onClick={() => cancelEditing(sessionNumber)}>Cancel</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => startEditing(sessionNumber)}>Edit</button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan="3">
-                      <button onClick={() => handleAddTopic(sessionNumber, topicsForSession.length)}>+</button>
-                    </td>
-                  </tr>
-                </React.Fragment>
-              );
-            })}
+            {sessionPlans.map(plan => (
+              <React.Fragment key={plan.id}>
+                <tr>
+                  <td>{plan.sessionNumber}</td>
+                  <td>
+                    {plan.planDetails?.map((topic, i) => (
+                      <div key={i} className="topic-input">
+                        <input
+                          type="text"
+                          value={topic}
+                          onChange={(e) => handleInputChange(plan.sessionNumber, i, e.target.value)}
+                          disabled={!editing[plan.sessionNumber]}
+                        />
+                        {editing[plan.sessionNumber] && (
+                          <button onClick={() => handleDeleteTopic(plan.sessionNumber, i)}>-</button>
+                        )}
+                      </div>
+                    ))}
+                  </td>
+                  <td>
+                    {editing[plan.sessionNumber] ? (
+                      <>
+                        <button onClick={() => handleSaveTopic(plan.id, plan.sessionNumber)}>Save</button>
+                        <button onClick={() => cancelEditing(plan.sessionNumber)}>Cancel</button>
+                      </>
+                    ) : (
+                      <button onClick={() => startEditing(plan.sessionNumber)}>Edit</button>
+                    )}
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan="3">
+                    <button onClick={() => handleAddTopic(plan.sessionNumber, plan.planDetails?.length || 0)}>+</button>
+                  </td>
+                </tr>
+              </React.Fragment>
+            ))}
           </tbody>
         </table>
       </div>
