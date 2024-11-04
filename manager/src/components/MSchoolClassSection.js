@@ -336,7 +336,6 @@ useEffect(() => {
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-      console.log("Parsed Reserve Day Data:", reserveDay); // Log reserve day data
     } catch (e) {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
@@ -344,7 +343,6 @@ useEffect(() => {
   
     // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
-    console.log("Last Period End:", lastPeriodEnd); // Log last period end time
   
     return (
       <table className="timetable-table">
@@ -423,29 +421,32 @@ useEffect(() => {
           })}
   
           {/* Explicit Row for Reserved Times After Last Period */}
-          <tr>
-            <td>{`${lastPeriodEnd} - Reserved Time`}</td>
-            {days.map(day => {
-              const reservedTime = reserveDay[day];
-              const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
+          {Object.keys(reserveDay).some(day => reserveDay[day].start >= lastPeriodEnd) && (
+            <tr>
+              <td>{`${lastPeriodEnd} - Reserved Time`}</td>
+              {days.map(day => {
+                const reservedTime = reserveDay[day];
+                const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
   
-              return (
-                <td key={day}>
-                  {isAfterSchoolHours ? (
-                    <div className="reserved">
-                      Reserved Time ({reservedTime.start} - {reservedTime.end})
-                    </div>
-                  ) : (
-                    <span>-</span> // Placeholder if no reserved time
-                  )}
-                </td>
-              );
-            })}
-          </tr>
+                return (
+                  <td key={day}>
+                    {isAfterSchoolHours ? (
+                      <div className="reserved">
+                        Reserved Time ({reservedTime.start} - {reservedTime.end})
+                      </div>
+                    ) : (
+                      <span>-</span> // Placeholder if no reserved time
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          )}
         </tbody>
       </table>
     );
   };
+  
   
   
   
