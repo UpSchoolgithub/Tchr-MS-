@@ -331,6 +331,9 @@ useEffect(() => {
 
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
+
+    console.log("Reserved Days:", timetableSettings.reserveDay);
 
     return (
         <table className="timetable-table">
@@ -357,9 +360,10 @@ useEffect(() => {
                                 </td>
                                 {days.map(day => {
                                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                                    const isReserved = timetableSettings.reserveDay?.[day]?.open &&
-                                        startEndTime.start >= timetableSettings.reserveDay[day].start &&
-                                        startEndTime.end <= timetableSettings.reserveDay[day].end;
+                                    const reserveInfo = timetableSettings.reserveDay?.[day];
+                                    const isReserved = reserveInfo?.open &&
+                                        startEndTime.start >= reserveInfo.start &&
+                                        startEndTime.end <= reserveInfo.end;
 
                                     return (
                                         <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
@@ -406,7 +410,6 @@ useEffect(() => {
                 {/* Add additional rows for reserved times outside school hours */}
                 {Object.keys(timetableSettings.reserveDay).map(day => {
                     const reserveInfo = timetableSettings.reserveDay[day];
-                    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
 
                     // Check if the reserved time is outside school hours
                     if (reserveInfo.open && reserveInfo.start >= lastPeriodEnd) {
