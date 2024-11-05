@@ -371,10 +371,20 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+                    const reservedTime = reserveDay[day];
+  
+                    // Check if reserved time overlaps with the current period
+                    const isReserved = reservedTime && reservedTime.open &&
+                      startEndTime.start <= reservedTime.end &&
+                      startEndTime.end >= reservedTime.start;
   
                     return (
-                      <td key={`${day}-${period}`} onClick={() => handleOpenModal(day, period)}>
-                        {periodAssignment ? (
+                      <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
+                        {isReserved ? (
+                          <span className="reserved">
+                            Reserved Time ({reservedTime.start} - {reservedTime.end})
+                          </span>
+                        ) : periodAssignment ? (
                           <>
                             <div>{periodAssignment.teacher}</div>
                             <div>{periodAssignment.subject}</div>
@@ -412,21 +422,22 @@ useEffect(() => {
             );
           })}
   
-          {/* Reserved Time Row */}
+          {/* Reserved Time Row for After-School Hours */}
           <tr>
-            <td>16:00:00 - Reserved Time</td>
+            <td>After School Hours Reserved Time</td>
             {days.map(day => {
               const reservedTime = reserveDay[day];
-              const isReserved = reservedTime && reservedTime.open;
+              const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
+              const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
   
               return (
                 <td key={day}>
-                  {isReserved ? (
+                  {isAfterSchoolHours ? (
                     <div className="reserved">
-                      {`${reservedTime.start || 'N/A'} - ${reservedTime.end || 'N/A'}`}
+                      {`${reservedTime.start} - ${reservedTime.end}`}
                     </div>
                   ) : (
-                    <span>-</span> // Placeholder if no reserved time
+                    <span>-</span> // Placeholder if no reserved time after school hours
                   )}
                 </td>
               );
