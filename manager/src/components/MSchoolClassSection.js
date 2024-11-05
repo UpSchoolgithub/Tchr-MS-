@@ -346,6 +346,8 @@ useEffect(() => {
       reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
     });
   
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
+  
     return (
       <table className="timetable-table">
         <thead>
@@ -373,14 +375,15 @@ useEffect(() => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
                     const reservedTime = reserveDay[day];
   
-                    // Check if reserved time overlaps with the current period
-                    const isReserved = reservedTime && reservedTime.open &&
+                    // Check if reserved time falls within the current period
+                    const isReservedWithinPeriod = reservedTime && reservedTime.open &&
                       startEndTime.start <= reservedTime.end &&
-                      startEndTime.end >= reservedTime.start;
+                      startEndTime.end >= reservedTime.start &&
+                      reservedTime.end <= lastPeriodEnd; // Ensure it ends within school hours
   
                     return (
-                      <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
-                        {isReserved ? (
+                      <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
+                        {isReservedWithinPeriod ? (
                           <span className="reserved">
                             Reserved Time ({reservedTime.start} - {reservedTime.end})
                           </span>
@@ -422,12 +425,11 @@ useEffect(() => {
             );
           })}
   
-          {/* Reserved Time Row for After-School Hours */}
+          {/* After School Hours Reserved Time Row */}
           <tr>
             <td>After School Hours Reserved Time</td>
             {days.map(day => {
               const reservedTime = reserveDay[day];
-              const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
               const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
   
               return (
