@@ -332,7 +332,7 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
-    // Parse reserveDay object safely
+    // Parse reserveDay object safely, setting defaults if values are missing
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
@@ -340,6 +340,11 @@ useEffect(() => {
       console.error('Error parsing reserveDay:', e);
       reserveDay = {};
     }
+    
+    // Set default values for each day if reserveDay entries are missing
+    days.forEach(day => {
+      reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
+    });
   
     // Determine the end time of the last period
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodTimings.length - 1].end;
@@ -380,7 +385,7 @@ useEffect(() => {
                       <td key={`${day}-${period}`} onClick={() => !isReserved && handleOpenModal(day, period)}>
                         {isReserved ? (
                           <span className="reserved">
-                            Reserved Time ({reservedTime.start} - {reservedTime.end})
+                            Reserved Time ({reservedTime.start || 'N/A'} - {reservedTime.end || 'N/A'})
                           </span>
                         ) : periodAssignment ? (
                           <>
@@ -431,7 +436,7 @@ useEffect(() => {
                 <td key={day}>
                   {isAfterSchoolHours ? (
                     <div className="reserved">
-                      {`${reservedTime.start} - ${reservedTime.end}`}
+                      {`${reservedTime.start || 'N/A'} - ${reservedTime.end || 'N/A'}`}
                     </div>
                   ) : (
                     <span>-</span> // Placeholder if no reserved time
