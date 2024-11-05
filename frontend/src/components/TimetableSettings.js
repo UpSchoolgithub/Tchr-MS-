@@ -336,131 +336,130 @@ const TimetableSettings = () => {
         )}
 
 <h3>Reserve Type</h3>
-        <div className="form-section">
-          <div className="form-group">
-            <label>Reserve Type:</label>
-            <select name="reserveType" value={settings.reserveType} onChange={handleChange}>
-              <option value="time">Time</option>
-              <option value="day">Day</option>
-            </select>
+<div className="form-section">
+  <div className="form-group">
+    <label>Reserve Type:</label>
+    <select name="reserveType" value={settings.reserveType} onChange={handleChange}>
+      <option value="time">Time</option>
+      <option value="day">Day</option>
+    </select>
+  </div>
+
+  {settings.reserveType === 'day' && (
+    <>
+      <div className="reserve-day-section">
+        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+          <div key={day} className="reserve-day-group">
+            <label className="day-label">
+              <input
+                type="checkbox"
+                name={`reserveDay-${day}-open`}
+                checked={settings.reserveDay[day]?.open || false}
+                onChange={handleChange}
+              />
+              {day}
+            </label>
+            {settings.reserveDay[day]?.open && (
+              <div className="day-time-group">
+                <input
+                  type="time"
+                  name={`reserveDay-${day}-start`}
+                  value={settings.reserveDay[day]?.start || ''}
+                  onChange={handleChange}
+                />
+                <span>to</span>
+                <input
+                  type="time"
+                  name={`reserveDay-${day}-end`}
+                  value={settings.reserveDay[day]?.end || ''}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
           </div>
+        ))}
+      </div>
+      <div className="form-group">
+        <label>
+          Apply one particular time to all selected days
+          <input
+            type="checkbox"
+            name="applyToAll"
+            checked={settings.applyToAll}
+            onChange={handleChange}
+          />
+        </label>
+        {settings.applyToAll && (
+          <div className="day-time-group">
+            <input
+              type="time"
+              name="reserveTimeStart"
+              value={settings.reserveTimeStart}
+              onChange={handleChange}
+            />
+            <span>to</span>
+            <input
+              type="time"
+              name="reserveTimeEnd"
+              value={settings.reserveTimeEnd}
+              onChange={handleChange}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  )}
 
-          {settings.reserveType === 'day' && (
-            <>
-              <div className="reserve-day-section">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                  <div key={day} className="reserve-day-group">
-                    <label className="day-label">
-                      <input
-                        type="checkbox"
-                        name={`reserveDay-${day}-open`}
-                        checked={settings.reserveDay[day]?.open || false}
-                        onChange={handleChange}
-                      />
-                      {day}
-                    </label>
-                    {settings.reserveDay[day]?.open && (
-                      <div className="day-time-group">
-                        <input
-                          type="time"
-                          name={`reserveDay-${day}-start`}
-                          value={settings.reserveDay[day]?.start || ''}
-                          onChange={handleChange}
-                        />
-                        <span>to</span>
-                        <input
-                          type="time"
-                          name={`reserveDay-${day}-end`}
-                          value={settings.reserveDay[day]?.end || ''}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="form-group">
-                <label>
-                  Apply one particular time to all selected days
-                  <input
-                    type="checkbox"
-                    name="applyToAll"
-                    checked={settings.applyToAll}
-                    onChange={handleChange}
-                  />
-                </label>
-                {settings.applyToAll && (
-                  <div className="day-time-group">
-                    <input
-                      type="time"
-                      name="reserveTimeStart"
-                      value={settings.reserveTimeStart}
-                      onChange={handleChange}
-                    />
-                    <span>to</span>
-                    <input
-                      type="time"
-                      name="reserveTimeEnd"
-                      value={settings.reserveTimeEnd}
-                      onChange={handleChange}
-                    />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {settings.reserveType === 'time' && (
-            <>
-              <div className="form-group">
-                <label>Reserve Time Start:</label>
-                <input
-                  type="time"
-                  name="reserveTimeStart"
-                  value={settings.reserveTimeStart}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Reserve Time End:</label>
-                <input
-                  type="time"
-                  name="reserveTimeEnd"
-                  value={settings.reserveTimeEnd}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>
-                  Apply to all selected days (excluding Sunday)
-                  <input
-                    type="checkbox"
-                    name="applyToAll"
-                    checked={settings.applyToAll}
-                    onChange={handleChange}
-                  />
-                </label>
-                {settings.applyToAll && (
-                  <div className="form-group">
-                    <label>
-                      Include Saturday
-                      <input
-                        type="checkbox"
-                        name="includeSaturday"
-                        checked={settings.includeSaturday}
-                        onChange={handleChange}
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-        <button type="submit" className="save-button">Save Timetable Settings</button>
-      </form>
-    </div>
-  );
+  {settings.reserveType === 'time' && (
+    <>
+      <div className="form-group">
+        <label>Reserve Time Start:</label>
+        <input
+          type="time"
+          name="reserveTimeStart"
+          value={settings.reserveTimeStart}
+          onChange={handleChange}
+        />
+      </div>
+      <div className="form-group">
+        <label>Reserve Time End:</label>
+        <input
+          type="time"
+          name="reserveTimeEnd"
+          value={settings.reserveTimeEnd}
+          onChange={handleChange}
+        />
+      </div>
+      <div className="form-group">
+        <label>
+          Apply to all selected days
+          <input
+            type="checkbox"
+            name="applyToAll"
+            checked={settings.applyToAll}
+            onChange={handleChange}
+          />
+        </label>
+        {settings.applyToAll && (
+          <div className="form-group">
+            <label>
+              Include Saturday
+              <input
+                type="checkbox"
+                name="includeSaturday"
+                checked={settings.includeSaturday}
+                onChange={handleChange}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+    </>
+  )}
+</div>
+<button type="submit" className="save-button">Save Timetable Settings</button>
+</form>
+</div>
+);
 };
-
 export default TimetableSettings;
