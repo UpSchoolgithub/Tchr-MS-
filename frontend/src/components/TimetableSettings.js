@@ -327,7 +327,7 @@ const TimetableSettings = () => {
           </>
         )}
 
-        <h3>Reserve Type</h3>
+<h3>Reserve Type</h3>
         <div className="form-section">
           <div className="form-group">
             <label>Reserve Type:</label>
@@ -336,6 +336,7 @@ const TimetableSettings = () => {
               <option value="day">Day</option>
             </select>
           </div>
+
           {settings.reserveType === 'day' && (
             <>
               <div className="reserve-day-section">
@@ -400,6 +401,7 @@ const TimetableSettings = () => {
               </div>
             </>
           )}
+
           {settings.reserveType === 'time' && (
             <>
               <div className="form-group">
@@ -419,6 +421,30 @@ const TimetableSettings = () => {
                   value={settings.reserveTimeEnd}
                   onChange={handleChange}
                 />
+              </div>
+              <div className="form-group">
+                <label>
+                  Apply to all selected days (excluding Sunday)
+                  <input
+                    type="checkbox"
+                    name="applyToAll"
+                    checked={settings.applyToAll}
+                    onChange={handleChange}
+                  />
+                </label>
+                {settings.applyToAll && (
+                  <div className="form-group">
+                    <label>
+                      Include Saturday
+                      <input
+                        type="checkbox"
+                        name="includeSaturday"
+                        checked={settings.includeSaturday}
+                        onChange={handleChange}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
             </>
           )}
