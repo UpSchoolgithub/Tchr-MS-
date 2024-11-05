@@ -487,7 +487,7 @@ useEffect(() => {
   
     const doc = new jsPDF('p', 'mm', 'a4');
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const rows = [];
     const timeline = [];
   
@@ -510,10 +510,9 @@ useEffect(() => {
       }
     });
   
-    if (timetableSettings.reserveTimeStart && timetableSettings.reserveTimeEnd) {
-      timeline.push({ type: 'reserved', label: 'RESERVED TIME', time: `${timetableSettings.reserveTimeStart} - ${timetableSettings.reserveTimeEnd}` });
-    }
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
   
+    // Add each period and assignments to rows
     timeline.forEach(entry => {
       const row = [entry.time];
       if (entry.type === 'period') {
@@ -527,6 +526,20 @@ useEffect(() => {
       }
       rows.push(row);
     });
+  
+    // After School Hours Reserved Time Row
+    const afterSchoolRow = ['After School Hours Reserved Time'];
+    days.forEach(day => {
+      const reservedTime = reserveDay[day];
+      const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
+  
+      if (isAfterSchoolHours) {
+        afterSchoolRow.push(`afterschool hours\n${reservedTime.start} to ${reservedTime.end}`);
+      } else {
+        afterSchoolRow.push('-');
+      }
+    });
+    rows.push(afterSchoolRow);
   
     const columns = ['Time', ...days];
   
@@ -565,7 +578,6 @@ useEffect(() => {
     const filename = `Timetable_${className || classId}_${sectionName || sectionId}.pdf`;
     doc.save(filename);
   };
-  
   
   
   
