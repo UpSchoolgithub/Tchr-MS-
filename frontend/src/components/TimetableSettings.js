@@ -23,8 +23,10 @@ const TimetableSettings = () => {
     reserveTimeStart: '',
     reserveTimeEnd: '',
     applyToAll: false,
-    periodTimings: [], // Ensure this is always initialized as an array
+    includeSaturday: false,  // Add includeSaturday here
+    periodTimings: [],
   });
+
   const [error, setError] = useState('');
   const [showPeriodSettings, setShowPeriodSettings] = useState(false);
 
@@ -132,38 +134,43 @@ const TimetableSettings = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const updatedReserveDay = { ...settings.reserveDay };
-    if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
-      for (const day of ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) { // Exclude Sunday
-        if (updatedReserveDay[day]?.open) {
-          updatedReserveDay[day].start = settings.reserveTimeStart;
-          updatedReserveDay[day].end = settings.reserveTimeEnd;
-        }
+  const updatedReserveDay = { ...settings.reserveDay };
+  if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
+    // Apply to Monday to Friday by default
+    ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].forEach((day) => {
+      if (!updatedReserveDay[day]) {
+        updatedReserveDay[day] = { open: true };
       }
-      if (settings.includeSaturday && !updatedReserveDay["Saturday"]) {
-        updatedReserveDay["Saturday"] = {
-          open: true,
-          start: settings.reserveTimeStart,
-          end: settings.reserveTimeEnd,
-        };
-      }
-    }
+      updatedReserveDay[day].start = settings.reserveTimeStart;
+      updatedReserveDay[day].end = settings.reserveTimeEnd;
+    });
 
-    try {
-      const settingsToSave = {
-        ...settings,
-        reserveDay: JSON.stringify(updatedReserveDay),
-        periodTimings: settings.periodTimings, // Ensure periodTimings is included
-      };
-      await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
-      alert('Timetable settings saved successfully!');
-    } catch (error) {
-      console.error('Error saving timetable settings:', error);
-      alert('Failed to save timetable settings.');
+    // Optionally include Saturday if checkbox is selected
+    if (settings.includeSaturday) {
+      if (!updatedReserveDay["Saturday"]) {
+        updatedReserveDay["Saturday"] = { open: true };
+      }
+      updatedReserveDay["Saturday"].start = settings.reserveTimeStart;
+      updatedReserveDay["Saturday"].end = settings.reserveTimeEnd;
     }
-  };
+  }
+
+  try {
+    const settingsToSave = {
+      ...settings,
+      reserveDay: JSON.stringify(updatedReserveDay),
+      periodTimings: settings.periodTimings, // Ensure periodTimings is included
+    };
+    await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
+    alert('Timetable settings saved successfully!');
+  } catch (error) {
+    console.error('Error saving timetable settings:', error);
+    alert('Failed to save timetable settings.');
+  }
+};
+
 
 
   return (
