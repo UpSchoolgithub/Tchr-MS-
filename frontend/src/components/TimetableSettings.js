@@ -345,6 +345,17 @@ const TimetableSettings = () => {
     </select>
   </div>
 
+  {/* Note for Reserve Type: Time */}
+  {settings.reserveType === 'time' && (
+    <div className="form-group note">
+      <p>
+        <strong>Note:</strong> This reserved time will apply from <strong>Monday to Friday</strong> by default. 
+        If you want to include Saturday, tick the "Include Saturday" option below. 
+        For a customized schedule for each day, please choose "Reserve Type: Day."
+      </p>
+    </div>
+  )}
+
   {settings.reserveType === 'day' && (
     <>
       <div className="reserve-day-section">
@@ -379,34 +390,6 @@ const TimetableSettings = () => {
           </div>
         ))}
       </div>
-      <div className="form-group">
-        <label>
-          Apply one particular time to all selected days
-          <input
-            type="checkbox"
-            name="applyToAll"
-            checked={settings.applyToAll}
-            onChange={handleChange}
-          />
-        </label>
-        {settings.applyToAll && (
-          <div className="day-time-group">
-            <input
-              type="time"
-              name="reserveTimeStart"
-              value={settings.reserveTimeStart}
-              onChange={handleChange}
-            />
-            <span>to</span>
-            <input
-              type="time"
-              name="reserveTimeEnd"
-              value={settings.reserveTimeEnd}
-              onChange={handleChange}
-            />
-          </div>
-        )}
-      </div>
     </>
   )}
 
@@ -432,27 +415,14 @@ const TimetableSettings = () => {
       </div>
       <div className="form-group">
         <label>
-          Apply to all selected days
+          Include Saturday
           <input
             type="checkbox"
-            name="applyToAll"
-            checked={settings.applyToAll}
+            name="includeSaturday"
+            checked={settings.includeSaturday}
             onChange={handleChange}
           />
         </label>
-        {settings.applyToAll && (
-          <div className="form-group">
-            <label>
-              Include Saturday
-              <input
-                type="checkbox"
-                name="includeSaturday"
-                checked={settings.includeSaturday}
-                onChange={handleChange}
-              />
-            </label>
-          </div>
-        )}
       </div>
     </>
   )}
@@ -460,6 +430,7 @@ const TimetableSettings = () => {
 <button type="submit" className="save-button">Save Timetable Settings</button>
 </form>
 </div>
+
 );
 };
 export default TimetableSettings;
