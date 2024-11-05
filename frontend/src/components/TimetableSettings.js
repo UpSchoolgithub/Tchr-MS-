@@ -136,11 +136,18 @@ const TimetableSettings = () => {
 
     const updatedReserveDay = { ...settings.reserveDay };
     if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
-      for (const day in updatedReserveDay) {
-        if (updatedReserveDay[day].open) {
+      for (const day of ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) { // Exclude Sunday
+        if (updatedReserveDay[day]?.open) {
           updatedReserveDay[day].start = settings.reserveTimeStart;
           updatedReserveDay[day].end = settings.reserveTimeEnd;
         }
+      }
+      if (settings.includeSaturday && !updatedReserveDay["Saturday"]) {
+        updatedReserveDay["Saturday"] = {
+          open: true,
+          start: settings.reserveTimeStart,
+          end: settings.reserveTimeEnd,
+        };
       }
     }
 
@@ -157,6 +164,7 @@ const TimetableSettings = () => {
       alert('Failed to save timetable settings.');
     }
   };
+
 
   return (
     <div className="timetable-settings-container">
