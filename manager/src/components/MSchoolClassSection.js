@@ -491,6 +491,20 @@ useEffect(() => {
     const rows = [];
     const timeline = [];
   
+    // Define reserveDay with fallback structure
+    let reserveDay;
+    try {
+      reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+    } catch (e) {
+      console.error('Error parsing reserveDay:', e);
+      reserveDay = {};
+    }
+  
+    // Set default values for each day if reserveDay entries are missing
+    days.forEach(day => {
+      reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
+    });
+  
     periods.forEach((period, index) => {
       const periodTiming = timetableSettings.periodTimings[index];
       const periodTimeText = periodTiming ? `${periodTiming.start} - ${periodTiming.end}` : 'No Time';
