@@ -170,12 +170,10 @@ const TimetableSettings = () => {
     try {
       const settingsToSave = {
         ...settings,
+        includeSaturday: settings.includeSaturday, // Explicitly include includeSaturday
         reserveDay: JSON.stringify(updatedReserveDay),
         periodTimings: settings.periodTimings,
       };
-  
-      // Log the settings to save, particularly to verify `includeSaturday`
-      console.log("Settings to save:", settingsToSave);
   
       await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');
@@ -184,6 +182,7 @@ const TimetableSettings = () => {
       alert('Failed to save timetable settings.');
     }
   };
+  
   
   
   
