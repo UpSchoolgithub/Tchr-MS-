@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
+const { getTeacherAssignments } = require('../controllers/teacherController');
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -250,5 +251,7 @@ const getTeacherAssignments = async (req, res) => {
 module.exports = {
   getTeacherAssignments
 };
+
+router.get('/:teacherId/assignments', authenticateManager, getTeacherAssignments);
 
 module.exports = router;
