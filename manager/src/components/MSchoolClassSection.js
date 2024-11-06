@@ -331,11 +331,12 @@ useEffect(() => {
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    if (timetableSettings.includeSaturday) {
-      days.push('Saturday');
-    }
-    days.push('Sunday'); // Sunday will be shown but should not display reserved time in `time` mode.
-  
+      if (timetableSettings.includeSaturday) { // New condition to add Saturday if included
+        days.push('Saturday');
+      }
+      days.push('Sunday');  // Sunday will be shown but should not display reserved time in `time` mode.
+
+
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
   
     // Handle reserve type "time" with common start/end times, or "day" with per-day times
@@ -679,6 +680,24 @@ return (
       <button onClick={handleShowTimetable}>Timetable</button>
       <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
     </div>
+
+    {/* Checkbox for enabling Saturday for Reserve Type */}
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={timetableSettings?.includeSaturday || false}
+            onChange={(e) =>
+              setTimetableSettings((prev) => ({
+                ...prev,
+                includeSaturday: e.target.checked,
+              }))
+            }
+          />
+          Enable Saturday for Reserve Type
+        </label>
+      </div>
+
     {successMessage && <div className="success-message">{successMessage}</div>}
     {error && <div className="error-message">{error}</div>}
     {showCalendar && (
