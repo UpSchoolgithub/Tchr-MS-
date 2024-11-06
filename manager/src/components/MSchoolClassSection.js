@@ -329,7 +329,7 @@ useEffect(() => {
       return <p>No timetable settings available</p>;
     }
   
-    // Keep Saturday in the days array by default
+    // Keep Saturday in the days array by default for regular class assignments
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
@@ -385,7 +385,7 @@ useEffect(() => {
                     let reserveStart = '';
                     let reserveEnd = '';
   
-                    // Apply reserve time conditionally based on the selected reserve type
+                    // Apply reserve time only if it's enabled for the day
                     if (reserveType === "time" && day !== 'Sunday' && (day !== 'Saturday' || timetableSettings.includeSaturday)) {
                       isReservedWithinPeriod =
                         startEndTime.start <= commonReserveEnd &&
@@ -481,6 +481,7 @@ useEffect(() => {
       </table>
     );
   };
+  
   
   
   

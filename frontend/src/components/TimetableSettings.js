@@ -141,42 +141,43 @@ const TimetableSettings = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  const updatedReserveDay = { ...settings.reserveDay };
-  if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
-    // Apply to Monday to Friday by default
-    ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].forEach((day) => {
-      if (!updatedReserveDay[day]) {
-        updatedReserveDay[day] = { open: true };
+    e.preventDefault();
+  
+    const updatedReserveDay = { ...settings.reserveDay };
+    if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
+      // Apply to Monday to Friday by default
+      ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].forEach((day) => {
+        if (!updatedReserveDay[day]) {
+          updatedReserveDay[day] = { open: true };
+        }
+        updatedReserveDay[day].start = settings.reserveTimeStart;
+        updatedReserveDay[day].end = settings.reserveTimeEnd;
+      });
+  
+      // Include Saturday for reserved time only if checkbox is selected
+      if (settings.includeSaturday) {
+        if (!updatedReserveDay["Saturday"]) {
+          updatedReserveDay["Saturday"] = { open: true };
+        }
+        updatedReserveDay["Saturday"].start = settings.reserveTimeStart;
+        updatedReserveDay["Saturday"].end = settings.reserveTimeEnd;
       }
-      updatedReserveDay[day].start = settings.reserveTimeStart;
-      updatedReserveDay[day].end = settings.reserveTimeEnd;
-    });
-
-    // Optionally include Saturday if checkbox is selected
-    if (settings.includeSaturday) {
-      if (!updatedReserveDay["Saturday"]) {
-        updatedReserveDay["Saturday"] = { open: true };
-      }
-      updatedReserveDay["Saturday"].start = settings.reserveTimeStart;
-      updatedReserveDay["Saturday"].end = settings.reserveTimeEnd;
     }
-  }
-
-  try {
-    const settingsToSave = {
-      ...settings,
-      reserveDay: JSON.stringify(updatedReserveDay),
-      periodTimings: settings.periodTimings, // Ensure periodTimings is included
-    };
-    await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
-    alert('Timetable settings saved successfully!');
-  } catch (error) {
-    console.error('Error saving timetable settings:', error);
-    alert('Failed to save timetable settings.');
-  }
-};
+  
+    try {
+      const settingsToSave = {
+        ...settings,
+        reserveDay: JSON.stringify(updatedReserveDay),
+        periodTimings: settings.periodTimings,
+      };
+      await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
+      alert('Timetable settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving timetable settings:', error);
+      alert('Failed to save timetable settings.');
+    }
+  };
+  
 
 
 
