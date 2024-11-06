@@ -343,7 +343,7 @@ useEffect(() => {
   
     // Keep Saturday in the days array by default for regular class assignments
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday','Saturday'];
   if (timetableSettings.includeSaturday) { // Add Saturday only if enabled
     days.push('Saturday');
   }
