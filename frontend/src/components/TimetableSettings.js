@@ -68,19 +68,25 @@ const TimetableSettings = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name.startsWith('reserveDay')) {
-      const [_, day, field] = name.split('-');
+  
+    if (name === "includeSaturday") {
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        includeSaturday: checked,
+      }));
+    } else if (name.startsWith("reserveDay")) {
+      const [_, day, field] = name.split("-");
       setSettings((prevSettings) => {
         const updatedDaySettings = {
           ...prevSettings.reserveDay[day],
-          [field || 'open']: type === 'checkbox' ? checked : value,
+          [field || "open"]: type === "checkbox" ? checked : value,
         };
-
-        if (type === 'checkbox' && !checked) {
-          updatedDaySettings.start = '';
-          updatedDaySettings.end = '';
+  
+        if (type === "checkbox" && !checked) {
+          updatedDaySettings.start = "";
+          updatedDaySettings.end = "";
         }
-
+  
         return {
           ...prevSettings,
           reserveDay: {
@@ -89,13 +95,13 @@ const TimetableSettings = () => {
           },
         };
       });
-    } else if (name === 'applyToAll') {
+    } else if (name === "applyToAll") {
       setSettings((prevSettings) => ({
         ...prevSettings,
         applyToAll: checked,
       }));
-    } else if (name.startsWith('periodStart-')) {
-      const index = parseInt(name.split('-')[1], 10);
+    } else if (name.startsWith("periodStart-")) {
+      const index = parseInt(name.split("-")[1], 10);
       setSettings((prevSettings) => {
         const periodTimings = [...prevSettings.periodTimings];
         periodTimings[index] = {
@@ -104,8 +110,8 @@ const TimetableSettings = () => {
         };
         return { ...prevSettings, periodTimings };
       });
-    } else if (name.startsWith('periodEnd-')) {
-      const index = parseInt(name.split('-')[1], 10);
+    } else if (name.startsWith("periodEnd-")) {
+      const index = parseInt(name.split("-")[1], 10);
       setSettings((prevSettings) => {
         const periodTimings = [...prevSettings.periodTimings];
         periodTimings[index] = {
@@ -121,6 +127,7 @@ const TimetableSettings = () => {
       }));
     }
   };
+  
 
   const handleSavePeriodSettings = () => {
     setShowPeriodSettings(true);
