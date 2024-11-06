@@ -35,18 +35,21 @@ const TimetableSettings = () => {
       try {
         const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
         const data = response.data;
-
+    
         if (data.reserveDay) {
           data.reserveDay = JSON.parse(data.reserveDay);
         } else {
           data.reserveDay = {};
         }
-
+    
+        // Log to check if includeSaturday is being received correctly
+        console.log("Fetched timetable data:", data);
+    
         setSettings({
           ...data,
           periodTimings: data.periodTimings || [], // Ensure this is an array
         });
-
+    
         if (data.periodTimings && data.periodTimings.length > 0) {
           setShowPeriodSettings(true);
         }
@@ -60,6 +63,7 @@ const TimetableSettings = () => {
         }
       }
     };
+    
 
     if (schoolId) {
       fetchTimetable();
@@ -145,7 +149,6 @@ const TimetableSettings = () => {
   
     const updatedReserveDay = { ...settings.reserveDay };
     if (settings.applyToAll && settings.reserveTimeStart && settings.reserveTimeEnd) {
-      // Apply to Monday to Friday by default
       ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].forEach((day) => {
         if (!updatedReserveDay[day]) {
           updatedReserveDay[day] = { open: true };
@@ -154,7 +157,6 @@ const TimetableSettings = () => {
         updatedReserveDay[day].end = settings.reserveTimeEnd;
       });
   
-      // Include Saturday for reserved time only if checkbox is selected
       if (settings.includeSaturday) {
         if (!updatedReserveDay["Saturday"]) {
           updatedReserveDay["Saturday"] = { open: true };
@@ -170,6 +172,10 @@ const TimetableSettings = () => {
         reserveDay: JSON.stringify(updatedReserveDay),
         periodTimings: settings.periodTimings,
       };
+  
+      // Log the settings to save, particularly to verify `includeSaturday`
+      console.log("Settings to save:", settingsToSave);
+  
       await axios.put(`https://tms.up.school/api/schools/${schoolId}/timetable`, settingsToSave);
       alert('Timetable settings saved successfully!');
     } catch (error) {
@@ -177,6 +183,7 @@ const TimetableSettings = () => {
       alert('Failed to save timetable settings.');
     }
   };
+  
   
   
 
