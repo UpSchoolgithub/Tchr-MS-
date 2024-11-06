@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import './TeacherAssignments.css';
 
 const TeacherAssignments = () => {
-  const { teacherId } = useParams(); // Ensure teacherId is retrieved from URL
+  const { teacherId } = useParams();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,6 +41,8 @@ const TeacherAssignments = () => {
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
+              <th>Start Time</th>
+              <th>End Time</th>
             </tr>
           </thead>
           <tbody>
@@ -50,6 +52,8 @@ const TeacherAssignments = () => {
                 <td>{assignment.day}</td>
                 <td>{assignment.period}</td>
                 <td>{assignment.subjectName}</td>
+                <td>{assignment.startTime}</td>
+                <td>{assignment.endTime}</td>
               </tr>
             ))}
           </tbody>
