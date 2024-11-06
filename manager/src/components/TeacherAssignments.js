@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../services/axiosInstance'; // Assuming axios is set up with base URL
+import axiosInstance from '../services/axiosInstance';
+import { useParams } from 'react-router-dom';
+import './TeacherAssignments.css';
 
-const TeacherAssignments = ({ teacherId }) => {
+const TeacherAssignments = () => {
+  const { teacherId } = useParams(); // Ensure teacherId is retrieved from URL
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,12 +29,12 @@ const TeacherAssignments = ({ teacherId }) => {
   if (error) return <p>{error}</p>;
 
   return (
-    <div>
-      <h2>Assignments for Teacher {teacherId}</h2>
+    <div className="assignments-container">
+      <h2>Assignments for Teacher</h2>
       {assignments.length === 0 ? (
         <p>No assignments found.</p>
       ) : (
-        <table>
+        <table className="assignments-table">
           <thead>
             <tr>
               <th>School</th>
