@@ -75,33 +75,18 @@ const TimetableSettings = () => {
           ...prevSettings.reserveDay[day],
           [field || 'open']: type === 'checkbox' ? checked : value,
         };
-  
+
         if (type === 'checkbox' && !checked) {
           updatedDaySettings.start = '';
           updatedDaySettings.end = '';
         }
-  
+
         return {
           ...prevSettings,
           reserveDay: {
             ...prevSettings.reserveDay,
             [day]: updatedDaySettings,
           },
-        };
-      });
-    } else if (name === 'includeSaturday') {
-      setSettings((prevSettings) => {
-        const updatedReserveDay = { ...prevSettings.reserveDay };
-        
-        // Clear Saturday timings if unchecked
-        if (!checked) {
-          updatedReserveDay["Saturday"] = { open: false, start: '', end: '' };
-        }
-        
-        return {
-          ...prevSettings,
-          includeSaturday: checked,
-          reserveDay: updatedReserveDay
         };
       });
     } else if (name === 'applyToAll') {
@@ -136,7 +121,17 @@ const TimetableSettings = () => {
       }));
     }
   };
-  
+
+  const handleSavePeriodSettings = () => {
+    setShowPeriodSettings(true);
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      periodTimings: Array.from({ length: prevSettings.periodsPerDay }, () => ({
+        start: '',
+        end: '',
+      })),
+    }));
+  };
 
   const handleSubmit = async (e) => {
   e.preventDefault();
