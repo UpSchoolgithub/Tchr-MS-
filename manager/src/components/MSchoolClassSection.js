@@ -423,8 +423,45 @@ useEffect(() => {
   
  // tthi is updated 
   
+ const handleReserveTypeChange = (newReserveType) => {
+  setTimetableSettings((prevSettings) => {
+    if (newReserveType === 'time') {
+      // Clear day-based data
+      return {
+        ...prevSettings,
+        reserveType: 'time',
+        reserveDay: null, // Assuming this is where day-based data is stored
+      };
+    } else if (newReserveType === 'day') {
+      // Clear time-based data
+      return {
+        ...prevSettings,
+        reserveType: 'day',
+        reserveTimeStart: null,
+        reserveTimeEnd: null,
+      };
+    }
+    return prevSettings;
+  });
+};
+
   
-  
+const saveTimetableSettings = async () => {
+  // Prepare data based on reserve type
+  const settingsToSave = {
+    ...timetableSettings,
+    ...(timetableSettings.reserveType === 'time' ? { reserveDay: undefined } : {}),
+    ...(timetableSettings.reserveType === 'day' ? { reserveTimeStart: undefined, reserveTimeEnd: undefined } : {}),
+  };
+
+  try {
+    await axiosInstance.post(`/schools/${schoolId}/timetable`, settingsToSave);
+    setSuccessMessage("Timetable settings saved successfully!");
+  } catch (error) {
+    console.error("Error saving timetable settings:", error);
+    setError("Failed to save timetable settings. Please try again.");
+  }
+};
   
             
   
