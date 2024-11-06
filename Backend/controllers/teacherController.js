@@ -12,7 +12,7 @@ const getTeacherAssignments = async (req, res) => {
                 { model: School, attributes: ['name'] },
                 { model: Subject, attributes: ['subjectName'] },
                 { model: ClassInfo, attributes: ['className'] },
-                { model: Section, attributes: ['name'] }
+                { model: Section, attributes: ['section_name'] } // Use actual column name here
             ],
             attributes: ['day', 'period', 'startTime', 'endTime']
         });
@@ -20,7 +20,7 @@ const getTeacherAssignments = async (req, res) => {
         const formattedAssignments = assignments.map(assignment => ({
             schoolName: assignment.School.name,
             className: assignment.ClassInfo.className,
-            sectionName: assignment.Section.name,
+            sectionName: assignment.Section.section_name, // Update this if column name differs
             day: assignment.day,
             period: assignment.period,
             subjectName: assignment.Subject.subjectName,
