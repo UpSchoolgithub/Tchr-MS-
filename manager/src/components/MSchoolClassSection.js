@@ -132,12 +132,24 @@ useEffect(() => {
     try {
       const response = await axiosInstance.get(`/schools/${schoolId}/timetable`);
       console.log('Timetable Settings Response:', response.data);
+      
+      // Check if `includeSaturday` is present and correct in response
+      if ('includeSaturday' in response.data) {
+        console.log('includeSaturday:', response.data.includeSaturday); // Should log true or false
+      } else {
+        console.warn('includeSaturday not found in timetable settings response');
+      }
+      
       setTimetableSettings(response.data);
+  
+      // Check if state has updated
+      console.log('Updated Timetable Settings:', timetableSettings);
     } catch (error) {
       setError('Error fetching timetable settings.');
       console.error('Error fetching timetable settings:', error);
     }
   };
+  
 
   const generatePeriodTimings = () => {
     const { periodsPerDay, durationPerPeriod, schoolStartTime } = timetableSettings;
@@ -331,8 +343,11 @@ useEffect(() => {
   
     // Keep Saturday in the days array by default for regular class assignments
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  if (timetableSettings.includeSaturday) { // Add Saturday only if enabled
+    days.push('Saturday');
+  }
+  days.push('Sunday'); // Always show Sunday
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
   
     // Handle reserve type "time" with common start/end times, or "day" with per-day times
