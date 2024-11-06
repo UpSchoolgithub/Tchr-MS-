@@ -1,48 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import axiosInstance from '../services/axiosInstance';
-import './TeacherAssignments.css';
+import axiosInstance from '../services/axiosInstance'; // Assuming axios is set up with base URL
 
-const TeacherAssignments = () => {
-  const { teacherId } = useParams();
+const TeacherAssignments = ({ teacherId }) => {
   const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
         setAssignments(response.data);
-      } catch (error) {
-        console.error('Error fetching assignments:', error);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching assignments:", err);
+        setError('Failed to load assignments');
+        setLoading(false);
       }
     };
 
     fetchAssignments();
   }, [teacherId]);
 
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
-    <div className="teacher-assignments">
-      <h2>Assignments for Teacher</h2>
-      <table className="assignments-table">
-        <thead>
-          <tr>
-            <th>School</th>
-            <th>Day</th>
-            <th>Period</th>
-            <th>Subject</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assignments.map((assignment, index) => (
-            <tr key={index}>
-              <td>{assignment.schoolName}</td>
-              <td>{assignment.day}</td>
-              <td>{assignment.period}</td>
-              <td>{assignment.subjectName}</td>
+    <div>
+      <h2>Assignments for Teacher {teacherId}</h2>
+      {assignments.length === 0 ? (
+        <p>No assignments found.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>School</th>
+              <th>Day</th>
+              <th>Period</th>
+              <th>Subject</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {assignments.map((assignment, index) => (
+              <tr key={index}>
+                <td>{assignment.schoolName}</td>
+                <td>{assignment.day}</td>
+                <td>{assignment.period}</td>
+                <td>{assignment.subjectName}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

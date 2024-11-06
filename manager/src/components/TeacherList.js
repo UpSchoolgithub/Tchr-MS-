@@ -31,6 +31,7 @@ const TeacherList = () => {
       setTeachers(response.data);
     } catch (error) {
       console.error('Error fetching teachers:', error);
+      setError('Failed to load teachers.');
     }
   };
 
