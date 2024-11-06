@@ -330,7 +330,7 @@ useEffect(() => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday','Saturday'];
       if (timetableSettings.includeSaturday) { // New condition to add Saturday if included
         days.push('Saturday');
       }
