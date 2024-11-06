@@ -49,7 +49,7 @@ const TeacherAssignments = () => {
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-    doc.text('Assignments for Teacher', 14, 10);
+    doc.text('Teacher Time Table', 14, 10);
 
     const tableData = filteredAssignments.map((assignment) => [
       assignment.schoolName,
@@ -75,7 +75,7 @@ const TeacherAssignments = () => {
 
   return (
     <div className="assignments-container">
-      <h2>Assignments for Teacher</h2>
+      <h2>Teacher Time Table</h2>
 
       {/* Filters */}
       <div className="filters">

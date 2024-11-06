@@ -72,7 +72,7 @@ const TeacherList = () => {
               <td>
                 <button className="edit-button" onClick={() => navigate(`/teachers/edit/${teacher.id}`)}>Edit</button>
                 <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
-                <button className="view-assignments-button" onClick={() => handleViewAssignments(teacher.id)}>View Assignments</button>
+                <button className="view-assignments-button" onClick={() => handleViewAssignments(teacher.id)}>View Teacher Timetable</button>
               </td>
             </tr>
           ))}
