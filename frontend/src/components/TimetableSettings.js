@@ -36,18 +36,18 @@ const TimetableSettings = () => {
         const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
         const data = response.data;
     
+        // Log the fetched data to verify if includeSaturday is present
+        console.log("Fetched timetable data:", data);
+    
         if (data.reserveDay) {
           data.reserveDay = JSON.parse(data.reserveDay);
         } else {
           data.reserveDay = {};
         }
     
-        // Log to check if includeSaturday is being received correctly
-        console.log("Fetched timetable data:", data);
-    
         setSettings({
           ...data,
-          periodTimings: data.periodTimings || [], // Ensure this is an array
+          periodTimings: data.periodTimings || [],
         });
     
         if (data.periodTimings && data.periodTimings.length > 0) {
@@ -63,6 +63,7 @@ const TimetableSettings = () => {
         }
       }
     };
+    
     
 
     if (schoolId) {
