@@ -408,39 +408,40 @@ const TimetableSettings = () => {
     </>
   )}
 
-  {settings.reserveType === 'time' && (
-    <>
-      <div className="form-group">
-        <label>Reserve Time Start:</label>
+{settings.reserveType === 'time' && (
+  <>
+    <div className="form-group">
+      <label>Reserve Time Start:</label>
+      <input
+        type="time"
+        name="reserveTimeStart"
+        value={settings.reserveTimeStart}
+        onChange={handleChange}
+      />
+    </div>
+    <div className="form-group">
+      <label>Reserve Time End:</label>
+      <input
+        type="time"
+        name="reserveTimeEnd"
+        value={settings.reserveTimeEnd}
+        onChange={handleChange}
+      />
+    </div>
+    <div className="form-group">
+      <label>
+        Include Saturday
         <input
-          type="time"
-          name="reserveTimeStart"
-          value={settings.reserveTimeStart}
+          type="checkbox"
+          name="includeSaturday"
+          checked={settings.includeSaturday}
           onChange={handleChange}
         />
-      </div>
-      <div className="form-group">
-        <label>Reserve Time End:</label>
-        <input
-          type="time"
-          name="reserveTimeEnd"
-          value={settings.reserveTimeEnd}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="form-group">
-        <label>
-          Include Saturday
-          <input
-            type="checkbox"
-            name="includeSaturday"
-            checked={settings.includeSaturday}
-            onChange={handleChange}
-          />
-        </label>
-      </div>
-    </>
-  )}
+      </label>
+    </div>
+  </>
+)}
+
 </div>
 <button type="submit" className="save-button">Save Timetable Settings</button>
 </form>

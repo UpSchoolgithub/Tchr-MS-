@@ -681,22 +681,7 @@ return (
       <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
     </div>
 
-    {/* Checkbox for enabling Saturday for Reserve Type */}
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={timetableSettings?.includeSaturday || false}
-            onChange={(e) =>
-              setTimetableSettings((prev) => ({
-                ...prev,
-                includeSaturday: e.target.checked,
-              }))
-            }
-          />
-          Enable Saturday for Reserve Type
-        </label>
-      </div>
+    
 
     {successMessage && <div className="success-message">{successMessage}</div>}
     {error && <div className="error-message">{error}</div>}
