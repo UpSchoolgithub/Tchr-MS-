@@ -1,0 +1,14 @@
+.assignments-container {
+    padding: 20px;
+  }
+  
+  .assignments-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .assignments-table th, .assignments-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+  
