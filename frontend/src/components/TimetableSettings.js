@@ -436,17 +436,7 @@ const TimetableSettings = () => {
         onChange={handleChange}
       />
     </div>
-    <div className="form-group">
-      <label>
-        Include Saturday
-        <input
-          type="checkbox"
-          name="includeSaturday"
-          checked={settings.includeSaturday}
-          onChange={handleChange}
-        />
-      </label>
-    </div>
+    
   </>
 )}
 
