@@ -334,25 +334,30 @@ useEffect(() => {
     if (timetableSettings.includeSaturday) {
       days.push('Saturday');
     }
-    days.push('Sunday');
+    days.push('Sunday'); // Sunday will be shown but should not display reserved time in `time` mode.
   
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
-    const isTimeBasedReserve = timetableSettings.reserveType === 'time';
+  
+    // Handle reserve type "time" with common start/end times, or "day" with per-day times
+    const reserveType = timetableSettings.reserveType;
     const commonReserveStart = timetableSettings.reserveTimeStart;
     const commonReserveEnd = timetableSettings.reserveTimeEnd;
-  
-    let reserveDay;
-    try {
-      reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-    } catch (e) {
-      console.error('Error parsing reserveDay:', e);
-      reserveDay = {};
+    let reserveDay = {};
+    
+    // Parse reserveDay only if reserveType is "day"
+    if (reserveType === "day") {
+      try {
+        reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+      } catch (e) {
+        console.error('Error parsing reserveDay:', e);
+        reserveDay = {};
+      }
+      
+      // Ensure defaults for each day in reserveDay
+      days.forEach(day => {
+        reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
+      });
     }
-  
-    // Set default values for each day if `reserveType` is "day"
-    days.forEach(day => {
-      reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
-    });
   
     return (
       <table className="timetable-table">
@@ -379,17 +384,32 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                    const reservedTime = isTimeBasedReserve ? { start: commonReserveStart, end: commonReserveEnd } : reserveDay[day];
+                    let isReservedWithinPeriod = false;
+                    let reserveStart = '';
+                    let reserveEnd = '';
   
-                    const isReservedWithinPeriod = reservedTime.open &&
-                      startEndTime.start <= reservedTime.end &&
-                      startEndTime.end >= reservedTime.start;
+                    if (reserveType === "time" && day !== 'Sunday') {
+                      // Reserve type "time": apply common times across days (excluding Sunday)
+                      isReservedWithinPeriod =
+                        startEndTime.start <= commonReserveEnd &&
+                        startEndTime.end >= commonReserveStart;
+                      reserveStart = commonReserveStart;
+                      reserveEnd = commonReserveEnd;
+                    } else if (reserveType === "day" && reserveDay[day]?.open) {
+                      // Reserve type "day": each day can have custom times
+                      const reservedTime = reserveDay[day];
+                      isReservedWithinPeriod =
+                        startEndTime.start <= reservedTime.end &&
+                        startEndTime.end >= reservedTime.start;
+                      reserveStart = reservedTime.start;
+                      reserveEnd = reservedTime.end;
+                    }
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
                         {isReservedWithinPeriod ? (
                           <span className="reserved">
-                            Reserved Time ({reservedTime.start} - {reservedTime.end})
+                            Reserved Time ({reserveStart} - {reserveEnd})
                           </span>
                         ) : periodAssignment ? (
                           <>
@@ -431,17 +451,25 @@ useEffect(() => {
           <tr>
             <td>After School Hours Reserved Time</td>
             {days.map(day => {
-              const reservedTime = isTimeBasedReserve
-                ? { start: commonReserveStart, end: commonReserveEnd }
-                : reserveDay[day];
-              const isAfterSchoolHours = reservedTime.open && reservedTime.start >= lastPeriodEnd;
+              const isAfterSchoolHours =
+                reserveType === "time" &&
+                day !== 'Sunday' &&
+                commonReserveStart >= lastPeriodEnd;
+  
+              const reserveAfterSchool =
+                reserveType === "day" && reserveDay[day]?.open && reserveDay[day].start >= lastPeriodEnd;
   
               return (
                 <td key={day}>
                   {isAfterSchoolHours ? (
                     <div className="reserved">
                       afterschool hours <br />
-                      {`${reservedTime.start} to ${reservedTime.end}`}
+                      {`${commonReserveStart} to ${commonReserveEnd}`}
+                    </div>
+                  ) : reserveAfterSchool ? (
+                    <div className="reserved">
+                      afterschool hours <br />
+                      {`${reserveDay[day].start} to ${reserveDay[day].end}`}
                     </div>
                   ) : (
                     <span>-</span> // Placeholder if no reserved time after school hours
