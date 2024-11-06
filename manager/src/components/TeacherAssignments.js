@@ -98,7 +98,7 @@ const TeacherAssignments = () => {
       </div>
 
       {/* Download PDF Button */}
-      <button onClick={downloadPDF}>Download Assignments as PDF</button>
+      <button onClick={downloadPDF}>Download Timetable</button>
 
       {/* Assignments Table */}
       {filteredAssignments.length === 0 ? (
