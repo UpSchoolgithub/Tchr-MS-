@@ -330,7 +330,7 @@ useEffect(() => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
     if (timetableSettings.includeSaturday) {
       days.push('Saturday');
     }
@@ -383,50 +383,45 @@ useEffect(() => {
                     {periodTime}
                   </td>
                   {days.map(day => {
-  const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-  let isReservedWithinPeriod = false;
-  let reserveStart = '';
-  let reserveEnd = '';
-
-  if (reserveType === "time" && day !== 'Sunday') {
-    // Reserve type "time": apply common times across days (excluding Sunday)
-    isReservedWithinPeriod =
-      startEndTime.start <= commonReserveStart &&
-      startEndTime.end >= commonReserveEnd &&
-      commonReserveStart >= startEndTime.start &&
-      commonReserveEnd <= startEndTime.end;
-    reserveStart = commonReserveStart;
-    reserveEnd = commonReserveEnd;
-  } else if (reserveType === "day" && reserveDay[day]?.open) {
-    // Reserve type "day": each day can have custom times
-    const reservedTime = reserveDay[day];
-    isReservedWithinPeriod =
-      startEndTime.start <= reservedTime.start &&
-      startEndTime.end >= reservedTime.end &&
-      reservedTime.start >= startEndTime.start &&
-      reservedTime.end <= startEndTime.end;
-    reserveStart = reservedTime.start;
-    reserveEnd = reservedTime.end;
-  }
-
-  return (
-    <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
-      {isReservedWithinPeriod ? (
-        <span className="reserved">
-          Reserved Time ({reserveStart} - {reserveEnd})
-        </span>
-      ) : periodAssignment ? (
-        <>
-          <div>{periodAssignment.teacher}</div>
-          <div>{periodAssignment.subject}</div>
-        </>
-      ) : (
-        <span className="add-icon">+</span>
-      )}
-    </td>
-  );
-})}
-
+                    const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+                    let isReservedWithinPeriod = false;
+                    let reserveStart = '';
+                    let reserveEnd = '';
+  
+                    if (reserveType === "time" && day !== 'Sunday') {
+                      // Reserve type "time": apply common times across days (excluding Sunday)
+                      isReservedWithinPeriod =
+                        startEndTime.start <= commonReserveEnd &&
+                        startEndTime.end >= commonReserveStart;
+                      reserveStart = commonReserveStart;
+                      reserveEnd = commonReserveEnd;
+                    } else if (reserveType === "day" && reserveDay[day]?.open) {
+                      // Reserve type "day": each day can have custom times
+                      const reservedTime = reserveDay[day];
+                      isReservedWithinPeriod =
+                        startEndTime.start <= reservedTime.end &&
+                        startEndTime.end >= reservedTime.start;
+                      reserveStart = reservedTime.start;
+                      reserveEnd = reservedTime.end;
+                    }
+  
+                    return (
+                      <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
+                        {isReservedWithinPeriod ? (
+                          <span className="reserved">
+                            Reserved Time ({reserveStart} - {reserveEnd})
+                          </span>
+                        ) : periodAssignment ? (
+                          <>
+                            <div>{periodAssignment.teacher}</div>
+                            <div>{periodAssignment.subject}</div>
+                          </>
+                        ) : (
+                          <span className="add-icon">+</span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
   
                 {/* Insert Breaks */}
