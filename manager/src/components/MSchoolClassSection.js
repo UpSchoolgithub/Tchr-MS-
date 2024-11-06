@@ -330,9 +330,12 @@ useEffect(() => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    if (timetableSettings.includeSaturday) {
+      days.push('Saturday'); // Include Saturday if checkbox is checked
+    }
+    days.push('Sunday'); // Optionally include Sunday if needed
   
-    // Parse reserveDay object safely, setting defaults if values are missing
     let reserveDay;
     try {
       reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
@@ -347,9 +350,9 @@ useEffect(() => {
     });
   
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
-    const commonReserveStart = reserveDay[days[0]].start; // Assuming all days have the same reserve start
-    const commonReserveEnd = reserveDay[days[0]].end;     // Assuming all days have the same reserve end
-    const isCommonReserved = reserveDay[days[0]].open;
+    const commonReserveStart = timetableSettings.reserveTimeStart;
+    const commonReserveEnd = timetableSettings.reserveTimeEnd;
+    const isCommonReserved = timetableSettings.reserveType === 'time';
   
     return (
       <table className="timetable-table">
@@ -376,19 +379,16 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
-                    const reservedTime = reserveDay[day];
-  
-                    // Check if reserved time falls within the current period
-                    const isReservedWithinPeriod = reservedTime && reservedTime.open &&
-                      startEndTime.start <= reservedTime.end &&
-                      startEndTime.end >= reservedTime.start &&
-                      reservedTime.end <= lastPeriodEnd; // Ensure it ends within school hours
+                    const isReservedWithinPeriod = isCommonReserved &&
+                      commonReserveStart <= startEndTime.end &&
+                      commonReserveEnd >= startEndTime.start &&
+                      commonReserveEnd <= lastPeriodEnd;
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
                         {isReservedWithinPeriod ? (
                           <span className="reserved">
-                            Reserved Time ({reservedTime.start} - {reservedTime.end})
+                            Reserved Time ({commonReserveStart} - {commonReserveEnd})
                           </span>
                         ) : periodAssignment ? (
                           <>
@@ -448,6 +448,7 @@ useEffect(() => {
       </table>
     );
   };
+  
   
   
  // tthi is updated 
