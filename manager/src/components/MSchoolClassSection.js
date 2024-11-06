@@ -329,14 +329,10 @@ useEffect(() => {
       return <p>No timetable settings available</p>;
     }
   
+    // Keep Saturday in the days array by default
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday','Saturday'];
-      if (timetableSettings.includeSaturday) { // New condition to add Saturday if included
-        days.push('Saturday');
-      }
-      days.push('Sunday');  // Sunday will be shown but should not display reserved time in `time` mode.
-
-
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  
     const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
   
     // Handle reserve type "time" with common start/end times, or "day" with per-day times
@@ -344,7 +340,7 @@ useEffect(() => {
     const commonReserveStart = timetableSettings.reserveTimeStart;
     const commonReserveEnd = timetableSettings.reserveTimeEnd;
     let reserveDay = {};
-    
+  
     // Parse reserveDay only if reserveType is "day"
     if (reserveType === "day") {
       try {
@@ -389,15 +385,14 @@ useEffect(() => {
                     let reserveStart = '';
                     let reserveEnd = '';
   
-                    if (reserveType === "time" && day !== 'Sunday') {
-                      // Reserve type "time": apply common times across days (excluding Sunday)
+                    // Apply reserve time conditionally based on the selected reserve type
+                    if (reserveType === "time" && day !== 'Sunday' && (day !== 'Saturday' || timetableSettings.includeSaturday)) {
                       isReservedWithinPeriod =
                         startEndTime.start <= commonReserveEnd &&
                         startEndTime.end >= commonReserveStart;
                       reserveStart = commonReserveStart;
                       reserveEnd = commonReserveEnd;
                     } else if (reserveType === "day" && reserveDay[day]?.open) {
-                      // Reserve type "day": each day can have custom times
                       const reservedTime = reserveDay[day];
                       isReservedWithinPeriod =
                         startEndTime.start <= reservedTime.end &&
@@ -455,10 +450,13 @@ useEffect(() => {
               const isAfterSchoolHours =
                 reserveType === "time" &&
                 day !== 'Sunday' &&
+                (day !== 'Saturday' || timetableSettings.includeSaturday) &&
                 commonReserveStart >= lastPeriodEnd;
   
               const reserveAfterSchool =
-                reserveType === "day" && reserveDay[day]?.open && reserveDay[day].start >= lastPeriodEnd;
+                reserveType === "day" &&
+                reserveDay[day]?.open &&
+                reserveDay[day].start >= lastPeriodEnd;
   
               return (
                 <td key={day}>
@@ -483,6 +481,7 @@ useEffect(() => {
       </table>
     );
   };
+  
   
   
   
