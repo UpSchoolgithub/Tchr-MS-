@@ -42,8 +42,7 @@ router.post('/refresh-token', (req, res) => {
     }
 
     // Generate a new access token with role included
-    const newToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token: newToken });
+    const token = jwt.sign({ id: manager.id, isManager: true }, process.env.JWT_SECRET, { expiresIn: '1h' });
   });
 });
 
