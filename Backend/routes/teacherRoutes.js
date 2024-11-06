@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
+const { getTeacherAssignments } = require('../controllers/teacherController');
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -219,5 +220,36 @@ router.get('/teacher/sessions', authenticateTeacherToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+// teacherController.js
+
+const getTeacherAssignments = async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    // Assuming you have a database model or query to fetch assignments
+    const assignments = await Assignment.find({ teacherId })
+      .populate('school', 'name')  // Populate school details
+      .populate('subject', 'subjectName')  // Populate subject details
+      .lean();
+
+    // Format data if necessary, for example, extracting specific fields
+    const formattedAssignments = assignments.map(assignment => ({
+      schoolName: assignment.school.name,
+      day: assignment.day,
+      period: assignment.period,
+      subjectName: assignment.subject.subjectName
+    }));
+
+    res.json(formattedAssignments);
+  } catch (error) {
+    console.error('Error fetching assignments:', error);
+    res.status(500).json({ message: 'Failed to fetch assignments' });
+  }
+};
+
+module.exports = {
+  getTeacherAssignments
+};
 
 module.exports = router;
