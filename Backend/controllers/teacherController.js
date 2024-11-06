@@ -19,22 +19,23 @@ const getTeacherAssignments = async (req, res) => {
       });
   
       const formattedAssignments = assignments.map(assignment => ({
-        schoolName: assignment.School.name,
-        className: assignment.ClassInfo.name,
-        sectionName: assignment.Section.name,
+        schoolName: assignment.School?.name || 'N/A',
+        className: assignment.ClassInfo?.name || 'N/A',
+        sectionName: assignment.Section?.name || 'N/A',
         day: assignment.day,
         period: assignment.period,
-        subjectName: assignment.Subject.subjectName,
+        subjectName: assignment.Subject?.subjectName || 'N/A',
         startTime: assignment.startTime,
         endTime: assignment.endTime,
       }));
   
       res.json(formattedAssignments);
     } catch (error) {
-      console.error('Error fetching assignments:', error);
+      console.error('Error fetching assignments:', error); // Log the actual error on the server
       res.status(500).json({ message: 'Failed to fetch assignments' });
     }
   };
+  
   
   
 
