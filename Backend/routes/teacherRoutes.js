@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/authenticateToken');
 const authenticateManager = require('../middleware/authenticateManager');
 const authenticateTeacherToken = require('../middleware/authenticateTeacherToken');
-const authenticateTeacherOrManager = require('../middleware/authenticateTeacherOrManager');
 
 // 1. Create a new teacher (protected for managers)
 router.post('/', authenticateManager, async (req, res) => {
@@ -151,11 +150,14 @@ router.delete('/:id', authenticateManager, async (req, res) => {
 });
 
 // 7. Fetch timetable for the logged-in teacher (protected for teachers)
-router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, res) => {
+router.get('/:teacherId/timetable', authenticateTeacherToken, async (req, res) => {
   const { teacherId } = req.params;
 
+  if (req.user.id !== parseInt(teacherId, 10)) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+
   try {
-    // Your timetable fetching logic here
     const timetable = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
@@ -163,17 +165,16 @@ router.get('/:teacherId/timetable', authenticateTeacherOrManager, async (req, re
         { model: Section, attributes: ['name'] },
         { model: Subject, attributes: ['name'] },
       ],
-      order: [['day', 'ASC'], ['startTime', 'ASC']],
+      order: [['day', 'ASC'], ['time', 'ASC']],
     });
 
     const formattedTimetable = timetable.map(entry => ({
       id: entry.id,
       day: entry.day,
-      className: entry.ClassInfo ? entry.ClassInfo.name : '',
-      sectionName: entry.Section ? entry.Section.name : '',
-      subjectName: entry.Subject ? entry.Subject.name : '',
-      startTime: entry.startTime,
-      endTime: entry.endTime,
+      className: entry.ClassInfo.name,
+      sectionName: entry.Section.name,
+      subjectName: entry.Subject.name,
+      time: entry.time,
     }));
 
     res.json(formattedTimetable);
