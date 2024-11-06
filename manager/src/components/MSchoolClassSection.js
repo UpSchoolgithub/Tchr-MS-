@@ -367,8 +367,8 @@ useEffect(() => {
   
                     // Ensure "Reserved Time" only appears if the period falls within the reserve time range
                     const isReservedWithinPeriod = isCommonReserved &&
-                      startEndTime.start <= commonReserveEnd &&
-                      startEndTime.end >= commonReserveStart &&
+                      startEndTime.start < commonReserveEnd &&
+                      startEndTime.end > commonReserveStart &&
                       startEndTime.start >= commonReserveStart &&
                       startEndTime.end <= commonReserveEnd;
   
