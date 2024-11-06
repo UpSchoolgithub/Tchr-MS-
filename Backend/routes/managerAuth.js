@@ -16,6 +16,7 @@ router.post('/login', async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+    
     // Include the role in the token payload
     const token = jwt.sign({ id: manager.id, role: manager.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: manager.id, role: manager.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
@@ -27,7 +28,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-
 // Refresh Token Route
 router.post('/refresh-token', (req, res) => {
   const { refreshToken } = req.body;
@@ -37,10 +37,12 @@ router.post('/refresh-token', (req, res) => {
 
   jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
+      console.error("Token verification error:", err);
+      return res.status(403).json({ message: 'Invalid or expired refresh token' });
     }
 
-    const newToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Generate a new access token with role included
+    const newToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token: newToken });
   });
 });
