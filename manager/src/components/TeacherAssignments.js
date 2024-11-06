@@ -13,6 +13,7 @@ const TeacherAssignments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch assignments when the component mounts
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
@@ -47,6 +48,7 @@ const TeacherAssignments = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+  // Download timetable as a PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text('Teacher Time Table', 14, 10);
