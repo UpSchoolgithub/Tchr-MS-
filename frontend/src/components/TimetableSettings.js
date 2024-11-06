@@ -372,9 +372,8 @@ const TimetableSettings = () => {
   {settings.reserveType === 'time' && (
     <div className="form-group note">
       <p>
-        <strong>Note:</strong> This reserved time will apply from <strong>Monday to Friday</strong> by default. 
-        If you want to include Saturday, tick the "Include Saturday" option below. 
-        For a customized schedule for each day, please choose "Reserve Type: Day."
+        <strong>Note:</strong> This reserved time will apply from <strong>Monday to Saturday</strong> by default. 
+               For a customized schedule for each day, please choose "Reserve Type: Day."
       </p>
     </div>
   )}
