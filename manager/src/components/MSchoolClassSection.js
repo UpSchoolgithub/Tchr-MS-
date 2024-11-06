@@ -330,14 +330,26 @@ useEffect(() => {
     }
   
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    if (timetableSettings.includeSaturday) {
-      days.push('Saturday');
-    }
-    days.push('Sunday');
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
-    const { reserveTimeStart: commonReserveStart, reserveTimeEnd: commonReserveEnd, reserveType } = timetableSettings;
-    const isCommonReserved = reserveType === 'time';
+    // Parse reserveDay object safely, setting defaults if values are missing
+    let reserveDay;
+    try {
+      reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
+    } catch (e) {
+      console.error('Error parsing reserveDay:', e);
+      reserveDay = {};
+    }
+  
+    // Set default values for each day if reserveDay entries are missing
+    days.forEach(day => {
+      reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
+    });
+  
+    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
+    const commonReserveStart = reserveDay[days[0]].start; // Assuming all days have the same reserve start
+    const commonReserveEnd = reserveDay[days[0]].end;     // Assuming all days have the same reserve end
+    const isCommonReserved = reserveDay[days[0]].open;
   
     return (
       <table className="timetable-table">
@@ -364,19 +376,19 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+                    const reservedTime = reserveDay[day];
   
-                    // Ensure "Reserved Time" only appears if the period falls within the reserve time range
-                    const isReservedWithinPeriod = isCommonReserved &&
-                      startEndTime.start < commonReserveEnd &&
-                      startEndTime.end > commonReserveStart &&
-                      startEndTime.start >= commonReserveStart &&
-                      startEndTime.end <= commonReserveEnd;
+                    // Check if reserved time falls within the current period
+                    const isReservedWithinPeriod = reservedTime && reservedTime.open &&
+                      startEndTime.start <= reservedTime.end &&
+                      startEndTime.end >= reservedTime.start &&
+                      reservedTime.end <= lastPeriodEnd; // Ensure it ends within school hours
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
                         {isReservedWithinPeriod ? (
                           <span className="reserved">
-                            Reserved Time ({commonReserveStart} - {commonReserveEnd})
+                            Reserved Time ({reservedTime.start} - {reservedTime.end})
                           </span>
                         ) : periodAssignment ? (
                           <>
@@ -415,6 +427,23 @@ useEffect(() => {
               </React.Fragment>
             );
           })}
+  
+          {/* After School Hours Reserved Time Row */}
+          <tr>
+            <td>After School Hours Reserved Time</td>
+            {days.map(day => (
+              <td key={day}>
+                {isCommonReserved && commonReserveStart >= lastPeriodEnd ? (
+                  <div className="reserved">
+                    afterschool hours <br />
+                    {`${commonReserveStart} to ${commonReserveEnd}`}
+                  </div>
+                ) : (
+                  <span>-</span> // Placeholder if no reserved time after school hours
+                )}
+              </td>
+            ))}
+          </tr>
         </tbody>
       </table>
     );
@@ -423,45 +452,8 @@ useEffect(() => {
   
  // tthi is updated 
   
- const handleReserveTypeChange = (newReserveType) => {
-  setTimetableSettings((prevSettings) => {
-    if (newReserveType === 'time') {
-      // Clear day-based data
-      return {
-        ...prevSettings,
-        reserveType: 'time',
-        reserveDay: null, // Assuming this is where day-based data is stored
-      };
-    } else if (newReserveType === 'day') {
-      // Clear time-based data
-      return {
-        ...prevSettings,
-        reserveType: 'day',
-        reserveTimeStart: null,
-        reserveTimeEnd: null,
-      };
-    }
-    return prevSettings;
-  });
-};
-
   
-const saveTimetableSettings = async () => {
-  // Prepare data based on reserve type
-  const settingsToSave = {
-    ...timetableSettings,
-    ...(timetableSettings.reserveType === 'time' ? { reserveDay: undefined } : {}),
-    ...(timetableSettings.reserveType === 'day' ? { reserveTimeStart: undefined, reserveTimeEnd: undefined } : {}),
-  };
-
-  try {
-    await axiosInstance.post(`/schools/${schoolId}/timetable`, settingsToSave);
-    setSuccessMessage("Timetable settings saved successfully!");
-  } catch (error) {
-    console.error("Error saving timetable settings:", error);
-    setError("Failed to save timetable settings. Please try again.");
-  }
-};
+  
   
             
   
