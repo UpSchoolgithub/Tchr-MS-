@@ -35,21 +35,22 @@ const TimetableSettings = () => {
       try {
         const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/timetable`);
         const data = response.data;
-    
+  
         // Log the fetched data to verify if includeSaturday is present
         console.log("Fetched timetable data:", data);
-    
+  
         if (data.reserveDay) {
           data.reserveDay = JSON.parse(data.reserveDay);
         } else {
           data.reserveDay = {};
         }
-    
+  
         setSettings({
           ...data,
           periodTimings: data.periodTimings || [],
+          includeSaturday: data.includeSaturday || false, // Ensure includeSaturday is properly set
         });
-    
+  
         if (data.periodTimings && data.periodTimings.length > 0) {
           setShowPeriodSettings(true);
         }
@@ -63,13 +64,12 @@ const TimetableSettings = () => {
         }
       }
     };
-    
-    
-
+  
     if (schoolId) {
       fetchTimetable();
     }
   }, [schoolId]);
+  
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
