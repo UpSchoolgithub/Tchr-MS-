@@ -332,27 +332,12 @@ useEffect(() => {
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
     if (timetableSettings.includeSaturday) {
-      days.push('Saturday'); // Include Saturday if checkbox is checked
+      days.push('Saturday');
     }
-    days.push('Sunday'); // Optionally include Sunday if needed
+    days.push('Sunday');
   
-    let reserveDay;
-    try {
-      reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-    } catch (e) {
-      console.error('Error parsing reserveDay:', e);
-      reserveDay = {};
-    }
-  
-    // Set default values for each day if reserveDay entries are missing
-    days.forEach(day => {
-      reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
-    });
-  
-    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
-    const commonReserveStart = timetableSettings.reserveTimeStart;
-    const commonReserveEnd = timetableSettings.reserveTimeEnd;
-    const isCommonReserved = timetableSettings.reserveType === 'time';
+    const { reserveTimeStart: commonReserveStart, reserveTimeEnd: commonReserveEnd, reserveType } = timetableSettings;
+    const isCommonReserved = reserveType === 'time';
   
     return (
       <table className="timetable-table">
@@ -379,10 +364,13 @@ useEffect(() => {
                   </td>
                   {days.map(day => {
                     const periodAssignment = assignedPeriods ? assignedPeriods[`${day}-${period}`] : undefined;
+  
+                    // Ensure "Reserved Time" only appears if the period falls within the reserve time range
                     const isReservedWithinPeriod = isCommonReserved &&
-                      commonReserveStart <= startEndTime.end &&
-                      commonReserveEnd >= startEndTime.start &&
-                      commonReserveEnd <= lastPeriodEnd;
+                      startEndTime.start <= commonReserveEnd &&
+                      startEndTime.end >= commonReserveStart &&
+                      startEndTime.start >= commonReserveStart &&
+                      startEndTime.end <= commonReserveEnd;
   
                     return (
                       <td key={`${day}-${period}`} onClick={() => !isReservedWithinPeriod && handleOpenModal(day, period)}>
@@ -427,28 +415,10 @@ useEffect(() => {
               </React.Fragment>
             );
           })}
-  
-          {/* After School Hours Reserved Time Row */}
-          <tr>
-            <td>After School Hours Reserved Time</td>
-            {days.map(day => (
-              <td key={day}>
-                {isCommonReserved && commonReserveStart >= lastPeriodEnd ? (
-                  <div className="reserved">
-                    afterschool hours <br />
-                    {`${commonReserveStart} to ${commonReserveEnd}`}
-                  </div>
-                ) : (
-                  <span>-</span> // Placeholder if no reserved time after school hours
-                )}
-              </td>
-            ))}
-          </tr>
         </tbody>
       </table>
     );
   };
-  
   
   
  // tthi is updated 
