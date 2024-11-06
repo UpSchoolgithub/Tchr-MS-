@@ -13,7 +13,7 @@ import TeacherList from './components/TeacherList';
 import CreateTeacher from './components/CreateTeacher';
 import EditTeacher from './components/EditTeacher';
 import SchoolCalendar from './components/SchoolCalendar';
-import TeacherTimetable from './components/TeacherTimetable'; // Un-commented the import
+import TeacherTimetable from './components/TeacherTimetable';
 import TeacherAssignments from './components/TeacherAssignments';
 
 import { ManagerAuthProvider, useManagerAuth } from './context/ManagerAuthContext';
@@ -71,7 +71,6 @@ function AppContent() {
             <Route path="/request" element={<ProtectedRoute element={<MRequest />} />} />
             <Route path="/view-activities" element={<ProtectedRoute element={<MViewActivities />} />} />
 
-
             {/* Teacher routes */}
             <Route path="/teachers" element={<ProtectedRoute element={<TeacherList />} />} />
             <Route path="/teachers/create" element={<ProtectedRoute element={<CreateTeacher />} />} />
@@ -79,11 +78,10 @@ function AppContent() {
             <Route path="/dashboard/school/:schoolId/class/:classId/section/:sectionId" element={<ProtectedRoute element={<MSchoolClassSection />} />} />
 
             {/* TeacherTimetable Route */}
-            <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} /> {/* New Route */}
+            <Route path="/teacher-timetable" element={<ProtectedRoute element={<TeacherTimetable />} />} />
 
-            <Routes>
-              <Route path="/teachers/:teacherId/assignments" element={<TeacherAssignments />} />
-            </Routes>
+            {/* Teacher Assignments Route */}
+            <Route path="/teachers/:teacherId/assignments" element={<TeacherAssignments />} />
             
             {/* 404 Page */}
             <Route path="*" element={<div>Page Not Found</div>} />
