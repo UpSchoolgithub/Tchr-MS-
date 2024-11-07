@@ -1,11 +1,25 @@
 // src/components/StudentPersonalDetails.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import axiosInstance from '../services/axiosInstance';
 import './StudentPersonalDetails.css';
 
 const StudentPersonalDetails = ({ sectionId }) => {
-  const [studentData, setStudentData] = useState([]); // State to store parsed student data
+  const [studentData, setStudentData] = useState([]); // State to store student data
+
+  // Fetch existing student data when component loads
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await axiosInstance.get(`/sections/${sectionId}/students`);
+        setStudentData(response.data);
+      } catch (error) {
+        console.error('Error fetching student data:', error);
+      }
+    };
+
+    fetchStudentData();
+  }, [sectionId]);
 
   // Handle Excel file upload
   const handleFileUpload = (event) => {
@@ -27,7 +41,7 @@ const StudentPersonalDetails = ({ sectionId }) => {
   // Upload student data to the backend
   const uploadStudentData = async () => {
     try {
-      const response = await axiosInstance.post(`/sections/${sectionId}/students`, {
+      await axiosInstance.post(`/sections/${sectionId}/students`, {
         students: studentData,
       });
       alert('Student data uploaded successfully');
@@ -38,38 +52,36 @@ const StudentPersonalDetails = ({ sectionId }) => {
   };
 
   // Render student data in a table
-  const renderStudentTable = () => {
-    return (
-      <table className="student-table">
-        <thead>
-          <tr>
-            <th>Roll Number</th>
-            <th>Student Name</th>
-            <th>Student Email</th>
-            <th>Student Phone Number</th>
-            <th>Parent Name</th>
-            <th>Parent Phone Number 1</th>
-            <th>Parent Phone Number 2 (optional)</th>
-            <th>Parent Email</th>
+  const renderStudentTable = () => (
+    <table className="student-table">
+      <thead>
+        <tr>
+          <th>Roll Number</th>
+          <th>Student Name</th>
+          <th>Student Email</th>
+          <th>Student Phone Number</th>
+          <th>Parent Name</th>
+          <th>Parent Phone Number 1</th>
+          <th>Parent Phone Number 2 (optional)</th>
+          <th>Parent Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {studentData.map((student, index) => (
+          <tr key={index}>
+            <td>{student.rollNumber || student['Roll Number']}</td>
+            <td>{student.name || student['Student Name']}</td>
+            <td>{student.studentEmail || student['Student Email']}</td>
+            <td>{student.studentPhoneNumber || student['Student Phone Number']}</td>
+            <td>{student.parentName || student['Parent Name']}</td>
+            <td>{student.parentPhoneNumber1 || student['Parent Phone Number 1']}</td>
+            <td>{student.parentPhoneNumber2 || student['Parent Phone Number 2 (optional)']}</td>
+            <td>{student.parentEmail || student['Parent Email']}</td>
           </tr>
-        </thead>
-        <tbody>
-          {studentData.map((student, index) => (
-            <tr key={index}>
-              <td>{student['Roll Number']}</td>
-              <td>{student['Student Name']}</td>
-              <td>{student['Student Email']}</td>
-              <td>{student['Student Phone Number']}</td>
-              <td>{student['Parent Name']}</td>
-              <td>{student['Parent Phone Number 1']}</td>
-              <td>{student['Parent Phone Number 2 (optional)']}</td>
-              <td>{student['Parent Email']}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
+        ))}
+      </tbody>
+    </table>
+  );
 
   return (
     <div className="student-personal-details">
