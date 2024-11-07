@@ -8,17 +8,19 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
     const [studentData, setStudentData] = useState([]);
   
     useEffect(() => {
-      const fetchStudentData = async () => {
-        try {
-          const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
-          setStudentData(response.data);
-        } catch (error) {
-          console.error('Error fetching student data:', error);
-        }
-      };
-  
-      fetchStudentData();
-    }, [schoolId, classId, sectionId]);
+        const fetchStudentData = async () => {
+          try {
+            const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
+            console.log('Fetched student data:', response.data); // Log the fetched data
+            setStudentData(response.data);
+          } catch (error) {
+            console.error('Error fetching student data:', error);
+          }
+        };
+      
+        fetchStudentData();
+      }, [schoolId, classId, sectionId]);
+      
     
 
   // Handle Excel file upload
