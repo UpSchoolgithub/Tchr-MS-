@@ -59,7 +59,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
       where: { sectionId },
       attributes: [
         'rollNumber',
-        'name',
+        'studentName', // Corrected field name
         'studentEmail',
         'studentPhoneNumber',
         'parentName',
@@ -79,6 +79,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 // Route to delete a specific student by ID within a section
