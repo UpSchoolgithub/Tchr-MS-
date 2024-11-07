@@ -1,5 +1,6 @@
 // src/components/StudentPersonalDetails.js
 import React, { useState } from 'react';
+import axios from 'axios'; // Import axios to make API requests
 import * as XLSX from 'xlsx';
 import './StudentPersonalDetails.css';
 
@@ -17,10 +18,22 @@ const StudentPersonalDetails = () => {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       setStudentData(jsonData); // Store parsed data in state
-      console.log(jsonData); // For debugging
+      uploadData(jsonData); // Send data to backend
     };
 
     reader.readAsArrayBuffer(file);
+  };
+
+  // Send student data to the backend
+  const uploadData = async (data) => {
+    try {
+      const response = await axios.post('/api/sections/{combinedSectionId}/students', { students: data });
+      console.log(response.data);
+      alert('Student data uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading student data:', error);
+      alert('Failed to upload student data.');
+    }
   };
 
   // Render student data in a table
