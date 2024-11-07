@@ -56,8 +56,8 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       res.status(201).json({ message: 'Students uploaded successfully' });
     } catch (bulkError) {
       await transaction.rollback();
-      console.error('Error in bulk create:', bulkError);
-      res.status(500).json({ error: 'Failed to upload some students. Check for duplicate roll numbers.' });
+      console.error('Bulk create error:', bulkError); // Log full error details
+      res.status(500).json({ error: 'Failed to upload some students due to database constraints.' });
     }
 
     // Delete the uploaded file after processing
@@ -67,8 +67,8 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
 
   } catch (error) {
     await transaction.rollback();
-    console.error('Error uploading students:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in student upload route:', error.stack || error); // Detailed error logging
+    res.status(500).json({ error: 'Internal server error during student upload.' });
   }
 });
 
