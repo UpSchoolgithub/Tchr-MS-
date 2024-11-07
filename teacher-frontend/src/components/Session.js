@@ -6,7 +6,7 @@ import './Session.css';
 import { useTeacherAuth } from '../context/TeacherAuthContext';
 
 const Session = () => {
-  const { teacherId } = useTeacherAuth(); // Access teacherId directly from context
+  const { teacherId } = useTeacherAuth(); // Retrieve teacherId from context
   const [sessions, setSessions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
@@ -17,13 +17,14 @@ const Session = () => {
       console.error('Teacher ID is undefined');
       return;
     }
+    
     try {
       console.log(`Fetching sessions for teacherId: ${teacherId} on day: ${day}`);
       const response = await axiosInstance.get(`/teacherportal/${teacherId}/sessions`, {
         params: { day },
       });
       setSessions(response.data);
-      setError(null);
+      setError(null); // Clear any previous errors on successful fetch
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions');
@@ -34,6 +35,28 @@ const Session = () => {
     const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
     fetchSessionsByDay(dayOfWeek);
   }, [selectedDate, teacherId]);
+
+  const handleStartSession = async (sessionId) => {
+    try {
+      await axiosInstance.post(`/teacherportal/${teacherId}/sessions/${sessionId}/start`);
+      const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+      fetchSessionsByDay(dayOfWeek); // Refresh sessions after starting
+    } catch (error) {
+      console.error('Error starting session:', error);
+      setError('Failed to start session');
+    }
+  };
+
+  const handleEndSession = async (sessionId) => {
+    try {
+      await axiosInstance.post(`/teacherportal/${teacherId}/sessions/${sessionId}/end`);
+      const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+      fetchSessionsByDay(dayOfWeek); // Refresh sessions after ending
+    } catch (error) {
+      console.error('Error ending session:', error);
+      setError('Failed to end session');
+    }
+  };
 
   return (
     <div>

@@ -35,6 +35,7 @@ function InnerApp() {
             <Route path="/school-calendar" element={<PrivateRoute><SchoolCalendar /></PrivateRoute>} />
             <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
+            <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
 
             {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
             <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
