@@ -1,10 +1,10 @@
 // src/components/StudentPersonalDetails.js
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios to make API requests
+import axios from 'axios';
 import * as XLSX from 'xlsx';
 import './StudentPersonalDetails.css';
 
-const StudentPersonalDetails = () => {
+const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => { // Receive props here
   const [studentData, setStudentData] = useState([]); // State to store parsed student data
 
   // Handle Excel file upload
@@ -27,7 +27,8 @@ const StudentPersonalDetails = () => {
   // Send student data to the backend
   const uploadData = async (data) => {
     try {
-      const response = await axios.post('/api/sections/{combinedSectionId}/students', { students: data });
+      // Use sectionId in the API URL
+      const response = await axios.post(`/api/sections/${sectionId}/students`, { students: data });
       console.log(response.data);
       alert('Student data uploaded successfully!');
     } catch (error) {
