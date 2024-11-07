@@ -51,15 +51,8 @@ const TeacherSessions = () => {
     navigate('/session-details', { state: { session } });
   };
 
-  const isStartButtonVisible = (sessionStartTime, sessionEndTime) => {
-    const sessionStart = new Date(`${selectedDate.toDateString()} ${sessionStartTime}`);
-    const sessionEnd = new Date(`${selectedDate.toDateString()} ${sessionEndTime}`);
-    const now = new Date();
-
-    // Show the button only if:
-    // - Today’s date matches `selectedDate`
-    // - The session is within 10 minutes of starting and hasn't ended
-    return selectedDate.toDateString() === new Date().toDateString() && now >= sessionStart - 10 * 60 * 1000 && now < sessionEnd;
+  const isToday = (date) => {
+    return date.toDateString() === new Date().toDateString();
   };
 
   if (loading) return <p>Loading...</p>;
@@ -101,12 +94,12 @@ const TeacherSessions = () => {
                 <td>{session.period}</td>
                 <td>{session.subjectName}</td>
                 <td>
-                  {isStartButtonVisible(session.startTime, session.endTime) ? (
+                  {isToday(selectedDate) ? (
                     <button onClick={() => handleStartSession(session)}>
                       Start Session
                     </button>
                   ) : (
-                    <span>{session.endTime}</span> // Show end time if the session is not active yet or already passed
+                    <span>{session.endTime}</span> // Show end time if not today
                   )}
                 </td>
               </tr>
