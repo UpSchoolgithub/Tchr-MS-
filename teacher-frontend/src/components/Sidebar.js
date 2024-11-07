@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './Sidebar.css';  // Import the CSS file for the sidebar
+import { useTeacherAuth } from '../context/TeacherAuthContext';
+import './Sidebar.css';
 
 const Sidebar = () => {
+  const { teacherId } = useTeacherAuth(); // Assuming teacherId is available in the context
+
   return (
     <div className="sidebar">
       <ul>
@@ -24,6 +27,12 @@ const Sidebar = () => {
         <li>
           <Link to="/view-activities">View Activities</Link>
         </li>
+        {/* New Teacher Sessions Link */}
+        {teacherId && (
+          <li>
+            <Link to={`/teacherportal/${teacherId}/teacher-sessions`}>Teacher Sessions</Link>
+          </li>
+        )}
       </ul>
     </div>
   );
