@@ -12,29 +12,23 @@ const upload = multer({ dest: 'uploads/' });
 
 // Route to upload students from an Excel file
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'File not uploaded. Please check the upload format.' });
+  }
+
   const { sectionId } = req.params;
   const transaction = await sequelize.transaction();
 
   try {
-    // Find the section to associate students with
     const section = await Section.findOne({ where: { id: sectionId } });
     if (!section) {
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Read and parse the Excel file
     const workbook = XLSX.readFile(req.file.path);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const students = XLSX.utils.sheet_to_json(worksheet);
 
-    // Validate Excel columns
-    const requiredColumns = ['Roll Number', 'Student Name', 'Student Email', 'Student Phone Number', 'Parent Name', 'Parent Phone Number 1', 'Parent Email'];
-    const missingColumns = requiredColumns.filter(col => !students[0].hasOwnProperty(col));
-    if (missingColumns.length > 0) {
-      return res.status(400).json({ error: `Missing columns in Excel file: ${missingColumns.join(', ')}` });
-    }
-
-    // Create student records
     const studentRecords = students.map(student => ({
       rollNumber: student['Roll Number'],
       studentName: student['Student Name'],
@@ -49,28 +43,22 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       updatedAt: new Date(),
     }));
 
-    // Bulk create with transaction and handle duplicates
-    try {
-      await Student.bulkCreate(studentRecords, { transaction });
-      await transaction.commit();
-      res.status(201).json({ message: 'Students uploaded successfully' });
-    } catch (bulkError) {
-      await transaction.rollback();
-      console.error('Bulk create error:', bulkError); // Log full error details
-      res.status(500).json({ error: 'Failed to upload some students due to database constraints.' });
-    }
+    await Student.bulkCreate(studentRecords, { transaction });
+    await transaction.commit();
+    res.status(201).json({ message: 'Students uploaded successfully' });
 
-    // Delete the uploaded file after processing
+    // Delete file after processing
     fs.unlink(req.file.path, (err) => {
       if (err) console.error('Error deleting file:', err);
     });
 
   } catch (error) {
     await transaction.rollback();
-    console.error('Error in student upload route:', error.stack || error); // Detailed error logging
+    console.error('Error in student upload route:', error);
     res.status(500).json({ error: 'Internal server error during student upload.' });
   }
 });
+
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
