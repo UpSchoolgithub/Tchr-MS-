@@ -36,10 +36,13 @@ const TeacherAuthProvider = ({ children }) => {
       const { token, teacherId } = response.data;
       setToken(token);
       setTeacherId(teacherId);
+      localStorage.setItem('token', token);
+      localStorage.setItem('teacherId', teacherId);
     } catch (error) {
       throw new Error('Login failed');
     }
   };
+  
 
   const logout = () => {
     setToken(null);
