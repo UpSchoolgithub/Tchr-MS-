@@ -27,31 +27,46 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
-
+  
     reader.onload = (e) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet).map(row => ({
+        rollNumber: row['Roll Number'],
+        studentName: row['Student Name'],
+        studentEmail: row['Student Email'],
+        studentPhoneNumber: row['Student Phone Number'],
+        parentName: row['Parent Name'],
+        parentPhoneNumber1: row['Parent Phone Number 1'],
+        parentPhoneNumber2: row['Parent Phone Number 2 (optional)'],
+        parentEmail: row['Parent Email'],
+      }));
+      
       setStudentData(jsonData); // Store parsed data in state
-      console.log(jsonData); // For debugging
+      console.log('Parsed student data:', jsonData); // For debugging
     };
-
+  
     reader.readAsArrayBuffer(file);
   };
+  
 
   // Upload student data to the backend
   const uploadStudentData = async () => {
     try {
-      await axiosInstance.post(`/sections/${sectionId}/students`, {
+      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, {
         students: studentData,
       });
       alert('Student data uploaded successfully');
+      // Fetch updated data to reflect the changes
+      fetchStudentData();
     } catch (error) {
       console.error('Error uploading student data:', error);
       alert('Failed to upload student data');
     }
   };
+  
+  
 
   // Render student data in a table
   const renderStudentTable = () => (
