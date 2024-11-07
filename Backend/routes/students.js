@@ -14,8 +14,12 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
     // Find the section to associate students with
     const section = await Section.findOne({ where: { id: sectionId } });
     if (!section) {
+      console.error('Section not found');
       return res.status(404).json({ error: 'Section not found' });
     }
+
+    // Log the student data to confirm structure
+    console.log('Student data received:', students);
 
     // Create student records
     const studentRecords = students.map(student => ({
@@ -41,6 +45,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // Route to get all students in a specific section
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
