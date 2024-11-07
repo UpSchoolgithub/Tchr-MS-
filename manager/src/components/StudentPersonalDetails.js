@@ -86,11 +86,11 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       });
       setFeedbackMessage('Student data uploaded successfully!'); // Success message
       setIsSuccess(true);
-      // Fetch updated data to reflect the changes
-      fetchStudentData();
+      fetchStudentData(); // Fetch updated data to reflect the changes
     } catch (error) {
-      console.error('Error uploading student data:', error.response ? error.response.data : error.message);
-      setFeedbackMessage(`Failed to upload student data: ${error.response ? error.response.data : error.message}`); // Error message
+      const errorMsg = error.response ? error.response.data : error.message;
+      console.error('Error uploading student data:', errorMsg);
+      setFeedbackMessage(`Failed to upload student data: ${errorMsg}`); // Error message
       setIsSuccess(false);
     }
   };
