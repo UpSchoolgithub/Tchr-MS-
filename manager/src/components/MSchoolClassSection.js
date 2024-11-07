@@ -35,6 +35,9 @@ const MSchoolClassSection = () => {
   const [isEditWarningOpen, setIsEditWarningOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showReloadButton, setShowReloadButton] = useState(false);
+  const [showStudents, setShowStudents] = useState(false); // State to control "Students" section visibility
+  const [selectedTab, setSelectedTab] = useState('Student Personal'); // State to track selected tab
+
   const [schoolName, setSchoolName] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -309,6 +312,34 @@ useEffect(() => {
   const handleShowTimetable = () => {
     setShowTimetable(true);
     setShowCalendar(false);
+  };
+
+  // Show "Students" section
+  const handleShowStudents = () => {
+    setShowStudents(true); // Show "Students" section
+    setShowCalendar(false);
+    setShowTimetable(false); // Hide other sections
+  };
+
+  // Update selected tab within "Students" section
+  const handleTabChange = (tab) => {
+    setSelectedTab(tab);
+  };
+
+  // Render content based on selected tab in "Students" section
+  const renderStudentContent = () => {
+    switch (selectedTab) {
+      case 'Student Personal':
+        return <div>Display personal details of students here.</div>;
+      case 'Attendance':
+        return <div>Display attendance records of students here.</div>;
+      case 'Assignments':
+        return <div>Display assignment details of students here.</div>;
+      case 'Test':
+        return <div>Display test records of students here.</div>;
+      default:
+        return <div>Select a tab to view details.</div>;
+    }
   };
 
   const handleTeacherFilterChange = (e) => {
@@ -640,6 +671,7 @@ return (
     <div className="buttons">
       <button onClick={handleShowCalendar}>School Calendar</button>
       <button onClick={handleShowTimetable}>Timetable</button>
+      <button onClick={handleShowStudents}>Students</button> {/* "Students" button */}
       <button onClick={downloadTimetableAsPDF}>Download Timetable as PDF</button>
     </div>
 
@@ -717,21 +749,63 @@ return (
           <option disabled>No subjects available</option>
         )}
       </select>
-    </div>
+      </div>
     <button type="submit">Assign</button>
     <button type="button" onClick={handleCloseModal}>Cancel</button>
   </form>
 </Modal>
 
+<Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
+  <h2>Warning</h2>
+  <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
+  <button onClick={handleEditConfirmed}>Yes</button>
+  <button onClick={handleCloseEditWarning}>No</button>
+</Modal>
 
-    <Modal isOpen={isEditWarningOpen} onRequestClose={handleCloseEditWarning}>
-      <h2>Warning</h2>
-      <p>This period already has an assigned teacher and subject. Are you sure you want to edit it?</p>
-      <button onClick={handleEditConfirmed}>Yes</button>
-      <button onClick={handleCloseEditWarning}>No</button>
-    </Modal>
+{/* Show Students Section */}
+{showStudents && (
+  <div className="students-section">
+    <h2>Students Information</h2>
+
+    {/* Tab Buttons for Students Section */}
+    <div className="student-tabs">
+      <button
+        className={selectedTab === 'Student Personal' ? 'active-tab' : ''}
+        onClick={() => handleTabChange('Student Personal')}
+      >
+        Student Personal
+      </button>
+      <button
+        className={selectedTab === 'Attendance' ? 'active-tab' : ''}
+        onClick={() => handleTabChange('Attendance')}
+      >
+        Attendance
+      </button>
+      <button
+        className={selectedTab === 'Assignments' ? 'active-tab' : ''}
+        onClick={() => handleTabChange('Assignments')}
+      >
+        Assignments
+      </button>
+      <button
+        className={selectedTab === 'Test' ? 'active-tab' : ''}
+        onClick={() => handleTabChange('Test')}
+      >
+        Test
+      </button>
+    </div>
+
+    {/* Content Based on Selected Tab */}
+    <div className="tab-content">
+      {renderStudentContent()}
+    </div>
   </div>
+)}
+</div> // This is the closing tag for the main container div
 );
 };
 
 export default MSchoolClassSection;
+
+
+
