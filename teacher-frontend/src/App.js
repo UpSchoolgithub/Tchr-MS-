@@ -17,7 +17,7 @@ function PrivateRoute({ children }) {
 }
 
 function InnerApp() {
-  const { token } = useTeacherAuth();
+  const { token, teacherId } = useTeacherAuth(); // Assuming teacherId is provided in your context
 
   return (
     <WebSocketProvider token={token}>
@@ -28,12 +28,12 @@ function InnerApp() {
             <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
+            {/* Dynamic route with teacherId */}
+            <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/classroom" element={<PrivateRoute><Classroom /></PrivateRoute>} />
             <Route path="/school-calendar" element={<PrivateRoute><SchoolCalendar /></PrivateRoute>} />
             <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
-            {/* Add other routes as needed */}
           </Routes>
         </div>
       </Router>

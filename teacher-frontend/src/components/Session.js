@@ -6,7 +6,7 @@ import './Session.css';
 import { useParams } from 'react-router-dom';
 
 const Session = () => {
-  const { teacherId } = useParams(); // Assuming teacherId is in the URL params
+  const { teacherId } = useParams(); // Retrieve teacherId from route params
   const [sessions, setSessions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
@@ -14,7 +14,7 @@ const Session = () => {
   const fetchSessionsByDay = async (day) => {
     try {
       const response = await axiosInstance.get(`/teacherportal/${teacherId}/sessions`, {
-        params: { day: day }
+        params: { day },
       });
       setSessions(response.data);
     } catch (error) {
@@ -30,7 +30,7 @@ const Session = () => {
 
   const handleStartSession = async (sessionId) => {
     try {
-      await axiosInstance.post(`/teacherportal/sessions/${sessionId}/start`);
+      await axiosInstance.post(`/teacherportal/${teacherId}/sessions/${sessionId}/start`);
       const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
       fetchSessionsByDay(dayOfWeek); // Refresh sessions after starting
     } catch (error) {
@@ -40,7 +40,7 @@ const Session = () => {
 
   const handleEndSession = async (sessionId) => {
     try {
-      await axiosInstance.post(`/teacherportal/sessions/${sessionId}/end`);
+      await axiosInstance.post(`/teacherportal/${teacherId}/sessions/${sessionId}/end`);
       const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
       fetchSessionsByDay(dayOfWeek); // Refresh sessions after ending
     } catch (error) {
