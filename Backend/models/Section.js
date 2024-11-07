@@ -28,6 +28,8 @@ Section.associate = (models) => {
   Section.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   Section.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   Section.hasMany(models.Subject, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  Section.hasMany(models.Student, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
 };
 
 module.exports = Section;

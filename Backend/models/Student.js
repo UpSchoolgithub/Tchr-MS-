@@ -13,34 +13,50 @@ Student.init({
   rollNumber: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    unique: true,
   },
-  name: {
+  studentName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
   studentEmail: {
     type: DataTypes.STRING,
     allowNull: true,
+    validate: {
+      isEmail: true,
+    },
   },
   studentPhoneNumber: {
     type: DataTypes.STRING,
     allowNull: true,
+    validate: {
+      is: /^[0-9]{10}$/,  // Assuming a 10-digit phone number format
+    },
   },
   parentName: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  parentPhoneNumber: {
+  parentPhoneNumber1: {
     type: DataTypes.STRING,
     allowNull: true,
+    validate: {
+      is: /^[0-9]{10}$/,  // Assuming a 10-digit phone number format
+    },
   },
   parentPhoneNumber2: {
     type: DataTypes.STRING,
     allowNull: true,
+    validate: {
+      is: /^[0-9]{10}$/,  // Assuming a 10-digit phone number format
+    },
   },
   parentEmail: {
     type: DataTypes.STRING,
     allowNull: true,
+    validate: {
+      isEmail: true,
+    },
   },
   sectionId: {
     type: DataTypes.INTEGER,
