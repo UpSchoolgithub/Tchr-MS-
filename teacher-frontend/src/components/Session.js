@@ -3,13 +3,18 @@ import axiosInstance from '../services/axiosInstance';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './Session.css';
-import { useTeacherAuth } from '../context/TeacherAuthContext';
+import { useParams } from 'react-router-dom';
 
 const Session = () => {
-  const { teacherId } = useTeacherAuth(); // Retrieve teacherId from context
+  const { teacherId } = useParams();
   const [sessions, setSessions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
+
+  // Helper function to get the day of the week from a date
+  const getDayOfWeek = (date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  };
 
   const fetchSessionsByDay = async (day) => {
     if (!teacherId) {
@@ -17,14 +22,14 @@ const Session = () => {
       console.error('Teacher ID is undefined');
       return;
     }
-    
+
     try {
       console.log(`Fetching sessions for teacherId: ${teacherId} on day: ${day}`);
       const response = await axiosInstance.get(`/teacherportal/${teacherId}/sessions`, {
         params: { day },
       });
       setSessions(response.data);
-      setError(null); // Clear any previous errors on successful fetch
+      setError(null);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions');
@@ -32,38 +37,16 @@ const Session = () => {
   };
 
   useEffect(() => {
-    const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const dayOfWeek = getDayOfWeek(selectedDate); // Determine the day based on the selected date
     fetchSessionsByDay(dayOfWeek);
   }, [selectedDate, teacherId]);
-
-  const handleStartSession = async (sessionId) => {
-    try {
-      await axiosInstance.post(`/teacherportal/${teacherId}/sessions/${sessionId}/start`);
-      const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
-      fetchSessionsByDay(dayOfWeek); // Refresh sessions after starting
-    } catch (error) {
-      console.error('Error starting session:', error);
-      setError('Failed to start session');
-    }
-  };
-
-  const handleEndSession = async (sessionId) => {
-    try {
-      await axiosInstance.post(`/teacherportal/${teacherId}/sessions/${sessionId}/end`);
-      const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
-      fetchSessionsByDay(dayOfWeek); // Refresh sessions after ending
-    } catch (error) {
-      console.error('Error ending session:', error);
-      setError('Failed to end session');
-    }
-  };
 
   return (
     <div>
       <h2>Today's Sessions</h2>
-      <DatePicker 
-        selected={selectedDate} 
-        onChange={date => setSelectedDate(date)} 
+      <DatePicker
+        selected={selectedDate}
+        onChange={(date) => setSelectedDate(date)}
         dateFormat="yyyy-MM-dd"
       />
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -107,7 +90,7 @@ const Session = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="8">No sessions for today.</td>
+              <td colSpan="8">No sessions for the selected day.</td>
             </tr>
           )}
         </tbody>
