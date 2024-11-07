@@ -3,18 +3,27 @@ import axiosInstance from '../services/axiosInstance';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './Session.css';
-//import fetchSessions from '../services/sessionService'; // Or wherever the function is defined
 
 const Session = () => {
   const [sessions, setSessions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // Get the current day in a readable format (e.g., 'Monday', 'Tuesday')
+  const getDayName = (date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+  };
+
   const fetchSessions = async (date) => {
+    const dayName = getDayName(date);
+
     try {
       const response = await axiosInstance.get('/teacher/sessions', {
         params: { date: date.toISOString().slice(0, 10) }
       });
-      setSessions(response.data);
+      // Filter sessions by the current day name
+      const filteredSessions = response.data.filter(session => session.day === dayName);
+      setSessions(filteredSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
     }
@@ -25,11 +34,10 @@ const Session = () => {
     console.log('Sessions:', sessions); // Log the sessions
   }, [selectedDate]);
   
-
   const handleStartSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/start`);
-      fetchSessions(selectedDate); // Correct usage of fetchSessions
+      fetchSessions(selectedDate);
     } catch (error) {
       console.error('Error starting session:', error);
     }
@@ -38,7 +46,7 @@ const Session = () => {
   const handleEndSession = async (sessionId) => {
     try {
       await axiosInstance.post(`/teacher/sessions/${sessionId}/end`);
-      fetchSessions(selectedDate); // Correct usage of fetchSessions
+      fetchSessions(selectedDate);
     } catch (error) {
       console.error('Error ending session:', error);
     }
