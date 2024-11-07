@@ -528,98 +528,45 @@ useEffect(() => {
 
 
   const downloadTimetableAsPDF = () => {
-    if (!timetableSettings || !timetableSettings.periodTimings || timetableSettings.periodTimings.length === 0) {
+    if (!timetableSettings || !timetableSettings.periodTimings) {
       alert('No timetable settings available to download.');
       return;
     }
   
-    const doc = new jsPDF('p', 'mm', 'a4');
+    // 1. Change orientation to 'landscape'
+    const doc = new jsPDF('landscape');  // This makes the PDF landscape
+  
     const periods = Array.from({ length: timetableSettings.periodsPerDay || 0 }, (_, i) => i + 1);
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const rows = [];
-    const timeline = [];
   
-    // Define reserveDay with fallback structure
-    let reserveDay;
-    try {
-      reserveDay = JSON.parse(timetableSettings.reserveDay || '{}');
-    } catch (e) {
-      console.error('Error parsing reserveDay:', e);
-      reserveDay = {};
-    }
-  
-    // Set default values for each day if reserveDay entries are missing
-    days.forEach(day => {
-      reserveDay[day] = reserveDay[day] || { open: false, start: '00:00', end: '00:00' };
-    });
-  
+    // 2. Generate rows for each period with assigned teacher and subject
     periods.forEach((period, index) => {
       const periodTiming = timetableSettings.periodTimings[index];
       const periodTimeText = periodTiming ? `${periodTiming.start} - ${periodTiming.end}` : 'No Time';
   
-      timeline.push({ type: 'period', period, time: periodTimeText });
-  
-      if (index === 1 && timetableSettings.shortBreak1StartTime && timetableSettings.shortBreak1EndTime) {
-        timeline.push({ type: 'break', label: 'SHORT BREAK 1', time: `${timetableSettings.shortBreak1StartTime} - ${timetableSettings.shortBreak1EndTime}` });
-      }
-  
-      if (index === 3 && timetableSettings.lunchStartTime && timetableSettings.lunchEndTime) {
-        timeline.push({ type: 'break', label: 'LUNCH', time: `${timetableSettings.lunchStartTime} - ${timetableSettings.lunchEndTime}` });
-      }
-  
-      if (index === 5 && timetableSettings.shortBreak2StartTime && timetableSettings.shortBreak2EndTime) {
-        timeline.push({ type: 'break', label: 'SHORT BREAK 2', time: `${timetableSettings.shortBreak2StartTime} - ${timetableSettings.shortBreak2EndTime}` });
-      }
-    });
-  
-    const lastPeriodEnd = timetableSettings.periodTimings[timetableSettings.periodsPerDay - 1].end;
-  
-    // Add each period and assignments to rows
-    timeline.forEach(entry => {
-      const row = [entry.time];
-      if (entry.type === 'period') {
-        days.forEach(day => {
-          const periodAssignment = assignedPeriods[`${day}-${entry.period}`];
-          const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
-          row.push(entryText);
-        });
-      } else {
-        row.push(entry.label);
-      }
+      const row = [periodTimeText];
+      days.forEach((day) => {
+        const periodAssignment = assignedPeriods[`${day}-${period}`];
+        const entryText = periodAssignment ? `${periodAssignment.teacher}\n${periodAssignment.subject}` : '';
+        row.push(entryText);
+      });
       rows.push(row);
     });
   
-    // After School Hours Reserved Time Row
-    const afterSchoolRow = ['After School Hours Reserved Time'];
-    days.forEach(day => {
-      const reservedTime = reserveDay[day];
-      const isAfterSchoolHours = reservedTime && reservedTime.open && reservedTime.start >= lastPeriodEnd;
-  
-      if (isAfterSchoolHours) {
-        afterSchoolRow.push(`afterschool hours\n${reservedTime.start} to ${reservedTime.end}`);
-      } else {
-        afterSchoolRow.push('-');
-      }
-    });
-    rows.push(afterSchoolRow);
-  
     const columns = ['Time', ...days];
   
-    doc.setFontSize(18);
-    doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    // 3. Add the centered title with school name, class, and section details
+    doc.setFontSize(16);
+    doc.text(schoolName, doc.internal.pageSize.width / 2, 14, { align: 'center' });
     doc.setFontSize(14);
-    doc.text('School Timetable', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+    doc.text(`Class: ${className}    Section: ${sectionName}`, doc.internal.pageSize.width / 2, 22, { align: 'center' });
   
-    // Use className and sectionName instead of classId and sectionId
-    const classSectionText = `Class: ${className || classId}    Section: ${sectionName || sectionId}`;
-    doc.setFontSize(12);
-    doc.text(classSectionText, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
-  
-    // Timetable Table
+    // 4. Add the timetable table
     doc.autoTable({
-      startY: 45,
       head: [columns],
       body: rows,
+      startY: 30,  // Starting position of the table after the title
       theme: 'grid',
       styles: {
         halign: 'center',
@@ -637,9 +584,11 @@ useEffect(() => {
       },
     });
   
-    const filename = `Timetable_${className || classId}_${sectionName || sectionId}.pdf`;
+    // 5. Save the PDF with a filename
+    const filename = `Timetable_${className}_${sectionName}.pdf`;
     doc.save(filename);
   };
+  
   
   
   
