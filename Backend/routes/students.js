@@ -70,12 +70,17 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
       ],
     });
 
+    if (students.length === 0) {
+      return res.status(404).json({ message: 'No students found for this section' });
+    }
+
     res.status(200).json(students);
   } catch (error) {
-    console.error('Error fetching students:', error);
+    console.error('Error fetching students:', error); // Log detailed error
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // Route to delete a specific student by ID within a section
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/students/:studentId', async (req, res) => {
