@@ -10,6 +10,7 @@ import Request from './components/Request';
 import ViewActivities from './components/ViewActivities';
 import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContext';
 import { WebSocketProvider } from './WebSocketContext';
+import TeacherSessions from './components/TeacherSessions';
 
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
@@ -39,6 +40,7 @@ function InnerApp() {
 
             {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
             <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
+            <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
           </Routes>
         </div>
       </Router>
