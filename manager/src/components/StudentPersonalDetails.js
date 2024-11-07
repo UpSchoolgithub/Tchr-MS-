@@ -5,29 +5,28 @@ import axiosInstance from '../services/axiosInstance';
 import './StudentPersonalDetails.css';
 
 const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
-    const [studentData, setStudentData] = useState([]);
-  
-    useEffect(() => {
-        const fetchStudentData = async () => {
-          try {
-            const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
-            console.log('Fetched student data:', response.data); // Log the fetched data
-            setStudentData(response.data);
-          } catch (error) {
-            console.error('Error fetching student data:', error);
-          }
-        };
-      
-        fetchStudentData();
-      }, [schoolId, classId, sectionId]);
-      
-    
+  const [studentData, setStudentData] = useState([]);
 
-  // Handle Excel file upload
+  // Fetch student data from the backend
+  const fetchStudentData = async () => {
+    try {
+      const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
+      console.log('Fetched student data:', response.data); // Log the fetched data
+      setStudentData(response.data);
+    } catch (error) {
+      console.error('Error fetching student data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudentData();
+  }, [schoolId, classId, sectionId]);
+
+  // Handle Excel file upload and parse data
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
-  
+
     reader.onload = (e) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
@@ -46,10 +45,9 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       setStudentData(jsonData); // Store parsed data in state
       console.log('Parsed student data:', jsonData); // For debugging
     };
-  
+
     reader.readAsArrayBuffer(file);
   };
-  
 
   // Upload student data to the backend
   const uploadStudentData = async () => {
@@ -65,8 +63,6 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       alert('Failed to upload student data');
     }
   };
-  
-  
 
   // Render student data in a table
   const renderStudentTable = () => (
@@ -86,14 +82,14 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       <tbody>
         {studentData.map((student, index) => (
           <tr key={index}>
-            <td>{student.rollNumber || student['Roll Number']}</td>
-            <td>{student.name || student['Student Name']}</td>
-            <td>{student.studentEmail || student['Student Email']}</td>
-            <td>{student.studentPhoneNumber || student['Student Phone Number']}</td>
-            <td>{student.parentName || student['Parent Name']}</td>
-            <td>{student.parentPhoneNumber1 || student['Parent Phone Number 1']}</td>
-            <td>{student.parentPhoneNumber2 || student['Parent Phone Number 2 (optional)']}</td>
-            <td>{student.parentEmail || student['Parent Email']}</td>
+            <td>{student.rollNumber}</td>
+            <td>{student.studentName}</td>
+            <td>{student.studentEmail}</td>
+            <td>{student.studentPhoneNumber}</td>
+            <td>{student.parentName}</td>
+            <td>{student.parentPhoneNumber1}</td>
+            <td>{student.parentPhoneNumber2}</td>
+            <td>{student.parentEmail}</td>
           </tr>
         ))}
       </tbody>
