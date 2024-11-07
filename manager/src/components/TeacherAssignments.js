@@ -18,7 +18,7 @@ const TeacherAssignments = () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
         setAssignments(response.data);
-        setFilteredAssignments(response.data);
+        setFilteredAssignments(response.data); // Initially display all data
         setLoading(false);
       } catch (err) {
         console.error("Error fetching assignments:", err);
@@ -30,13 +30,14 @@ const TeacherAssignments = () => {
     fetchAssignments();
   }, [teacherId]);
 
+  // Filter assignments based on selected filters
   useEffect(() => {
     const filtered = assignments.filter(assignment => {
       return (
-        (filters.school === '' || assignment.schoolName === filters.school) &&
-        (filters.class === '' || assignment.className === filters.class) &&
-        (filters.subject === '' || assignment.subjectName === filters.subject) &&
-        (filters.day === '' || assignment.day === filters.day)
+        (filters.school === '' || assignment.schoolName.includes(filters.school)) &&
+        (filters.class === '' || assignment.className.toString() === filters.class) &&
+        (filters.subject === '' || assignment.subjectName.includes(filters.subject)) &&
+        (filters.day === '' || assignment.day.includes(filters.day))
       );
     });
     setFilteredAssignments(filtered);
@@ -120,8 +121,8 @@ const TeacherAssignments = () => {
             {filteredAssignments.map((assignment, index) => (
               <tr key={index}>
                 <td>{assignment.schoolName}</td>
-                <td>{assignment.className || 'N/A'}</td>
-                <td>{assignment.sectionName || 'N/A'}</td>
+                <td>{assignment.className}</td>
+                <td>{assignment.sectionName}</td>
                 <td>{assignment.day}</td>
                 <td>{assignment.period}</td>
                 <td>{assignment.subjectName}</td>
