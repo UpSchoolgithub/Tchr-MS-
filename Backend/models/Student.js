@@ -10,12 +10,12 @@ Student.init({
     autoIncrement: true,
     primaryKey: true,
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   rollNumber: {
     type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  name: {
+    type: DataTypes.STRING,
     allowNull: false,
   },
   studentEmail: {
