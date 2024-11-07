@@ -16,14 +16,20 @@ const TeacherAssignments = () => {
   const [uniqueDays, setUniqueDays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [teacherName, setTeacherName] = useState('');
 
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
         setAssignments(response.data);
-        setFilteredAssignments(response.data); // Initially display all data
+        setFilteredAssignments(response.data);
         extractUniqueFilters(response.data);
+        
+        // Fetch teacher's name for displaying in the PDF
+        const teacherResponse = await axiosInstance.get(`/teachers/${teacherId}`);
+        setTeacherName(teacherResponse.data.name);
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching assignments:", err);
@@ -47,7 +53,6 @@ const TeacherAssignments = () => {
     setUniqueDays(days);
   };
 
-  // Filter assignments based on selected filters
   useEffect(() => {
     const filtered = assignments.filter(assignment => {
       return (
@@ -65,8 +70,11 @@ const TeacherAssignments = () => {
   };
 
   const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Teacher Time Table', 14, 10);
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(16);
+    doc.text('Teacher Time Table', doc.internal.pageSize.width / 2, 14, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Teacher: ${teacherName}`, doc.internal.pageSize.width / 2, 22, { align: 'center' });
 
     const tableData = filteredAssignments.map((assignment) => [
       assignment.schoolName,
@@ -82,9 +90,20 @@ const TeacherAssignments = () => {
     doc.autoTable({
       head: [['School', 'Class', 'Section', 'Day', 'Period', 'Subject', 'Start Time', 'End Time']],
       body: tableData,
+      theme: 'grid',
+      styles: {
+        halign: 'center', // Center-align content
+      },
+      headStyles: {
+        fillColor: [22, 160, 133], // Optional: header color
+        halign: 'center',
+      },
+      startY: 30, // Start the table below the title
+      margin: { top: 20, bottom: 20 },
+      tableWidth: 'auto',
     });
 
-    doc.save('teacher_assignments.pdf');
+    doc.save(`${teacherName}_timetable.pdf`);
   };
 
   if (loading) return <p>Loading...</p>;
