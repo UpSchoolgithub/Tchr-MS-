@@ -81,7 +81,7 @@ const TeacherSessions = () => {
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
-              <th>Start</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -95,11 +95,14 @@ const TeacherSessions = () => {
                 <td>{session.subjectName}</td>
                 <td>
                   {isToday(selectedDate) ? (
-                    <button onClick={() => handleStartSession(session)}>
-                      Start Session
-                    </button>
+                    <>
+                      <button onClick={() => handleStartSession(session)} style={{ backgroundColor: 'orange', color: 'black' }}>
+                        Start Session
+                      </button>
+                      <span> - {session.endTime}</span>
+                    </>
                   ) : (
-                    <span>{session.endTime}</span> // Show end time if not today
+                    <span>{session.endTime}</span>
                   )}
                 </td>
               </tr>
