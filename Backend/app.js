@@ -62,13 +62,13 @@ const testRoutes = require('./routes/testRoutes');
 //const studentRoutes = require('./routes/student');
 const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
-const studentsRouter = require('./routes/students')
+//const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
 //const subjectRoutes = require('./routes/subjectRoutes');
 const timetableRoutes = require('./routes/timetableRoutes'); // Import your timetable routes
 
 const teacherPortalRoutes = require('./routes/teacherPortalRoutes');
-const studentsRoute = require('./routes/students');
+//const studentsRoute = require('./routes/students');
 
 app.use('/api/timetable', require('./routes/timetableRoutes'));
 
