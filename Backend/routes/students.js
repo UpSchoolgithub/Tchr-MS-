@@ -51,7 +51,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
 });
 
 
-// Route to get all students in a specific section
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
   const { sectionId } = req.params;
 
