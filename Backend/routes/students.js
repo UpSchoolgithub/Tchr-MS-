@@ -2,24 +2,28 @@ const express = require('express');
 const router = express.Router();
 const { Section, Student } = require('../models');
 const sequelize = require('../config/db');
+const multer = require('multer');
+const XLSX = require('xlsx');
 
-// Route to upload students
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {  
+// Configure multer for file uploads
+const upload = multer({ dest: 'uploads/' });
+
+// Route to upload students from an Excel file
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', upload.single('file'), async (req, res) => {
   const { sectionId } = req.params;
-  const { students } = req.body;
-
   const transaction = await sequelize.transaction();
 
   try {
     // Find the section to associate students with
     const section = await Section.findOne({ where: { id: sectionId } });
     if (!section) {
-      console.error('Section not found');
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Log the student data to confirm structure
-    console.log('Student data received:', students);
+    // Read and parse the Excel file
+    const workbook = XLSX.readFile(req.file.path);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const students = XLSX.utils.sheet_to_json(worksheet);
 
     // Create student records
     const studentRecords = students.map(student => ({
