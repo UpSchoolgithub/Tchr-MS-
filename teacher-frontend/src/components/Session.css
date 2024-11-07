@@ -12,4 +12,48 @@
     background-color: #f2f2f2;
     text-align: left;
   }
+  .session-container {
+    padding: 20px;
+  }
+  
+  .error-message {
+    color: red;
+    margin-top: 10px;
+  }
+  
+  .date-picker {
+    margin-bottom: 20px;
+  }
+  
+  .session-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .session-table th, .session-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .start-button, .end-button, .action-button {
+    padding: 5px 10px;
+    margin: 2px;
+    cursor: pointer;
+  }
+  
+  .start-button {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .end-button {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .action-button {
+    background-color: #008CBA;
+    color: white;
+  }
   
