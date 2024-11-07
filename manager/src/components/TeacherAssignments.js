@@ -10,6 +10,10 @@ const TeacherAssignments = () => {
   const [assignments, setAssignments] = useState([]);
   const [filteredAssignments, setFilteredAssignments] = useState([]);
   const [filters, setFilters] = useState({ school: '', class: '', subject: '', day: '' });
+  const [uniqueSchools, setUniqueSchools] = useState([]);
+  const [uniqueClasses, setUniqueClasses] = useState([]);
+  const [uniqueSubjects, setUniqueSubjects] = useState([]);
+  const [uniqueDays, setUniqueDays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,6 +23,7 @@ const TeacherAssignments = () => {
         const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
         setAssignments(response.data);
         setFilteredAssignments(response.data); // Initially display all data
+        extractUniqueFilters(response.data);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching assignments:", err);
@@ -30,14 +35,26 @@ const TeacherAssignments = () => {
     fetchAssignments();
   }, [teacherId]);
 
+  const extractUniqueFilters = (data) => {
+    const schools = [...new Set(data.map(item => item.schoolName))];
+    const classes = [...new Set(data.map(item => item.className))];
+    const subjects = [...new Set(data.map(item => item.subjectName))];
+    const days = [...new Set(data.map(item => item.day))];
+
+    setUniqueSchools(schools);
+    setUniqueClasses(classes);
+    setUniqueSubjects(subjects);
+    setUniqueDays(days);
+  };
+
   // Filter assignments based on selected filters
   useEffect(() => {
     const filtered = assignments.filter(assignment => {
       return (
-        (filters.school === '' || assignment.schoolName.includes(filters.school)) &&
-        (filters.class === '' || assignment.className.toString() === filters.class) &&
-        (filters.subject === '' || assignment.subjectName.includes(filters.subject)) &&
-        (filters.day === '' || assignment.day.includes(filters.day))
+        (filters.school === '' || assignment.schoolName === filters.school) &&
+        (filters.class === '' || assignment.className === filters.class) &&
+        (filters.subject === '' || assignment.subjectName === filters.subject) &&
+        (filters.day === '' || assignment.day === filters.day)
       );
     });
     setFilteredAssignments(filtered);
@@ -81,19 +98,39 @@ const TeacherAssignments = () => {
       <div className="filters">
         <label>
           School:
-          <input type="text" name="school" value={filters.school} onChange={handleFilterChange} />
+          <select name="school" value={filters.school} onChange={handleFilterChange}>
+            <option value="">All</option>
+            {uniqueSchools.map((school, index) => (
+              <option key={index} value={school}>{school}</option>
+            ))}
+          </select>
         </label>
         <label>
           Class:
-          <input type="text" name="class" value={filters.class} onChange={handleFilterChange} />
+          <select name="class" value={filters.class} onChange={handleFilterChange}>
+            <option value="">All</option>
+            {uniqueClasses.map((className, index) => (
+              <option key={index} value={className}>{className}</option>
+            ))}
+          </select>
         </label>
         <label>
           Subject:
-          <input type="text" name="subject" value={filters.subject} onChange={handleFilterChange} />
+          <select name="subject" value={filters.subject} onChange={handleFilterChange}>
+            <option value="">All</option>
+            {uniqueSubjects.map((subject, index) => (
+              <option key={index} value={subject}>{subject}</option>
+            ))}
+          </select>
         </label>
         <label>
           Day:
-          <input type="text" name="day" value={filters.day} onChange={handleFilterChange} />
+          <select name="day" value={filters.day} onChange={handleFilterChange}>
+            <option value="">All</option>
+            {uniqueDays.map((day, index) => (
+              <option key={index} value={day}>{day}</option>
+            ))}
+          </select>
         </label>
       </div>
 
