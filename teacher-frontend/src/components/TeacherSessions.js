@@ -9,31 +9,63 @@ const TeacherSessions = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // Utility function to get day name from a date
+  const getDayName = (date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+  };
+
+  const fetchSessions = async (date) => {
+    setLoading(true);
+    try {
+      const day = getDayName(date);
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`, {
+        params: { day }
+      });
+      setSessions(response.data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
+      setError('Failed to load sessions');
+      setLoading(false);
+    }
+  };
+
+  // Fetch sessions whenever selectedDate changes
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-        setSessions(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching sessions:", err);
-        setError('Failed to load sessions');
-        setLoading(false);
-      }
-    };
+    fetchSessions(selectedDate);
+  }, [selectedDate, teacherId]);
 
-    fetchSessions();
-  }, [teacherId]);
+  const handlePreviousDay = () => {
+    const previousDate = new Date(selectedDate);
+    previousDate.setDate(selectedDate.getDate() - 1);
+    setSelectedDate(previousDate);
+  };
+
+  // Prevent going to future dates
+  const handleNextDay = () => {
+    const nextDate = new Date(selectedDate);
+    const today = new Date();
+    if (nextDate < today) {
+      nextDate.setDate(selectedDate.getDate() + 1);
+      setSelectedDate(nextDate);
+    }
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <div className="sessions-container">
-      <h2>Teacher Sessions</h2>
+      <h2>Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})</h2>
+      <div className="navigation-buttons">
+        <button onClick={handlePreviousDay}>Previous Day</button>
+        <button onClick={handleNextDay} disabled={selectedDate >= new Date()}>Next Day</button>
+      </div>
       {sessions.length === 0 ? (
-        <p>No sessions found.</p>
+        <p>No sessions found for {getDayName(selectedDate)}.</p>
       ) : (
         <table className="sessions-table">
           <thead>
