@@ -9,16 +9,17 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: (origin, callback) => {
+        console.log('Incoming origin:', origin);  // Add this line for debugging
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true, // Allows credentials to be sent from frontend
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Defines allowed HTTP methods
-    allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'Accept'], // Defines allowed headers
-    optionsSuccessStatus: 200 // Ensures successful response for OPTIONS requests
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With', 'Accept'],
+    optionsSuccessStatus: 200
 };
 
 module.exports = cors(corsOptions);
