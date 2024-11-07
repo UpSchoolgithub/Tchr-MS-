@@ -31,7 +31,6 @@ function InnerApp() {
 
             {/* Protected routes that require login */}
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/classroom" element={<PrivateRoute><Classroom /></PrivateRoute>} />
             <Route path="/school-calendar" element={<PrivateRoute><SchoolCalendar /></PrivateRoute>} />
             <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
