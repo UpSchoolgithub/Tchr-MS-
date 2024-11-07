@@ -1,20 +1,20 @@
 // src/components/TeacherSessions.js
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TeacherSessions.css';
 
 const TeacherSessions = () => {
   const { teacherId } = useParams();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Utility function to get day name from a date
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
@@ -33,12 +33,10 @@ const TeacherSessions = () => {
     }
   };
 
-  // Fetch sessions when the component mounts
   useEffect(() => {
     fetchSessions();
   }, [teacherId]);
 
-  // Filter sessions based on selectedDate
   useEffect(() => {
     const day = getDayName(selectedDate);
     const filtered = sessions.filter(session => session.day === day);
@@ -47,6 +45,16 @@ const TeacherSessions = () => {
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
+  };
+
+  const handleStartSession = (session) => {
+    navigate('/session-details', { state: { session } });
+  };
+
+  const isStartButtonVisible = (startTime) => {
+    const sessionStart = new Date(`${selectedDate.toDateString()} ${startTime}`);
+    const now = new Date();
+    return sessionStart - now <= 10 * 60 * 1000; // Show button 10 minutes before start time
   };
 
   if (loading) return <p>Loading...</p>;
@@ -59,7 +67,7 @@ const TeacherSessions = () => {
         <DatePicker
           selected={selectedDate}
           onChange={handleDateChange}
-          maxDate={new Date()} // Prevent selecting future dates
+          maxDate={new Date()}
           dateFormat="yyyy-MM-dd"
         />
       </div>
@@ -75,8 +83,7 @@ const TeacherSessions = () => {
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
-              <th>Start Time</th>
-              <th>End Time</th>
+              <th>Start</th>
             </tr>
           </thead>
           <tbody>
@@ -88,8 +95,15 @@ const TeacherSessions = () => {
                 <td>{session.day}</td>
                 <td>{session.period}</td>
                 <td>{session.subjectName}</td>
-                <td>{session.startTime}</td>
-                <td>{session.endTime}</td>
+                <td>
+                  {isStartButtonVisible(session.startTime) ? (
+                    <button onClick={() => handleStartSession(session)}>
+                      Start Session
+                    </button>
+                  ) : (
+                    <span>{session.startTime}</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
