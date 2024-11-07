@@ -66,6 +66,7 @@ const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
 //const subjectRoutes = require('./routes/subjectRoutes');
 const timetableRoutes = require('./routes/timetableRoutes'); // Import your timetable routes
+const teacherPortalRoutes = require('./routes/teacherPortalRoutes');
 
 app.use('/api/timetable', require('./routes/timetableRoutes'));
 
@@ -550,6 +551,10 @@ app.use('/api/teacher', teacherRoutes);
 //app.use('/api/teachers', teachersRoutes);
 //app.use('/api/timetable', timetableRoutes);
 app.use('/api', timetableRoutes);
+
+
+
+app.use('/api/teacherportal', teacherPortalRoutes);
 
 // Fallback for undefined routes
 app.use((req, res) => {
