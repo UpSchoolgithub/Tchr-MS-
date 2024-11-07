@@ -9,6 +9,7 @@ import './TeacherSessions.css';
 const TeacherSessions = () => {
   const { teacherId } = useParams();
   const [sessions, setSessions] = useState([]);
+  const [filteredSessions, setFilteredSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -19,13 +20,10 @@ const TeacherSessions = () => {
     return days[date.getDay()];
   };
 
-  const fetchSessions = async (date) => {
+  const fetchSessions = async () => {
     setLoading(true);
     try {
-      const day = getDayName(date);
-      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`, {
-        params: { day }
-      });
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
       setSessions(response.data);
       setLoading(false);
     } catch (err) {
@@ -35,10 +33,17 @@ const TeacherSessions = () => {
     }
   };
 
-  // Fetch sessions whenever selectedDate changes
+  // Fetch sessions when the component mounts
   useEffect(() => {
-    fetchSessions(selectedDate);
-  }, [selectedDate, teacherId]);
+    fetchSessions();
+  }, [teacherId]);
+
+  // Filter sessions based on selectedDate
+  useEffect(() => {
+    const day = getDayName(selectedDate);
+    const filtered = sessions.filter(session => session.day === day);
+    setFilteredSessions(filtered);
+  }, [selectedDate, sessions]);
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
@@ -58,7 +63,7 @@ const TeacherSessions = () => {
           dateFormat="yyyy-MM-dd"
         />
       </div>
-      {sessions.length === 0 ? (
+      {filteredSessions.length === 0 ? (
         <p>No sessions found for {getDayName(selectedDate)}.</p>
       ) : (
         <table className="sessions-table">
@@ -75,7 +80,7 @@ const TeacherSessions = () => {
             </tr>
           </thead>
           <tbody>
-            {sessions.map((session, index) => (
+            {filteredSessions.map((session, index) => (
               <tr key={index}>
                 <td>{session.schoolName}</td>
                 <td>{session.className}</td>
