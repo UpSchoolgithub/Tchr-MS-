@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useParams } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './TeacherSessions.css';
 
 const TeacherSessions = () => {
@@ -38,20 +40,8 @@ const TeacherSessions = () => {
     fetchSessions(selectedDate);
   }, [selectedDate, teacherId]);
 
-  const handlePreviousDay = () => {
-    const previousDate = new Date(selectedDate);
-    previousDate.setDate(selectedDate.getDate() - 1);
-    setSelectedDate(previousDate);
-  };
-
-  // Prevent going to future dates
-  const handleNextDay = () => {
-    const nextDate = new Date(selectedDate);
-    const today = new Date();
-    if (nextDate < today) {
-      nextDate.setDate(selectedDate.getDate() + 1);
-      setSelectedDate(nextDate);
-    }
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
   };
 
   if (loading) return <p>Loading...</p>;
@@ -61,8 +51,12 @@ const TeacherSessions = () => {
     <div className="sessions-container">
       <h2>Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})</h2>
       <div className="navigation-buttons">
-        <button onClick={handlePreviousDay}>Previous Day</button>
-        <button onClick={handleNextDay} disabled={selectedDate >= new Date()}>Next Day</button>
+        <DatePicker
+          selected={selectedDate}
+          onChange={handleDateChange}
+          maxDate={new Date()} // Prevent selecting future dates
+          dateFormat="yyyy-MM-dd"
+        />
       </div>
       {sessions.length === 0 ? (
         <p>No sessions found for {getDayName(selectedDate)}.</p>
