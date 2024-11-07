@@ -1,5 +1,26 @@
 .assignments-container {
+    max-width: 800px;
+    margin: auto;
     padding: 20px;
+  }
+  
+  .filters {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    justify-content: space-between;
+  }
+  
+  .filters label {
+    font-weight: bold;
+    margin-right: 5px;
+  }
+  
+  .filters input {
+    padding: 5px;
+    width: 100px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
   
   .assignments-table {
@@ -8,7 +29,12 @@
   }
   
   .assignments-table th, .assignments-table td {
-    padding: 8px;
     border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .assignments-table th {
+    background-color: #f2f2f2;
+    text-align: left;
   }
   

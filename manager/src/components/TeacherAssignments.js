@@ -13,7 +13,6 @@ const TeacherAssignments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch assignments when the component mounts
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
@@ -31,7 +30,6 @@ const TeacherAssignments = () => {
     fetchAssignments();
   }, [teacherId]);
 
-  // Filter assignments based on selected filters
   useEffect(() => {
     const filtered = assignments.filter(assignment => {
       return (
@@ -48,7 +46,6 @@ const TeacherAssignments = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  // Download timetable as a PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text('Teacher Time Table', 14, 10);
@@ -123,8 +120,8 @@ const TeacherAssignments = () => {
             {filteredAssignments.map((assignment, index) => (
               <tr key={index}>
                 <td>{assignment.schoolName}</td>
-                <td>{assignment.className}</td>
-                <td>{assignment.sectionName}</td>
+                <td>{assignment.className || 'N/A'}</td>
+                <td>{assignment.sectionName || 'N/A'}</td>
                 <td>{assignment.day}</td>
                 <td>{assignment.period}</td>
                 <td>{assignment.subjectName}</td>
