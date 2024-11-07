@@ -2,19 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { Section, Student } = require('../models');
 
-// Route to upload students
 router.post('/sections/:sectionId/students', async (req, res) => {
-  const { sectionId } = req.params;
+  const { sectionId } = req.params;  // Use sectionId instead of combinedSectionId
   const { students } = req.body;
 
   try {
-    // Find the section by sectionId
-    const section = await Section.findOne({ where: { sectionId } });
+    const section = await Section.findOne({ where: { sectionId } });  // Ensure sectionId is used here
     if (!section) {
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Prepare student records for bulk insertion
+    // Prepare student records
     const studentRecords = students.map(student => ({
       rollNumber: student['Roll Number'],
       name: student['Student Name'],
@@ -29,7 +27,6 @@ router.post('/sections/:sectionId/students', async (req, res) => {
       updatedAt: new Date()
     }));
 
-    // Bulk create student records
     await Student.bulkCreate(studentRecords);
     res.status(201).json({ message: 'Students uploaded successfully' });
   } catch (error) {
