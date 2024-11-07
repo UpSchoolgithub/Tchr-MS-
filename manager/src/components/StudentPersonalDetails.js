@@ -4,21 +4,20 @@ import * as XLSX from 'xlsx';
 import axiosInstance from '../services/axiosInstance';
 import './StudentPersonalDetails.css';
 
-const StudentPersonalDetails = ({ sectionId }) => {
-  const [studentData, setStudentData] = useState([]); // State to store student data
-
-  // Fetch existing student data when component loads
+const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
+    const [studentData, setStudentData] = useState([]);
+  
     useEffect(() => {
-        const fetchStudentData = async () => {
-          try {
-            const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
-            setStudentData(response.data);
-          } catch (error) {
-            console.error('Error fetching student data:', error);
-          }
-        };
-    
-        fetchStudentData();
+      const fetchStudentData = async () => {
+        try {
+          const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
+          setStudentData(response.data);
+        } catch (error) {
+          console.error('Error fetching student data:', error);
+        }
+      };
+  
+      fetchStudentData();
     }, [schoolId, classId, sectionId]);
     
 
