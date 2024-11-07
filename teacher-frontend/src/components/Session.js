@@ -12,11 +12,19 @@ const Session = () => {
   const [error, setError] = useState(null);
 
   const fetchSessionsByDay = async (day) => {
+    if (!teacherId) {
+      setError('Teacher ID is undefined');
+      console.error('Teacher ID is undefined');
+      return;
+    }
+    
     try {
+      console.log(`Fetching sessions for teacherId: ${teacherId} on day: ${day}`);
       const response = await axiosInstance.get(`/teacherportal/${teacherId}/sessions`, {
         params: { day },
       });
       setSessions(response.data);
+      setError(null); // Clear any previous errors on successful fetch
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions');
@@ -35,6 +43,7 @@ const Session = () => {
       fetchSessionsByDay(dayOfWeek); // Refresh sessions after starting
     } catch (error) {
       console.error('Error starting session:', error);
+      setError('Failed to start session');
     }
   };
 
@@ -45,6 +54,7 @@ const Session = () => {
       fetchSessionsByDay(dayOfWeek); // Refresh sessions after ending
     } catch (error) {
       console.error('Error ending session:', error);
+      setError('Failed to end session');
     }
   };
 
@@ -56,7 +66,7 @@ const Session = () => {
         onChange={date => setSelectedDate(date)} 
         dateFormat="yyyy-MM-dd"
       />
-      {error && <p>{error}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <table className="session-table">
         <thead>
           <tr>
