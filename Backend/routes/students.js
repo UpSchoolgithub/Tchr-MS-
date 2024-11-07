@@ -59,11 +59,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
       where: { sectionId },
       attributes: [
         'rollNumber',
-        'studentName', // Corrected field name
+        'studentName', // Corrected to match the database
         'studentEmail',
         'studentPhoneNumber',
         'parentName',
-        'parentPhoneNumber',
+        'parentPhoneNumber1', // Updated field name
         'parentPhoneNumber2',
         'parentEmail',
       ],
