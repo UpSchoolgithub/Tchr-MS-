@@ -5,6 +5,7 @@ import axiosInstance from '../services/axiosInstance';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './MSchoolClassSection.css';
+import StudentPersonalDetails from './StudentPersonalDetails'; // Import the new component
 
 Modal.setAppElement('#root');
 
@@ -764,45 +765,45 @@ return (
 
 {/* Show Students Section */}
 {showStudents && (
-  <div className="students-section">
-    <h2>Students Information</h2>
+        <div className="students-section">
+          <h2>Students Information</h2>
+          <div className="student-tabs">
+            <button
+              className={selectedTab === 'Student Personal' ? 'active-tab' : ''}
+              onClick={() => handleTabChange('Student Personal')}
+            >
+              Student Personal
+            </button>
+            <button
+              className={selectedTab === 'Attendance' ? 'active-tab' : ''}
+              onClick={() => handleTabChange('Attendance')}
+            >
+              Attendance
+            </button>
+            <button
+              className={selectedTab === 'Assignments' ? 'active-tab' : ''}
+              onClick={() => handleTabChange('Assignments')}
+            >
+              Assignments
+            </button>
+            <button
+              className={selectedTab === 'Test' ? 'active-tab' : ''}
+              onClick={() => handleTabChange('Test')}
+            >
+              Test
+            </button>
+          </div>
 
-    {/* Tab Buttons for Students Section */}
-    <div className="student-tabs">
-      <button
-        className={selectedTab === 'Student Personal' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Student Personal')}
-      >
-        Student Personal
-      </button>
-      <button
-        className={selectedTab === 'Attendance' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Attendance')}
-      >
-        Attendance
-      </button>
-      <button
-        className={selectedTab === 'Assignments' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Assignments')}
-      >
-        Assignments
-      </button>
-      <button
-        className={selectedTab === 'Test' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Test')}
-      >
-        Test
-      </button>
+          <div className="tab-content">
+            {selectedTab === 'Student Personal' && <StudentPersonalDetails />}
+            {selectedTab === 'Attendance' && <div>Attendance Data Here</div>}
+            {selectedTab === 'Assignments' && <div>Assignments Data Here</div>}
+            {selectedTab === 'Test' && <div>Test Data Here</div>}
+          </div>
+        </div>
+      )}
     </div>
-
-    {/* Content Based on Selected Tab */}
-    <div className="tab-content">
-      {renderStudentContent()}
-    </div>
-  </div>
-)}
-</div> // This is the closing tag for the main container div
-);
+  );
 };
 
 export default MSchoolClassSection;

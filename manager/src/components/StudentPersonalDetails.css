@@ -1,0 +1,28 @@
+/* src/components/StudentPersonalDetails.css */
+
+.student-personal-details {
+    margin-top: 20px;
+  }
+  
+  .upload-button {
+    display: block;
+    margin-bottom: 20px;
+  }
+  
+  .student-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .student-table th, .student-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .student-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
