@@ -81,7 +81,9 @@ const TeacherSessions = () => {
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
-              <th>Actions</th>
+              <th>Session Started</th>
+              <th>Session Ended</th>
+              <th>Assignments</th>
             </tr>
           </thead>
           <tbody>
@@ -95,15 +97,17 @@ const TeacherSessions = () => {
                 <td>{session.subjectName}</td>
                 <td>
                   {isToday(selectedDate) ? (
-                    <>
-                      <button onClick={() => handleStartSession(session)} style={{ backgroundColor: 'orange', color: 'black' }}>
-                        Start Session
-                      </button>
-                      <span> - {session.endTime}</span>
-                    </>
+                    <button onClick={() => handleStartSession(session)} style={{ backgroundColor: 'orange', color: 'black' }}>
+                      Start Session
+                    </button>
                   ) : (
-                    <span>{session.endTime}</span>
+                    <span>-</span>
                   )}
+                </td>
+                <td>{session.endTime}</td>
+                <td>
+                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
+                  <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
                 </td>
               </tr>
             ))}
