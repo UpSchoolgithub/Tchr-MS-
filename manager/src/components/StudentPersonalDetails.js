@@ -1,10 +1,10 @@
 // src/components/StudentPersonalDetails.js
 import React, { useState } from 'react';
-import axios from 'axios';
 import * as XLSX from 'xlsx';
+import axiosInstance from '../services/axiosInstance';
 import './StudentPersonalDetails.css';
 
-const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => { // Receive props here
+const StudentPersonalDetails = ({ sectionId }) => {
   const [studentData, setStudentData] = useState([]); // State to store parsed student data
 
   // Handle Excel file upload
@@ -18,22 +18,22 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => { // Receiv
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       setStudentData(jsonData); // Store parsed data in state
-      uploadData(jsonData); // Send data to backend
+      console.log(jsonData); // For debugging
     };
 
     reader.readAsArrayBuffer(file);
   };
 
-  // Send student data to the backend
-  const uploadData = async (data) => {
+  // Upload student data to the backend
+  const uploadStudentData = async () => {
     try {
-      // Use sectionId in the API URL
-      const response = await axios.post(`/api/sections/${sectionId}/students`, { students: data });
-      console.log(response.data);
-      alert('Student data uploaded successfully!');
+      const response = await axiosInstance.post(`/sections/${sectionId}/students`, {
+        students: studentData,
+      });
+      alert('Student data uploaded successfully');
     } catch (error) {
       console.error('Error uploading student data:', error);
-      alert('Failed to upload student data.');
+      alert('Failed to upload student data');
     }
   };
 
@@ -80,7 +80,16 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => { // Receiv
         onChange={handleFileUpload}
         className="upload-button"
       />
-      {studentData.length > 0 ? renderStudentTable() : <p>No data available. Please upload an Excel file.</p>}
+      {studentData.length > 0 ? (
+        <>
+          {renderStudentTable()}
+          <button onClick={uploadStudentData} className="upload-button">
+            Upload Student Data
+          </button>
+        </>
+      ) : (
+        <p>No data available. Please upload an Excel file.</p>
+      )}
     </div>
   );
 };

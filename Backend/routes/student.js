@@ -1,8 +1,9 @@
-// routes/students.js
+// Backend/routes/student.js
 const express = require('express');
 const router = express.Router();
 const { Section, Student } = require('../models');
 
+// Route to upload students
 router.post('/sections/:sectionId/students', async (req, res) => {
   const { sectionId } = req.params;
   const { students } = req.body;
@@ -19,12 +20,12 @@ router.post('/sections/:sectionId/students', async (req, res) => {
       studentEmail: student['Student Email'],
       studentPhoneNumber: student['Student Phone Number'],
       parentName: student['Parent Name'],
-      parentPhoneNumber: student['Parent Phone Number 1'],
+      parentPhoneNumber1: student['Parent Phone Number 1'],
       parentPhoneNumber2: student['Parent Phone Number 2 (optional)'],
       parentEmail: student['Parent Email'],
       sectionId: section.id,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }));
 
     await Student.bulkCreate(studentRecords);
