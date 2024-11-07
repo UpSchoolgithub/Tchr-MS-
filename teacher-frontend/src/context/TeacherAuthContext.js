@@ -1,14 +1,11 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// TeacherAuthContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
 
 const TeacherAuthContext = createContext();
 
 export const useTeacherAuth = () => {
-  const context = useContext(TeacherAuthContext);
-  if (!context) {
-    throw new Error('useTeacherAuth must be used within a TeacherAuthProvider');
-  }
-  return context;
+  return useContext(TeacherAuthContext);
 };
 
 const TeacherAuthProvider = ({ children }) => {
@@ -16,39 +13,29 @@ const TeacherAuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
 
   useEffect(() => {
-    // Sync state with localStorage in case of any changes
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-
-    if (teacherId) {
-      localStorage.setItem('teacherId', teacherId);
-    } else {
-      localStorage.removeItem('teacherId');
-    }
-  }, [token, teacherId]);
+    // Sync with local storage
+    if (teacherId) localStorage.setItem('teacherId', teacherId);
+    if (token) localStorage.setItem('token', token);
+  }, [teacherId, token]);
 
   const login = async (email, password) => {
     try {
       const response = await axiosInstance.post('/teacher/login', { email, password });
-      const { token, teacherId } = response.data;
-      setToken(token);
-      setTeacherId(teacherId);
-      localStorage.setItem('token', token);
-      localStorage.setItem('teacherId', teacherId);
+      setTeacherId(response.data.teacherId);
+      setToken(response.data.token);
+      // Save to localStorage for persistence
+      localStorage.setItem('teacherId', response.data.teacherId);
+      localStorage.setItem('token', response.data.token);
     } catch (error) {
-      throw new Error('Login failed');
+      throw new Error(error.response ? error.response.data.message : 'Login failed');
     }
   };
-  
 
   const logout = () => {
-    setToken(null);
     setTeacherId(null);
-    localStorage.removeItem('token');
+    setToken(null);
     localStorage.removeItem('teacherId');
+    localStorage.removeItem('token');
   };
 
   return (
