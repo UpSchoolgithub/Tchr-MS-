@@ -3,18 +3,15 @@ import axiosInstance from '../services/axiosInstance';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './Session.css';
-import { useParams } from 'react-router-dom';
+import { useTeacherAuth } from '../context/TeacherAuthContext';
 
 const Session = () => {
-  const { teacherId } = useParams();
+  const { teacherId } = useTeacherAuth(); // Get teacherId from context
   const [sessions, setSessions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
 
-  // Helper function to get the day of the week from a date
-  const getDayOfWeek = (date) => {
-    return date.toLocaleDateString('en-US', { weekday: 'long' });
-  };
+  const getDayOfWeek = (date) => date.toLocaleDateString('en-US', { weekday: 'long' });
 
   const fetchSessionsByDay = async (day) => {
     if (!teacherId) {
@@ -37,7 +34,7 @@ const Session = () => {
   };
 
   useEffect(() => {
-    const dayOfWeek = getDayOfWeek(selectedDate); // Determine the day based on the selected date
+    const dayOfWeek = getDayOfWeek(selectedDate);
     fetchSessionsByDay(dayOfWeek);
   }, [selectedDate, teacherId]);
 
