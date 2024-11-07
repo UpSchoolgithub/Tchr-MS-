@@ -52,11 +52,13 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
         console.log('Parsed student data:', jsonData); // For debugging
       } catch (parseError) {
         console.error('Error parsing Excel file:', parseError);
+        alert('Error parsing the Excel file. Please ensure it has the correct format.');
       }
     };
 
     reader.onerror = (readError) => {
       console.error('Error reading file:', readError);
+      alert('Error reading the file. Please try again with a valid Excel file.');
     };
 
     reader.readAsArrayBuffer(file);
@@ -66,21 +68,24 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   const uploadStudentData = async () => {
     if (studentData.length === 0) {
       console.error('No student data to upload.');
-      alert('No student data to upload.');
+      alert('No student data to upload. Please upload an Excel file first.');
       return;
     }
 
     try {
       console.log('Uploading student data:', studentData);
-      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, {
+      const response = await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, {
         students: studentData,
       });
-      alert('Student data uploaded successfully');
+      alert(`Student data uploaded successfully! Response: ${response.statusText}`);
       // Fetch updated data to reflect the changes
       fetchStudentData();
     } catch (error) {
-      console.error('Error uploading student data:', error.response ? error.response.data : error.message);
-      alert('Failed to upload student data');
+      const errorMessage = error.response
+        ? `Failed to upload student data. Error: ${error.response.data.message || error.response.statusText}`
+        : `Failed to upload student data. Error: ${error.message}`;
+      console.error(errorMessage);
+      alert(errorMessage);
     }
   };
 
