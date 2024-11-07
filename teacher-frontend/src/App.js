@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import Sidebar from './components/Sidebar'; 
+import Sidebar from './components/Sidebar';
 import Session from './components/Session';
 import Classroom from './components/Classroom';
 import SchoolCalendar from './components/SchoolCalendar';
@@ -17,23 +17,28 @@ function PrivateRoute({ children }) {
 }
 
 function InnerApp() {
-  const { token, teacherId } = useTeacherAuth(); // Assuming teacherId is provided in your context
+  const { token } = useTeacherAuth();
 
   return (
     <WebSocketProvider token={token}>
       <Router>
-        {token && <Sidebar />}
+        {token && <Sidebar />}  {/* Sidebar only appears when logged in */}
         <div className={token ? "content-with-sidebar" : "content"}>
           <Routes>
-            <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" replace />} />
+            {/* Redirect to dashboard or login based on token */}
+            <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login />} />
+
+            {/* Protected routes that require login */}
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            {/* Dynamic route with teacherId */}
-            <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
+            <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/classroom" element={<PrivateRoute><Classroom /></PrivateRoute>} />
             <Route path="/school-calendar" element={<PrivateRoute><SchoolCalendar /></PrivateRoute>} />
             <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
+
+            {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
+            <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
           </Routes>
         </div>
       </Router>
