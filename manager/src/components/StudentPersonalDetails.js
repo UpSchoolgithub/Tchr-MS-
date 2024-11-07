@@ -10,11 +10,12 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   // Fetch student data from the backend
   const fetchStudentData = async () => {
     try {
+      console.log(`Fetching data for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}`);
       const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
       console.log('Fetched student data:', response.data); // Log the fetched data
       setStudentData(response.data);
     } catch (error) {
-      console.error('Error fetching student data:', error);
+      console.error('Error fetching student data:', error.response ? error.response.data : error.message);
     }
   };
 
@@ -25,25 +26,37 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   // Handle Excel file upload and parse data
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
+    if (!file) {
+      console.error('No file selected.');
+      return;
+    }
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet).map(row => ({
-        rollNumber: row['Roll Number'],
-        studentName: row['Student Name'],
-        studentEmail: row['Student Email'],
-        studentPhoneNumber: row['Student Phone Number'],
-        parentName: row['Parent Name'],
-        parentPhoneNumber1: row['Parent Phone Number 1'],
-        parentPhoneNumber2: row['Parent Phone Number 2 (optional)'],
-        parentEmail: row['Parent Email'],
-      }));
-      
-      setStudentData(jsonData); // Store parsed data in state
-      console.log('Parsed student data:', jsonData); // For debugging
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet).map(row => ({
+          rollNumber: row['Roll Number'],
+          studentName: row['Student Name'],
+          studentEmail: row['Student Email'],
+          studentPhoneNumber: row['Student Phone Number'],
+          parentName: row['Parent Name'],
+          parentPhoneNumber1: row['Parent Phone Number 1'],
+          parentPhoneNumber2: row['Parent Phone Number 2 (optional)'],
+          parentEmail: row['Parent Email'],
+        }));
+
+        setStudentData(jsonData); // Store parsed data in state
+        console.log('Parsed student data:', jsonData); // For debugging
+      } catch (parseError) {
+        console.error('Error parsing Excel file:', parseError);
+      }
+    };
+
+    reader.onerror = (readError) => {
+      console.error('Error reading file:', readError);
     };
 
     reader.readAsArrayBuffer(file);
@@ -51,7 +64,14 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
 
   // Upload student data to the backend
   const uploadStudentData = async () => {
+    if (studentData.length === 0) {
+      console.error('No student data to upload.');
+      alert('No student data to upload.');
+      return;
+    }
+
     try {
+      console.log('Uploading student data:', studentData);
       await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, {
         students: studentData,
       });
@@ -59,7 +79,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       // Fetch updated data to reflect the changes
       fetchStudentData();
     } catch (error) {
-      console.error('Error uploading student data:', error);
+      console.error('Error uploading student data:', error.response ? error.response.data : error.message);
       alert('Failed to upload student data');
     }
   };
