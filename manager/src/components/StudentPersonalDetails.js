@@ -1,20 +1,18 @@
-// src/components/StudentPersonalDetails.js
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import axiosInstance from '../services/axiosInstance';
 import './StudentPersonalDetails.css';
 
 const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
-  const [studentData, setStudentData] = useState([]);
-  const [feedbackMessage, setFeedbackMessage] = useState(""); // For feedback messages
-  const [isSuccess, setIsSuccess] = useState(false); // For success state
+  const [studentData, setStudentData] = useState([]); // Existing data
+  const [parsedData, setParsedData] = useState([]); // Newly parsed data
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Fetch student data from the backend
   const fetchStudentData = async () => {
     try {
-      console.log(`Fetching data for schoolId: ${schoolId}, classId: ${classId}, sectionId: ${sectionId}`);
       const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
-      console.log('Fetched student data:', response.data); // Log the fetched data
       setStudentData(response.data);
     } catch (error) {
       console.error('Error fetching student data:', error.response ? error.response.data : error.message);
@@ -28,12 +26,9 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   // Handle Excel file upload and parse data
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    if (!file) {
-      console.error('No file selected.');
-      return;
-    }
-    const reader = new FileReader();
+    if (!file) return;
 
+    const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result);
@@ -50,53 +45,41 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
           parentEmail: row['Parent Email'],
         }));
 
-        setStudentData(jsonData); // Store parsed data in state
-        setFeedbackMessage("File parsed successfully! Ready to upload."); // Feedback message
+        setParsedData(jsonData); // Store parsed data separately
+        setFeedbackMessage("File parsed successfully! Review data below before uploading.");
         setIsSuccess(true);
-        console.log('Parsed student data:', jsonData); // For debugging
       } catch (parseError) {
         console.error('Error parsing Excel file:', parseError);
-        setFeedbackMessage("Error parsing the Excel file."); // Feedback message
+        setFeedbackMessage("Error parsing the Excel file.");
         setIsSuccess(false);
       }
     };
-
-    reader.onerror = (readError) => {
-      console.error('Error reading file:', readError);
-      setFeedbackMessage("Error reading the file."); // Feedback message
-      setIsSuccess(false);
-    };
-
     reader.readAsArrayBuffer(file);
   };
 
-  // Upload student data to the backend
+  // Upload parsed student data to the backend
   const uploadStudentData = async () => {
-    if (studentData.length === 0) {
-      console.error('No student data to upload.');
-      setFeedbackMessage('No student data to upload.'); // Feedback message
+    if (parsedData.length === 0) {
+      setFeedbackMessage('No student data to upload.');
       setIsSuccess(false);
       return;
     }
 
     try {
-      console.log('Uploading student data:', studentData);
-      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, {
-        students: studentData,
-      });
-      setFeedbackMessage('Student data uploaded successfully!'); // Success message
+      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, { students: parsedData });
+      setFeedbackMessage('Student data uploaded successfully!');
       setIsSuccess(true);
-      fetchStudentData(); // Fetch updated data to reflect the changes
+      fetchStudentData(); // Refresh existing data
+      setParsedData([]); // Clear parsed data after upload
     } catch (error) {
       const errorMsg = error.response ? error.response.data : error.message;
-      console.error('Error uploading student data:', errorMsg);
-      setFeedbackMessage(`Failed to upload student data: ${errorMsg}`); // Error message
+      setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
       setIsSuccess(false);
     }
   };
 
   // Render student data in a table
-  const renderStudentTable = () => (
+  const renderStudentTable = (data) => (
     <table className="student-table">
       <thead>
         <tr>
@@ -111,7 +94,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
         </tr>
       </thead>
       <tbody>
-        {studentData.map((student, index) => (
+        {data.map((student, index) => (
           <tr key={index}>
             <td>{student.rollNumber}</td>
             <td>{student.studentName}</td>
@@ -130,25 +113,21 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   return (
     <div className="student-personal-details">
       <h3>Student Personal Details</h3>
-      <input
-        type="file"
-        accept=".xlsx, .xls"
-        onChange={handleFileUpload}
-        className="upload-button"
-      />
-      {feedbackMessage && (
-        <p style={{ color: isSuccess ? 'green' : 'red' }}>{feedbackMessage}</p> // Display feedback message
-      )}
-      {studentData.length > 0 ? (
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="upload-button" />
+      {feedbackMessage && <p style={{ color: isSuccess ? 'green' : 'red' }}>{feedbackMessage}</p>}
+      
+      {parsedData.length > 0 && (
         <>
-          {renderStudentTable()}
+          <h4>Preview Parsed Data</h4>
+          {renderStudentTable(parsedData)}
           <button onClick={uploadStudentData} className="upload-button">
-            Upload Student Data
+            Confirm and Upload Data
           </button>
         </>
-      ) : (
-        <p>No data available. Please upload an Excel file.</p>
       )}
+
+      <h4>Existing Student List</h4>
+      {studentData.length > 0 ? renderStudentTable(studentData) : <p>No student data available.</p>}
     </div>
   );
 };
