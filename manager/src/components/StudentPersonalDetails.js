@@ -73,7 +73,12 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
   
     try {
       console.log("Uploading Data:", parsedData); // Debugging log
-      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, { students: parsedData });
+      // Temporarily using a direct URL string to test the endpoint
+      const response = await axiosInstance.post(
+        '/schools/29/classes/122/sections/169/students', 
+        { students: parsedData }
+      );
+      console.log("Upload Response:", response.data); // Log response
       setFeedbackMessage('Student data uploaded successfully!');
       setIsSuccess(true);
       fetchStudentData(); // Refresh existing data
@@ -85,6 +90,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       console.error("Upload Error:", error); // Log the entire error for debugging
     }
   };
+  
   
 
   // Render student data in a table
