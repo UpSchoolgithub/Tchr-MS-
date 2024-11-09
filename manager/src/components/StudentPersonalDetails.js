@@ -70,19 +70,22 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       setIsSuccess(false);
       return;
     }
-
+  
     try {
+      console.log("Uploading Data:", parsedData); // Debugging log
       await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, { students: parsedData });
       setFeedbackMessage('Student data uploaded successfully!');
       setIsSuccess(true);
       fetchStudentData(); // Refresh existing data
       setParsedData([]); // Clear parsed data after upload
     } catch (error) {
-      const errorMsg = error.response ? error.response.data : error.message;
+      const errorMsg = error.response?.data?.message || JSON.stringify(error.response?.data) || error.message;
       setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
       setIsSuccess(false);
+      console.error("Upload Error:", error); // Log the entire error for debugging
     }
   };
+  
 
   // Render student data in a table
   const renderStudentTable = (data) => (
