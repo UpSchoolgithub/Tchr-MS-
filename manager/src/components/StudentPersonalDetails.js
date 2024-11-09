@@ -91,6 +91,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
     }
   };
   
+  //d
   
 
   // Render student data in a table
