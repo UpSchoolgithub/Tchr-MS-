@@ -19,26 +19,26 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
 
     // Map and validate student data
     const studentRecords = students.map(student => ({
-      rollNumber: student['Roll Number'],
-      name: student['Student Name'],
-      studentEmail: student['Student Email'],
-      studentPhoneNumber: student['Student Phone Number'],
-      parentName: student['Parent Name'],
-      parentPhoneNumber: student['Parent Phone Number 1'],
+      rollNumber: student['Roll Number'] || null,
+      name: student['Student Name'] || null,
+      studentEmail: student['Student Email'] || null,
+      studentPhoneNumber: student['Student Phone Number'] || null,
+      parentName: student['Parent Name'] || null,
+      parentPhoneNumber: student['Parent Phone Number 1'] || null,
       parentPhoneNumber2: student['Parent Phone Number 2 (optional)'] || null,
-      parentEmail: student['Parent Email'],
+      parentEmail: student['Parent Email'] || null,
       sectionId: section.id,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }));
+    })).filter(student => student.rollNumber && student.name); // Filter out records missing rollNumber or name
 
     console.log("Student records to be inserted:", studentRecords);
 
-    // For debugging: Insert only one record to test
-    await Student.create(studentRecords[0], { transaction });
+    // Insert all records once confirmed
+    await Student.bulkCreate(studentRecords, { transaction });
     
     await transaction.commit();
-    res.status(201).json({ message: 'Student uploaded successfully (single record for debugging)' });
+    res.status(201).json({ message: 'Students uploaded successfully' });
   } catch (error) {
     await transaction.rollback();
     console.error('Error uploading students:', error.message);
