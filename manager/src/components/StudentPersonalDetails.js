@@ -65,31 +65,46 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
 
   // Upload parsed student data to the backend
   const uploadStudentData = async () => {
-    if (parsedData.length === 0) {
-      setFeedbackMessage('No student data to upload.');
-      setIsSuccess(false);
-      return;
-    }
+    const testData = [
+      {
+        rollNumber: "1",
+        studentName: "Oliver Green",
+        studentEmail: "oliver.green@example.com",
+        studentPhoneNumber: "789-123-4567",
+        parentName: "Linda Green",
+        parentPhoneNumber1: "321-654-9870",
+        parentPhoneNumber2: "",
+        parentEmail: "linda.green@example.com"
+      },
+      {
+        rollNumber: "2",
+        studentName: "Sophia Brown",
+        studentEmail: "sophia.brown@example.com",
+        studentPhoneNumber: "890-234-5678",
+        parentName: "Thomas Brown",
+        parentPhoneNumber1: "432-765-0987",
+        parentPhoneNumber2: "",
+        parentEmail: "thomas.brown@example.com"
+      }
+    ];
   
     try {
-      console.log("Uploading Data:", parsedData); // Debugging log
-      // Temporarily using a direct URL string to test the endpoint
       const response = await axiosInstance.post(
-        '/schools/29/classes/122/sections/169/students', 
-        { students: parsedData }
+        `/schools/29/classes/122/sections/169/students`, 
+        { students: testData } // Using hardcoded data instead of parsedData
       );
-      console.log("Upload Response:", response.data); // Log response
+      console.log("Upload Response:", response.data);
       setFeedbackMessage('Student data uploaded successfully!');
       setIsSuccess(true);
       fetchStudentData(); // Refresh existing data
-      setParsedData([]); // Clear parsed data after upload
     } catch (error) {
       const errorMsg = error.response?.data?.message || JSON.stringify(error.response?.data) || error.message;
       setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
       setIsSuccess(false);
-      console.error("Upload Error:", error); // Log the entire error for debugging
+      console.error("Upload Error:", error);
     }
   };
+  
   
   //d
   
