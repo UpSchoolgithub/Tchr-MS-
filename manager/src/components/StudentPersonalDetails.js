@@ -15,9 +15,15 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
       setStudentData(response.data);
     } catch (error) {
-      console.error('Error fetching student data:', error.response ? error.response.data : error.message);
+      if (error.response && error.response.status === 404) {
+        console.log('No students found for this section');
+        setStudentData([]); // Set an empty array if no students found
+      } else {
+        console.error('Error fetching student data:', error.response ? error.response.data : error.message);
+      }
     }
   };
+  
 
   useEffect(() => {
     fetchStudentData();
