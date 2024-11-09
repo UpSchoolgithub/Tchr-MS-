@@ -7,6 +7,7 @@ const sequelize = require('../config/db');
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
   const { sectionId } = req.params;
   const { students } = req.body;
+  console.log("Received student data:", students);  // Add this line
 
   const transaction = await sequelize.transaction();
 
