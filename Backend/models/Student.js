@@ -12,12 +12,11 @@ Student.init({
   },
   rollNumber: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    unique: true,
+    allowNull: true, // Allow duplicates
   },
   studentName: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   studentEmail: {
     type: DataTypes.STRING,
@@ -60,11 +59,7 @@ Student.init({
   },
   sectionId: {
     type: DataTypes.INTEGER,
-    references: {
-      model: 'sections',
-      key: 'id',
-    },
-    allowNull: false,
+    allowNull: false, // Ensure sectionId is present for association, but no foreign key constraint
   },
 }, {
   sequelize,
@@ -73,11 +68,10 @@ Student.init({
   timestamps: true,
 });
 
+// Define the association with Section without enforcing foreign key constraint in the database
 Student.associate = (models) => {
   Student.belongsTo(models.Section, {
-    foreignKey: 'sectionId',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+    foreignKey: 'sectionId', // Just defines the column name, no strict constraint
   });
 };
 
