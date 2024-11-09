@@ -20,6 +20,8 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   const transaction = await sequelize.transaction();
 
   try {
+    console.log('Processing file upload for section:', sectionId);
+    
     const section = await Section.findOne({ where: { id: sectionId } });
     if (!section) {
       return res.status(404).json({ error: 'Section not found' });
@@ -28,6 +30,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
     const workbook = XLSX.readFile(req.file.path);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const students = XLSX.utils.sheet_to_json(worksheet);
+    console.log('Parsed students:', students); // Log parsed data for inspection
 
     const studentRecords = students.map(student => ({
       rollNumber: student['Roll Number'],
@@ -59,7 +62,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   }
 });
 
-
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
   const { sectionId } = req.params;
@@ -79,8 +81,9 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
       ],
     });
 
+    // Return empty array instead of 404 if no students are found
     if (students.length === 0) {
-      return res.status(404).json({ message: 'No students found for this section' });
+      return res.status(200).json([]);
     }
 
     res.status(200).json(students);
