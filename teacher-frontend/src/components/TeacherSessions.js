@@ -47,7 +47,10 @@ const TeacherSessions = () => {
   };
 
   const handleStartSession = (session) => {
-    navigate('/session-details', { state: { session } });
+    // Navigate to session details page with sectionId and sessionId in the route
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
+      state: { session },
+    });
   };
 
   const isToday = (date) => {
