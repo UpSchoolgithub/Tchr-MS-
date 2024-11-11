@@ -1,3 +1,5 @@
+// models/Attendance.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -9,22 +11,21 @@ Attendance.init({
     allowNull: false,
     references: {
       model: 'students',
-      key: 'id',
+      key: 'id'
     }
   },
   date: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: false,
   },
   status: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('P', 'A'),
     allowNull: false,
+    comment: 'P = Present, A = Absent',
   }
 }, {
   sequelize,
   modelName: 'Attendance',
-  tableName: 'attendances',
-  timestamps: true,
 });
 
 module.exports = Attendance;

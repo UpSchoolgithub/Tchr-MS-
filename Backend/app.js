@@ -551,6 +551,7 @@ app.use('/api/teacher', teacherRoutes);
 //app.use('/api/teachers', teachersRoutes);
 //app.use('/api/timetable', timetableRoutes);
 app.use('/api', timetableRoutes);
+app.use('/api', attendanceRoutes);
 
 
 
