@@ -7,6 +7,14 @@ const SessionDetails = ({ sectionId }) => {
   const [absentees, setAbsentees] = useState([]);
 
   useEffect(() => {
+    // Log sectionId to ensure it’s defined
+    console.log("Section ID:", sectionId);
+
+    if (!sectionId) {
+      console.error("sectionId is undefined. Cannot fetch students.");
+      return;
+    }
+
     // Fetch all students for the section
     const fetchStudents = async () => {
       try {
@@ -17,6 +25,7 @@ const SessionDetails = ({ sectionId }) => {
         console.error('Error fetching students:', error);
       }
     };
+
     fetchStudents();
   }, [sectionId]);
 
@@ -32,7 +41,6 @@ const SessionDetails = ({ sectionId }) => {
 
   return (
     <div className="session-details-container">
-      {/* Attendance Section */}
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         <select
@@ -74,7 +82,6 @@ const SessionDetails = ({ sectionId }) => {
         </div>
       </div>
 
-      {/* Session Notes Section */}
       <div className="session-notes-section">
         <h3>Session Notes and Details</h3>
         <div className="session-info">
