@@ -28,9 +28,11 @@ const Student = ({ schoolId, classId, sectionId }) => {
   // Handle Excel file upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    setParsedFile(file);
+    if (file) {
+      setParsedFile(file);
+    }
   };
-
+  
   // Upload and save student data from the file
   const uploadStudentData = async () => {
     if (!parsedFile) {
