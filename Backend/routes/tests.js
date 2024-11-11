@@ -1,5 +1,3 @@
-// routes/tests.js
-
 const express = require('express');
 const router = express.Router();
 const { Test, Student } = require('../models');
@@ -8,15 +6,19 @@ const { Test, Student } = require('../models');
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/tests', async (req, res) => {
   try {
     const { sectionId } = req.params;
+
+    // Fetch students in the section
     const students = await Student.findAll({
       where: { sectionId },
       attributes: ['id', 'rollNumber', 'studentName']
     });
 
+    // Fetch test records for those students
     const testRecords = await Test.findAll({
       where: {
         studentId: students.map(student => student.id)
-      }
+      },
+      attributes: ['studentId', 'testNumber', 'score']
     });
 
     res.json({ students, testRecords });

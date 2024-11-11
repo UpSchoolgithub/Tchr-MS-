@@ -1,5 +1,3 @@
-// models/Assignment.js
-
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -27,6 +25,7 @@ Assignment.init({
 }, {
   sequelize,
   modelName: 'Assignment',
+  tableName: 'assignments', // Ensure the table name matches your database
   timestamps: true
 });
 
