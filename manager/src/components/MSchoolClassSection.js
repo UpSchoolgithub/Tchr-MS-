@@ -802,10 +802,13 @@ return (
             {selectedTab === 'Attendance' && (
               <Attendance schoolId={schoolId} classId={classId} sectionId={sectionId} />
             )}
-
-            {selectedTab === 'Assignments' && <Assignments schoolId={schoolId} classId={classId} sectionId={sectionId} />}
-            {selectedTab === 'Test' && <Tests schoolId={schoolId} classId={classId} sectionId={sectionId} />}
-           </div>
+            {selectedTab === 'Assignments' && (
+              <Assignments schoolId={schoolId} classId={classId} sectionId={sectionId} />
+            )}
+            {selectedTab === 'Test' && (
+              <Tests schoolId={schoolId} classId={classId} sectionId={sectionId} />
+            )}
+            </div>
         </div>
       )}
     </div>
