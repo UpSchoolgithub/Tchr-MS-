@@ -62,21 +62,25 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setIsSuccess(false);
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', parsedFile);
-
+  
+    // Debugging log to verify that the file is correctly appended
+    console.log('File to be uploaded:', parsedFile);
+  
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust as needed
+            'Content-Type': 'multipart/form-data' // Ensures correct handling of file upload
           },
         }
       );
-
+  
       setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after upload
@@ -87,6 +91,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
       console.error("Upload Error:", error);
     }
   };
+  
 
   // Add a student manually
   const addStudentManually = async () => {
