@@ -4,8 +4,6 @@ const { Section, Student } = require('../models');
 const sequelize = require('../config/db');
 const multer = require('multer');
 const XLSX = require('xlsx');
-const fs = require('fs');
-const path = require('path');
 
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
@@ -45,7 +43,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       parentName: student['Parent Name'],
       parentPhoneNumber1: student['Parent Phone Number 1'],
       parentPhoneNumber2: student['Parent Phone Number 2 (optional)'] || null,
-      parentEmail: student['Parent Email'],
+      parentEmail: student['Parent Email'] || null,
       sectionId: section.id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -63,7 +61,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   }
 });
 
-// Route to upload students manually
+// Route to add a student manually
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/manual', async (req, res) => {
   const { sectionId } = req.params;
   const {
@@ -92,8 +90,8 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
       studentPhoneNumber,
       parentName,
       parentPhoneNumber1,
-      parentPhoneNumber2,
-      parentEmail,
+      parentPhoneNumber2: parentPhoneNumber2 || null,
+      parentEmail: parentEmail || null,
       sectionId: section.id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -105,7 +103,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
     res.status(400).json({ error: 'Error adding student' });
   }
 });
-
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
