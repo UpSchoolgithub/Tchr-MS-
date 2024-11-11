@@ -1,0 +1,22 @@
+.tests-management {
+    margin-top: 20px;
+  }
+  
+  .tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .tests-table th,
+  .tests-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .tests-table th {
+    background-color: #e9ecef;
+    font-weight: bold;
+  }
+  
