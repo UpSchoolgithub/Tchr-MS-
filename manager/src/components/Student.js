@@ -36,12 +36,13 @@ const Student = ({ schoolId, classId, sectionId }) => {
     fetchStudents();
   }, [schoolId, classId, sectionId]);
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setParsedFile(file);
+  const handleFileUpload = async () => {
+    if (!parsedFile) {
+      setFeedbackMessage('No file selected.');
+      setIsSuccess(false);
+      return;
     }
-  };
+};
 
   const uploadStudentData = async () => {
     if (!parsedFile) {
@@ -51,30 +52,29 @@ const Student = ({ schoolId, classId, sectionId }) => {
     }
 
     const formData = new FormData();
-    formData.append('file', parsedFile);
+  formData.append('file', parsedFile);
 
-    try {
-      const response = await axiosInstance.post(
-        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust token retrieval as needed
-          },
-        }
-      );
+  try {
+    const response = await axiosInstance.post(
+      `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust as needed
+        },
+      }
+    );
 
-      setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
-      setIsSuccess(true);
-      fetchStudents(); // Refresh the list of students after upload
-      setParsedFile(null); // Clear selected file
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message;
-      setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
-      setIsSuccess(false);
-      console.error("Upload Error:", error);
-    }
-  };
+    setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
+    setIsSuccess(true);
+    fetchStudents(); // Refresh the list of students after upload
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.message;
+    setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
+    setIsSuccess(false);
+    console.error("Upload Error:", error);
+  }
+};
 
   const addStudentManually = async () => {
     try {
