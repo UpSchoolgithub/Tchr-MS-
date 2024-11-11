@@ -7,6 +7,7 @@ const SessionDetails = () => {
   const { teacherId, sectionId, sessionId } = useParams();
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
+  const [sessionDetails, setSessionDetails] = useState({}); // To store session-specific details
 
   useEffect(() => {
     console.log("Section ID:", sectionId); // Log to check if sectionId is retrieved
@@ -29,7 +30,27 @@ const SessionDetails = () => {
 
     fetchStudents();
   }, [sectionId]);
-  
+
+  useEffect(() => {
+    if (!sessionId || !teacherId) {
+      console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
+      return;
+    }
+
+    // Fetch session details
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
+        setSessionDetails(response.data);
+        console.log("Fetched session details:", response.data);
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+      }
+    };
+
+    fetchSessionDetails();
+  }, [sessionId, teacherId]);
+
   const handleMarkAbsent = (studentId) => {
     if (!absentees.includes(studentId)) {
       setAbsentees((prev) => [...prev, studentId]);
@@ -48,7 +69,7 @@ const SessionDetails = () => {
 
     try {
       // Send the attendance data to the backend
-      const response = await axiosInstance.post(`/teachers/${sessionId}/attendance`, {
+      const response = await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/attendance`, {
         date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
         absentees,
         sectionId,
@@ -108,16 +129,16 @@ const SessionDetails = () => {
       <div className="session-notes-section">
         <h3>Session Notes and Details</h3>
         <div className="session-info">
-          <label>Session Number:</label> <span>05</span>
+          <label>Session Number:</label> <span>{sessionDetails.sessionNumber || 'N/A'}</span>
         </div>
         <div className="session-info">
-          <label>Chapter:</label> <span>Respiration in Plants</span>
+          <label>Chapter:</label> <span>{sessionDetails.chapter || 'N/A'}</span>
         </div>
         <div className="assignments-dropdown">
           <label>Assignments:</label>
           <select>
-            <option>No</option>
-            <option>Yes</option>
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
           </select>
         </div>
         <textarea className="observations-textarea" placeholder="Observations"></textarea>
