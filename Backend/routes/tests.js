@@ -3,30 +3,29 @@ const router = express.Router();
 const { Test, Student } = require('../models');
 
 // Get test results for a specific section
+// routes/tests.js
+
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/tests', async (req, res) => {
-  try {
-    const { sectionId } = req.params;
-
-    // Fetch students in the section
-    const students = await Student.findAll({
-      where: { sectionId },
-      attributes: ['id', 'rollNumber', 'studentName']
-    });
-
-    // Fetch test records for those students
-    const testRecords = await Test.findAll({
-      where: {
-        studentId: students.map(student => student.id)
-      },
-      attributes: ['studentId', 'testNumber', 'score']
-    });
-
-    res.json({ students, testRecords });
-  } catch (error) {
-    console.error('Error fetching test results:', error);
-    res.status(500).json({ error: 'Error fetching test results' });
-  }
-});
+    try {
+      const { sectionId } = req.params;
+      const students = await Student.findAll({
+        where: { sectionId },
+        attributes: ['id', 'rollNumber', 'studentName']
+      });
+  
+      const testRecords = await Test.findAll({
+        where: {
+          studentId: students.map(student => student.id)
+        }
+      });
+  
+      res.json({ students, testRecords });
+    } catch (error) {
+      console.error('Error fetching test results:', error);  // Add this to log the error
+      res.status(500).json({ error: 'Error fetching test results' });
+    }
+  });
+  
 
 // Save or update test results
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/tests', async (req, res) => {
