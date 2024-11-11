@@ -11,6 +11,17 @@ const Student = ({ schoolId, classId, sectionId }) => {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const initialStudentData = {
+    rollNumber: '',
+    studentName: '',
+    studentEmail: '',
+    studentPhoneNumber: '',
+    parentName: '',
+    parentPhoneNumber1: '',
+    parentPhoneNumber2: '',
+    parentEmail: ''
+  };
+
   // Fetch students from the backend
   const fetchStudents = async () => {
     try {
@@ -40,24 +51,24 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setIsSuccess(false);
       return;
     }
-  
+
     const formData = new FormData();
-    formData.append('file', parsedFile); // Key name 'file' must match backend expectation
-  
+    formData.append('file', parsedFile);
+
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust as necessary
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Use correct token retrieval method
           },
         }
       );
-  
+
       setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
       setIsSuccess(true);
-      fetchStudents(); // Refresh data
+      fetchStudents(); // Refresh the list of students after upload
       setParsedFile(null); // Clear selected file
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
@@ -66,20 +77,86 @@ const Student = ({ schoolId, classId, sectionId }) => {
       console.error("Upload Error:", error);
     }
   };
-  
+
+  // Add new student manually
+  const addStudentManually = async () => {
+    try {
+      const response = await axiosInstance.post(
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/manual`,
+        newStudentData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Use correct token retrieval method
+          },
+        }
+      );
+
+      setFeedbackMessage(response.data.message || 'Student added successfully!');
+      setIsSuccess(true);
+      fetchStudents(); // Refresh the list of students after adding manually
+      setNewStudentData(initialStudentData); // Clear form fields
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || error.message;
+      setFeedbackMessage(`Failed to add student: ${errorMsg}`);
+      setIsSuccess(false);
+      console.error("Add Error:", error);
+    }
+  };
 
   return (
     <div className="student-management">
       <h3>Student Management</h3>
-      
+
+      {/* File Upload */}
       <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
       <button onClick={uploadStudentData}>Upload Students</button>
+      
+      {/* Manual Student Entry */}
+      <h4>Or Add Student Manually</h4>
+      <div className="manual-entry-form">
+        <label>
+          Roll Number:
+          <input type="number" value={newStudentData.rollNumber} onChange={(e) => setNewStudentData({ ...newStudentData, rollNumber: e.target.value })} />
+        </label>
+        <label>
+          Student Name:
+          <input type="text" value={newStudentData.studentName} onChange={(e) => setNewStudentData({ ...newStudentData, studentName: e.target.value })} />
+        </label>
+        <label>
+          Email:
+          <input type="email" value={newStudentData.studentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, studentEmail: e.target.value })} />
+        </label>
+        <label>
+          Phone Number:
+          <input type="text" value={newStudentData.studentPhoneNumber} onChange={(e) => setNewStudentData({ ...newStudentData, studentPhoneNumber: e.target.value })} />
+        </label>
+        <label>
+          Parent Name:
+          <input type="text" value={newStudentData.parentName} onChange={(e) => setNewStudentData({ ...newStudentData, parentName: e.target.value })} />
+        </label>
+        <label>
+          Parent Phone Number 1:
+          <input type="text" value={newStudentData.parentPhoneNumber1} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhoneNumber1: e.target.value })} />
+        </label>
+        <label>
+          Parent Phone Number 2 (optional):
+          <input type="text" value={newStudentData.parentPhoneNumber2} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhoneNumber2: e.target.value })} />
+        </label>
+        <label>
+          Parent Email:
+          <input type="email" value={newStudentData.parentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })} />
+        </label>
+        <button onClick={addStudentManually}>Add Student</button>
+      </div>
+
+      {/* Feedback Message */}
       {feedbackMessage && (
         <p className={`feedback-message ${isSuccess ? 'success' : 'error'}`}>
           {feedbackMessage}
         </p>
       )}
 
+      {/* Students Table */}
       <table className="student-table">
         <thead>
           <tr>
@@ -110,6 +187,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
         </tbody>
       </table>
 
+      {/* Edit Form */}
       {editingStudent && (
         <div className="edit-form">
           <h4>Edit Student</h4>
