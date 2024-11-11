@@ -1,3 +1,5 @@
+// models/Test.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -9,22 +11,23 @@ Test.init({
     allowNull: false,
     references: {
       model: 'students',
-      key: 'id',
+      key: 'id'
     }
   },
-  date: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  score: {
+  testNumber: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    comment: 'Test 1, Test 2, etc.'
+  },
+  score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    comment: 'Score of the student in the test'
   }
 }, {
   sequelize,
   modelName: 'Test',
-  tableName: 'tests',
-  timestamps: true,
+  timestamps: true
 });
 
 module.exports = Test;
