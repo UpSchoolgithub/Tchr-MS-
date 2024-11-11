@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
+import { useParams } from 'react-router-dom';
 import './SessionDetails.css';
 
-const SessionDetails = ({ sectionId }) => {
-  const { sectionId } = useParams();
+const SessionDetails = () => {
+  const { sectionId } = useParams(); // Get sectionId from the URL
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
 
