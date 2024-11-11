@@ -77,14 +77,49 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
     return Array.from({ length: daysInMonth }, (_, i) => i + 1);
   };
 
+  const handleMonthChange = (e) => {
+    setCurrentMonth(parseInt(e.target.value, 10));
+  };
+
+  const handleYearChange = (e) => {
+    setCurrentYear(parseInt(e.target.value, 10));
+  };
+
   return (
     <div className="attendance-management">
       <h3>Attendance for {`${currentMonth}/${currentYear}`}</h3>
 
+      <div className="attendance-controls">
+        <label>
+          Month:
+          <select value={currentMonth} onChange={handleMonthChange}>
+            {[...Array(12)].map((_, index) => (
+              <option key={index + 1} value={index + 1}>
+                {new Date(0, index).toLocaleString('default', { month: 'long' })}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Year:
+          <select value={currentYear} onChange={handleYearChange}>
+            {[...Array(5)].map((_, index) => {
+              const year = new Date().getFullYear() - 2 + index;
+              return (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+      </div>
+
       <table className="attendance-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Roll Number</th>
             <th>Name</th>
             {renderDates().map(date => (
               <th key={date}>{date}</th>
@@ -93,18 +128,18 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
         </thead>
         <tbody>
           {students.map(student => (
-            <tr key={student.id}>
-              <td>{student.id}</td>
-              <td>{student.studentName}</td>
+            <tr key={student.rollNumber}>
+              <td>{student.rollNumber}</td>
+              <td>{student.name}</td>
               {renderDates().map(date => {
                 const fullDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                const status = attendance[student.id]?.[fullDate] || '';
+                const status = attendance[student.rollNumber]?.[fullDate] || '';
 
                 return (
                   <td key={date}>
                     <select
                       value={status}
-                      onChange={(e) => handleStatusChange(student.id, fullDate, e.target.value)}
+                      onChange={(e) => handleStatusChange(student.rollNumber, fullDate, e.target.value)}
                     >
                       <option value="">-</option>
                       <option value="P">P</option>
