@@ -1,54 +1,83 @@
 // src/components/SessionDetails.js
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { state } = useLocation();
-  const session = state?.session;
-  const navigate = useNavigate();
+  const location = useLocation();
+  const session = location.state?.session;
+  const [students, setStudents] = useState([]);
+  const [absentees, setAbsentees] = useState([]);
 
-  if (!session) {
-    return <p>No session data available.</p>;
-  }
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await axiosInstance.get(`/sections/${session.sectionId}/students`);
+        setStudents(response.data);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    };
+    fetchStudents();
+  }, [session.sectionId]);
 
-  const handleEndSession = () => {
-    // Here you would typically update the session end status in your backend.
-    console.log('End session:', session.id);
-    navigate('/'); // Navigate back to the main session list after ending the session.
+  const markAbsent = (studentId) => {
+    setAbsentees((prev) => [...prev, studentId]);
+  };
+
+  const markPresent = (studentId) => {
+    setAbsentees((prev) => prev.filter(id => id !== studentId));
+  };
+
+  const handleEndSession = async () => {
+    try {
+      await axiosInstance.post(`/sessions/${session.id}/attendance`, {
+        absentees
+      });
+      alert('Session attendance recorded successfully!');
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      alert('Failed to save attendance');
+    }
   };
 
   return (
     <div className="session-details">
-      <h2>Session Notes and Details</h2>
-      <div>
-        <strong>Session Number:</strong> {session.sessionNumber || 'N/A'}
-      </div>
-      <div>
-        <strong>Chapter:</strong> {session.chapter || 'N/A'}
-      </div>
-      <div>
-        <strong>Topics to Cover:</strong>
-        <ul>
-          {session.topics?.map((topic, index) => (
-            <li key={index}>{topic}</li>
+      <div className="attendance-section">
+        <h3>Mark Attendance</h3>
+        <select multiple onChange={(e) => markAbsent(e.target.value)}>
+          {students.map(student => (
+            <option key={student.id} value={student.id}>{student.studentName}</option>
           ))}
-        </ul>
-      </div>
-      <div>
-        <strong>Assignments:</strong>
-        <select>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
         </select>
+        <div className="absentees-list">
+          <h4>List of Absentees:</h4>
+          <ul>
+            {absentees.map((id, index) => (
+              <li key={id}>
+                {students.find(student => student.id === id)?.studentName}
+                <button onClick={() => markPresent(id)}>Mark Present</button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-      <div>
-        <strong>Observations:</strong>
-        <textarea placeholder="Enter observations here" />
+
+      <div className="session-notes">
+        <h2>Session Notes and Details</h2>
+        <p><strong>Session Number:</strong> {session.sessionNumber}</p>
+        <p><strong>Chapter:</strong> {session.chapter}</p>
+        <div>
+          <label>Assignments:</label>
+          <select>
+            <option>No</option>
+            <option>Yes</option>
+          </select>
+        </div>
+        <textarea placeholder="Observations" />
+        <button onClick={handleEndSession}>End Session</button>
       </div>
-      <button onClick={handleEndSession} className="end-session-button">
-        End Session
-      </button>
     </div>
   );
 };
