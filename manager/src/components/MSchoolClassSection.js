@@ -799,8 +799,9 @@ return (
               <Student schoolId={schoolId} classId={classId} sectionId={sectionId} />
             )}
             {selectedTab === 'Attendance' && (
-              <Attendance students={students} /> // Pass students data to Attendance
+              <Attendance schoolId={schoolId} classId={classId} sectionId={sectionId} />
             )}
+
             {selectedTab === 'Assignments' && <div>Assignments Data Here</div>}
             {selectedTab === 'Test' && <div>Test Data Here</div>}
           </div>
