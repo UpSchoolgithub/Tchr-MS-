@@ -40,21 +40,21 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setIsSuccess(false);
       return;
     }
-
+  
     const formData = new FormData();
-    formData.append('file', parsedFile);
-
+    formData.append('file', parsedFile); // Key name 'file' must match backend expectation
+  
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust if necessary
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust as necessary
           },
         }
       );
-
+  
       setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh data
@@ -66,6 +66,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
       console.error("Upload Error:", error);
     }
   };
+  
 
   return (
     <div className="student-management">
