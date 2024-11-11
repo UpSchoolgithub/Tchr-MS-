@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { sectionId } = useParams(); // Get sectionId from the URL
+  const { sectionId, sessionId } = useParams(); // Make sure sessionId is included in your route parameters
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
 
@@ -38,6 +38,28 @@ const SessionDetails = () => {
 
   const handleMarkPresent = (studentId) => {
     setAbsentees((prev) => prev.filter((id) => id !== studentId));
+  };
+
+  const endSession = async () => {
+    if (!sessionId) {
+      console.error("sessionId is undefined. Cannot mark attendance.");
+      return;
+    }
+
+    try {
+      // Send the attendance data to the backend
+      const response = await axiosInstance.post(`/teachers/${sessionId}/attendance`, {
+        date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+        absentees,
+        sectionId,
+      });
+
+      console.log("Attendance marked successfully:", response.data);
+      alert("Session ended and attendance marked successfully.");
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      alert("Failed to mark attendance.");
+    }
   };
 
   return (
@@ -99,7 +121,7 @@ const SessionDetails = () => {
           </select>
         </div>
         <textarea className="observations-textarea" placeholder="Observations"></textarea>
-        <button className="end-session-button">End Session</button>
+        <button className="end-session-button" onClick={endSession}>End Session</button>
       </div>
     </div>
   );
