@@ -63,6 +63,49 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   }
 });
 
+// Route to upload students manually
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/manual', async (req, res) => {
+  const { sectionId } = req.params;
+  const {
+    rollNumber,
+    studentName,
+    studentEmail,
+    studentPhoneNumber,
+    parentName,
+    parentPhoneNumber1,
+    parentPhoneNumber2,
+    parentEmail,
+  } = req.body;
+
+  try {
+    // Verify if section exists
+    const section = await Section.findOne({ where: { id: sectionId } });
+    if (!section) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    // Insert new student data
+    const newStudent = await Student.create({
+      rollNumber,
+      studentName,
+      studentEmail,
+      studentPhoneNumber,
+      parentName,
+      parentPhoneNumber1,
+      parentPhoneNumber2,
+      parentEmail,
+      sectionId: section.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    res.status(201).json({ message: 'Student added successfully', student: newStudent });
+  } catch (error) {
+    console.error('Error adding student:', error);
+    res.status(400).json({ error: 'Error adding student' });
+  }
+});
+
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {

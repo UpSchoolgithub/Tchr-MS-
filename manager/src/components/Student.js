@@ -76,31 +76,22 @@ const Student = ({ schoolId, classId, sectionId }) => {
   }
 };
 
-  const addStudentManually = async () => {
+const addStudentManually = async () => {
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/manual`,
         newStudentData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust token retrieval as needed
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
         }
       );
-
+  
       setFeedbackMessage(response.data.message || 'Student added successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after adding manually
-      setNewStudentData({
-        rollNumber: '',
-        studentName: '',
-        studentEmail: '',
-        studentPhoneNumber: '',
-        parentName: '',
-        parentPhoneNumber1: '',
-        parentPhoneNumber2: '',
-        parentEmail: ''
-      });
+      setNewStudentData(initialStudentData); // Clear form fields
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to add student: ${errorMsg}`);
@@ -108,6 +99,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
       console.error("Add Error:", error);
     }
   };
+  
 
   return (
     <div className="student-management">
