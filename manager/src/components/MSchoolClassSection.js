@@ -5,7 +5,7 @@ import axiosInstance from '../services/axiosInstance';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './MSchoolClassSection.css';
-import StudentPersonalDetails from './StudentPersonalDetails'; // Import the new component
+import Student from './Student'; // Replace with Student.js
 
 Modal.setAppElement('#root');
 
@@ -796,7 +796,7 @@ return (
 
     <div className="tab-content">
       {selectedTab === 'Student Personal' && (
-        <StudentPersonalDetails
+        <Student
           schoolId={schoolId}
           classId={classId}
           sectionId={sectionId} // Pass sectionId as a prop
