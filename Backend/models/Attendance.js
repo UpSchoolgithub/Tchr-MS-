@@ -19,13 +19,12 @@ Attendance.init({
     allowNull: false,
   },
   status: {
-    type: DataTypes.ENUM('P', 'A'),
+    type: DataTypes.STRING,
     allowNull: false,
-    comment: 'P = Present, A = Absent',
-  }
+  },
 }, {
-  sequelize,
-  modelName: 'Attendance',
+  tableName: 'attendances', // Specify the correct table name
+  timestamps: true,
 });
 
 module.exports = Attendance;
