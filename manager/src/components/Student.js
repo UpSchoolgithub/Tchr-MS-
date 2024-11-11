@@ -20,6 +20,17 @@ const Student = ({ schoolId, classId, sectionId }) => {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const initialStudentData = {
+    rollNumber: '',
+    studentName: '',
+    studentEmail: '',
+    studentPhoneNumber: '',
+    parentName: '',
+    parentPhoneNumber1: '',
+    parentPhoneNumber2: '',
+    parentEmail: ''
+  };
+
   // Fetch students from the backend
   const fetchStudents = async () => {
     try {
@@ -36,14 +47,15 @@ const Student = ({ schoolId, classId, sectionId }) => {
     fetchStudents();
   }, [schoolId, classId, sectionId]);
 
-  const handleFileUpload = async () => {
-    if (!parsedFile) {
-      setFeedbackMessage('No file selected.');
-      setIsSuccess(false);
-      return;
+  // Capture the selected file for upload
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setParsedFile(file);
     }
-};
+  };
 
+  // Upload student data from the selected Excel file
   const uploadStudentData = async () => {
     if (!parsedFile) {
       setFeedbackMessage('No file selected.');
@@ -52,31 +64,32 @@ const Student = ({ schoolId, classId, sectionId }) => {
     }
 
     const formData = new FormData();
-  formData.append('file', parsedFile);
+    formData.append('file', parsedFile);
 
-  try {
-    const response = await axiosInstance.post(
-      `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust as needed
-        },
-      }
-    );
+    try {
+      const response = await axiosInstance.post(
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
 
-    setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
-    setIsSuccess(true);
-    fetchStudents(); // Refresh the list of students after upload
-  } catch (error) {
-    const errorMsg = error.response?.data?.error || error.message;
-    setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
-    setIsSuccess(false);
-    console.error("Upload Error:", error);
-  }
-};
+      setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
+      setIsSuccess(true);
+      fetchStudents(); // Refresh the list of students after upload
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || error.message;
+      setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
+      setIsSuccess(false);
+      console.error("Upload Error:", error);
+    }
+  };
 
-const addStudentManually = async () => {
+  // Add a student manually
+  const addStudentManually = async () => {
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/manual`,
@@ -87,7 +100,7 @@ const addStudentManually = async () => {
           },
         }
       );
-  
+
       setFeedbackMessage(response.data.message || 'Student added successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after adding manually
@@ -99,7 +112,19 @@ const addStudentManually = async () => {
       console.error("Add Error:", error);
     }
   };
-  
+
+  // Delete a student
+  const handleDelete = async (studentId) => {
+    try {
+      await axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`);
+      setFeedbackMessage('Student deleted successfully');
+      setIsSuccess(true);
+      fetchStudents(); // Refresh the list after deletion
+    } catch (error) {
+      setFeedbackMessage(`Failed to delete student: ${error.message}`);
+      setIsSuccess(false);
+    }
+  };
 
   return (
     <div className="student-management">
