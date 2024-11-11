@@ -38,15 +38,20 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setIsSuccess(false);
       return;
     }
-
+  
+    // Create FormData and append the file to match Postman's format
     const formData = new FormData();
     formData.append('file', parsedFile);
-
+  
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
       setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
       setIsSuccess(true);
@@ -56,8 +61,10 @@ const Student = ({ schoolId, classId, sectionId }) => {
       const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
       setIsSuccess(false);
+      console.error("Upload Error:", error);
     }
   };
+  
 
   // Handle edit and delete actions
   const handleEdit = (student) => {
