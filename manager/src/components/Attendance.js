@@ -19,16 +19,16 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
         { params: { month: currentMonth, year: currentYear } }
       );
-  
+
       const { students: fetchedStudents, attendanceRecords } = response.data;
-  
-      // Set student list, ensuring to use `studentName` field
+
+      // Set student list with roll numbers and names
       const formattedStudents = fetchedStudents.map(student => ({
         rollNumber: student.rollNumber,
-        name: student.studentName // Ensure the field matches exactly
+        name: student.studentName // Use `student.studentName` for display
       }));
       setStudents(formattedStudents);
-  
+
       // Prepare attendance data in a structured format
       const attendanceData = {};
       attendanceRecords.forEach(record => {
@@ -42,7 +42,6 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
       console.error('Error fetching attendance:', error);
     }
   };
-  
 
   const handleStatusChange = (studentId, date, status) => {
     setAttendance(prev => ({
@@ -132,31 +131,23 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
           </tr>
         </thead>
         <tbody>
-  {students.map(student => (
-    <tr key={student.rollNumber}>
-      <td>{student.rollNumber}</td>
-      <td>{student.name}</td> {/* Use `student.name` here */}
-      {renderDates().map(date => {
-        const fullDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-        const status = attendance[student.rollNumber]?.[fullDate] || '';
+          {students.map(student => (
+            <tr key={student.rollNumber}>
+              <td>{student.rollNumber}</td>
+              <td>{student.name}</td> {/* Display the student's name */}
+              {renderDates().map(date => {
+                const fullDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                const status = attendance[student.rollNumber]?.[fullDate] || '-';
 
-        return (
-          <td key={date}>
-            <select
-              value={status}
-              onChange={(e) => handleStatusChange(student.rollNumber, fullDate, e.target.value)}
-            >
-              <option value="">-</option>
-              <option value="P">P</option>
-              <option value="A">A</option>
-            </select>
-          </td>
-        );
-      })}
-    </tr>
-  ))}
-</tbody>
-
+                return (
+                  <td key={date}>
+                    {status} {/* Display "-" or attendance status */}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
       </table>
 
       <button onClick={handleSave} className="save-button">Save Attendance</button>
