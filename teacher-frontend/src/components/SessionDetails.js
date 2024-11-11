@@ -3,6 +3,7 @@ import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = ({ sectionId }) => {
+  const { sectionId } = useParams();
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
 
@@ -20,7 +21,7 @@ const SessionDetails = ({ sectionId }) => {
       try {
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
         setStudents(response.data);
-        console.log("Fetched students:", response.data); // Log to confirm data
+        console.log("Fetched students:", response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
       }
@@ -28,7 +29,7 @@ const SessionDetails = ({ sectionId }) => {
 
     fetchStudents();
   }, [sectionId]);
-
+  
   const handleMarkAbsent = (studentId) => {
     if (!absentees.includes(studentId)) {
       setAbsentees((prev) => [...prev, studentId]);
