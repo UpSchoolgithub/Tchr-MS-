@@ -6,12 +6,7 @@ import './Student.css';
 const Student = ({ schoolId, classId, sectionId }) => {
   const [students, setStudents] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
-  const [newStudentData, setNewStudentData] = useState({});
-  const [parsedFile, setParsedFile] = useState(null);
-  const [feedbackMessage, setFeedbackMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const initialStudentData = {
+  const [newStudentData, setNewStudentData] = useState({
     rollNumber: '',
     studentName: '',
     studentEmail: '',
@@ -20,7 +15,10 @@ const Student = ({ schoolId, classId, sectionId }) => {
     parentPhoneNumber1: '',
     parentPhoneNumber2: '',
     parentEmail: ''
-  };
+  });
+  const [parsedFile, setParsedFile] = useState(null);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Fetch students from the backend
   const fetchStudents = async () => {
@@ -94,7 +92,16 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setFeedbackMessage(response.data.message || 'Student added successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after adding manually
-      setNewStudentData(initialStudentData); // Clear form fields
+      setNewStudentData({ // Reset form fields
+        rollNumber: '',
+        studentName: '',
+        studentEmail: '',
+        studentPhoneNumber: '',
+        parentName: '',
+        parentPhoneNumber1: '',
+        parentPhoneNumber2: '',
+        parentEmail: ''
+      });
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to add student: ${errorMsg}`);
@@ -105,7 +112,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
 
   return (
     <div className="student-management">
-      <h3>Student Management</h3>
+      <h3>Student Personal Details</h3>
 
       {/* File Upload */}
       <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
@@ -157,35 +164,40 @@ const Student = ({ schoolId, classId, sectionId }) => {
       )}
 
       {/* Students Table */}
-      <table className="student-table">
-        <thead>
-          <tr>
-            <th>Roll Number</th>
-            <th>Student Name</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-            <th>Parent Name</th>
-            <th>Parent Phone</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map(student => (
-            <tr key={student.id}>
-              <td>{student.rollNumber}</td>
-              <td>{student.studentName}</td>
-              <td>{student.studentEmail}</td>
-              <td>{student.studentPhoneNumber}</td>
-              <td>{student.parentName}</td>
-              <td>{student.parentPhoneNumber1}</td>
-              <td>
-                <button onClick={() => handleEdit(student)}>Edit</button>
-                <button onClick={() => handleDelete(student.id)}>Delete</button>
-              </td>
+      <h4>Existing Student List</h4>
+      {students.length > 0 ? (
+        <table className="student-table">
+          <thead>
+            <tr>
+              <th>Roll Number</th>
+              <th>Student Name</th>
+              <th>Email</th>
+              <th>Phone Number</th>
+              <th>Parent Name</th>
+              <th>Parent Phone</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {students.map(student => (
+              <tr key={student.id}>
+                <td>{student.rollNumber}</td>
+                <td>{student.studentName}</td>
+                <td>{student.studentEmail}</td>
+                <td>{student.studentPhoneNumber}</td>
+                <td>{student.parentName}</td>
+                <td>{student.parentPhoneNumber1}</td>
+                <td>
+                  <button onClick={() => handleEdit(student)}>Edit</button>
+                  <button onClick={() => handleDelete(student.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No student data available.</p>
+      )}
 
       {/* Edit Form */}
       {editingStudent && (
