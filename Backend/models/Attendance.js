@@ -16,12 +16,23 @@ Attendance.init({
     onDelete: 'CASCADE', // Optional: handles deletion of student records
     onUpdate: 'CASCADE', // Optional: handles updates to student ID
   },
+  sessionId: { // Optional: only add if attendance is linked to specific sessions
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'sessions', // Ensure this matches the table name for sessions if using sessions
+      key: 'id',
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  },
   date: {
     type: DataTypes.DATEONLY, // Stores only date, without time
     allowNull: false,
+    defaultValue: DataTypes.NOW // Defaults to today's date if not provided
   },
   status: {
-    type: DataTypes.ENUM('P', 'A'),
+    type: DataTypes.ENUM('P', 'A'), // Update to ('Present', 'Absent') if preferred
     allowNull: false,
     comment: 'P = Present, A = Absent',
   },

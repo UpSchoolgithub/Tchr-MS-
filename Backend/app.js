@@ -79,6 +79,7 @@ const teacherRoutes = require('./routes/teacherRoutes');
 
 const testRoutes = require('./routes/tests');
 const assignmentRoutes = require('./routes/assignments');
+const teacherSessionsRoutes = require('./routes/teachersessions');
 
 
 
@@ -557,6 +558,7 @@ app.use('/api', timetableRoutes);
 app.use('/api', attendanceRoutes);
 app.use('/api', testRoutes);
 app.use('/api', assignmentRoutes);
+app.use('/api', teacherSessionsRoutes);
 
 
 app.use('/api/teacherportal', teacherPortalRoutes);
