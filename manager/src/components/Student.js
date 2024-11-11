@@ -6,7 +6,8 @@ import './Student.css';
 const Student = ({ schoolId, classId, sectionId }) => {
   const [students, setStudents] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
-  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [showManualEntryForm, setShowManualEntryForm] = useState(false);
   const [newStudentData, setNewStudentData] = useState({
     rollNumber: '',
     studentName: '',
@@ -91,7 +92,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
 
       setFeedbackMessage(response.data.message || 'Student added successfully!');
       setIsSuccess(true);
-      fetchStudents(); // Refresh the list of students after adding manually
+      fetchStudents();
       setNewStudentData({
         rollNumber: '',
         studentName: '',
@@ -101,8 +102,8 @@ const Student = ({ schoolId, classId, sectionId }) => {
         parentPhoneNumber1: '',
         parentPhoneNumber2: '',
         parentEmail: ''
-      }); // Clear form fields
-      setShowManualEntry(false); // Hide the form after adding
+      });
+      setShowManualEntryForm(false);
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to add student: ${errorMsg}`);
@@ -113,12 +114,13 @@ const Student = ({ schoolId, classId, sectionId }) => {
 
   const handleEdit = (student) => {
     setEditingStudent(student);
-    setNewStudentData(student);
+    setNewStudentData({ ...student });
+    setShowManualEntryForm(true);
   };
 
   const saveEdit = async () => {
     try {
-      const response = await axiosInstance.put(
+      await axiosInstance.put(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${editingStudent.id}`,
         newStudentData,
         {
@@ -128,7 +130,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
         }
       );
 
-      setFeedbackMessage(response.data.message || 'Student updated successfully!');
+      setFeedbackMessage('Student updated successfully');
       setIsSuccess(true);
       fetchStudents();
       setEditingStudent(null);
@@ -142,30 +144,51 @@ const Student = ({ schoolId, classId, sectionId }) => {
         parentPhoneNumber2: '',
         parentEmail: ''
       });
+      setShowManualEntryForm(false);
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message;
-      setFeedbackMessage(`Failed to update student: ${errorMsg}`);
+      console.error('Error updating student:', error);
+      setFeedbackMessage('Error updating student');
       setIsSuccess(false);
-      console.error("Update Error:", error);
     }
   };
 
   const handleDelete = async (studentId) => {
     try {
-      await axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
+      await axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`);
+      fetchStudents();
       setFeedbackMessage('Student deleted successfully');
       setIsSuccess(true);
-      fetchStudents(); // Refresh the list after deletion
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message;
-      setFeedbackMessage(`Failed to delete student: ${errorMsg}`);
+      console.error('Error deleting student:', error);
+      setFeedbackMessage('Error deleting student');
       setIsSuccess(false);
-      console.error("Delete Error:", error);
     }
+  };
+
+  const handleMultiDelete = async () => {
+    try {
+      await Promise.all(selectedStudents.map(studentId =>
+        axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`)
+      ));
+      fetchStudents();
+      setSelectedStudents([]);
+      setFeedbackMessage('Selected students deleted successfully');
+      setIsSuccess(true);
+    } catch (error) {
+      console.error('Error deleting students:', error);
+      setFeedbackMessage('Error deleting students');
+      setIsSuccess(false);
+    }
+  };
+
+  const toggleSelectStudent = (studentId) => {
+    setSelectedStudents(prevSelected => {
+      if (prevSelected.includes(studentId)) {
+        return prevSelected.filter(id => id !== studentId);
+      } else {
+        return [...prevSelected, studentId];
+      }
+    });
   };
 
   return (
@@ -176,17 +199,19 @@ const Student = ({ schoolId, classId, sectionId }) => {
       <div className="file-upload">
         <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
         <button onClick={uploadStudentData}>Upload Students</button>
+        <button
+          className="add-student-button"
+          onClick={() => setShowManualEntryForm(!showManualEntryForm)}
+          style={{ float: 'right', backgroundColor: 'green', color: 'white' }}
+        >
+          {showManualEntryForm ? 'Cancel' : 'Add Manually'}
+        </button>
       </div>
 
-      {/* Button to show manual entry form */}
-      {!showManualEntry && (
-        <button onClick={() => setShowManualEntry(true)}>Add Student Manually</button>
-      )}
-
       {/* Manual Student Entry Form */}
-      {showManualEntry && (
+      {showManualEntryForm && (
         <div className="manual-entry-form">
-          <h4>Or Add Student Manually</h4>
+          <h4>Add Student Manually</h4>
           <label>
             Roll Number:
             <input
@@ -251,10 +276,11 @@ const Student = ({ schoolId, classId, sectionId }) => {
               onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })}
             />
           </label>
-          <button onClick={editingStudent ? saveEdit : addStudentManually}>
-            {editingStudent ? 'Save Changes' : 'Add Student'}
-          </button>
-          <button onClick={() => setShowManualEntry(false)}>Cancel</button>
+          {editingStudent ? (
+            <button onClick={saveEdit}>Save Changes</button>
+          ) : (
+            <button onClick={addStudentManually}>Add Student</button>
+          )}
         </div>
       )}
 
@@ -271,6 +297,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
         <table className="student-table">
           <thead>
             <tr>
+              <th>Select</th>
               <th>Roll Number</th>
               <th>Student Name</th>
               <th>Email</th>
@@ -283,6 +310,13 @@ const Student = ({ schoolId, classId, sectionId }) => {
           <tbody>
             {students.map((student) => (
               <tr key={student.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedStudents.includes(student.id)}
+                    onChange={() => toggleSelectStudent(student.id)}
+                  />
+                </td>
                 <td>{student.rollNumber}</td>
                 <td>{student.studentName}</td>
                 <td>{student.studentEmail}</td>
@@ -300,8 +334,16 @@ const Student = ({ schoolId, classId, sectionId }) => {
       ) : (
         <p>No student data available.</p>
       )}
+
+      {/* Multi-Delete Button */}
+      {selectedStudents.length > 0 && (
+        <button onClick={handleMultiDelete} className="multi-delete-button">
+          Delete Selected
+        </button>
+      )}
     </div>
   );
 };
 
 export default Student;
+
