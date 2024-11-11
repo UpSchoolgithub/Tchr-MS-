@@ -18,6 +18,8 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setStudents(response.data);
     } catch (error) {
       console.error('Error fetching students:', error);
+      setFeedbackMessage('Error fetching student data');
+      setIsSuccess(false);
     }
   };
 
@@ -25,36 +27,34 @@ const Student = ({ schoolId, classId, sectionId }) => {
     fetchStudents();
   }, [schoolId, classId, sectionId]);
 
-  // Handle Excel file upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       setParsedFile(file);
     }
   };
-  
-  // Upload and save student data from the file
+
   const uploadStudentData = async () => {
     if (!parsedFile) {
       setFeedbackMessage('No file selected.');
       setIsSuccess(false);
       return;
     }
-  
-    // Create FormData and append the file to match Postman's format
+
     const formData = new FormData();
     formData.append('file', parsedFile);
-  
+
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust if necessary
           },
         }
       );
+
       setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh data
@@ -66,40 +66,6 @@ const Student = ({ schoolId, classId, sectionId }) => {
       console.error("Upload Error:", error);
     }
   };
-  
-
-  // Handle edit and delete actions
-  const handleEdit = (student) => {
-    setEditingStudent(student);
-    setNewStudentData({ ...student });
-  };
-
-  const handleDelete = async (studentId) => {
-    try {
-      await axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`);
-      fetchStudents(); // Refresh data after deletion
-      setFeedbackMessage('Student deleted successfully');
-      setIsSuccess(true);
-    } catch (error) {
-      console.error('Error deleting student:', error);
-      setFeedbackMessage('Error deleting student');
-      setIsSuccess(false);
-    }
-  };
-
-  const saveEdit = async () => {
-    try {
-      await axiosInstance.put(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${editingStudent.id}`, newStudentData);
-      setFeedbackMessage('Student updated successfully');
-      setIsSuccess(true);
-      fetchStudents(); // Refresh data
-      setEditingStudent(null); // Exit edit mode
-    } catch (error) {
-      console.error('Error updating student:', error);
-      setFeedbackMessage('Error updating student');
-      setIsSuccess(false);
-    }
-  };
 
   return (
     <div className="student-management">
@@ -107,7 +73,11 @@ const Student = ({ schoolId, classId, sectionId }) => {
       
       <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
       <button onClick={uploadStudentData}>Upload Students</button>
-      {feedbackMessage && <p style={{ color: isSuccess ? 'green' : 'red' }}>{feedbackMessage}</p>}
+      {feedbackMessage && (
+        <p className={`feedback-message ${isSuccess ? 'success' : 'error'}`}>
+          {feedbackMessage}
+        </p>
+      )}
 
       <table className="student-table">
         <thead>
