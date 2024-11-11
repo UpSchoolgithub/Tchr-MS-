@@ -11,6 +11,7 @@ import ViewActivities from './components/ViewActivities';
 import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContext';
 import { WebSocketProvider } from './WebSocketContext';
 import TeacherSessions from './components/TeacherSessions';
+import SessionDetails from './components/SessionDetails'; // Import the SessionDetails component
 
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
@@ -23,7 +24,7 @@ function InnerApp() {
   return (
     <WebSocketProvider token={token}>
       <Router>
-        {token && <Sidebar />}  {/* Sidebar only appears when logged in */}
+        {token && <Sidebar />} {/* Sidebar only appears when logged in */}
         <div className={token ? "content-with-sidebar" : "content"}>
           <Routes>
             {/* Redirect to dashboard or login based on token */}
@@ -41,6 +42,9 @@ function InnerApp() {
             {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
             <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
+
+            {/* Route for Session Details */}
+            <Route path="/session-details" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
           </Routes>
         </div>
       </Router>
