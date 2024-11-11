@@ -77,9 +77,6 @@ const teacherRoutes = require('./routes/teacherRoutes');
 //const teacherRoutes = require('./routes/teacher');
 
 
-const testRoutes = require('./routes/tests');
-const assignmentRoutes = require('./routes/assignments');
-
 
 
 // Your existing route definitions
