@@ -59,7 +59,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Use correct token retrieval method
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust token retrieval as needed
           },
         }
       );
@@ -76,7 +76,6 @@ const Student = ({ schoolId, classId, sectionId }) => {
     }
   };
 
-  // Add new student manually
   const addStudentManually = async () => {
     try {
       const response = await axiosInstance.post(
@@ -84,7 +83,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
         newStudentData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Use correct token retrieval method
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust token retrieval as needed
           },
         }
       );
@@ -92,7 +91,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setFeedbackMessage(response.data.message || 'Student added successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after adding manually
-      setNewStudentData({ // Reset form fields
+      setNewStudentData({
         rollNumber: '',
         studentName: '',
         studentEmail: '',
@@ -112,11 +111,13 @@ const Student = ({ schoolId, classId, sectionId }) => {
 
   return (
     <div className="student-management">
-      <h3>Student Personal Details</h3>
+      <h3>Student Management</h3>
 
       {/* File Upload */}
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
-      <button onClick={uploadStudentData}>Upload Students</button>
+      <div className="file-upload">
+        <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+        <button onClick={uploadStudentData}>Upload Students</button>
+      </div>
       
       {/* Manual Student Entry */}
       <h4>Or Add Student Manually</h4>
@@ -188,7 +189,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
                 <td>{student.parentName}</td>
                 <td>{student.parentPhoneNumber1}</td>
                 <td>
-                  <button onClick={() => handleEdit(student)}>Edit</button>
+                  <button onClick={() => setEditingStudent(student)}>Edit</button>
                   <button onClick={() => handleDelete(student.id)}>Delete</button>
                 </td>
               </tr>
@@ -197,31 +198,6 @@ const Student = ({ schoolId, classId, sectionId }) => {
         </table>
       ) : (
         <p>No student data available.</p>
-      )}
-
-      {/* Edit Form */}
-      {editingStudent && (
-        <div className="edit-form">
-          <h4>Edit Student</h4>
-          <label>
-            Roll Number:
-            <input type="number" value={newStudentData.rollNumber} onChange={(e) => setNewStudentData({ ...newStudentData, rollNumber: e.target.value })} />
-          </label>
-          <label>
-            Student Name:
-            <input type="text" value={newStudentData.studentName} onChange={(e) => setNewStudentData({ ...newStudentData, studentName: e.target.value })} />
-          </label>
-          <label>
-            Email:
-            <input type="email" value={newStudentData.studentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, studentEmail: e.target.value })} />
-          </label>
-          <label>
-            Phone Number:
-            <input type="text" value={newStudentData.studentPhoneNumber} onChange={(e) => setNewStudentData({ ...newStudentData, studentPhoneNumber: e.target.value })} />
-          </label>
-          <button onClick={saveEdit}>Save</button>
-          <button onClick={() => setEditingStudent(null)}>Cancel</button>
-        </div>
       )}
     </div>
   );

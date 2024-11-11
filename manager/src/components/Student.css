@@ -1,6 +1,21 @@
-.manual-entry-form {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-top: 20px;
+.student-management {
+    margin: 20px;
+  }
+  
+  .file-upload, .manual-entry-form {
+    margin: 10px 0;
+  }
+  
+  .manual-entry-form label {
+    display: block;
+    margin: 5px 0;
+  }
+  
+  .feedback-message.success {
+    color: green;
+  }
+  
+  .feedback-message.error {
+    color: red;
   }
   
