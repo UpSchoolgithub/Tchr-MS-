@@ -9,15 +9,14 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
 
   useEffect(() => {
-    // Log sectionId to ensure it’s defined
-    console.log("Section ID:", sectionId);
+    console.log("Section ID:", sectionId); // Log to check if sectionId is retrieved
 
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
       return;
     }
 
-    // Fetch all students for the section
+    // Fetch students for the section
     const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
