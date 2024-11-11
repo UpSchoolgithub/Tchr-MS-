@@ -802,7 +802,10 @@ return (
           sectionId={sectionId} // Pass sectionId as a prop
         />
       )}
-      {selectedTab === 'Attendance' && <div>Attendance Data Here</div>}
+      {selectedTab === 'Attendance' && (
+        <Attendance schoolId={schoolId} classId={classId} sectionId={sectionId} />
+      )}
+
       {selectedTab === 'Assignments' && <div>Assignments Data Here</div>}
       {selectedTab === 'Test' && <div>Test Data Here</div>}
           </div>
