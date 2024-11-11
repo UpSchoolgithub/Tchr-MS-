@@ -57,8 +57,8 @@ const mteacherRoutes = require('./routes/mteacherRoutes');
 //const timetableRoutes = require('./routes/timetableRoutes');
 //const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const assignmentRoutes = require('./routes/assignmentRoutes');
-const testRoutes = require('./routes/testRoutes');
+//const assignmentRoutes = require('./routes/assignmentRoutes');
+//const testRoutes = require('./routes/testRoutes');
 //const studentRoutes = require('./routes/student');
 const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
@@ -76,6 +76,9 @@ const teacherRoutes = require('./routes/teacherRoutes');
 //const teachersRoutes = require('./routes/teachers');
 //const teacherRoutes = require('./routes/teacher');
 
+
+const testRoutes = require('./routes/tests');
+const assignmentRoutes = require('./routes/assignments');
 
 
 
