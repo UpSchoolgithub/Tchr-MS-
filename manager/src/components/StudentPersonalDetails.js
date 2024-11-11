@@ -72,17 +72,29 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
     }
   
     try {
-      console.log("Uploading Data:", parsedData); // Debugging log
-      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`, { students: parsedData });
-      setFeedbackMessage('Student data uploaded successfully!');
+      // Create a new FormData object to match Postman's request format
+      const formData = new FormData();
+      formData.append('file', parsedData); // Ensure parsedData is the file object or replace it with the actual file
+  
+      const response = await axiosInstance.post(
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+  
+      setFeedbackMessage(response.data.message || 'Student data uploaded successfully!');
       setIsSuccess(true);
       fetchStudentData(); // Refresh existing data
       setParsedData([]); // Clear parsed data after upload
     } catch (error) {
-      const errorMsg = error.response?.data?.message || JSON.stringify(error.response?.data) || error.message;
+      const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
       setIsSuccess(false);
-      console.error("Upload Error:", error); // Log the entire error for debugging
+      console.error("Upload Error:", error);
     }
   };
   
