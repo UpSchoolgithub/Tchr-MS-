@@ -6,6 +6,7 @@ import './Student.css';
 const Student = ({ schoolId, classId, sectionId }) => {
   const [students, setStudents] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [newStudentData, setNewStudentData] = useState({
     rollNumber: '',
     studentName: '',
@@ -19,17 +20,6 @@ const Student = ({ schoolId, classId, sectionId }) => {
   const [parsedFile, setParsedFile] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-
-  const initialStudentData = {
-    rollNumber: '',
-    studentName: '',
-    studentEmail: '',
-    studentPhoneNumber: '',
-    parentName: '',
-    parentPhoneNumber1: '',
-    parentPhoneNumber2: '',
-    parentEmail: ''
-  };
 
   // Fetch students from the backend
   const fetchStudents = async () => {
@@ -47,7 +37,6 @@ const Student = ({ schoolId, classId, sectionId }) => {
     fetchStudents();
   }, [schoolId, classId, sectionId]);
 
-  // Capture the selected file for upload
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -55,35 +44,31 @@ const Student = ({ schoolId, classId, sectionId }) => {
     }
   };
 
-  // Upload student data from the selected Excel file
   const uploadStudentData = async () => {
     if (!parsedFile) {
       setFeedbackMessage('No file selected.');
       setIsSuccess(false);
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', parsedFile);
-  
-    // Debugging log to verify that the file is correctly appended
-    console.log('File to be uploaded:', parsedFile);
-  
+
     try {
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Adjust as needed
-            'Content-Type': 'multipart/form-data' // Ensures correct handling of file upload
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
         }
       );
-  
+
       setFeedbackMessage(response.data.message || 'Students uploaded successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after upload
+      setParsedFile(null); // Clear selected file
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to upload student data: ${errorMsg}`);
@@ -91,9 +76,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
       console.error("Upload Error:", error);
     }
   };
-  
 
-  // Add a student manually
   const addStudentManually = async () => {
     try {
       const response = await axiosInstance.post(
@@ -109,7 +92,17 @@ const Student = ({ schoolId, classId, sectionId }) => {
       setFeedbackMessage(response.data.message || 'Student added successfully!');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list of students after adding manually
-      setNewStudentData(initialStudentData); // Clear form fields
+      setNewStudentData({
+        rollNumber: '',
+        studentName: '',
+        studentEmail: '',
+        studentPhoneNumber: '',
+        parentName: '',
+        parentPhoneNumber1: '',
+        parentPhoneNumber2: '',
+        parentEmail: ''
+      }); // Clear form fields
+      setShowManualEntry(false); // Hide the form after adding
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
       setFeedbackMessage(`Failed to add student: ${errorMsg}`);
@@ -118,16 +111,60 @@ const Student = ({ schoolId, classId, sectionId }) => {
     }
   };
 
-  // Delete a student
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setNewStudentData(student);
+  };
+
+  const saveEdit = async () => {
+    try {
+      const response = await axiosInstance.put(
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${editingStudent.id}`,
+        newStudentData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+
+      setFeedbackMessage(response.data.message || 'Student updated successfully!');
+      setIsSuccess(true);
+      fetchStudents();
+      setEditingStudent(null);
+      setNewStudentData({
+        rollNumber: '',
+        studentName: '',
+        studentEmail: '',
+        studentPhoneNumber: '',
+        parentName: '',
+        parentPhoneNumber1: '',
+        parentPhoneNumber2: '',
+        parentEmail: ''
+      });
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || error.message;
+      setFeedbackMessage(`Failed to update student: ${errorMsg}`);
+      setIsSuccess(false);
+      console.error("Update Error:", error);
+    }
+  };
+
   const handleDelete = async (studentId) => {
     try {
-      await axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`);
+      await axiosInstance.delete(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students/${studentId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
       setFeedbackMessage('Student deleted successfully');
       setIsSuccess(true);
       fetchStudents(); // Refresh the list after deletion
     } catch (error) {
-      setFeedbackMessage(`Failed to delete student: ${error.message}`);
+      const errorMsg = error.response?.data?.error || error.message;
+      setFeedbackMessage(`Failed to delete student: ${errorMsg}`);
       setIsSuccess(false);
+      console.error("Delete Error:", error);
     }
   };
 
@@ -140,44 +177,86 @@ const Student = ({ schoolId, classId, sectionId }) => {
         <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
         <button onClick={uploadStudentData}>Upload Students</button>
       </div>
-      
-      {/* Manual Student Entry */}
-      <h4>Or Add Student Manually</h4>
-      <div className="manual-entry-form">
-        <label>
-          Roll Number:
-          <input type="number" value={newStudentData.rollNumber} onChange={(e) => setNewStudentData({ ...newStudentData, rollNumber: e.target.value })} />
-        </label>
-        <label>
-          Student Name:
-          <input type="text" value={newStudentData.studentName} onChange={(e) => setNewStudentData({ ...newStudentData, studentName: e.target.value })} />
-        </label>
-        <label>
-          Email:
-          <input type="email" value={newStudentData.studentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, studentEmail: e.target.value })} />
-        </label>
-        <label>
-          Phone Number:
-          <input type="text" value={newStudentData.studentPhoneNumber} onChange={(e) => setNewStudentData({ ...newStudentData, studentPhoneNumber: e.target.value })} />
-        </label>
-        <label>
-          Parent Name:
-          <input type="text" value={newStudentData.parentName} onChange={(e) => setNewStudentData({ ...newStudentData, parentName: e.target.value })} />
-        </label>
-        <label>
-          Parent Phone Number 1:
-          <input type="text" value={newStudentData.parentPhoneNumber1} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhoneNumber1: e.target.value })} />
-        </label>
-        <label>
-          Parent Phone Number 2 (optional):
-          <input type="text" value={newStudentData.parentPhoneNumber2} onChange={(e) => setNewStudentData({ ...newStudentData, parentPhoneNumber2: e.target.value })} />
-        </label>
-        <label>
-          Parent Email:
-          <input type="email" value={newStudentData.parentEmail} onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })} />
-        </label>
-        <button onClick={addStudentManually}>Add Student</button>
-      </div>
+
+      {/* Button to show manual entry form */}
+      {!showManualEntry && (
+        <button onClick={() => setShowManualEntry(true)}>Add Student Manually</button>
+      )}
+
+      {/* Manual Student Entry Form */}
+      {showManualEntry && (
+        <div className="manual-entry-form">
+          <h4>Or Add Student Manually</h4>
+          <label>
+            Roll Number:
+            <input
+              type="number"
+              value={newStudentData.rollNumber}
+              onChange={(e) => setNewStudentData({ ...newStudentData, rollNumber: e.target.value })}
+            />
+          </label>
+          <label>
+            Student Name:
+            <input
+              type="text"
+              value={newStudentData.studentName}
+              onChange={(e) => setNewStudentData({ ...newStudentData, studentName: e.target.value })}
+            />
+          </label>
+          <label>
+            Email:
+            <input
+              type="email"
+              value={newStudentData.studentEmail}
+              onChange={(e) => setNewStudentData({ ...newStudentData, studentEmail: e.target.value })}
+            />
+          </label>
+          <label>
+            Phone Number:
+            <input
+              type="text"
+              value={newStudentData.studentPhoneNumber}
+              onChange={(e) => setNewStudentData({ ...newStudentData, studentPhoneNumber: e.target.value })}
+            />
+          </label>
+          <label>
+            Parent Name:
+            <input
+              type="text"
+              value={newStudentData.parentName}
+              onChange={(e) => setNewStudentData({ ...newStudentData, parentName: e.target.value })}
+            />
+          </label>
+          <label>
+            Parent Phone Number 1:
+            <input
+              type="text"
+              value={newStudentData.parentPhoneNumber1}
+              onChange={(e) => setNewStudentData({ ...newStudentData, parentPhoneNumber1: e.target.value })}
+            />
+          </label>
+          <label>
+            Parent Phone Number 2 (optional):
+            <input
+              type="text"
+              value={newStudentData.parentPhoneNumber2}
+              onChange={(e) => setNewStudentData({ ...newStudentData, parentPhoneNumber2: e.target.value })}
+            />
+          </label>
+          <label>
+            Parent Email:
+            <input
+              type="email"
+              value={newStudentData.parentEmail}
+              onChange={(e) => setNewStudentData({ ...newStudentData, parentEmail: e.target.value })}
+            />
+          </label>
+          <button onClick={editingStudent ? saveEdit : addStudentManually}>
+            {editingStudent ? 'Save Changes' : 'Add Student'}
+          </button>
+          <button onClick={() => setShowManualEntry(false)}>Cancel</button>
+        </div>
+      )}
 
       {/* Feedback Message */}
       {feedbackMessage && (
@@ -202,7 +281,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
             </tr>
           </thead>
           <tbody>
-            {students.map(student => (
+            {students.map((student) => (
               <tr key={student.id}>
                 <td>{student.rollNumber}</td>
                 <td>{student.studentName}</td>
@@ -211,7 +290,7 @@ const Student = ({ schoolId, classId, sectionId }) => {
                 <td>{student.parentName}</td>
                 <td>{student.parentPhoneNumber1}</td>
                 <td>
-                  <button onClick={() => setEditingStudent(student)}>Edit</button>
+                  <button onClick={() => handleEdit(student)}>Edit</button>
                   <button onClick={() => handleDelete(student.id)}>Delete</button>
                 </td>
               </tr>
