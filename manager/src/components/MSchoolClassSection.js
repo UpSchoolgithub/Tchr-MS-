@@ -20,6 +20,8 @@ const MSchoolClassSection = () => {
   const [holidays, setHolidays] = useState([]);
   const [filter, setFilter] = useState('all');
   const [showCalendar, setShowCalendar] = useState(false);
+  const [students, setStudents] = useState([]);
+
   const [showTimetable, setShowTimetable] = useState(
     () => JSON.parse(localStorage.getItem('showTimetable')) || false
   );
@@ -80,6 +82,24 @@ const MSchoolClassSection = () => {
     });
     fetchTimetableSettings(schoolId);
 }, [schoolId, sectionId]); // Use sectionId instead of sectionName
+
+//fetch students
+useEffect(() => {
+  const fetchStudents = async () => {
+    try {
+      const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
+      const parsedStudents = response.data.map(student => ({
+        rollNumber: student.rollNumber,
+        name: student.studentName,
+      }));
+      setStudents(parsedStudents);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+
+  fetchStudents();
+}, [schoolId, classId, sectionId]);
 
 useEffect(() => {
   if (teachers.length > 0 && timetableSettings && subjects.length > 0) {
@@ -766,55 +786,30 @@ return (
 
 {/* Show Students Section */}
 {showStudents && (
-  <div className="students-section">
-    <h2>Students Information</h2>
-    <div className="student-tabs">
-      <button
-        className={selectedTab === 'Student Personal' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Student Personal')}
-      >
-        Student Personal
-      </button>
-      <button
-        className={selectedTab === 'Attendance' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Attendance')}
-      >
-        Attendance
-      </button>
-      <button
-        className={selectedTab === 'Assignments' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Assignments')}
-      >
-        Assignments
-      </button>
-      <button
-        className={selectedTab === 'Test' ? 'active-tab' : ''}
-        onClick={() => handleTabChange('Test')}
-      >
-        Test
-      </button>
-    </div>
-
-    <div className="tab-content">
-      {selectedTab === 'Student Personal' && (
-        <Student
-          schoolId={schoolId}
-          classId={classId}
-          sectionId={sectionId} // Pass sectionId as a prop
-        />
-      )}
-      {selectedTab === 'Attendance' && (
-        <Attendance schoolId={schoolId} classId={classId} sectionId={sectionId} />
-      )}
-
-      {selectedTab === 'Assignments' && <div>Assignments Data Here</div>}
-      {selectedTab === 'Test' && <div>Test Data Here</div>}
+        <div className="students-section">
+          <h2>Students Information</h2>
+          <div className="student-tabs">
+            <button className={selectedTab === 'Student Personal' ? 'active-tab' : ''} onClick={() => handleTabChange('Student Personal')}>Student Personal</button>
+            <button className={selectedTab === 'Attendance' ? 'active-tab' : ''} onClick={() => handleTabChange('Attendance')}>Attendance</button>
+            <button className={selectedTab === 'Assignments' ? 'active-tab' : ''} onClick={() => handleTabChange('Assignments')}>Assignments</button>
+            <button className={selectedTab === 'Test' ? 'active-tab' : ''} onClick={() => handleTabChange('Test')}>Test</button>
+          </div>
+          <div className="tab-content">
+            {selectedTab === 'Student Personal' && (
+              <Student schoolId={schoolId} classId={classId} sectionId={sectionId} />
+            )}
+            {selectedTab === 'Attendance' && (
+              <Attendance students={students} /> // Pass students data to Attendance
+            )}
+            {selectedTab === 'Assignments' && <div>Assignments Data Here</div>}
+            {selectedTab === 'Test' && <div>Test Data Here</div>}
           </div>
         </div>
       )}
     </div>
   );
 };
+
 
 export default MSchoolClassSection;
 
