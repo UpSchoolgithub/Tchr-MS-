@@ -12,6 +12,7 @@ const SessionDetails = ({ sectionId }) => {
       try {
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
         setStudents(response.data);
+        console.log("Fetched students:", response.data); // Log to confirm data
       } catch (error) {
         console.error('Error fetching students:', error);
       }
@@ -39,11 +40,15 @@ const SessionDetails = ({ sectionId }) => {
           onChange={(e) => handleMarkAbsent(parseInt(e.target.value))}
         >
           <option value="">Choose Absentees</option>
-          {students.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.studentName}
-            </option>
-          ))}
+          {students.length > 0 ? (
+            students.map((student) => (
+              <option key={student.id} value={student.id}>
+                {student.studentName}
+              </option>
+            ))
+          ) : (
+            <option disabled>Loading students...</option>
+          )}
         </select>
 
         <div className="absentees-list">
