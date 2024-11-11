@@ -7,7 +7,8 @@ import 'jspdf-autotable';
 import './MSchoolClassSection.css';
 import Student from './Student'; // Replace with Student.js
 import Attendance from './Attendance';
-
+import Assignments from './Assignments'; // Import Assignments component
+import Tests from './Tests'; // Import Tests component
 Modal.setAppElement('#root');
 
 const MSchoolClassSection = () => {
@@ -802,9 +803,9 @@ return (
               <Attendance schoolId={schoolId} classId={classId} sectionId={sectionId} />
             )}
 
-            {selectedTab === 'Assignments' && <div>Assignments Data Here</div>}
-            {selectedTab === 'Test' && <div>Test Data Here</div>}
-          </div>
+            {selectedTab === 'Assignments' && <Assignments schoolId={schoolId} classId={classId} sectionId={sectionId} />}
+            {selectedTab === 'Test' && <Tests schoolId={schoolId} classId={classId} sectionId={sectionId} />}
+           </div>
         </div>
       )}
     </div>

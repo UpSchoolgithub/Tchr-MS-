@@ -1,41 +1,51 @@
-// src/components/Test.js
+// src/components/Tests.js
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
+import './Tests.css';
 
-const Test = ({ schoolId, classId, sectionId }) => {
+const Tests = ({ schoolId, classId, sectionId }) => {
   const [students, setStudents] = useState([]);
-  const [testResults, setTestResults] = useState({});
-  const [numTests, setNumTests] = useState(3); // Number of test columns
+  const [tests, setTests] = useState({});
 
   useEffect(() => {
-    fetchStudents();
+    fetchTests();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchTests = async () => {
     try {
-      const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
-      const formattedStudents = response.data.map(student => ({
+      const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/tests`);
+      const { students: fetchedStudents, testRecords } = response.data;
+
+      const formattedStudents = fetchedStudents.map(student => ({
         rollNumber: student.rollNumber,
         name: student.studentName
       }));
       setStudents(formattedStudents);
+
+      const testData = {};
+      testRecords.forEach(record => {
+        const testId = record.testId;
+        const studentId = record.studentId;
+        if (!testData[studentId]) testData[studentId] = {};
+        testData[studentId][testId] = record.status;
+      });
+      setTests(testData);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('Error fetching tests:', error);
     }
   };
 
   return (
-    <div className="test-management">
-      <h3>Test Results</h3>
-
-      <table className="test-table">
+    <div className="tests-management">
+      <h3>Tests</h3>
+      <table className="tests-table">
         <thead>
           <tr>
             <th>Roll Number</th>
             <th>Name</th>
-            {[...Array(numTests)].map((_, index) => (
-              <th key={index}>Test {index + 1}</th>
-            ))}
+            <th>Test 1</th>
+            <th>Test 2</th>
+            <th>Test 3</th>
           </tr>
         </thead>
         <tbody>
@@ -43,8 +53,8 @@ const Test = ({ schoolId, classId, sectionId }) => {
             <tr key={student.rollNumber}>
               <td>{student.rollNumber}</td>
               <td>{student.name}</td>
-              {[...Array(numTests)].map((_, index) => (
-                <td key={index}>-</td> // Display placeholder "-"
+              {[1, 2, 3].map(id => (
+                <td key={id}>{tests[student.rollNumber]?.[id] || '-'}</td>
               ))}
             </tr>
           ))}
@@ -54,4 +64,4 @@ const Test = ({ schoolId, classId, sectionId }) => {
   );
 };
 
-export default Test;
+export default Tests;
