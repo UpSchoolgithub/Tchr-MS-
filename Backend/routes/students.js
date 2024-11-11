@@ -6,7 +6,9 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
-
+const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+const students = XLSX.utils.sheet_to_json(worksheet);
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -45,12 +47,12 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       parentName: student['Parent Name'],
       parentPhoneNumber1: student['Parent Phone Number 1'],
       parentPhoneNumber2: student['Parent Phone Number 2 (optional)'] || null,
-      parentEmail: student['Parent Email'],
+      parentEmail: student['Parent Email'] ? student['Parent Email'] : null, // Set to null if empty
       sectionId: section.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
-
+    
     // Insert into database
     await Student.bulkCreate(studentRecords, { transaction, ignoreDuplicates: true });
     await transaction.commit();
