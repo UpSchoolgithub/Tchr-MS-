@@ -22,16 +22,21 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   try {
     console.log('Processing file upload for section:', sectionId);
     
+    // Check if the section exists
     const section = await Section.findOne({ where: { id: sectionId } });
     if (!section) {
+      await transaction.rollback();
       return res.status(404).json({ error: 'Section not found' });
     }
+    console.log('Section found:', section.id);
 
+    // Read and parse the Excel file
     const workbook = XLSX.readFile(req.file.path);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const students = XLSX.utils.sheet_to_json(worksheet);
     console.log('Parsed students:', students); // Log parsed data for inspection
 
+    // Map student data to the required database schema format
     const studentRecords = students.map(student => ({
       rollNumber: student['Roll Number'],
       studentName: student['Student Name'],
@@ -46,16 +51,19 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       updatedAt: new Date(),
     }));
 
-    await Student.bulkCreate(studentRecords, { transaction });
+    // Attempt to bulk insert data, ignoring duplicates if necessary
+    await Student.bulkCreate(studentRecords, { transaction, ignoreDuplicates: true });
     await transaction.commit();
+
     res.status(201).json({ message: 'Students uploaded successfully' });
 
-    // Delete file after processing
+    // Delete the file after processing to free up space
     fs.unlink(req.file.path, (err) => {
       if (err) console.error('Error deleting file:', err);
     });
 
   } catch (error) {
+    // Rollback transaction if any error occurs
     await transaction.rollback();
     console.error('Error in student upload route:', error);
     res.status(500).json({ error: 'Internal server error during student upload.' });
