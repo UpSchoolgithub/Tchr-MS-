@@ -1,4 +1,3 @@
-// src/components/TeacherSessions.js
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { useParams, useNavigate } from 'react-router-dom';
