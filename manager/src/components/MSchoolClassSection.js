@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './MSchoolClassSection.css';
 import Student from './Student'; // Replace with Student.js
+import Attendance from './Attendance';
 
 Modal.setAppElement('#root');
 
