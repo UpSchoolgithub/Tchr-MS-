@@ -67,7 +67,7 @@ const SessionDetails = () => {
     }));
 
     try {
-      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`, {
+      await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, {
         attendanceData
       });
       setAttendanceSaved(true);
