@@ -58,5 +58,6 @@ Session.init({
 // Define associations
 Session.belongsTo(Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
 Session.belongsTo(Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
+Session.belongsTo(School, { foreignKey: 'schoolId' });
 
 module.exports = Session;

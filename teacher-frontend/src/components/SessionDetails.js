@@ -13,7 +13,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
-  
+
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
@@ -51,7 +51,7 @@ const SessionDetails = () => {
   }, [sessionId, teacherId]);
 
   const handleAbsenteeChange = (selectedOptions) => {
-    const selectedIds = selectedOptions.map((option) => option.value);
+    const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
     setAbsentees(selectedIds);
   };
 
@@ -122,6 +122,8 @@ const SessionDetails = () => {
           placeholder="Select absentees"
           value={studentOptions.filter(option => absentees.includes(option.value))}
           className="multi-select-dropdown"
+          closeMenuOnSelect={false}
+          isClearable
         />
 
         <div className="absentees-list">
