@@ -7,32 +7,44 @@ const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
   const { classId, subject, school, sectionName, sectionId } = location.state || {};
+  
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch students in the section
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
+      setError("Section ID is missing. Unable to fetch students.");
+      setLoading(false);
       return;
     }
 
     const fetchStudents = async () => {
       try {
+        console.log("Fetching students for section ID:", sectionId);  // Log section ID for debugging
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
         setStudents(response.data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching students:', error);
+        setError("Failed to load students.");
+        setLoading(false);
       }
     };
 
     fetchStudents();
   }, [sectionId]);
 
+  // Fetch session details
   useEffect(() => {
     if (!sessionId || !teacherId) {
       console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
+      setError("Session ID or Teacher ID is missing. Unable to fetch session details.");
       return;
     }
 
@@ -42,6 +54,7 @@ const SessionDetails = () => {
         setSessionDetails(response.data);
       } catch (error) {
         console.error('Error fetching session details:', error);
+        setError("Failed to load session details.");
       }
     };
 
@@ -95,6 +108,9 @@ const SessionDetails = () => {
       alert("Failed to finalize attendance.");
     }
   };
+
+  if (loading) return <p>Loading students...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div className="session-details-container">
