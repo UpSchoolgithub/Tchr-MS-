@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
   const { teacherId, sectionId, sessionId } = useParams();
+  const location = useLocation();
+  const { classId, subject, school, section } = location.state || {}; // Accessing passed state
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
-  const [sessionDetails, setSessionDetails] = useState({}); // To store session-specific details
+  const [sessionDetails, setSessionDetails] = useState({});
 
   useEffect(() => {
-    console.log("Section ID:", sectionId); // Log to check if sectionId is retrieved
-
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
       return;
@@ -22,7 +22,6 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
         setStudents(response.data);
-        console.log("Fetched students:", response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
       }
@@ -42,7 +41,6 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(response.data);
-        console.log("Fetched session details:", response.data);
       } catch (error) {
         console.error('Error fetching session details:', error);
       }
@@ -68,14 +66,16 @@ const SessionDetails = () => {
     }
 
     try {
-      // Send the attendance data to the backend
       const response = await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/attendance`, {
         date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
         absentees,
         sectionId,
+        classId,
+        subject,
+        school,
+        section
       });
 
-      console.log("Attendance marked successfully:", response.data);
       alert("Session ended and attendance marked successfully.");
     } catch (error) {
       console.error("Error marking attendance:", error);
@@ -85,6 +85,18 @@ const SessionDetails = () => {
 
   return (
     <div className="session-details-container">
+      <h2>Session Details</h2>
+
+      {/* Display session details */}
+      <div className="session-info">
+        <p><strong>Class ID:</strong> {classId}</p>
+        <p><strong>Subject:</strong> {subject}</p>
+        <p><strong>School:</strong> {school}</p>
+        <p><strong>Section:</strong> {section}</p>
+        <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+        <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
+      </div>
+
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         <select
@@ -128,12 +140,6 @@ const SessionDetails = () => {
 
       <div className="session-notes-section">
         <h3>Session Notes and Details</h3>
-        <div className="session-info">
-          <label>Session Number:</label> <span>{sessionDetails.sessionNumber || 'N/A'}</span>
-        </div>
-        <div className="session-info">
-          <label>Chapter:</label> <span>{sessionDetails.chapter || 'N/A'}</span>
-        </div>
         <div className="assignments-dropdown">
           <label>Assignments:</label>
           <select>

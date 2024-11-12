@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TeacherSessions.css';
+import { useLocation } from 'react-router-dom';
 
 const TeacherSessions = () => {
   const { teacherId } = useParams();
@@ -47,7 +48,15 @@ const TeacherSessions = () => {
   };
 
   const handleStartSession = (session) => {
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`);
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
+      state: {
+        classId: session.classId,
+        subject: session.subjectName,
+        school: session.schoolName,
+        section: session.sectionName,
+        sessionId: session.id
+      }
+    });
   };
   
 
