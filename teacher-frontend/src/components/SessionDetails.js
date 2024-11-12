@@ -25,7 +25,7 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
         setStudents(response.data);
-        setFilteredStudents(response.data);
+        setFilteredStudents(response.data); // Set both students and filteredStudents initially
       } catch (error) {
         console.error('Error fetching students:', error);
       }
@@ -64,13 +64,11 @@ const SessionDetails = () => {
   const handleMarkAbsent = (studentId) => {
     if (!absentees.includes(studentId)) {
       setAbsentees((prev) => [...prev, studentId]);
-      console.log(`Added to absentees: ${studentId}`);
     }
   };
 
   const handleMarkPresent = (studentId) => {
     setAbsentees((prev) => prev.filter((id) => id !== studentId));
-    console.log(`Removed from absentees: ${studentId}`);
   };
 
   const saveAttendance = async () => {
