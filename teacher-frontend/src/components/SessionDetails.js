@@ -7,41 +7,35 @@ const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
   const { classId, subject, school, sectionName, sectionId } = location.state || {};
-  const [students, setStudents] = useState([]);
-  const [absentees, setAbsentees] = useState([]);
+  
+  const [students, setStudents] = useState([]); // Student list for this session
+  const [absentees, setAbsentees] = useState([]); // Track absentees
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Debugging Logs
-  useEffect(() => {
-    console.log("Session Details Component Loaded:");
-    console.log("teacherId:", teacherId);
-    console.log("sessionId:", sessionId);
-    console.log("sectionId:", sectionId);
-  }, [teacherId, sessionId, sectionId]);
-
-  // Fetch Students
-  useEffect(() => {
-    if (!sectionId) {
-      console.error("sectionId is undefined. Cannot fetch students.");
-      return;
+  // Fetch students for the section
+  const fetchStudentData = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/schools/${school}/classes/${classId}/sections/${sectionId}/students`
+      );
+      setStudents(response.data);
+      setFeedbackMessage("Students fetched successfully.");
+      setIsSuccess(true);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      setFeedbackMessage("Failed to fetch students.");
+      setIsSuccess(false);
     }
+  };
 
-    const fetchStudents = async () => {
-      console.log("Fetching students for section:", sectionId); // Debugging log
-      try {
-        const response = await axiosInstance.get(`/sections/${sectionId}/students`);
-        console.log("Fetched students:", response.data); // Debugging log
-        setStudents(response.data);
-      } catch (error) {
-        console.error('Error fetching students:', error);
-      }
-    };
+  useEffect(() => {
+    fetchStudentData();
+  }, [school, classId, sectionId]);
 
-    fetchStudents();
-  }, [sectionId]);
-
-  // Fetch Session Details
+  // Fetch session details
   useEffect(() => {
     if (!sessionId || !teacherId) {
       console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
@@ -49,49 +43,53 @@ const SessionDetails = () => {
     }
 
     const fetchSessionDetails = async () => {
-      console.log("Fetching session details for session:", sessionId); // Debugging log
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-        console.log("Fetched session details:", response.data); // Debugging log
         setSessionDetails(response.data);
       } catch (error) {
-        console.error('Error fetching session details:', error);
+        console.error("Error fetching session details:", error);
       }
     };
 
     fetchSessionDetails();
   }, [sessionId, teacherId]);
 
+  // Mark a student as absent
   const handleMarkAbsent = (studentId) => {
     if (!absentees.includes(studentId)) {
       setAbsentees((prev) => [...prev, studentId]);
     }
   };
 
+  // Mark a student as present
   const handleMarkPresent = (studentId) => {
     setAbsentees((prev) => prev.filter((id) => id !== studentId));
   };
 
+  // Save attendance for the session
   const saveAttendance = async () => {
-    const attendanceData = students.map(student => ({
+    const attendanceData = students.map((student) => ({
       studentId: student.id,
       sectionId,
       date: new Date().toISOString().split('T')[0],
-      status: absentees.includes(student.id) ? 'A' : 'P'
+      status: absentees.includes(student.id) ? 'A' : 'P',
     }));
 
     try {
       await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, {
-        attendanceData
+        attendanceData,
       });
       setAttendanceSaved(true);
-      alert("Attendance saved successfully. You can still edit until the session is ended.");
+      setFeedbackMessage("Attendance saved successfully. You can still edit until the session is ended.");
+      setIsSuccess(true);
     } catch (error) {
       console.error("Error saving attendance:", error);
-      alert("Failed to save attendance.");
+      setFeedbackMessage("Failed to save attendance.");
+      setIsSuccess(false);
     }
   };
 
+  // End the session and finalize attendance
   const endSession = async () => {
     if (!attendanceSaved) {
       alert("Please save the attendance before ending the session.");
@@ -101,7 +99,7 @@ const SessionDetails = () => {
     try {
       await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/finalize-attendance`, {
         sessionId,
-        finalized: true
+        finalized: true,
       });
       alert("Session ended and attendance finalized.");
     } catch (error) {
@@ -124,6 +122,8 @@ const SessionDetails = () => {
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
       </div>
 
+      {feedbackMessage && <p style={{ color: isSuccess ? 'green' : 'red' }}>{feedbackMessage}</p>}
+
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         <select
@@ -131,15 +131,11 @@ const SessionDetails = () => {
           onChange={(e) => handleMarkAbsent(parseInt(e.target.value))}
         >
           <option value="">Choose Absentees</option>
-          {students.length > 0 ? (
-            students.map((student) => (
-              <option key={student.id} value={student.id}>
-                {student.studentName}
-              </option>
-            ))
-          ) : (
-            <option disabled>Loading students...</option>
-          )}
+          {students.map((student) => (
+            <option key={student.id} value={student.id}>
+              {student.studentName}
+            </option>
+          ))}
         </select>
 
         <div className="absentees-list">
@@ -150,10 +146,7 @@ const SessionDetails = () => {
               return (
                 <div key={id} className="absentee-item">
                   <span>{student?.studentName}</span>
-                  <button
-                    className="mark-present-button"
-                    onClick={() => handleMarkPresent(id)}
-                  >
+                  <button className="mark-present-button" onClick={() => handleMarkPresent(id)}>
                     Mark Present
                   </button>
                 </div>
