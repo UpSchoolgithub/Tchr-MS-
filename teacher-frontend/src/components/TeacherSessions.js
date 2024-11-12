@@ -53,11 +53,13 @@ const TeacherSessions = () => {
         classId: session.classId,
         subject: session.subjectName,
         school: session.schoolName,
-        section: session.sectionName,
+        sectionName: session.sectionName, // Pass section name for display
+        sectionId: session.sectionId, // Pass section ID for attendance fetching
         sessionId: session.id
       }
     });
   };
+  
   
 
   const isToday = (date) => {

@@ -4,9 +4,9 @@ import { useParams, useLocation } from 'react-router-dom';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { teacherId, sectionId, sessionId } = useParams();
+  const { teacherId, sessionId } = useParams();
   const location = useLocation();
-  const { classId, subject, school, section } = location.state || {}; // Accessing passed state
+  const { classId, subject, school, sectionName, sectionId } = location.state || {}; // Retrieve sectionId for data fetching, sectionName for display
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
@@ -17,7 +17,7 @@ const SessionDetails = () => {
       return;
     }
 
-    // Fetch students for the section
+    // Fetch students for the section using sectionId
     const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
@@ -73,7 +73,7 @@ const SessionDetails = () => {
         classId,
         subject,
         school,
-        section
+        section: sectionName // Pass section name for display if needed
       });
 
       alert("Session ended and attendance marked successfully.");
@@ -92,7 +92,7 @@ const SessionDetails = () => {
         <p><strong>Class ID:</strong> {classId}</p>
         <p><strong>Subject:</strong> {subject}</p>
         <p><strong>School:</strong> {school}</p>
-        <p><strong>Section:</strong> {section}</p>
+        <p><strong>Section:</strong> {sectionName}</p> {/* Display section name */}
         <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
       </div>
