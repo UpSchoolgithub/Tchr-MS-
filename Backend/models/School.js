@@ -1,6 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Session = require('./Session'); // Import the Session model
 
 class School extends Model {}
 
@@ -42,7 +41,6 @@ School.associate = (models) => {
   School.hasMany(models.ClassInfo, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Section, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Subject, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  School.hasMany(Session, { foreignKey: 'schoolId' }); // Correct reference to Session model
 };
 
 module.exports = School;
