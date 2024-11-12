@@ -5,28 +5,16 @@ const { Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Stude
 // Get sessions for a specific teacher
 router.get('/teachers/:teacherId/assignments', async (req, res) => {
   const { teacherId } = req.params;
-  
+
   try {
     // Fetch sessions assigned to the teacher
     const sessions = await Session.findAll({
       where: { teacherId },
       include: [
-        {
-          model: School,
-          attributes: ['name'],
-        },
-        {
-          model: ClassInfo,
-          attributes: ['className'],
-        },
-        {
-          model: Section,
-          attributes: ['sectionName'],
-        },
-        {
-          model: Subject,
-          attributes: ['subjectName'],
-        },
+        { model: School, attributes: ['name'] },
+        { model: ClassInfo, attributes: ['className'] },
+        { model: Section, attributes: ['sectionName'] },
+        { model: Subject, attributes: ['subjectName'] },
       ],
       attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
     });
@@ -34,10 +22,10 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
     // Format response with session details
     const formattedSessions = sessions.map((session) => ({
       id: session.id,
-      schoolName: session.School.name,
-      className: session.ClassInfo.className,
-      sectionName: session.Section.sectionName,
-      subjectName: session.Subject.subjectName,
+      schoolName: session.School ? session.School.name : 'N/A',
+      className: session.ClassInfo ? session.ClassInfo.className : 'N/A',
+      sectionName: session.Section ? session.Section.sectionName : 'N/A',
+      subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
       day: session.day,
       period: session.period,
       startTime: session.startTime,
@@ -55,7 +43,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
 // Mark attendance for a session
 router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const { date, absentees } = req.body;
+  const { date, absentees, sectionId } = req.body;
 
   try {
     // Mark attendance as "Absent" for students listed in absentees
@@ -69,7 +57,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
     }
 
     // Automatically mark others as "Present"
-    const allStudents = await Student.findAll({ where: { sectionId: req.body.sectionId } });
+    const allStudents = await Student.findAll({ where: { sectionId } });
     const presentStudents = allStudents.filter(student => !absentees.includes(student.id));
 
     for (const student of presentStudents) {
@@ -109,14 +97,14 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
     res.json({
       sessionNumber: session.id,
-      chapter: session.chapter || 'N/A',
-      topicsToCover: session.topics || [],
-      assignments: session.assignments,
-      observations: session.observations,
-      schoolName: session.School.name,
-      className: session.ClassInfo.className,
-      sectionName: session.Section.sectionName,
-      subjectName: session.Subject.subjectName,
+      chapter: session.chapter || 'N/A', // Ensure `chapter` is a defined field in the model
+      topicsToCover: session.topics || [], // Ensure `topics` is a defined field in the model
+      assignments: session.assignments || 'No assignments', // Optional: Default if missing
+      observations: session.observations || 'No observations',
+      schoolName: session.School ? session.School.name : 'N/A',
+      className: session.ClassInfo ? session.ClassInfo.className : 'N/A',
+      sectionName: session.Section ? session.Section.sectionName : 'N/A',
+      subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
     });
   } catch (error) {
     console.error('Error fetching session details:', error);
