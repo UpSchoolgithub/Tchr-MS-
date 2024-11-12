@@ -1,4 +1,3 @@
-// models/Session.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Section = require('./Section'); // Import the Section model
@@ -59,6 +58,6 @@ Session.init({
 // Define associations
 Session.belongsTo(Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
 Session.belongsTo(Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
-Session.belongsTo(School, { foreignKey: 'schoolId' });
+Session.belongsTo(School, { foreignKey: 'schoolId', onDelete: 'CASCADE' }); // Correct association with School
 
 module.exports = Session;

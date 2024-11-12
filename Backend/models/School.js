@@ -42,8 +42,7 @@ School.associate = (models) => {
   School.hasMany(models.ClassInfo, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Section, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   School.hasMany(models.Subject, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  School.hasMany(Session, { foreignKey: 'schoolId' });
-
+  School.hasMany(Session, { foreignKey: 'schoolId' }); // Correct reference to Session model
 };
 
 module.exports = School;
