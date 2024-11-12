@@ -22,6 +22,9 @@ const TeacherAssignments = () => {
     const fetchAssignments = async () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+        console.log("Assignments Data:", response.data); // Log to confirm structure
+
+        // Ensure sectionId is available in the assignment data
         setAssignments(response.data);
         setFilteredAssignments(response.data);
         extractUniqueFilters(response.data);
@@ -80,6 +83,7 @@ const TeacherAssignments = () => {
       assignment.schoolName,
       assignment.className,
       assignment.sectionName,
+      assignment.sectionId, // Add sectionId here for easy reference
       assignment.day,
       assignment.period,
       assignment.subjectName,
@@ -88,7 +92,7 @@ const TeacherAssignments = () => {
     ]);
 
     doc.autoTable({
-      head: [['School', 'Class', 'Section', 'Day', 'Period', 'Subject', 'Start Time', 'End Time']],
+      head: [['School', 'Class', 'Section', 'Section ID', 'Day', 'Period', 'Subject', 'Start Time', 'End Time']],
       body: tableData,
       theme: 'grid',
       styles: {
@@ -166,6 +170,7 @@ const TeacherAssignments = () => {
               <th>School</th>
               <th>Class</th>
               <th>Section</th>
+              <th>Section ID</th> {/* Add a column for Section ID */}
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
@@ -179,6 +184,7 @@ const TeacherAssignments = () => {
                 <td>{assignment.schoolName}</td>
                 <td>{assignment.className}</td>
                 <td>{assignment.sectionName}</td>
+                <td>{assignment.sectionId}</td> {/* Display sectionId here */}
                 <td>{assignment.day}</td>
                 <td>{assignment.period}</td>
                 <td>{assignment.subjectName}</td>
