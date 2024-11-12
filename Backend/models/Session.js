@@ -57,8 +57,6 @@ Session.associate = (models) => {
   Session.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
-  Session.belongsTo(models.ClassInfo, { foreignKey: 'classId', onDelete: 'CASCADE' });
-
 };
 
 module.exports = Session;
