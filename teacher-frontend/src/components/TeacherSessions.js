@@ -89,6 +89,7 @@ const TeacherSessions = () => {
               <th>School</th>
               <th>Class</th>
               <th>Section</th>
+              <th>Section ID</th> {/* Add Section ID column here */}
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
@@ -103,6 +104,7 @@ const TeacherSessions = () => {
                 <td>{session.schoolName}</td>
                 <td>{session.className}</td>
                 <td>{session.sectionName}</td>
+                <td>{session.sectionId}</td> {/* Display Section ID here */}
                 <td>{session.day}</td>
                 <td>{session.period}</td>
                 <td>{session.subjectName}</td>
@@ -127,6 +129,7 @@ const TeacherSessions = () => {
       )}
     </div>
   );
+  
 };
 
 export default TeacherSessions;

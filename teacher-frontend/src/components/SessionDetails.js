@@ -86,17 +86,18 @@ const SessionDetails = () => {
   return (
     <div className="session-details-container">
       <h2>Session Details</h2>
-
+  
       {/* Display session details */}
       <div className="session-info">
         <p><strong>Class ID:</strong> {classId}</p>
         <p><strong>Subject:</strong> {subject}</p>
         <p><strong>School:</strong> {school}</p>
-        <p><strong>Section:</strong> {sectionName}</p> {/* Display section name */}
+        <p><strong>Section:</strong> {sectionName}</p>
+        <p><strong>Section ID:</strong> {sectionId}</p> {/* Display Section ID */}
         <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
       </div>
-
+  
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         <select
@@ -114,7 +115,7 @@ const SessionDetails = () => {
             <option disabled>Loading students...</option>
           )}
         </select>
-
+  
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
           {absentees.length > 0 ? (
@@ -137,7 +138,7 @@ const SessionDetails = () => {
           )}
         </div>
       </div>
-
+  
       <div className="session-notes-section">
         <h3>Session Notes and Details</h3>
         <div className="assignments-dropdown">
@@ -152,6 +153,7 @@ const SessionDetails = () => {
       </div>
     </div>
   );
+  
 };
 
 export default SessionDetails;
