@@ -14,6 +14,7 @@ const SessionDetails = () => {
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
 
+  // Fetch students data based on sectionId, school, and classId
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
@@ -32,6 +33,7 @@ const SessionDetails = () => {
     fetchStudents();
   }, [school, classId, sectionId]);
 
+  // Fetch session details based on teacherId and sessionId
   useEffect(() => {
     if (!sessionId || !teacherId) {
       console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
@@ -50,11 +52,13 @@ const SessionDetails = () => {
     fetchSessionDetails();
   }, [sessionId, teacherId]);
 
+  // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
     setAbsentees(selectedIds);
   };
 
+  // Save attendance data to the backend
   const saveAttendance = async () => {
     const attendanceData = students.map((student) => ({
       studentId: student.id,
@@ -75,6 +79,7 @@ const SessionDetails = () => {
     }
   };
 
+  // End the session and finalize attendance
   const endSession = async () => {
     if (!attendanceSaved) {
       alert("Please save the attendance before ending the session.");
@@ -93,6 +98,7 @@ const SessionDetails = () => {
     }
   };
 
+  // Convert students into options for react-select
   const studentOptions = students.map((student) => ({
     value: student.id,
     label: student.studentName
