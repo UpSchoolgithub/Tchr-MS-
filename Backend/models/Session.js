@@ -1,4 +1,3 @@
-// models/Session.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -10,7 +9,7 @@ Session.init({
     autoIncrement: true,
     primaryKey: true,
   },
-  chapterName: {  // Add this field
+  chapterName: {
     type: DataTypes.STRING,
     allowNull: true,
   },
@@ -52,5 +51,12 @@ Session.init({
   tableName: 'sessions',
   timestamps: true,
 });
+
+// Define the associations in the associate method
+Session.associate = (models) => {
+  Session.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE' });
+  Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
+  Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
+};
 
 module.exports = Session;
