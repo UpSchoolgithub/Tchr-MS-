@@ -12,7 +12,7 @@ const getTeacherAssignments = async (req, res) => {
       include: [
         { model: School, attributes: ['name'] },
         { model: ClassInfo, attributes: ['className'] },
-        { model: Section, attributes: ['sectionName'] },
+        { model: Section, attributes: ['sectionName', 'id'] },
         { model: Subject, attributes: ['subjectName'] }
       ],
       attributes: ['day', 'period', 'startTime', 'endTime']
@@ -26,12 +26,14 @@ const getTeacherAssignments = async (req, res) => {
       schoolName: assignment.School.name,
       className: assignment.ClassInfo.className,
       sectionName: assignment.Section.sectionName,
+      sectionId: assignment.Section.id, // Ensure sectionId is included
       day: assignment.day,
       period: assignment.period,
       subjectName: assignment.Subject.subjectName,
       startTime: assignment.startTime,
       endTime: assignment.endTime,
     }));
+    
 
     res.json(formattedAssignments);
   } catch (error) {
