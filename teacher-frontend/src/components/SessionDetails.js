@@ -7,35 +7,33 @@ const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
   const { classId, subject, school, sectionName, sectionId } = location.state || {};
-  
-  const [students, setStudents] = useState([]); // Student list for this session
-  const [absentees, setAbsentees] = useState([]); // Track absentees
+
+  const [students, setStudents] = useState([]); // Full list of students
+  const [filteredStudents, setFilteredStudents] = useState([]); // Filtered student list for search
+  const [absentees, setAbsentees] = useState([]); // List of absentees
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  // Fetch students for the section
-  const fetchStudentData = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/schools/${school}/classes/${classId}/sections/${sectionId}/students`
-      );
-      setStudents(response.data);
-      setFeedbackMessage("Students fetched successfully.");
-      setIsSuccess(true);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      setFeedbackMessage("Failed to fetch students.");
-      setIsSuccess(false);
-    }
-  };
+  const [searchQuery, setSearchQuery] = useState(""); // Search query for filtering students
 
   useEffect(() => {
-    fetchStudentData();
+    if (!sectionId) {
+      console.error("sectionId is undefined. Cannot fetch students.");
+      return;
+    }
+
+    const fetchStudents = async () => {
+      try {
+        const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
+        setStudents(response.data);
+        setFilteredStudents(response.data); // Initialize with full list
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+
+    fetchStudents();
   }, [school, classId, sectionId]);
 
-  // Fetch session details
   useEffect(() => {
     if (!sessionId || !teacherId) {
       console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
@@ -47,12 +45,20 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(response.data);
       } catch (error) {
-        console.error("Error fetching session details:", error);
+        console.error('Error fetching session details:', error);
       }
     };
 
     fetchSessionDetails();
   }, [sessionId, teacherId]);
+
+  // Filter students based on the search query
+  useEffect(() => {
+    const filtered = students.filter((student) =>
+      student.studentName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredStudents(filtered);
+  }, [searchQuery, students]);
 
   // Mark a student as absent
   const handleMarkAbsent = (studentId) => {
@@ -61,12 +67,12 @@ const SessionDetails = () => {
     }
   };
 
-  // Mark a student as present
+  // Remove a student from absentees (mark as present)
   const handleMarkPresent = (studentId) => {
     setAbsentees((prev) => prev.filter((id) => id !== studentId));
   };
 
-  // Save attendance for the session
+  // Save attendance
   const saveAttendance = async () => {
     const attendanceData = students.map((student) => ({
       studentId: student.id,
@@ -80,16 +86,14 @@ const SessionDetails = () => {
         attendanceData,
       });
       setAttendanceSaved(true);
-      setFeedbackMessage("Attendance saved successfully. You can still edit until the session is ended.");
-      setIsSuccess(true);
+      alert("Attendance saved successfully. You can still edit until the session is ended.");
     } catch (error) {
       console.error("Error saving attendance:", error);
-      setFeedbackMessage("Failed to save attendance.");
-      setIsSuccess(false);
+      alert("Failed to save attendance.");
     }
   };
 
-  // End the session and finalize attendance
+  // End session and finalize attendance
   const endSession = async () => {
     if (!attendanceSaved) {
       alert("Please save the attendance before ending the session.");
@@ -122,21 +126,31 @@ const SessionDetails = () => {
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
       </div>
 
-      {feedbackMessage && <p style={{ color: isSuccess ? 'green' : 'red' }}>{feedbackMessage}</p>}
-
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
-        <select
-          className="dropdown"
-          onChange={(e) => handleMarkAbsent(parseInt(e.target.value))}
-        >
-          <option value="">Choose Absentees</option>
-          {students.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.studentName}
-            </option>
-          ))}
-        </select>
+        <input
+          type="text"
+          placeholder="Search by student name"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+
+        <div className="student-list">
+          {filteredStudents.length > 0 ? (
+            filteredStudents.map((student) => (
+              <div
+                key={student.id}
+                className="student-item"
+                onClick={() => handleMarkAbsent(student.id)}
+              >
+                {student.studentName}
+              </div>
+            ))
+          ) : (
+            <p>No students found.</p>
+          )}
+        </div>
 
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
@@ -146,8 +160,11 @@ const SessionDetails = () => {
               return (
                 <div key={id} className="absentee-item">
                   <span>{student?.studentName}</span>
-                  <button className="mark-present-button" onClick={() => handleMarkPresent(id)}>
-                    Mark Present
+                  <button
+                    className="mark-present-button"
+                    onClick={() => handleMarkPresent(id)}
+                  >
+                    ❌
                   </button>
                 </div>
               );
