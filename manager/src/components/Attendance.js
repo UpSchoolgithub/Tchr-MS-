@@ -1,4 +1,3 @@
-// src/components/Attendance.js
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import './Attendance.css';
@@ -24,8 +23,9 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
 
       // Set student list with roll numbers and names
       const formattedStudents = fetchedStudents.map(student => ({
+        id: student.id, // Use unique student ID for attendance mapping
         rollNumber: student.rollNumber,
-        name: student.studentName // Use `student.studentName` for display
+        name: student.studentName
       }));
       setStudents(formattedStudents);
 
@@ -43,12 +43,15 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
     }
   };
 
-  const handleStatusChange = (studentId, date, status) => {
+  const handleStatusChange = (studentId, date) => {
+    const currentStatus = attendance[studentId]?.[date] || 'P'; // Default to "P" for present
+    const newStatus = currentStatus === 'P' ? 'A' : 'P'; // Toggle status between "P" and "A"
+
     setAttendance(prev => ({
       ...prev,
       [studentId]: {
         ...prev[studentId],
-        [date]: status
+        [date]: newStatus
       }
     }));
   };
@@ -132,16 +135,16 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
         </thead>
         <tbody>
           {students.map(student => (
-            <tr key={student.rollNumber}>
+            <tr key={student.id}>
               <td>{student.rollNumber}</td>
-              <td>{student.name}</td> {/* Display the student's name */}
+              <td>{student.name}</td>
               {renderDates().map(date => {
                 const fullDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                const status = attendance[student.rollNumber]?.[fullDate] || '-';
+                const status = attendance[student.id]?.[fullDate] || '-';
 
                 return (
-                  <td key={date}>
-                    {status} {/* Display "-" or attendance status */}
+                  <td key={date} onClick={() => handleStatusChange(student.id, fullDate)}>
+                    {status}
                   </td>
                 );
               })}

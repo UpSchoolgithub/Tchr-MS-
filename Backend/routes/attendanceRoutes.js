@@ -33,17 +33,18 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/attendance',
 
 // Update attendance
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/attendance', async (req, res) => {
-  const { sectionId } = req.params;
-  const { attendanceData } = req.body;
-
-  try {
-    // Bulk upsert attendance records
-    await Attendance.bulkCreate(attendanceData, { updateOnDuplicate: ['status'] });
-    res.json({ message: 'Attendance updated successfully' });
-  } catch (error) {
-    console.error('Error updating attendance:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+    const { sectionId } = req.params;
+    const { attendanceData } = req.body;
+  
+    try {
+      // Bulk upsert attendance records, setting 'status' as 'A' or 'P'
+      await Attendance.bulkCreate(attendanceData, { updateOnDuplicate: ['status'] });
+      res.json({ message: 'Attendance updated successfully' });
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
 
 module.exports = router;

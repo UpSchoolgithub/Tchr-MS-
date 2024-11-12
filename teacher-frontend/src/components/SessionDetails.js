@@ -6,10 +6,11 @@ import './SessionDetails.css';
 const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
-  const { classId, subject, school, sectionName, sectionId } = location.state || {}; // Retrieve sectionId for data fetching, sectionName for display
+  const { classId, subject, school, sectionName, sectionId } = location.state || {};
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
+  const [attendanceSaved, setAttendanceSaved] = useState(false);
 
   useEffect(() => {
     if (!sectionId) {
@@ -17,7 +18,6 @@ const SessionDetails = () => {
       return;
     }
 
-    // Fetch students for the section using sectionId
     const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(`/sections/${sectionId}/students`);
@@ -36,7 +36,6 @@ const SessionDetails = () => {
       return;
     }
 
-    // Fetch session details
     const fetchSessionDetails = async () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
@@ -59,45 +58,58 @@ const SessionDetails = () => {
     setAbsentees((prev) => prev.filter((id) => id !== studentId));
   };
 
+  const saveAttendance = async () => {
+    const attendanceData = students.map(student => ({
+      studentId: student.id,
+      sectionId,
+      date: new Date().toISOString().split('T')[0],
+      status: absentees.includes(student.id) ? 'A' : 'P'
+    }));
+
+    try {
+      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`, {
+        attendanceData
+      });
+      setAttendanceSaved(true);
+      alert("Attendance saved successfully. You can still edit until the session is ended.");
+    } catch (error) {
+      console.error("Error saving attendance:", error);
+      alert("Failed to save attendance.");
+    }
+  };
+
   const endSession = async () => {
-    if (!sessionId) {
-      console.error("sessionId is undefined. Cannot mark attendance.");
+    if (!attendanceSaved) {
+      alert("Please save the attendance before ending the session.");
       return;
     }
 
     try {
-      const response = await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/attendance`, {
-        date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
-        absentees,
-        sectionId,
-        classId,
-        subject,
-        school,
-        section: sectionName // Pass section name for display if needed
+      await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/finalize-attendance`, {
+        sessionId,
+        finalized: true
       });
-
-      alert("Session ended and attendance marked successfully.");
+      alert("Session ended and attendance finalized.");
     } catch (error) {
-      console.error("Error marking attendance:", error);
-      alert("Failed to mark attendance.");
+      console.error("Error finalizing attendance:", error);
+      alert("Failed to finalize attendance.");
     }
   };
 
   return (
     <div className="session-details-container">
       <h2>Session Details</h2>
-  
-      {/* Display session details */}
+
       <div className="session-info">
         <p><strong>Class ID:</strong> {classId}</p>
         <p><strong>Subject:</strong> {subject}</p>
         <p><strong>School:</strong> {school}</p>
         <p><strong>Section:</strong> {sectionName}</p>
-        <p><strong>Section ID:</strong> {sectionId}</p> {/* Display Section ID */}
+        <p><strong>Section ID:</strong> {sectionId}</p>
         <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
       </div>
-  
+
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         <select
@@ -115,7 +127,7 @@ const SessionDetails = () => {
             <option disabled>Loading students...</option>
           )}
         </select>
-  
+
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
           {absentees.length > 0 ? (
@@ -138,22 +150,15 @@ const SessionDetails = () => {
           )}
         </div>
       </div>
-  
+
       <div className="session-notes-section">
         <h3>Session Notes and Details</h3>
-        <div className="assignments-dropdown">
-          <label>Assignments:</label>
-          <select>
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-        </div>
         <textarea className="observations-textarea" placeholder="Observations"></textarea>
+        <button className="save-button" onClick={saveAttendance}>Save Attendance</button>
         <button className="end-session-button" onClick={endSession}>End Session</button>
       </div>
     </div>
   );
-  
 };
 
 export default SessionDetails;
