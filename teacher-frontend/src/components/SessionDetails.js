@@ -8,12 +8,12 @@ const SessionDetails = () => {
   const location = useLocation();
   const { classId, subject, school, sectionName, sectionId } = location.state || {};
 
-  const [students, setStudents] = useState([]); // Full list of students
-  const [filteredStudents, setFilteredStudents] = useState([]); // Filtered student list for search
-  const [absentees, setAbsentees] = useState([]); // List of absentees
+  const [students, setStudents] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // Search query for filtering students
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!sectionId) {
@@ -25,7 +25,7 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
         setStudents(response.data);
-        setFilteredStudents(response.data); // Initialize with full list
+        setFilteredStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
       }
@@ -52,7 +52,6 @@ const SessionDetails = () => {
     fetchSessionDetails();
   }, [sessionId, teacherId]);
 
-  // Filter students based on the search query
   useEffect(() => {
     const filtered = students.filter(
       (student) =>
@@ -62,19 +61,18 @@ const SessionDetails = () => {
     setFilteredStudents(filtered);
   }, [searchQuery, students, absentees]);
 
-  // Mark a student as absent
   const handleMarkAbsent = (studentId) => {
     if (!absentees.includes(studentId)) {
       setAbsentees((prev) => [...prev, studentId]);
+      console.log(`Added to absentees: ${studentId}`);
     }
   };
 
-  // Remove a student from absentees (mark as present)
   const handleMarkPresent = (studentId) => {
     setAbsentees((prev) => prev.filter((id) => id !== studentId));
+    console.log(`Removed from absentees: ${studentId}`);
   };
 
-  // Save attendance
   const saveAttendance = async () => {
     const attendanceData = students.map((student) => ({
       studentId: student.id,
@@ -95,7 +93,6 @@ const SessionDetails = () => {
     }
   };
 
-  // End session and finalize attendance
   const endSession = async () => {
     if (!attendanceSaved) {
       alert("Please save the attendance before ending the session.");
