@@ -24,6 +24,7 @@ ClassInfo.associate = (models) => {
   ClassInfo.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   ClassInfo.hasMany(models.Section, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   ClassInfo.hasMany(models.Subject, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  ClassInfo.hasMany(models.Session, { foreignKey: 'classId', onDelete: 'CASCADE' });
 
 };
 
