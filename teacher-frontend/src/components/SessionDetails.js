@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import axiosInstance from '../services/axiosInstance';
 import { useParams, useLocation } from 'react-router-dom';
 import './SessionDetails.css';
@@ -9,12 +10,10 @@ const SessionDetails = () => {
   const { classId, subject, school, sectionName, sectionId } = location.state || {};
 
   const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
+  
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
@@ -25,7 +24,6 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
         setStudents(response.data);
-        setFilteredStudents(response.data); // Set both students and filteredStudents initially
       } catch (error) {
         console.error('Error fetching students:', error);
       }
@@ -52,23 +50,9 @@ const SessionDetails = () => {
     fetchSessionDetails();
   }, [sessionId, teacherId]);
 
-  useEffect(() => {
-    const filtered = students.filter(
-      (student) =>
-        student.studentName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !absentees.includes(student.id)
-    );
-    setFilteredStudents(filtered);
-  }, [searchQuery, students, absentees]);
-
-  const handleMarkAbsent = (studentId) => {
-    if (!absentees.includes(studentId)) {
-      setAbsentees((prev) => [...prev, studentId]);
-    }
-  };
-
-  const handleMarkPresent = (studentId) => {
-    setAbsentees((prev) => prev.filter((id) => id !== studentId));
+  const handleAbsenteeChange = (selectedOptions) => {
+    const selectedIds = selectedOptions.map((option) => option.value);
+    setAbsentees(selectedIds);
   };
 
   const saveAttendance = async () => {
@@ -109,6 +93,11 @@ const SessionDetails = () => {
     }
   };
 
+  const studentOptions = students.map((student) => ({
+    value: student.id,
+    label: student.studentName
+  }));
+
   return (
     <div className="session-details-container">
       <h2>Session Details</h2>
@@ -125,29 +114,15 @@ const SessionDetails = () => {
 
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
-        <input
-          type="text"
-          placeholder="Search by student name"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="search-input"
+        
+        <Select
+          isMulti
+          options={studentOptions}
+          onChange={handleAbsenteeChange}
+          placeholder="Select absentees"
+          value={studentOptions.filter(option => absentees.includes(option.value))}
+          className="multi-select-dropdown"
         />
-
-        <div className="student-list">
-          {filteredStudents.length > 0 ? (
-            filteredStudents.map((student) => (
-              <div
-                key={student.id}
-                className="student-item"
-                onClick={() => handleMarkAbsent(student.id)}
-              >
-                {student.studentName}
-              </div>
-            ))
-          ) : (
-            <p>No students found.</p>
-          )}
-        </div>
 
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
@@ -157,12 +132,6 @@ const SessionDetails = () => {
               return (
                 <div key={id} className="absentee-tag">
                   <span>{student?.studentName}</span>
-                  <button
-                    className="mark-present-button"
-                    onClick={() => handleMarkPresent(id)}
-                  >
-                    ❌
-                  </button>
                 </div>
               );
             })}
