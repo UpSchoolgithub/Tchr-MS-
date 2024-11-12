@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const Session = require('./Session'); // Import the Session model
 
 class School extends Model {}
 

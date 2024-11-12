@@ -3,6 +3,7 @@ const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Section = require('./Section'); // Import the Section model
 const Subject = require('./Subject'); // Import the Subject model
+const School = require('./School'); // Import the School model
 
 class Session extends Model {}
 
