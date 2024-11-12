@@ -54,11 +54,13 @@ const SessionDetails = () => {
 
   // Filter students based on the search query
   useEffect(() => {
-    const filtered = students.filter((student) =>
-      student.studentName.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = students.filter(
+      (student) =>
+        student.studentName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !absentees.includes(student.id)
     );
     setFilteredStudents(filtered);
-  }, [searchQuery, students]);
+  }, [searchQuery, students, absentees]);
 
   // Mark a student as absent
   const handleMarkAbsent = (studentId) => {
@@ -154,11 +156,11 @@ const SessionDetails = () => {
 
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
-          {absentees.length > 0 ? (
-            absentees.map((id) => {
+          <div className="absentee-tags">
+            {absentees.map((id) => {
               const student = students.find((s) => s.id === id);
               return (
-                <div key={id} className="absentee-item">
+                <div key={id} className="absentee-tag">
                   <span>{student?.studentName}</span>
                   <button
                     className="mark-present-button"
@@ -168,10 +170,8 @@ const SessionDetails = () => {
                   </button>
                 </div>
               );
-            })
-          ) : (
-            <p>No absentees selected.</p>
-          )}
+            })}
+          </div>
         </div>
       </div>
 
