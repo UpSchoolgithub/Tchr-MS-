@@ -45,6 +45,14 @@ Session.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  classInfoId: { // Foreign key to ClassInfo
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'classinfos',
+      key: 'id',
+    },
+  },
+
 }, {
   sequelize,
   modelName: 'Session',
@@ -57,6 +65,8 @@ Session.associate = (models) => {
   Session.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
+  Session.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
 };
 
 module.exports = Session;
