@@ -24,11 +24,13 @@ const SessionDetails = () => {
     const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
+        console.log('Fetched students:', response.data); // Add this line to check the response
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
       }
     };
+    
 
     fetchStudents();
   }, [school, classId, sectionId]);
@@ -126,11 +128,12 @@ const SessionDetails = () => {
           options={studentOptions}
           onChange={handleAbsenteeChange}
           placeholder="Select absentees"
-          value={studentOptions.filter(option => absentees.includes(option.value))}
+          value={studentOptions.filter((option) => absentees.includes(option.value))}
           className="multi-select-dropdown"
           closeMenuOnSelect={false}
           isClearable
         />
+
 
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
