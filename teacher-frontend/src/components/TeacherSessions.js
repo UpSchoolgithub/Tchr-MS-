@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TeacherSessions.css';
-import { useLocation } from 'react-router-dom';
 
 const TeacherSessions = () => {
   const { teacherId } = useParams();
@@ -15,15 +14,18 @@ const TeacherSessions = () => {
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // Function to get the day of the week from a date
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
   };
 
+  // Fetch sessions from the backend
   const fetchSessions = async () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      console.log("Fetched sessions:", response.data); // Debugging log to check session data
       setSessions(response.data);
       setLoading(false);
     } catch (err) {
@@ -37,25 +39,29 @@ const TeacherSessions = () => {
     fetchSessions();
   }, [teacherId]);
 
+  // Filter sessions based on selected date
   useEffect(() => {
     const day = getDayName(selectedDate);
     const filtered = sessions.filter(session => session.day === day);
     setFilteredSessions(filtered);
   }, [selectedDate, sessions]);
 
+  // Handle date selection change
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
 
+  // Handle navigation to session details page
   const handleStartSession = (session) => {
-    console.log("Session details for navigation:", session); // Log session details for debugging
-    
+    console.log("Session details for navigation:", session); // Debugging log
+
     // Check if all necessary fields are present
     if (!session.sectionId || !session.id || !session.classId) {
       console.error("Session details are incomplete.");
+      alert("Session details are incomplete. Please check the data.");
       return; // Prevent navigation if required data is missing
     }
-  
+
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
@@ -67,15 +73,13 @@ const TeacherSessions = () => {
       }
     });
   };
-  
-  
-  
-  
 
+  // Helper function to check if a date is today
   const isToday = (date) => {
     return date.toDateString() === new Date().toDateString();
   };
 
+  // Render loading and error states
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
@@ -99,7 +103,7 @@ const TeacherSessions = () => {
               <th>School</th>
               <th>Class</th>
               <th>Section</th>
-              <th>Section ID</th> {/* Add Section ID column here */}
+              <th>Section ID</th>
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
@@ -114,13 +118,16 @@ const TeacherSessions = () => {
                 <td>{session.schoolName}</td>
                 <td>{session.className}</td>
                 <td>{session.sectionName}</td>
-                <td>{session.sectionId}</td> {/* Display Section ID here */}
+                <td>{session.sectionId}</td>
                 <td>{session.day}</td>
                 <td>{session.period}</td>
                 <td>{session.subjectName}</td>
                 <td>
                   {isToday(selectedDate) ? (
-                    <button onClick={() => handleStartSession(session)} style={{ backgroundColor: 'orange', color: 'black' }}>
+                    <button
+                      onClick={() => handleStartSession(session)}
+                      style={{ backgroundColor: 'orange', color: 'black' }}
+                    >
                       Start Session
                     </button>
                   ) : (
@@ -139,7 +146,6 @@ const TeacherSessions = () => {
       )}
     </div>
   );
-  
 };
 
 export default TeacherSessions;
