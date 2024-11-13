@@ -48,11 +48,12 @@ const TeacherSessions = () => {
   };
 
   const handleStartSession = (session) => {
-    console.log("Session details for navigation:", session); // Debugging log
-  
-    if (!session.sectionId || !session.id) {
+    console.log("Session details for navigation:", session); // Log session details for debugging
+    
+    // Check if all necessary fields are present
+    if (!session.sectionId || !session.id || !session.classId) {
       console.error("Session details are incomplete.");
-      return; // Avoid navigation if data is missing
+      return; // Prevent navigation if required data is missing
     }
   
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
@@ -66,6 +67,7 @@ const TeacherSessions = () => {
       }
     });
   };
+  
   
   
   
