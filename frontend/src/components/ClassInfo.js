@@ -45,12 +45,14 @@ const ClassInfo = () => {
         id: section.id,
         sectionName: section.sectionName
       }));
+      console.log("Fetched Sections:", updatedSections); // Debugging line
       setSections(updatedSections);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
     }
   };
+  
   
 
   useEffect(() => {
@@ -304,17 +306,19 @@ const ClassInfo = () => {
                       <button 
                         onClick={() => {
                           const selectedClass = classInfos.find(cls => cls.className === className);
-                          const sectionData = selectedClass?.sections?.[sec];
-
+                          const sectionData = sections.find(sec => sec.sectionName === section); // Check in sections array
+                      
                           if (sectionData && sectionData.id) {
                             navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`);
                           } else {
-                            console.error("Section ID not found for section name:", sec);
+                            console.error("Section ID not found for section name:", section);
+                            setError(`Section ID not found for section name: ${section}`);
                           }
                         }}
                       >
                         Manage Sessions
                       </button>
+                      
 
 
                     </td>
