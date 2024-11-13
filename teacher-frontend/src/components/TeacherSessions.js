@@ -48,17 +48,25 @@ const TeacherSessions = () => {
   };
 
   const handleStartSession = (session) => {
+    console.log("Session details for navigation:", session); // Debugging log
+  
+    if (!session.sectionId || !session.id) {
+      console.error("Session details are incomplete.");
+      return; // Avoid navigation if data is missing
+    }
+  
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
         subject: session.subjectName,
         school: session.schoolName,
-        sectionName: session.sectionName, // Pass section name for display
-        sectionId: session.sectionId, // Pass section ID for attendance fetching
-        sessionId: session.id
+        sectionName: session.sectionName,
+        sectionId: session.sectionId,
+        sessionId: session.id,
       }
     });
   };
+  
   
   
 
