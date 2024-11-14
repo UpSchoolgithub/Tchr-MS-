@@ -45,14 +45,12 @@ const ClassInfo = () => {
         id: section.id,
         sectionName: section.sectionName
       }));
-      console.log("Fetched Sections:", updatedSections); // Debugging line
       setSections(updatedSections);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
     }
   };
-  
   
 
   useEffect(() => {
@@ -304,23 +302,19 @@ const ClassInfo = () => {
                       )}
                       <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>Delete</button>
                       <button 
-                        onClick={() => {
-                          const selectedClass = classInfos.find(cls => cls.className === info.className);
-                          const sectionData = sections.find(s => s.sectionName === sec); // Use sec directly
+  onClick={() => {
+    const selectedClass = classInfos.find(cls => cls.className === className);
+    const selectedSection = selectedClass?.Sections?.find(sec => sec.sectionName === sec);
 
-                          if (selectedClass && sectionData && sectionData.id) {
-                            navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`);
-                          } else {
-                            console.error("Section ID not found for section name:", sec);
-                            setError(`Section ID not found for section name: ${sec}`);
-                          }
-                        }}
-                      >
-                        Manage Sessions
-                      </button>
-
-                      
-
+    if (selectedSection) {
+      navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${selectedSection.id}/subjects/${subject.id}/sessions`);
+    } else {
+      console.error("Section ID not found for section name:", sec);
+    }
+  }}
+>
+  Manage Sessions
+</button>
 
                     </td>
                   </tr>
