@@ -61,7 +61,7 @@ const TeacherSessions = () => {
   // Handle start session button click
   const handleStartSession = (session) => {
     if (!session.id || !session.sessionPlanId) {
-      console.error("Missing session ID or sessionPlan ID for navigation");
+      console.error("Missing session ID or sessionPlan ID for navigation", session); // Log full session details for debugging
       return;
     }
   
@@ -77,6 +77,7 @@ const TeacherSessions = () => {
       },
     });
   };
+  
   
   
   

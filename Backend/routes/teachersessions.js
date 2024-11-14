@@ -19,6 +19,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       ],
       attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
     });
+    
 
     // Format response with session details
     const formattedSessions = sessions.map((session) => ({
