@@ -1,54 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
+import axiosInstance from '../services/axiosInstance';
 
 const SessionDetails = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
-  const [sessions, setSessions] = useState([]);
+  const location = useLocation();
+  const [sessionDetails, setSessionDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Only fetch if all IDs are defined
-    if (schoolId && classId && sectionId && subjectId) {
-      axios
-        .get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`)
-        .then(response => setSessions(response.data))
-        .catch(error => console.error('Error fetching sessions:', error));
-    }
+    // Fetch session details for the specified school, class, section, and subject
+    const fetchSessionDetails = async () => {
+      if (!schoolId || !classId || !sectionId || !subjectId) {
+        setError('Required parameters are missing.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axiosInstance.get(
+          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`
+        );
+        setSessionDetails(response.data.sessionDetails || []);
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+        setError('Failed to load session details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSessionDetails();
   }, [schoolId, classId, sectionId, subjectId]);
 
-  const handleCheckboxChange = (sessionId, isCompleted) => {
-    // Update the session's completion status when checkbox is toggled
-    axios
-      .put(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
-        completed: isCompleted,
-      })
-      .then(response => {
-        // Update the local state to reflect the completed status
-        setSessions(sessions.map(session =>
-          session.id === sessionId ? { ...session, completed: isCompleted } : session
-        ));
-      })
-      .catch(error => console.error('Error updating session completion:', error));
-  };
+  if (loading) return <p>Loading session details...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div>
-      <h2>Session Details</h2>
-      {sessions.length > 0 ? (
-        <ul>
-          {sessions.map(session => (
-            <li key={session.id}>
-              <input
-                type="checkbox"
-                checked={session.completed || false}
-                onChange={(e) => handleCheckboxChange(session.id, e.target.checked)}
-              />
-              {session.chapterName} - Priority: {session.priorityNumber} - Sessions: {session.numberOfSessions}
-            </li>
-          ))}
-        </ul>
+      <h2>Session Details for Section {sectionId}</h2>
+      {sessionDetails.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>Chapter Name</th>
+              <th>Number of Sessions</th>
+              <th>Priority Number</th>
+              <th>Section Name</th>
+              <th>Subject Name</th>
+              <th>Completed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sessionDetails.map((session) => (
+              <tr key={session.id}>
+                <td>{session.chapterName}</td>
+                <td>{session.numberOfSessions}</td>
+                <td>{session.priorityNumber}</td>
+                <td>{session.sectionName}</td>
+                <td>{session.subjectName}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={session.completed || false}
+                    onChange={() => handleCheckboxChange(session.id, !session.completed)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
-        <p>No sessions available for this subject.</p>
+        <p>No session plans found for this section.</p>
       )}
     </div>
   );
