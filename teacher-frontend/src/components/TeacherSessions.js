@@ -21,19 +21,17 @@ const TeacherSessions = () => {
   };
 
   const fetchSessions = async () => {
-  setLoading(true);
-  try {
-    const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-    console.log("Fetched sessions:", response.data); // Check if each session has necessary fields
-    setSessions(response.data);
-    setLoading(false);
-  } catch (err) {
-    console.error("Error fetching sessions:", err);
-    setError('Failed to load sessions');
-    setLoading(false);
-  }
-};
-
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      setSessions(response.data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
+      setError('Failed to load sessions');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchSessions();
@@ -50,27 +48,17 @@ const TeacherSessions = () => {
   };
 
   const handleStartSession = (session) => {
-    console.log("Session details for navigation:", session); // Log session details for debugging
-    
-    // Check if all necessary fields are present
-    if (!session.sectionId || !session.id || !session.classId) {
-      console.error("Session details are incomplete.");
-      return; // Prevent navigation if required data is missing
-    }
-  
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
         subject: session.subjectName,
         school: session.schoolName,
-        sectionName: session.sectionName,
-        sectionId: session.sectionId,
-        sessionId: session.id,
+        sectionName: session.sectionName, // Pass section name for display
+        sectionId: session.sectionId, // Pass section ID for attendance fetching
+        sessionId: session.id
       }
     });
   };
-  
-  
   
   
 
