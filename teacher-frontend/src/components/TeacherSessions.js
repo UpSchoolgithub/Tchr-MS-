@@ -14,7 +14,7 @@ const TeacherSessions = () => {
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Function to get the day of the week from a date
+  // Get the day of the week from a date
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
@@ -27,10 +27,10 @@ const TeacherSessions = () => {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
       console.log("Fetched sessions:", response.data); // Debugging log to check session data
       setSessions(response.data);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching sessions:", err);
       setError('Failed to load sessions');
+    } finally {
       setLoading(false);
     }
   };
@@ -39,7 +39,7 @@ const TeacherSessions = () => {
     fetchSessions();
   }, [teacherId]);
 
-  // Filter sessions based on selected date
+  // Filter sessions based on the selected date
   useEffect(() => {
     const day = getDayName(selectedDate);
     const filtered = sessions.filter(session => session.day === day);
@@ -51,11 +51,9 @@ const TeacherSessions = () => {
     setSelectedDate(date);
   };
 
-  // Handle navigation to session details page
+  // Navigate to session details page
   const handleStartSession = (session) => {
     console.log("Session details for navigation:", session);
-  
-    // Navigate to the session details page regardless of missing data
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
@@ -67,7 +65,6 @@ const TeacherSessions = () => {
       }
     });
   };
-  
 
   // Helper function to check if a date is today
   const isToday = (date) => {
@@ -129,7 +126,7 @@ const TeacherSessions = () => {
                     <span>-</span>
                   )}
                 </td>
-                <td>{session.endTime}</td>
+                <td>{session.endTime || '-'}</td>
                 <td>
                   <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
                   <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>

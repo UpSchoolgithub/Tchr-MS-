@@ -45,7 +45,7 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(response.data);
-        setTopics(response.data.topicsToCover || []); // Assuming topics are included in response
+        setTopics(response.data.topics || []); // Assuming 'topics' field is an array in response
       } catch (error) {
         console.error('Error fetching session details:', error);
       }
