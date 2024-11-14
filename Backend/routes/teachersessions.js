@@ -3,25 +3,23 @@ const router = express.Router();
 const { Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan  } = require('../models'); // Import models as needed
 
 // Get sessions for a specific teacher
-// Get sessions for a specific teacher
 router.get('/teachers/:teacherId/assignments', async (req, res) => {
   const { teacherId } = req.params;
 
   try {
     // Fetch sessions assigned to the teacher
     const sessions = await Session.findAll({
-      where: { teacherId },
-      include: [
-        { model: School, attributes: ['id', 'name'] },
-        { model: ClassInfo, attributes: ['id', 'className'] },
-        { model: Subject, attributes: ['id', 'subjectName'] },
-        { model: Section, attributes: ['id', 'sectionName'] },
-        { model: SessionPlan, attributes: ['id'], as: 'SessionPlan' } // Include sessionPlanId
-      ],
-      attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
-    });
-    
-    
+  where: { teacherId },
+  include: [
+    { model: School, attributes: ['id', 'name'] }, // Ensure `id` is fetched as `schoolId`
+    { model: ClassInfo, attributes: ['id', 'className'] }, // Ensure `id` is fetched as `classId`
+    { model: Subject, attributes: ['id', 'subjectName'] }, // Ensure `id` is fetched as `subjectId`
+    { model: Section, attributes: ['id', 'sectionName'] },
+  ],
+  attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
+});
+
+
     // Format response with session details
     const formattedSessions = sessions.map((session) => ({
       id: session.id,
@@ -34,7 +32,6 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       startTime: session.startTime,
       endTime: session.endTime,
       assignments: session.assignments,
-      sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null // Add sessionPlanId
     }));
 
     res.json(formattedSessions);
@@ -81,7 +78,6 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 });
 
 // Fetch session details
-// Fetch session details
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -94,10 +90,10 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
         { model: ClassInfo, attributes: ['className'] },
         { model: Section, attributes: ['sectionName'] },
         { model: Subject, attributes: ['subjectName'] },
-        { 
-          model: SessionPlan, 
-          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], 
-          as: 'SessionPlan' 
+        {
+          model: SessionPlan, // Include session plans if associated
+          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], // Include necessary fields
+          as: 'SessionPlans', // Use the alias defined in the association
         },
       ],
     });
@@ -119,20 +115,18 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
         startTime: session.startTime,
         endTime: session.endTime,
         assignments: session.assignments || 'No assignments',
-        sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null // Add sessionPlanId here as well
       },
-      sessionPlans: session.SessionPlan ? [{
-        id: session.SessionPlan.id,
-        sessionNumber: session.SessionPlan.sessionNumber,
-        planDetails: JSON.parse(session.SessionPlan.planDetails), // Assuming planDetails is a JSON string
-        completed: session.SessionPlan.completed,
-      }] : []
+      sessionPlans: session.SessionPlans.map(plan => ({
+        id: plan.id,
+        sessionNumber: plan.sessionNumber,
+        planDetails: JSON.parse(plan.planDetails), // Assuming planDetails is a JSON string
+        completed: plan.completed,
+      })),
     });
   } catch (error) {
     console.error('Error fetching session and session plans:', error);
     res.status(500).json({ error: 'Failed to fetch session details and plans' });
   }
 });
-
 
 module.exports = router;
