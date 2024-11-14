@@ -21,25 +21,23 @@ const TeacherSessions = () => {
   };
 
   // Fetch sessions from the backend
-  // Example assuming sessions have a `sessionDate` or `period` field
-const fetchSessions = async () => {
-  setLoading(true);
-  try {
-    const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-    console.log("Fetched sessions:", response.data); // Debugging log to check session data
-    const sortedSessions = response.data.sort((a, b) => {
-      // Sorting by date first, then by period if needed
-      return new Date(a.sessionDate) - new Date(b.sessionDate) || a.period - b.period;
-    });
-    setSessions(sortedSessions);
-    setLoading(false);
-  } catch (err) {
-    console.error("Error fetching sessions:", err);
-    setError('Failed to load sessions');
-    setLoading(false);
-  }
-};
-
+  const fetchSessions = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      console.log("Fetched sessions:", response.data); // Debugging log to check session data
+      const sortedSessions = response.data.sort((a, b) => {
+        // Sorting by period
+        return a.period - b.period;
+      });
+      setSessions(sortedSessions);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
+      setError('Failed to load sessions');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchSessions();
@@ -60,21 +58,19 @@ const fetchSessions = async () => {
   // Navigate to session details page
   const handleStartSession = (session) => {
     if (!session.id) {
-      console.error("Session ID is undefined:", session);
-      return;
+      console.warn("Session ID is undefined:", session);
     }
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'default'}`, {
       state: {
-        classId: session.classId,
-        subject: session.subjectName,
-        school: session.schoolName,
-        sectionName: session.sectionName,
-        sectionId: session.sectionId,
-        sessionId: session.id,
+        classId: session.classId || 'N/A',
+        subject: session.subjectName || 'N/A',
+        school: session.schoolName || 'N/A',
+        sectionName: session.sectionName || 'N/A',
+        sectionId: session.sectionId || 'N/A',
+        sessionId: session.id || 'N/A',
       }
     });
   };
-  
 
   // Helper function to check if a date is today
   const isToday = (date) => {
