@@ -7,7 +7,7 @@ import './SessionDetails.css';
 const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
-  const { classId, subject, school, sectionName, sectionId } = location.state || {};
+  const { classId, subject, school, sectionName, sectionId, sessionPlanId } = location.state || {};
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
@@ -116,7 +116,9 @@ const SessionDetails = () => {
         <p><strong>Section ID:</strong> {sectionId}</p>
         <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {sessionPlanId || 'N/A'}</p> {/* Display Session Plan ID */}
       </div>
+
 
       <div className="attendance-section">
         <h3>Mark Attendance</h3>

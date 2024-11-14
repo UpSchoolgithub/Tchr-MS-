@@ -53,12 +53,14 @@ const TeacherSessions = () => {
         classId: session.classId,
         subject: session.subjectName,
         school: session.schoolName,
-        sectionName: session.sectionName, // Pass section name for display
-        sectionId: session.sectionId, // Pass section ID for attendance fetching
-        sessionId: session.id
+        sectionName: session.sectionName,
+        sectionId: session.sectionId,
+        sessionId: session.id,
+        sessionPlanId: session.sessionPlanId  // Pass sessionPlanId if available
       }
     });
   };
+  
   
   
 
