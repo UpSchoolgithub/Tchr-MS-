@@ -112,4 +112,40 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   }
 });
 
+// Backend endpoint to fetch session details with topics
+router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
+  const { teacherId, sessionId } = req.params;
+  try {
+    const session = await Session.findOne({
+      where: { id: sessionId, teacherId },
+      include: [
+        { model: School, attributes: ['name'] },
+        { model: ClassInfo, attributes: ['className'] },
+        { model: Section, attributes: ['sectionName'] },
+        { model: Subject, attributes: ['subjectName'] },
+        { model: Topic, attributes: ['topicName', 'completed'] }, // Include topics here
+      ],
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({
+      sessionNumber: session.id,
+      chapter: session.chapter || 'N/A',
+      topicsToCover: session.Topics || [], // Include topics with `completed` field for checkboxes
+      assignments: session.assignments || 'No assignments',
+      observations: session.observations || 'No observations',
+      schoolName: session.School ? session.School.name : 'N/A',
+      className: session.ClassInfo ? session.ClassInfo.className : 'N/A',
+      sectionName: session.Section ? session.Section.sectionName : 'N/A',
+      subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
+    });
+  } catch (error) {
+    console.error('Error fetching session details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details' });
+  }
+});
+
 module.exports = router;

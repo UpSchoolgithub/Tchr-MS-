@@ -13,8 +13,9 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
+  const [topics, setTopics] = useState([]); // New state for session topics
 
-  // Fetch students data based on sectionId, school, and classId
+  // Fetch students based on sectionId, school, and classId
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
@@ -24,18 +25,16 @@ const SessionDetails = () => {
     const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
-        console.log('Fetched students:', response.data); // Add this line to check the response
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
       }
     };
-    
 
     fetchStudents();
   }, [school, classId, sectionId]);
 
-  // Fetch session details based on teacherId and sessionId
+  // Fetch session details and topics
   useEffect(() => {
     if (!sessionId || !teacherId) {
       console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
@@ -46,6 +45,7 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(response.data);
+        setTopics(response.data.topicsToCover || []); // Assuming topics are included in response
       } catch (error) {
         console.error('Error fetching session details:', error);
       }
@@ -100,6 +100,23 @@ const SessionDetails = () => {
     }
   };
 
+  // Handle topic completion toggle
+  const toggleTopicCompletion = async (topicId) => {
+    const updatedTopics = topics.map(topic =>
+      topic.id === topicId ? { ...topic, completed: !topic.completed } : topic
+    );
+    setTopics(updatedTopics);
+
+    try {
+      await axiosInstance.put(`/api/sessionTopics/${topicId}/toggle`, {
+        completed: !topics.find(topic => topic.id === topicId).completed,
+      });
+    } catch (error) {
+      console.error("Error updating topic completion:", error);
+      alert("Failed to update topic status.");
+    }
+  };
+
   // Convert students into options for react-select
   const studentOptions = students.map((student) => ({
     value: student.id,
@@ -134,7 +151,6 @@ const SessionDetails = () => {
           isClearable
         />
 
-
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
           <div className="absentee-tags">
@@ -148,6 +164,24 @@ const SessionDetails = () => {
             })}
           </div>
         </div>
+      </div>
+
+      <div className="session-topics-section">
+        <h3>Session Topics</h3>
+        <ul>
+          {topics.map((topic) => (
+            <li key={topic.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={topic.completed}
+                  onChange={() => toggleTopicCompletion(topic.id)}
+                />
+                {topic.topicName}
+              </label>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="session-notes-section">
