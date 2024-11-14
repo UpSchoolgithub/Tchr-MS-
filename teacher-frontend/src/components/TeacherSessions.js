@@ -21,19 +21,25 @@ const TeacherSessions = () => {
   };
 
   // Fetch sessions from the backend
-  const fetchSessions = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      console.log("Fetched sessions:", response.data); // Debugging log to check session data
-      setSessions(response.data);
-    } catch (err) {
-      console.error("Error fetching sessions:", err);
-      setError('Failed to load sessions');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Example assuming sessions have a `sessionDate` or `period` field
+const fetchSessions = async () => {
+  setLoading(true);
+  try {
+    const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+    console.log("Fetched sessions:", response.data); // Debugging log to check session data
+    const sortedSessions = response.data.sort((a, b) => {
+      // Sorting by date first, then by period if needed
+      return new Date(a.sessionDate) - new Date(b.sessionDate) || a.period - b.period;
+    });
+    setSessions(sortedSessions);
+    setLoading(false);
+  } catch (err) {
+    console.error("Error fetching sessions:", err);
+    setError('Failed to load sessions');
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchSessions();
