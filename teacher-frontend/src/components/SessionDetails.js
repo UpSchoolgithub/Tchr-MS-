@@ -37,15 +37,16 @@ const SessionDetails = () => {
   // Fetch session details and associated session plan details
   useEffect(() => {
     if (!sessionId || !teacherId) {
-      console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
+      console.error("Session ID or teacher ID is undefined. Cannot fetch session details.");
+      setError('Session or Teacher ID missing.');
       return;
     }
-
+  
     const fetchSessionDetails = async () => {
       try {
         const sessionResponse = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(sessionResponse.data.sessionDetails);
-
+  
         if (sessionResponse.data.sessionDetails.sessionPlanId) {
           const sessionPlanResponse = await axiosInstance.get(
             `/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subject}/sessionplans/${sessionPlanId}`
@@ -54,12 +55,13 @@ const SessionDetails = () => {
         }
       } catch (error) {
         console.error('Error fetching session details or session plan:', error);
+        setError('Failed to load session details or session plan.');
       }
     };
-
+  
     fetchSessionDetails();
   }, [sessionId, teacherId, school, classId, sectionId, subject, sessionPlanId]);
-
+  
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];

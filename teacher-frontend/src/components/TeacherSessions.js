@@ -59,26 +59,26 @@ const TeacherSessions = () => {
   };
 
   // Handle start session button click
-  const handleStartSession = async (session) => {
-    try {
-      // Use navigate to move to the session details with required information
-      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
-        state: {
-          classId: session.classId,
-          subject: session.subjectName,
-          school: session.schoolName,
-          sectionName: session.sectionName,
-          sectionId: session.sectionId,
-          sessionId: session.id,
-          sessionPlanId: session.sessionPlanId, // Pass sessionPlanId if available
-        },
-      });
-    } catch (error) {
-      console.error("Error navigating to session details:", error);
-      setError('Failed to navigate to session details.');
+  const handleStartSession = (session) => {
+    if (!session.id || !session.sectionId) {
+      console.error("Missing session ID or section ID for navigation");
+      setError('Unable to start session due to missing data.');
+      return;
     }
+  
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
+      state: {
+        classId: session.classId,
+        subject: session.subjectName,
+        school: session.schoolName,
+        sectionName: session.sectionName,
+        sectionId: session.sectionId,
+        sessionId: session.id,
+        sessionPlanId: session.sessionPlanId, // Pass sessionPlanId if available
+      },
+    });
   };
-
+  
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
   if (loading) return <p>Loading...</p>;
