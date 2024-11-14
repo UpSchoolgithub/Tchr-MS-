@@ -59,7 +59,10 @@ const fetchSessions = async () => {
 
   // Navigate to session details page
   const handleStartSession = (session) => {
-    console.log("Session details for navigation:", session);
+    if (!session.id) {
+      console.error("Session ID is undefined:", session);
+      return;
+    }
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
@@ -71,6 +74,7 @@ const fetchSessions = async () => {
       }
     });
   };
+  
 
   // Helper function to check if a date is today
   const isToday = (date) => {
