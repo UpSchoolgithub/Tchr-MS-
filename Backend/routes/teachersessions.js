@@ -164,5 +164,43 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   }
 });
 
+router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
+  const { teacherId, sectionId, subjectId } = req.params;
+
+  try {
+    // Fetch sessions based on teacherId, sectionId, and subjectId
+    const sessions = await Session.findAll({
+      where: { teacherId, sectionId, subjectId },
+      include: [
+        { model: SessionPlan, attributes: ['id', 'sessionNumber', 'planDetails'], as: 'SessionPlan' }, // Fetch associated session plans
+        { model: ClassInfo, attributes: ['className'] }, // Optional, if you need className
+        { model: Section, attributes: ['sectionName'] }, // Optional, if you need sectionName
+        { model: Subject, attributes: ['subjectName'] } // Optional, if you need subjectName
+      ],
+      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber', 'startTime', 'endTime'], // Session details
+    });
+
+    if (!sessions.length) {
+      return res.status(404).json({ error: 'No sessions found for the specified criteria' });
+    }
+
+    // Prepare response with session and session plan details
+    const sessionDetails = sessions.map((session) => ({
+      sessionId: session.id,
+      chapterName: session.chapterName,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null,
+      sessionPlanDetails: session.SessionPlan ? session.SessionPlan.planDetails : null,
+      subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
+      sectionName: session.Section ? session.Section.sectionName : 'N/A',
+    }));
+
+    res.json({ sessionDetails });
+  } catch (error) {
+    console.error('Error fetching session and session plan details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details and plans' });
+  }
+});
 
 module.exports = router;

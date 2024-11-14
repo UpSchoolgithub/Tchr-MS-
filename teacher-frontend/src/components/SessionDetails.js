@@ -39,23 +39,21 @@ const SessionDetails = () => {
 
   // Fetch session details and associated session plan details
   useEffect(() => {
-    if (!sessionId || !teacherId) {
-      console.error("Session ID or teacher ID is undefined. Cannot fetch session details.");
-      setError('Session or Teacher ID missing.');
+    if (!sessionId || !teacherId || !sessionPlanId) {
+      console.error("Session ID, Teacher ID, or Session Plan ID is undefined. Cannot fetch session details.");
+      setError('Session or Teacher ID or Session Plan ID missing.');
       return;
     }
 
     const fetchSessionDetails = async () => {
       try {
+        // Fetch session details based on sessionId and teacherId
         const sessionResponse = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(sessionResponse.data.sessionDetails);
 
-        if (sessionResponse.data.sessionDetails.sessionPlanId) {
-          const sessionPlanResponse = await axiosInstance.get(
-            `/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subject}/sessionplans/${sessionPlanId}`
-          );
-          setSessionPlanDetails(sessionPlanResponse.data);
-        }
+        // Fetch session plan details if sessionPlanId is provided
+        const sessionPlanResponse = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subject}/sessionplans/${sessionPlanId}`);
+        setSessionPlanDetails(sessionPlanResponse.data);
       } catch (error) {
         console.error('Error fetching session details or session plan:', error);
         setError('Failed to load session details or session plan.');

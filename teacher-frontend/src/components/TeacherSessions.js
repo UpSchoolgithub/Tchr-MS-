@@ -22,7 +22,7 @@ const TeacherSessions = () => {
     return days[date.getDay()];
   };
 
-  // Fetch sessions assigned to the teacher
+  // Fetch sessions assigned to the teacher along with session plans
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
@@ -64,7 +64,7 @@ const TeacherSessions = () => {
       console.error("Missing session ID or sessionPlan ID for navigation", session); // Log full session details for debugging
       return;
     }
-  
+
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
@@ -73,14 +73,11 @@ const TeacherSessions = () => {
         sectionName: session.sectionName,
         sectionId: session.sectionId,
         sessionId: session.id,
-        sessionPlanId: session.sessionPlanId,
+        sessionPlanId: session.sessionPlanId, // Pass sessionPlanId for the next page
       },
     });
   };
-  
-  
-  
-  
+
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
   if (loading) return <p>Loading...</p>;
