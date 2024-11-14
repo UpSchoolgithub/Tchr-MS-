@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TeacherSessions.css';
+import { useLocation } from 'react-router-dom';
 
 const TeacherSessions = () => {
   const { teacherId } = useParams();
@@ -13,8 +14,6 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const maxRetries = 3;
-  let retryCount = 0;
 
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -26,15 +25,10 @@ const TeacherSessions = () => {
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
       setSessions(response.data);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching sessions:", err);
-      if (retryCount < maxRetries) {
-        retryCount += 1;
-        fetchSessions(); // Retry fetching
-      } else {
-        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
-      }
-    } finally {
+      setError('Failed to load sessions');
       setLoading(false);
     }
   };
@@ -59,15 +53,18 @@ const TeacherSessions = () => {
         classId: session.classId,
         subject: session.subjectName,
         school: session.schoolName,
-        sectionName: session.sectionName,
-        sectionId: session.sectionId,
-        sessionId: session.id,
-        sessionPlanId: session.sessionPlanId  // Pass sessionPlanId if available
+        sectionName: session.sectionName, // Pass section name for display
+        sectionId: session.sectionId, // Pass section ID for attendance fetching
+        sessionId: session.id
       }
     });
   };
+  
+  
 
-  const isToday = (date) => date.toDateString() === new Date().toDateString();
+  const isToday = (date) => {
+    return date.toDateString() === new Date().toDateString();
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
@@ -92,7 +89,7 @@ const TeacherSessions = () => {
               <th>School</th>
               <th>Class</th>
               <th>Section</th>
-              <th>Section ID</th>
+              <th>Section ID</th> {/* Add Section ID column here */}
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
@@ -107,7 +104,7 @@ const TeacherSessions = () => {
                 <td>{session.schoolName}</td>
                 <td>{session.className}</td>
                 <td>{session.sectionName}</td>
-                <td>{session.sectionId}</td>
+                <td>{session.sectionId}</td> {/* Display Section ID here */}
                 <td>{session.day}</td>
                 <td>{session.period}</td>
                 <td>{session.subjectName}</td>
@@ -132,6 +129,7 @@ const TeacherSessions = () => {
       )}
     </div>
   );
+  
 };
 
 export default TeacherSessions;
