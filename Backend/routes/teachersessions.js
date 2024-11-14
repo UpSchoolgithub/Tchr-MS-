@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan  } = require('../models'); // Import models as needed
+const { Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models'); // Import models as needed
 
-// Get sessions for a specific teacher
 // Get sessions for a specific teacher
 router.get('/teachers/:teacherId/assignments', async (req, res) => {
   const { teacherId } = req.params;
@@ -20,9 +19,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       ],
       attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
     });
-    const fetchSessions = useCallback(async () => {
-    
-    
+
     // Format response with session details
     const formattedSessions = sessions.map((session) => ({
       id: session.id,
@@ -82,7 +79,6 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 });
 
 // Fetch session details
-// Fetch session details
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -134,6 +130,5 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session details and plans' });
   }
 });
-
 
 module.exports = router;
