@@ -53,15 +53,9 @@ const TeacherSessions = () => {
 
   // Handle navigation to session details page
   const handleStartSession = (session) => {
-    console.log("Session details for navigation:", session); // Debugging log
-
-    // Check if all necessary fields are present
-    if (!session.sectionId || !session.id || !session.classId) {
-      console.error("Session details are incomplete.");
-      alert("Session details are incomplete. Please check the data.");
-      return; // Prevent navigation if required data is missing
-    }
-
+    console.log("Session details for navigation:", session);
+  
+    // Navigate to the session details page regardless of missing data
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId,
@@ -73,6 +67,7 @@ const TeacherSessions = () => {
       }
     });
   };
+  
 
   // Helper function to check if a date is today
   const isToday = (date) => {
