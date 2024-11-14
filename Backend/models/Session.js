@@ -45,14 +45,21 @@ Session.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  classInfoId: { // Foreign key to ClassInfo
+  classInfoId: {
     type: DataTypes.INTEGER,
     references: {
       model: 'classinfos',
       key: 'id',
     },
   },
-
+  teacherId: { // New field for Teacher association
+    type: DataTypes.INTEGER,
+    allowNull: true, // Allow null if the session is not yet assigned to a teacher
+    references: {
+      model: 'teachers', // Assuming the model is named `teachers`
+      key: 'id',
+    },
+  },
 }, {
   sequelize,
   modelName: 'Session',
@@ -60,13 +67,12 @@ Session.init({
   timestamps: true,
 });
 
-// Define the associations in the associate method
 Session.associate = (models) => {
   Session.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
   Session.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-
+  Session.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' }); // Association to Teacher
 };
 
 module.exports = Session;
