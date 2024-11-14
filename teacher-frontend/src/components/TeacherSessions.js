@@ -27,8 +27,7 @@ const TeacherSessions = () => {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
       console.log("Fetched sessions:", response.data); // Debugging log to check session data
       const sortedSessions = response.data.sort((a, b) => {
-        // Sorting by period
-        return a.period - b.period;
+        return a.period - b.period; // Sorting by period
       });
       setSessions(sortedSessions);
       setLoading(false);

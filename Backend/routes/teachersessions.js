@@ -81,6 +81,7 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
   try {
+    // Fetch session with associations
     const session = await Session.findOne({
       where: { id: sessionId, teacherId },
       include: [
@@ -89,8 +90,9 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
         { model: Section, attributes: ['sectionName'] },
         { model: Subject, attributes: ['subjectName'] },
         {
-          model: SessionPlan, // Assuming `SessionPlan` is associated with `Session`
+          model: SessionPlan, // Include session plans if associated
           attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], // Include necessary fields
+          as: 'SessionPlans', // Use the alias defined in the association
         },
       ],
     });
@@ -99,6 +101,7 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
+    // Prepare the response format
     res.json({
       sessionDetails: {
         id: session.id,
@@ -115,7 +118,7 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
       sessionPlans: session.SessionPlans.map(plan => ({
         id: plan.id,
         sessionNumber: plan.sessionNumber,
-        planDetails: JSON.parse(plan.planDetails), // Assuming `planDetails` is stored as JSON string
+        planDetails: JSON.parse(plan.planDetails), // Assuming planDetails is a JSON string
         completed: plan.completed,
       })),
     });

@@ -1,197 +1,128 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
-import axiosInstance from '../services/axiosInstance';
-import { useParams, useLocation } from 'react-router-dom';
-import './SessionDetails.css';
+import axios from 'axios';
+import { useParams, useNavigate, Outlet } from 'react-router-dom';
 
-const SessionDetails = () => {
-  const { teacherId, sessionId } = useParams();
-  const location = useLocation();
-  const { classId, subject, school, sectionName, sectionId } = location.state || {};
+const SchoolDetails = ({ onSave }) => {
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
+  const [school, setSchool] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    website: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const schoolId = paramId;
 
-  const [students, setStudents] = useState([]);
-  const [absentees, setAbsentees] = useState([]);
-  const [sessionDetails, setSessionDetails] = useState({});
-  const [attendanceSaved, setAttendanceSaved] = useState(false);
-  const [topics, setTopics] = useState([]); // New state for session topics
-
-  // Fetch students based on sectionId, school, and classId
+  // Fetch school details when component mounts or schoolId changes
   useEffect(() => {
-    if (!sectionId) {
-      console.error("sectionId is undefined. Cannot fetch students.");
-      return;
-    }
-
-    const fetchStudents = async () => {
+    const fetchSchoolDetails = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
-        setStudents(response.data);
+        const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}`);
+        setSchool(response.data || {
+          name: '',
+          email: '',
+          phone: '',
+          website: ''
+        });
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching school details:', error);
+        setError('Failed to load school details');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchStudents();
-  }, [school, classId, sectionId]);
-
-  // Fetch session details and topics
-  useEffect(() => {
-    if (!sessionId || !teacherId) {
-      console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
-      return;
+    if (schoolId) {
+      fetchSchoolDetails();
     }
+  }, [schoolId]);
 
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-        setSessionDetails(response.data);
-        setTopics(response.data.topics || []); // Assuming 'topics' field is an array in response
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-      }
-    };
-
-    fetchSessionDetails();
-  }, [sessionId, teacherId]);
-
-  // Handle changes to the absentee selection
-  const handleAbsenteeChange = (selectedOptions) => {
-    const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    setAbsentees(selectedIds);
-  };
-
-  // Save attendance data to the backend
-  const saveAttendance = async () => {
-    const attendanceData = students.map((student) => ({
-      studentId: student.id,
-      sectionId,
-      date: new Date().toISOString().split('T')[0],
-      status: absentees.includes(student.id) ? 'A' : 'P',
+  // Handle input change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setSchool((prevSchool) => ({
+      ...prevSchool,
+      [name]: value
     }));
+  };
 
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, {
-        attendanceData,
-      });
-      setAttendanceSaved(true);
-      alert("Attendance saved successfully. You can still edit until the session is ended.");
+      if (schoolId) {
+        await axios.put(`https://tms.up.school/api/schools/${schoolId}`, school);
+      } else {
+        const response = await axios.post('https://tms.up.school/api/schools', school);
+        onSave(response.data.id);
+        navigate(`/edit-school/${response.data.id}/details`);
+      }
+      alert('School saved successfully!');
     } catch (error) {
-      console.error("Error saving attendance:", error);
-      alert("Failed to save attendance.");
+      console.error('Error saving school:', error);
+      alert('Failed to save school.');
     }
   };
 
-  // End the session and finalize attendance
-  const endSession = async () => {
-    if (!attendanceSaved) {
-      alert("Please save the attendance before ending the session.");
-      return;
-    }
-
-    try {
-      await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/finalize-attendance`, {
-        sessionId,
-        finalized: true,
-      });
-      alert("Session ended and attendance finalized.");
-    } catch (error) {
-      console.error("Error finalizing attendance:", error);
-      alert("Failed to finalize attendance.");
-    }
-  };
-
-  // Handle topic completion toggle
-  const toggleTopicCompletion = async (topicId) => {
-    const updatedTopics = topics.map(topic =>
-      topic.id === topicId ? { ...topic, completed: !topic.completed } : topic
-    );
-    setTopics(updatedTopics);
-
-    try {
-      await axiosInstance.put(`/api/sessionTopics/${topicId}/toggle`, {
-        completed: !topics.find(topic => topic.id === topicId).completed,
-      });
-    } catch (error) {
-      console.error("Error updating topic completion:", error);
-      alert("Failed to update topic status.");
-    }
-  };
-
-  // Convert students into options for react-select
-  const studentOptions = students.map((student) => ({
-    value: student.id,
-    label: student.studentName
-  }));
+  // Render loading or error states
+  if (loading) return <p>Loading school details...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="session-details-container">
-      <h2>Session Details</h2>
-
-      <div className="session-info">
-        <p><strong>Class ID:</strong> {classId}</p>
-        <p><strong>Subject:</strong> {subject}</p>
-        <p><strong>School:</strong> {school}</p>
-        <p><strong>Section:</strong> {sectionName}</p>
-        <p><strong>Section ID:</strong> {sectionId}</p>
-        <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-        <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
-      </div>
-
-      <div className="attendance-section">
-        <h3>Mark Attendance</h3>
-        
-        <Select
-          isMulti
-          options={studentOptions}
-          onChange={handleAbsenteeChange}
-          placeholder="Select absentees"
-          value={studentOptions.filter((option) => absentees.includes(option.value))}
-          className="multi-select-dropdown"
-          closeMenuOnSelect={false}
-          isClearable
-        />
-
-        <div className="absentees-list">
-          <h4>List of Absentees:</h4>
-          <div className="absentee-tags">
-            {absentees.map((id) => {
-              const student = students.find((s) => s.id === id);
-              return (
-                <div key={id} className="absentee-tag">
-                  <span>{student?.studentName}</span>
-                </div>
-              );
-            })}
-          </div>
+    <div>
+      <h2>{schoolId ? 'Edit' : 'Create'} School</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="name">School Name:</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={school.name}
+            onChange={handleChange}
+            required
+          />
         </div>
-      </div>
-
-      <div className="session-topics-section">
-        <h3>Session Topics</h3>
-        <ul>
-          {topics.map((topic) => (
-            <li key={topic.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={topic.completed}
-                  onChange={() => toggleTopicCompletion(topic.id)}
-                />
-                {topic.topicName}
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="session-notes-section">
-        <h3>Session Notes and Details</h3>
-        <textarea className="observations-textarea" placeholder="Observations"></textarea>
-        <button className="save-button" onClick={saveAttendance}>Save Attendance</button>
-        <button className="end-session-button" onClick={endSession}>End Session</button>
-      </div>
+        <div>
+          <label htmlFor="email">School Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={school.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="phone">Phone Number:</label>
+          <input
+            type="text"
+            id="phone"
+            name="phone"
+            value={school.phone}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label htmlFor="website">Website:</label>
+          <input
+            type="text"
+            id="website"
+            name="website"
+            value={school.website}
+            onChange={handleChange}
+          />
+        </div>
+        <button type="submit">Save School</button>
+      </form>
+      <Outlet context={{ schoolId }} />
     </div>
   );
 };
 
-export default SessionDetails;
+export default SchoolDetails;
