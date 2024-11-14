@@ -78,7 +78,8 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
   }
 });
 
-// Fetch session details
+
+// Get session details for a specific teacher and session
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -130,6 +131,9 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session details and plans' });
   }
 });
+
+module.exports = router;
+
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {

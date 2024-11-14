@@ -60,9 +60,9 @@ const TeacherSessions = () => {
 
   // Handle start session button click
   const handleStartSession = (session) => {
-    if (!session.id || !session.sectionId) {
-      console.error("Missing session ID or section ID for navigation");
-      setError('Unable to start session due to missing data.');
+    if (!session.id || !session.sessionPlanId) {
+      console.error("Missing session ID or sessionPlan ID for navigation");
+      alert("Unable to start session due to missing session details.");
       return;
     }
   
@@ -74,10 +74,11 @@ const TeacherSessions = () => {
         sectionName: session.sectionName,
         sectionId: session.sectionId,
         sessionId: session.id,
-        sessionPlanId: session.sessionPlanId, // Pass sessionPlanId if available
-      },
+        sessionPlanId: session.sessionPlanId
+      }
     });
   };
+  
   
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
