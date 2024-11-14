@@ -13,6 +13,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
+  const [sessionPlanDetails, setSessionPlanDetails] = useState({});
 
   // Fetch students based on sectionId, school, and classId
   useEffect(() => {
@@ -33,7 +34,7 @@ const SessionDetails = () => {
     fetchStudents();
   }, [school, classId, sectionId]);
 
-  // Fetch session details based on teacherId and sessionId
+  // Fetch session details and associated session plan details
   useEffect(() => {
     if (!sessionId || !teacherId) {
       console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
@@ -42,15 +43,22 @@ const SessionDetails = () => {
 
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-        setSessionDetails(response.data);
+        const sessionResponse = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
+        setSessionDetails(sessionResponse.data.sessionDetails);
+
+        if (sessionResponse.data.sessionDetails.sessionPlanId) {
+          const sessionPlanResponse = await axiosInstance.get(
+            `/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subject}/sessionplans/${sessionPlanId}`
+          );
+          setSessionPlanDetails(sessionPlanResponse.data);
+        }
       } catch (error) {
-        console.error('Error fetching session details:', error);
+        console.error('Error fetching session details or session plan:', error);
       }
     };
 
     fetchSessionDetails();
-  }, [sessionId, teacherId]);
+  }, [sessionId, teacherId, school, classId, sectionId, subject, sessionPlanId]);
 
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
@@ -115,6 +123,7 @@ const SessionDetails = () => {
         <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
         <p><strong>Session Plan ID:</strong> {sessionPlanId || 'N/A'}</p>
+        <p><strong>Session Plan Details:</strong> {sessionPlanDetails.planDetails || 'N/A'}</p>
       </div>
 
       <div className="attendance-section">

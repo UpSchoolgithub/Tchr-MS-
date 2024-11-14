@@ -131,4 +131,33 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   }
 });
 
+// Fetch sessions and associated session plans for a specific teacher, section, and subject
+router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
+  const { teacherId, sectionId, subjectId } = req.params;
+
+  try {
+    const sessions = await Session.findAll({
+      where: { teacherId, sectionId, subjectId },
+      include: [
+        {
+          model: SessionPlan,
+          attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
+          as: 'SessionPlan'
+        }
+      ],
+      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'] // Fetch session details
+    });
+
+    if (sessions.length === 0) {
+      return res.status(404).json({ error: 'No sessions found' });
+    }
+
+    res.json(sessions);
+  } catch (error) {
+    console.error('Error fetching sessions and session plans:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions and session plans' });
+  }
+});
+
+
 module.exports = router;
