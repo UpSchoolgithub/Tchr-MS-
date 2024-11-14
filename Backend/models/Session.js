@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const { SessionPlan } = require('./SessionPlan'); // or adjust path as needed
 
 class Session extends Model {}
 
