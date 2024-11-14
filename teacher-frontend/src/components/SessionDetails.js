@@ -1,45 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../services/axiosInstance';
 import { useParams } from 'react-router-dom';
-import './SessionDetails.css';
+import axiosInstance from '../services/axiosInstance';
 
 const SessionDetails = () => {
-  const { sectionId } = useParams(); // Get sectionId from URL parameters
-  const [sessionPlans, setSessionPlans] = useState([]); // State to store session plans
+  const { schoolId, classId, sectionId, subjectId } = useParams();
+  const [sessionDetails, setSessionDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch all session plans for a specific section
   useEffect(() => {
-    const fetchSessionPlans = async () => {
+    const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/your-school-id/classes/your-class-id/sections/${sectionId}/sessions`);
-        setSessionPlans(response.data); // Set session plans from response
+        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`);
+        setSessionDetails(response.data);
       } catch (error) {
-        console.error('Error fetching session plans:', error);
+        console.error('Error fetching session details:', error);
+        setError('Failed to load session details');
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (sectionId) {
-      fetchSessionPlans();
-    }
-  }, [sectionId]);
+    fetchSessionDetails();
+  }, [schoolId, classId, sectionId, subjectId]);
+
+  if (loading) return <p>Loading session details...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="session-details-container">
-      <h2>Session Plans for Section {sectionId}</h2>
-      
-      {sessionPlans.length === 0 ? (
-        <p>No session plans found for this section.</p>
+    <div>
+      <h2>Session Details for Section {sessionDetails.sectionId}</h2>
+      {sessionDetails.sessionDetails && sessionDetails.sessionDetails.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>Chapter Name</th>
+              <th>Number of Sessions</th>
+              <th>Priority Number</th>
+              <th>Section Name</th>
+              <th>Subject Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sessionDetails.sessionDetails.map((session) => (
+              <tr key={session.id}>
+                <td>{session.chapterName}</td>
+                <td>{session.numberOfSessions}</td>
+                <td>{session.priorityNumber}</td>
+                <td>{session.sectionName}</td>
+                <td>{session.subjectName}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
-        <ul className="session-plan-list">
-          {sessionPlans.map((plan) => (
-            <li key={plan.id} className="session-plan-item">
-              <strong>Session ID:</strong> {plan.id} <br />
-              <strong>Chapter Name:</strong> {plan.chapterName} <br />
-              <strong>Number of Sessions:</strong> {plan.numberOfSessions} <br />
-              <strong>Priority Number:</strong> {plan.priorityNumber}
-            </li>
-          ))}
-        </ul>
+        <p>No session plans found for this section.</p>
       )}
     </div>
   );
