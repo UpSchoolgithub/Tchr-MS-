@@ -14,21 +14,16 @@ const TeacherSessions = () => {
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Get the day of the week from a date
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
   };
 
-  // Fetch sessions from the backend
   const fetchSessions = async () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      console.log("Fetched sessions:", response.data); // Debugging log to check session data
-      const sortedSessions = response.data.sort((a, b) => {
-        return a.period - b.period; // Sorting by period
-      });
+      const sortedSessions = response.data.sort((a, b) => a.period - b.period);
       setSessions(sortedSessions);
       setLoading(false);
     } catch (err) {
@@ -42,19 +37,16 @@ const TeacherSessions = () => {
     fetchSessions();
   }, [teacherId]);
 
-  // Filter sessions based on the selected date
   useEffect(() => {
     const day = getDayName(selectedDate);
     const filtered = sessions.filter(session => session.day === day);
     setFilteredSessions(filtered);
   }, [selectedDate, sessions]);
 
-  // Handle date selection change
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
 
-  // Navigate to session details page
   const handleStartSession = (session) => {
     const { id, schoolId, classId, sectionId, subjectId } = session;
     
@@ -74,15 +66,11 @@ const TeacherSessions = () => {
       },
     });
   };
-  
-  
 
-  // Helper function to check if a date is today
   const isToday = (date) => {
     return date.toDateString() === new Date().toDateString();
   };
 
-  // Render loading and error states
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
