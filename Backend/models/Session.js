@@ -73,6 +73,9 @@ Session.associate = (models) => {
   Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
   Session.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   Session.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' }); // Association to Teacher
+  Session.hasOne(models.SessionPlan, { foreignKey: 'sessionId', as: 'SessionPlan' });
+  SessionPlan.belongsTo(Session, { foreignKey: 'sessionId' });
+  
 };
 
 module.exports = Session;
