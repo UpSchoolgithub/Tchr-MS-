@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
+import { useParams, useLocation } from 'react-router-dom';
 
 const SessionDetails = () => {
-  const { schoolId, classId, sectionId, subjectId } = useParams();
+  const { teacherId, sessionId } = useParams();
+  const location = useLocation();
+  const { schoolId, classId, sectionId, subjectId } = location.state || {};
+
   const [sessionDetails, setSessionDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!schoolId || !classId || !sectionId || !subjectId) {
+      console.error("Missing required parameters to fetch session details");
+      setError('Missing required parameters to fetch session details');
+      setLoading(false);
+      return;
+    }
+
     const fetchSessionDetails = async () => {
       try {
         const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`);
@@ -29,16 +39,14 @@ const SessionDetails = () => {
 
   return (
     <div>
-      <h2>Session Details for Section {sessionDetails.sectionId}</h2>
-      {sessionDetails.sessionDetails && sessionDetails.sessionDetails.length > 0 ? (
+      <h2>Session Details for Section {sectionId}</h2>
+      {sessionDetails && sessionDetails.sessionDetails && sessionDetails.sessionDetails.length > 0 ? (
         <table>
           <thead>
             <tr>
               <th>Chapter Name</th>
               <th>Number of Sessions</th>
               <th>Priority Number</th>
-              <th>Section Name</th>
-              <th>Subject Name</th>
             </tr>
           </thead>
           <tbody>
@@ -47,8 +55,6 @@ const SessionDetails = () => {
                 <td>{session.chapterName}</td>
                 <td>{session.numberOfSessions}</td>
                 <td>{session.priorityNumber}</td>
-                <td>{session.sectionName}</td>
-                <td>{session.subjectName}</td>
               </tr>
             ))}
           </tbody>

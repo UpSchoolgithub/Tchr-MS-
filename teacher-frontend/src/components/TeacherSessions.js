@@ -61,15 +61,16 @@ const TeacherSessions = () => {
     }
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'default'}`, {
       state: {
-        classId: session.classId || 'N/A',
-        subject: session.subjectName || 'N/A',
-        school: session.schoolName || 'N/A',
+        schoolId: session.schoolId || 'N/A', // Include the schoolId if available
+        classId: session.classId || 'N/A',   // Include the classId if available
+        subjectId: session.subjectId || 'N/A', // Include the subjectId if available
         sectionName: session.sectionName || 'N/A',
         sectionId: session.sectionId || 'N/A',
         sessionId: session.id || 'N/A',
       }
     });
   };
+  
 
   // Helper function to check if a date is today
   const isToday = (date) => {

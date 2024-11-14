@@ -11,13 +11,14 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
     const sessions = await Session.findAll({
       where: { teacherId },
       include: [
-        { model: School, attributes: ['name'] },
-        { model: ClassInfo, attributes: ['className'] },
-        { model: Section, attributes: ['sectionName'] },
-        { model: Subject, attributes: ['subjectName'] },
+        { model: School, attributes: ['id', 'name'] }, // Ensure `id` is fetched as `schoolId`
+        { model: ClassInfo, attributes: ['id', 'className'] }, // Ensure `id` is fetched as `classId`
+        { model: Subject, attributes: ['id', 'subjectName'] }, // Ensure `id` is fetched as `subjectId`
+        { model: Section, attributes: ['id', 'sectionName'] },
       ],
       attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
     });
+    
 
     // Format response with session details
     const formattedSessions = sessions.map((session) => ({
