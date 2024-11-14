@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
+import { useParams, useLocation } from 'react-router-dom';
 
 const SessionDetails = () => {
-  const { schoolId, classId, sectionId, subjectId } = useParams();
+  const { teacherId, sessionId } = useParams();
   const location = useLocation();
-  const [sessionDetails, setSessionDetails] = useState([]);
+  const { schoolId, classId, sectionId, subjectId } = location.state || {};
+
+  const [sessionDetails, setSessionDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch session details for the specified school, class, section, and subject
-    const fetchSessionDetails = async () => {
-      if (!schoolId || !classId || !sectionId || !subjectId) {
-        setError('Required parameters are missing.');
-        setLoading(false);
-        return;
-      }
+    if (!schoolId || !classId || !sectionId || !subjectId) {
+      console.error("Missing required parameters to fetch session details");
+      setError('Missing required parameters to fetch session details');
+      setLoading(false);
+      return;
+    }
 
+    const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`
-        );
-        setSessionDetails(response.data.sessionDetails || []);
+        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`);
+        setSessionDetails(response.data);
       } catch (error) {
         console.error('Error fetching session details:', error);
         setError('Failed to load session details');
@@ -40,33 +40,21 @@ const SessionDetails = () => {
   return (
     <div>
       <h2>Session Details for Section {sectionId}</h2>
-      {sessionDetails.length > 0 ? (
+      {sessionDetails && sessionDetails.sessionDetails && sessionDetails.sessionDetails.length > 0 ? (
         <table>
           <thead>
             <tr>
               <th>Chapter Name</th>
               <th>Number of Sessions</th>
               <th>Priority Number</th>
-              <th>Section Name</th>
-              <th>Subject Name</th>
-              <th>Completed</th>
             </tr>
           </thead>
           <tbody>
-            {sessionDetails.map((session) => (
+            {sessionDetails.sessionDetails.map((session) => (
               <tr key={session.id}>
                 <td>{session.chapterName}</td>
                 <td>{session.numberOfSessions}</td>
                 <td>{session.priorityNumber}</td>
-                <td>{session.sectionName}</td>
-                <td>{session.subjectName}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={session.completed || false}
-                    onChange={() => handleCheckboxChange(session.id, !session.completed)}
-                  />
-                </td>
               </tr>
             ))}
           </tbody>
