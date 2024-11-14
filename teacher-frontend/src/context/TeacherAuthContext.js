@@ -12,16 +12,17 @@ const TeacherAuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await axiosInstance.post('/teacher/login', { email, password });
-      const { teacherId, token } = response.data;
+      const { teacherId, token } = response.data;  // Ensure `token` is part of response.data
       setTeacherId(teacherId);
       setToken(token);
       localStorage.setItem('teacherId', teacherId);
       localStorage.setItem('token', token);
-      console.log('Teacher ID after login:', teacherId); // Log teacher ID
+      console.log('Token received:', token); // Log token for verification
     } catch (error) {
       throw new Error(error.response ? error.response.data.message : 'Login failed');
     }
   };
+  
 
   const logout = () => {
     setTeacherId(null);
