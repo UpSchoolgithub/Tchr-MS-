@@ -14,7 +14,7 @@ const SessionDetails = () => {
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
 
-  // Fetch students data based on sectionId, school, and classId
+  // Fetch students based on sectionId, school, and classId
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
@@ -54,13 +54,13 @@ const SessionDetails = () => {
 
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
-    const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+    const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
     setAbsentees(selectedIds);
   };
 
   // Save attendance data to the backend
   const saveAttendance = async () => {
-    const attendanceData = students.map((student) => ({
+    const attendanceData = students.map(student => ({
       studentId: student.id,
       sectionId,
       date: new Date().toISOString().split('T')[0],
@@ -68,9 +68,7 @@ const SessionDetails = () => {
     }));
 
     try {
-      await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, {
-        attendanceData,
-      });
+      await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, { attendanceData });
       setAttendanceSaved(true);
       alert("Attendance saved successfully. You can still edit until the session is ended.");
     } catch (error) {
@@ -99,9 +97,9 @@ const SessionDetails = () => {
   };
 
   // Convert students into options for react-select
-  const studentOptions = students.map((student) => ({
+  const studentOptions = students.map(student => ({
     value: student.id,
-    label: student.studentName
+    label: student.studentName,
   }));
 
   return (
@@ -116,13 +114,11 @@ const SessionDetails = () => {
         <p><strong>Section ID:</strong> {sectionId}</p>
         <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
-        <p><strong>Session Plan ID:</strong> {sessionPlanId || 'N/A'}</p> {/* Display Session Plan ID */}
+        <p><strong>Session Plan ID:</strong> {sessionPlanId || 'N/A'}</p>
       </div>
-
 
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
-        
         <Select
           isMulti
           options={studentOptions}
@@ -137,8 +133,8 @@ const SessionDetails = () => {
         <div className="absentees-list">
           <h4>List of Absentees:</h4>
           <div className="absentee-tags">
-            {absentees.map((id) => {
-              const student = students.find((s) => s.id === id);
+            {absentees.map(id => {
+              const student = students.find(s => s.id === id);
               return (
                 <div key={id} className="absentee-tag">
                   <span>{student?.studentName}</span>
