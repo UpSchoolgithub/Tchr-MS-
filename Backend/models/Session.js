@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const { SessionPlan } = require('./SessionPlan'); // or adjust path as needed
+const SessionPlan = require('./SessionPlan'); // Import SessionPlan model
 
 class Session extends Model {}
 
@@ -53,11 +53,11 @@ Session.init({
       key: 'id',
     },
   },
-  teacherId: { // New field for Teacher association
+  teacherId: { 
     type: DataTypes.INTEGER,
-    allowNull: true, // Allow null if the session is not yet assigned to a teacher
+    allowNull: true, 
     references: {
-      model: 'teachers', // Assuming the model is named `teachers`
+      model: 'teachers', 
       key: 'id',
     },
   },
@@ -73,10 +73,8 @@ Session.associate = (models) => {
   Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
   Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
   Session.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  Session.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' }); // Association to Teacher
+  Session.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
   Session.hasOne(models.SessionPlan, { foreignKey: 'sessionId', as: 'SessionPlan' });
-  SessionPlan.belongsTo(Session, { foreignKey: 'sessionId' });
-  
 };
 
 module.exports = Session;
