@@ -56,20 +56,25 @@ const TeacherSessions = () => {
 
   // Navigate to session details page
   const handleStartSession = (session) => {
-    if (!session.id) {
-      console.warn("Session ID is undefined:", session);
+    const { id, schoolId, classId, sectionId, subjectId } = session;
+    
+    if (!id || !schoolId || !classId || !subjectId) {
+      console.error("Missing required fields:", { id, schoolId, classId, subjectId });
+      alert("Unable to start session due to missing information.");
+      return;
     }
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'default'}`, {
+    
+    navigate(`/teacherportal/${teacherId}/session-details/${sectionId}/${id}`, {
       state: {
-        schoolId: session.schoolId || 'N/A', // Include the schoolId if available
-        classId: session.classId || 'N/A',   // Include the classId if available
-        subjectId: session.subjectId || 'N/A', // Include the subjectId if available
-        sectionName: session.sectionName || 'N/A',
-        sectionId: session.sectionId || 'N/A',
-        sessionId: session.id || 'N/A',
-      }
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        sessionId: id,
+      },
     });
   };
+  
   
 
   // Helper function to check if a date is today

@@ -7,7 +7,7 @@ const SessionDetails = () => {
   const location = useLocation();
   const { schoolId, classId, sectionId, subjectId } = location.state || {};
 
-  const [sessionDetails, setSessionDetails] = useState(null);
+  const [sessionDetails, setSessionDetails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -21,7 +21,7 @@ const SessionDetails = () => {
 
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`);
+        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
         setSessionDetails(response.data);
       } catch (error) {
         console.error('Error fetching session details:', error);
@@ -40,7 +40,7 @@ const SessionDetails = () => {
   return (
     <div>
       <h2>Session Details for Section {sectionId}</h2>
-      {sessionDetails && sessionDetails.sessionDetails && sessionDetails.sessionDetails.length > 0 ? (
+      {sessionDetails.length > 0 ? (
         <table>
           <thead>
             <tr>
@@ -50,7 +50,7 @@ const SessionDetails = () => {
             </tr>
           </thead>
           <tbody>
-            {sessionDetails.sessionDetails.map((session) => (
+            {sessionDetails.map((session) => (
               <tr key={session.id}>
                 <td>{session.chapterName}</td>
                 <td>{session.numberOfSessions}</td>
