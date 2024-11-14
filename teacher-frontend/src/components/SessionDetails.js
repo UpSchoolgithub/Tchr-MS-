@@ -14,11 +14,13 @@ const SessionDetails = () => {
   const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
   const [sessionPlanDetails, setSessionPlanDetails] = useState({});
+  const [error, setError] = useState(null);  // Define error state
 
   // Fetch students based on sectionId, school, and classId
   useEffect(() => {
     if (!sectionId) {
       console.error("sectionId is undefined. Cannot fetch students.");
+      setError("Section ID is missing, cannot fetch students.");
       return;
     }
 
@@ -28,6 +30,7 @@ const SessionDetails = () => {
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
+        setError('Failed to load students.');
       }
     };
 
@@ -41,12 +44,12 @@ const SessionDetails = () => {
       setError('Session or Teacher ID missing.');
       return;
     }
-  
+
     const fetchSessionDetails = async () => {
       try {
         const sessionResponse = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(sessionResponse.data.sessionDetails);
-  
+
         if (sessionResponse.data.sessionDetails.sessionPlanId) {
           const sessionPlanResponse = await axiosInstance.get(
             `/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subject}/sessionplans/${sessionPlanId}`
@@ -58,10 +61,10 @@ const SessionDetails = () => {
         setError('Failed to load session details or session plan.');
       }
     };
-  
+
     fetchSessionDetails();
   }, [sessionId, teacherId, school, classId, sectionId, subject, sessionPlanId]);
-  
+
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
@@ -111,6 +114,8 @@ const SessionDetails = () => {
     value: student.id,
     label: student.studentName,
   }));
+
+  if (error) return <p>{error}</p>;
 
   return (
     <div className="session-details-container">
