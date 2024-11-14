@@ -1,67 +1,158 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import axiosInstance from '../services/axiosInstance';
 import { useParams, useLocation } from 'react-router-dom';
+import './SessionDetails.css';
 
 const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
-  const { schoolId, classId, sectionId, subjectId } = location.state || {};
+  const { classId, subject, school, sectionName, sectionId } = location.state || {};
 
-  const [sessionDetails, setSessionDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [absentees, setAbsentees] = useState([]);
+  const [sessionDetails, setSessionDetails] = useState({});
+  const [attendanceSaved, setAttendanceSaved] = useState(false);
 
+  // Fetch students data based on sectionId, school, and classId
   useEffect(() => {
-    if (!schoolId || !classId || !sectionId || !subjectId) {
-      console.error("Missing required parameters to fetch session details");
-      setError('Missing required parameters to fetch session details');
-      setLoading(false);
+    if (!sectionId) {
+      console.error("sectionId is undefined. Cannot fetch students.");
+      return;
+    }
+
+    const fetchStudents = async () => {
+      try {
+        const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/students`);
+        setStudents(response.data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+
+    fetchStudents();
+  }, [school, classId, sectionId]);
+
+  // Fetch session details based on teacherId and sessionId
+  useEffect(() => {
+    if (!sessionId || !teacherId) {
+      console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
       return;
     }
 
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/session-details`);
+        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(response.data);
       } catch (error) {
         console.error('Error fetching session details:', error);
-        setError('Failed to load session details');
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchSessionDetails();
-  }, [schoolId, classId, sectionId, subjectId]);
+  }, [sessionId, teacherId]);
 
-  if (loading) return <p>Loading session details...</p>;
-  if (error) return <p>{error}</p>;
+  // Handle changes to the absentee selection
+  const handleAbsenteeChange = (selectedOptions) => {
+    const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+    setAbsentees(selectedIds);
+  };
+
+  // Save attendance data to the backend
+  const saveAttendance = async () => {
+    const attendanceData = students.map((student) => ({
+      studentId: student.id,
+      sectionId,
+      date: new Date().toISOString().split('T')[0],
+      status: absentees.includes(student.id) ? 'A' : 'P',
+    }));
+
+    try {
+      await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, {
+        attendanceData,
+      });
+      setAttendanceSaved(true);
+      alert("Attendance saved successfully. You can still edit until the session is ended.");
+    } catch (error) {
+      console.error("Error saving attendance:", error);
+      alert("Failed to save attendance.");
+    }
+  };
+
+  // End the session and finalize attendance
+  const endSession = async () => {
+    if (!attendanceSaved) {
+      alert("Please save the attendance before ending the session.");
+      return;
+    }
+
+    try {
+      await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/finalize-attendance`, {
+        sessionId,
+        finalized: true,
+      });
+      alert("Session ended and attendance finalized.");
+    } catch (error) {
+      console.error("Error finalizing attendance:", error);
+      alert("Failed to finalize attendance.");
+    }
+  };
+
+  // Convert students into options for react-select
+  const studentOptions = students.map((student) => ({
+    value: student.id,
+    label: student.studentName
+  }));
 
   return (
-    <div>
-      <h2>Session Details for Section {sectionId}</h2>
-      {sessionDetails && sessionDetails.sessionDetails && sessionDetails.sessionDetails.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>Chapter Name</th>
-              <th>Number of Sessions</th>
-              <th>Priority Number</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessionDetails.sessionDetails.map((session) => (
-              <tr key={session.id}>
-                <td>{session.chapterName}</td>
-                <td>{session.numberOfSessions}</td>
-                <td>{session.priorityNumber}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>No session plans found for this section.</p>
-      )}
+    <div className="session-details-container">
+      <h2>Session Details</h2>
+
+      <div className="session-info">
+        <p><strong>Class ID:</strong> {classId}</p>
+        <p><strong>Subject:</strong> {subject}</p>
+        <p><strong>School:</strong> {school}</p>
+        <p><strong>Section:</strong> {sectionName}</p>
+        <p><strong>Section ID:</strong> {sectionId}</p>
+        <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+        <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
+      </div>
+
+      <div className="attendance-section">
+        <h3>Mark Attendance</h3>
+        
+        <Select
+          isMulti
+          options={studentOptions}
+          onChange={handleAbsenteeChange}
+          placeholder="Select absentees"
+          value={studentOptions.filter(option => absentees.includes(option.value))}
+          className="multi-select-dropdown"
+          closeMenuOnSelect={false}
+          isClearable
+        />
+
+        <div className="absentees-list">
+          <h4>List of Absentees:</h4>
+          <div className="absentee-tags">
+            {absentees.map((id) => {
+              const student = students.find((s) => s.id === id);
+              return (
+                <div key={id} className="absentee-tag">
+                  <span>{student?.studentName}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="session-notes-section">
+        <h3>Session Notes and Details</h3>
+        <textarea className="observations-textarea" placeholder="Observations"></textarea>
+        <button className="save-button" onClick={saveAttendance}>Save Attendance</button>
+        <button className="end-session-button" onClick={endSession}>End Session</button>
+      </div>
     </div>
   );
 };
