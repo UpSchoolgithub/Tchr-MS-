@@ -81,6 +81,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 
 
 // Get session details for a specific teacher and session
+// Get session details for a specific teacher and session
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -133,7 +134,6 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   }
 });
 
-module.exports = router;
 
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
