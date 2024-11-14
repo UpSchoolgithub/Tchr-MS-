@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
 import axiosInstance from '../services/axiosInstance';
 import { useParams, useLocation } from 'react-router-dom';
 import './SessionDetails.css';
@@ -7,18 +6,19 @@ import './SessionDetails.css';
 const SessionDetails = () => {
   const { teacherId, sessionId } = useParams();
   const location = useLocation();
-  const { classId, subject, school, sectionName, sectionId } = location.state || {};
+  const { classId, subject, school, sectionName, sectionId, subjectId } = location.state || {};
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [sessionDetails, setSessionDetails] = useState({});
+  const [sessionList, setSessionList] = useState([]); // State for list of sessions
   const [attendanceSaved, setAttendanceSaved] = useState(false);
   const [topics, setTopics] = useState([]);
 
   // Fetch students based on sectionId, school, and classId
   useEffect(() => {
     if (!sectionId) {
-      console.error("Section ID is undefined. Cannot fetch students.");
+      console.error("sectionId is undefined. Cannot fetch students.");
       return;
     }
 
@@ -34,10 +34,29 @@ const SessionDetails = () => {
     fetchStudents();
   }, [school, classId, sectionId]);
 
-  // Fetch session details and topics
+  // Fetch sessions based on sectionId and subjectId
+  useEffect(() => {
+    if (!sectionId || !subjectId) {
+      console.error("sectionId or subjectId is undefined. Cannot fetch sessions.");
+      return;
+    }
+
+    const fetchSessions = async () => {
+      try {
+        const response = await axiosInstance.get(`/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`);
+        setSessionList(response.data); // Set session list for display
+      } catch (error) {
+        console.error('Error fetching sessions:', error);
+      }
+    };
+
+    fetchSessions();
+  }, [school, classId, sectionId, subjectId]);
+
+  // Fetch session details for a specific session
   useEffect(() => {
     if (!sessionId || !teacherId) {
-      console.error("Session ID or Teacher ID is undefined. Cannot fetch session details.");
+      console.error("sessionId or teacherId is undefined. Cannot fetch session details.");
       return;
     }
 
@@ -45,7 +64,7 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         setSessionDetails(response.data);
-        setTopics(response.data.topics || []); // Assuming 'topics' is an array in the response
+        setTopics(response.data.topics || []);
       } catch (error) {
         console.error('Error fetching session details:', error);
       }
@@ -53,75 +72,6 @@ const SessionDetails = () => {
 
     fetchSessionDetails();
   }, [sessionId, teacherId]);
-
-  // Handle changes to the absentee selection
-  const handleAbsenteeChange = (selectedOptions) => {
-    const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    setAbsentees(selectedIds);
-  };
-
-  // Save attendance data to the backend
-  const saveAttendance = async () => {
-    const attendanceData = students.map((student) => ({
-      studentId: student.id,
-      sectionId,
-      date: new Date().toISOString().split('T')[0],
-      status: absentees.includes(student.id) ? 'A' : 'P',
-    }));
-
-    try {
-      await axiosInstance.post(`/schools/${school}/classes/${classId}/sections/${sectionId}/attendance`, {
-        attendanceData,
-      });
-      setAttendanceSaved(true);
-      alert("Attendance saved successfully. You can still edit until the session is ended.");
-    } catch (error) {
-      console.error("Error saving attendance:", error);
-      alert("Failed to save attendance.");
-    }
-  };
-
-  // End the session and finalize attendance
-  const endSession = async () => {
-    if (!attendanceSaved) {
-      alert("Please save the attendance before ending the session.");
-      return;
-    }
-
-    try {
-      await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/finalize-attendance`, {
-        sessionId,
-        finalized: true,
-      });
-      alert("Session ended and attendance finalized.");
-    } catch (error) {
-      console.error("Error finalizing attendance:", error);
-      alert("Failed to finalize attendance.");
-    }
-  };
-
-  // Handle topic completion toggle
-  const toggleTopicCompletion = async (topicId) => {
-    const updatedTopics = topics.map(topic =>
-      topic.id === topicId ? { ...topic, completed: !topic.completed } : topic
-    );
-    setTopics(updatedTopics);
-
-    try {
-      await axiosInstance.put(`/api/sessionTopics/${topicId}/toggle`, {
-        completed: !topics.find(topic => topic.id === topicId).completed,
-      });
-    } catch (error) {
-      console.error("Error updating topic completion:", error);
-      alert("Failed to update topic status.");
-    }
-  };
-
-  // Convert students into options for react-select
-  const studentOptions = students.map((student) => ({
-    value: student.id,
-    label: student.studentName
-  }));
 
   return (
     <div className="session-details-container">
@@ -137,37 +87,22 @@ const SessionDetails = () => {
         <p><strong>Chapter:</strong> {sessionDetails.chapter || 'N/A'}</p>
       </div>
 
-      <div className="attendance-section">
-        <h3>Mark Attendance</h3>
-        
-        <Select
-          isMulti
-          options={studentOptions}
-          onChange={handleAbsenteeChange}
-          placeholder="Select absentees"
-          value={studentOptions.filter((option) => absentees.includes(option.value))}
-          className="multi-select-dropdown"
-          closeMenuOnSelect={false}
-          isClearable
-        />
-
-        <div className="absentees-list">
-          <h4>List of Absentees:</h4>
-          <div className="absentee-tags">
-            {absentees.map((id) => {
-              const student = students.find((s) => s.id === id);
-              return (
-                <div key={id} className="absentee-tag">
-                  <span>{student?.studentName}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <div className="session-list">
+        <h3>Session List</h3>
+        <ul>
+          {sessionList.map((session) => (
+            <li key={session.id}>
+              <strong>Session ID:</strong> {session.id} <br />
+              <strong>Chapter Name:</strong> {session.chapterName} <br />
+              <strong>Number of Sessions:</strong> {session.numberOfSessions} <br />
+              <strong>Priority:</strong> {session.priorityNumber}
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="session-topics-section">
-        <h3>Session Topics</h3>
+        <h3>Topics to Cover</h3>
         <ul>
           {topics.map((topic) => (
             <li key={topic.id}>
@@ -182,13 +117,6 @@ const SessionDetails = () => {
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="session-notes-section">
-        <h3>Session Notes and Details</h3>
-        <textarea className="observations-textarea" placeholder="Observations"></textarea>
-        <button className="save-button" onClick={saveAttendance}>Save Attendance</button>
-        <button className="end-session-button" onClick={endSession}>End Session</button>
       </div>
     </div>
   );
