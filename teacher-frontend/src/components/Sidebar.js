@@ -13,9 +13,6 @@ const Sidebar = () => {
           <Link to="/dashboard">Dashboard</Link>
         </li>
         <li>
-          <Link to="/session">Session</Link>
-        </li>
-        <li>
           <Link to="/classroom">Classroom</Link>
         </li>
         <li>
