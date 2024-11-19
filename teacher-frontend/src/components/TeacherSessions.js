@@ -13,6 +13,7 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Add filtering options
   const maxRetries = 3;
   let retryCount = 0;
 
@@ -30,7 +31,7 @@ const TeacherSessions = () => {
       setSessions(response.data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching sessions:", err);
+      console.error('Error fetching sessions:', err);
       if (retryCount < maxRetries) {
         retryCount += 1;
         fetchSessions(); // Retry fetching sessions
@@ -46,12 +47,24 @@ const TeacherSessions = () => {
     fetchSessions();
   }, [fetchSessions]);
 
-  // Filter sessions based on selected day
+  // Filter sessions based on selected day and additional filters
   useEffect(() => {
     const day = getDayName(selectedDate);
-    const filtered = sessions.filter((session) => session.day === day);
+    let filtered = sessions.filter((session) => session.day === day);
+
+    // Apply subject and progress filters
+    if (filter.subject) {
+      filtered = filtered.filter((session) => session.subjectName === filter.subject);
+    }
+    if (filter.progress === 'completed') {
+      filtered = filtered.filter((session) => session.completedTopics === session.totalTopics);
+    }
+    if (filter.progress === 'incomplete') {
+      filtered = filtered.filter((session) => session.completedTopics < session.totalTopics);
+    }
+
     setFilteredSessions(filtered);
-  }, [selectedDate, sessions]);
+  }, [selectedDate, sessions, filter]);
 
   // Handle date change for filtering sessions
   const handleDateChange = (date) => {
@@ -61,25 +74,24 @@ const TeacherSessions = () => {
   // Handle start session button click
   const handleStartSession = (session) => {
     if (!session.sectionId) {
-      console.error("Section ID is undefined for the session:", session);
-      alert("Unable to start session: Section ID is missing.");
+      console.error('Section ID is undefined for the session:', session);
+      alert('Unable to start session: Section ID is missing.');
       return;
     }
-  
+
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
       state: {
         classId: session.classId || 'N/A',
-        subject: session.subjectName || 'N/A',
-        school: session.schoolName || 'N/A',
+        subjectId: session.subjectId || 'N/A',
+        schoolId: session.schoolId || 'N/A',
         sectionName: session.sectionName || 'N/A',
         sectionId: session.sectionId,
         sessionId: session.id || 'unknown',
+        chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
+        topics: session.topics || [], // Topics if already available
       },
     });
   };
-  
-  
-
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
@@ -89,6 +101,7 @@ const TeacherSessions = () => {
   return (
     <div className="sessions-container">
       <h2>Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})</h2>
+
       <div className="navigation-buttons">
         <DatePicker
           selected={selectedDate}
@@ -96,7 +109,24 @@ const TeacherSessions = () => {
           maxDate={new Date()}
           dateFormat="yyyy-MM-dd"
         />
+
+        {/* Filters for subject and progress */}
+        <select onChange={(e) => setFilter({ ...filter, subject: e.target.value })}>
+          <option value="">All Subjects</option>
+          {Array.from(new Set(sessions.map((session) => session.subjectName))).map((subject) => (
+            <option key={subject} value={subject}>
+              {subject}
+            </option>
+          ))}
+        </select>
+
+        <select onChange={(e) => setFilter({ ...filter, progress: e.target.value })}>
+          <option value="">All Progress</option>
+          <option value="completed">Completed</option>
+          <option value="incomplete">Incomplete</option>
+        </select>
       </div>
+
       {filteredSessions.length === 0 ? (
         <p>No sessions found for {getDayName(selectedDate)}.</p>
       ) : (
@@ -110,6 +140,7 @@ const TeacherSessions = () => {
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
+              <th>Progress</th>
               <th>Session Started</th>
               <th>Session Ended</th>
               <th>Assignments</th>
@@ -126,8 +157,14 @@ const TeacherSessions = () => {
                 <td>{session.period}</td>
                 <td>{session.subjectName}</td>
                 <td>
+                  {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+                </td>
+                <td>
                   {isToday(selectedDate) ? (
-                    <button onClick={() => handleStartSession(session)} style={{ backgroundColor: 'orange', color: 'black' }}>
+                    <button
+                      onClick={() => handleStartSession(session)}
+                      style={{ backgroundColor: 'orange', color: 'black' }}
+                    >
                       Start Session
                     </button>
                   ) : (
