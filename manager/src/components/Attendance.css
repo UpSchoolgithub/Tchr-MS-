@@ -33,4 +33,8 @@
   .save-button:hover {
     background-color: #218838;
   }
+  .absent {
+    color: red;
+    font-weight: bold;
+  }
   

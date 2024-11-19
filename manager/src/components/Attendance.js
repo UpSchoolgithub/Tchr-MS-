@@ -143,11 +143,16 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
                 const status = attendance[student.id]?.[fullDate] || '-';
 
                 return (
-                  <td key={date} onClick={() => handleStatusChange(student.id, fullDate)}>
+                  <td
+                    key={date}
+                    onClick={() => handleStatusChange(student.id, fullDate)}
+                    className={status === 'A' ? 'absent' : ''}
+                  >
                     {status}
                   </td>
                 );
               })}
+
             </tr>
           ))}
         </tbody>

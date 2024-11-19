@@ -52,6 +52,25 @@ const SessionDetails = () => {
     label: student.studentName,
   }));
 
+  const handleSaveAttendance = async () => {
+    const attendanceData = students.map((student) => ({
+      studentId: student.id,
+      date: new Date().toISOString().split('T')[0], // Current date
+      status: absentees.includes(student.rollNumber) ? 'A' : 'P',
+    }));
+  
+    try {
+      await axiosInstance.post(
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
+        { attendanceData }
+      );
+      alert('Attendance saved successfully!');
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      alert('Error saving attendance');
+    }
+  };
+  
   return (
     <div className="session-details-container">
       <h2>Welcome, Teacher Name!</h2>
@@ -97,6 +116,9 @@ const SessionDetails = () => {
             </div>
           )}
         </div>
+        <button onClick={handleSaveAttendance} className="save-attendance-button">
+          Save Attendance
+        </button>
 
         {/* Right Side: Session Notes and Details */}
         <div className="session-notes-section">
