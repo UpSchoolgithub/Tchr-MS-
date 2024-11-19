@@ -59,19 +59,26 @@ const TeacherSessions = () => {
   };
 
   // Handle start session button click
-const handleStartSession = (session) => {
-  navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
-    state: {
-      classId: session.classId || 'N/A',
-      subject: session.subjectName || 'N/A',
-      school: session.schoolName || 'N/A',
-      sectionName: session.sectionName || 'N/A',
-      sectionId: session.sectionId || 'N/A',
-      sessionId: session.id || 'unknown',
-      sessionPlanId: session.sessionPlanId || 'N/A', // Pass placeholder if missing
-    },
-  });
-};
+  const handleStartSession = (session) => {
+    if (!session.sectionId) {
+      console.error("Section ID is undefined for session:", session);
+      alert("Unable to start session: Section ID is missing.");
+      return;
+    }
+  
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
+      state: {
+        classId: session.classId || 'N/A',
+        subject: session.subjectName || 'N/A',
+        school: session.schoolName || 'N/A',
+        sectionName: session.sectionName || 'N/A',
+        sectionId: session.sectionId || 'N/A',
+        sessionId: session.id || 'unknown',
+        sessionPlanId: session.sessionPlanId || 'N/A',
+      },
+    });
+  };
+  
 
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
