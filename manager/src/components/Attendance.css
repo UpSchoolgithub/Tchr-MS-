@@ -34,32 +34,3 @@
     background-color: #218838;
   }
   
-  .attendance-cell {
-    text-align: center;
-    cursor: pointer;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .attendance-cell.absent {
-    background-color: red;
-    color: white;
-    font-weight: bold;
-  }
-  
-  .attendance-cell.present {
-    background-color: green;
-    color: white;
-    font-weight: bold;
-  }
-  
-  .attendance-table th,
-  .attendance-table td {
-    padding: 8px;
-    text-align: center;
-  }
-  
