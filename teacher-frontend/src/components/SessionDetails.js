@@ -1,17 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
-const SessionDetails = () => {
+const SessionDetails = ({ schoolId, classId, sectionId }) => {
+  const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [assignments, setAssignments] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Example student data
-  const studentOptions = [
-    { value: 1, label: 'Shilpa' },
-    { value: 2, label: 'Anirudh' },
-    { value: 3, label: 'Anagha' },
-  ];
+  // Fetch students from the backend
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get(
+          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`
+        );
+        setStudents(response.data);
+        setError(null); // Clear any previous errors
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError('Failed to load students. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [schoolId, classId, sectionId]);
 
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
@@ -24,6 +42,12 @@ const SessionDetails = () => {
     setAssignments(e.target.value === 'yes');
   };
 
+  // Convert students to options for the dropdown
+  const studentOptions = students.map(student => ({
+    value: student.rollNumber,
+    label: student.studentName,
+  }));
+
   return (
     <div className="session-details-container">
       <h2>Welcome, Teacher Name!</h2>
@@ -32,16 +56,22 @@ const SessionDetails = () => {
         {/* Left Side: Mark Attendance */}
         <div className="attendance-section">
           <h3>Mark Attendance</h3>
-          <Select
-            isMulti
-            options={studentOptions}
-            onChange={handleAbsenteeChange}
-            placeholder="Choose Absentees"
-            value={studentOptions.filter(option => absentees.includes(option.value))}
-            className="multi-select-dropdown"
-            closeMenuOnSelect={false}
-            isClearable
-          />
+          {loading ? (
+            <p>Loading students...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : (
+            <Select
+              isMulti
+              options={studentOptions}
+              onChange={handleAbsenteeChange}
+              placeholder="Choose Absentees"
+              value={studentOptions.filter(option => absentees.includes(option.value))}
+              className="multi-select-dropdown"
+              closeMenuOnSelect={false}
+              isClearable
+            />
+          )}
 
           {/* Display absentees list only if absentees are selected */}
           {absentees.length > 0 && (
