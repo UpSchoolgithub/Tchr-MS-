@@ -11,54 +11,31 @@ const SessionDetails = () => {
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
-  const [sessionDetails, setSessionDetails] = useState({});
   const [attendanceSaved, setAttendanceSaved] = useState(false);
-  const [sessionPlanDetails, setSessionPlanDetails] = useState({});
   const [error, setError] = useState(null);
 
+  // Fetch students based on sectionId, school, and classId
   useEffect(() => {
-    const fetchStudents = async () => {
-      if (!sectionId) {
-        setError("Section ID is missing, cannot fetch students.");
-        return;
-      }
+    if (!sectionId) {
+      console.error("Section ID is undefined. Cannot fetch students.");
+      setError("Section ID is missing, cannot fetch students.");
+      return;
+    }
 
+    const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(
           `/schools/${school}/classes/${classId}/sections/${sectionId}/students`
         );
         setStudents(response.data);
       } catch (error) {
-        setError("Failed to load students.");
-      }
-    };
-
-    const fetchSessionDetails = async () => {
-      if (!sessionId || !teacherId) {
-        setError("Session ID or Teacher ID is missing.");
-        return;
-      }
-
-      try {
-        const sessionResponse = await axiosInstance.get(
-          `/teachers/${teacherId}/sessions/${sessionId}`
-        );
-        setSessionDetails(sessionResponse.data.sessionDetails || {});
-
-        if (sessionPlanId) {
-          const sessionPlanResponse = await axiosInstance.get(
-            `/schools/${school}/classes/${classId}/sections/${sectionId}/subjects/${subject}/sessionplans/${sessionPlanId}`
-          );
-          setSessionPlanDetails(sessionPlanResponse.data || {});
-        }
-      } catch (error) {
-        setError("Failed to load session details or session plan.");
+        console.error('Error fetching students:', error);
+        setError('Failed to load students.');
       }
     };
 
     fetchStudents();
-    fetchSessionDetails();
-  }, [school, classId, sectionId, sessionId, teacherId, subject, sessionPlanId]);
+  }, [school, classId, sectionId]);
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map(option => option.value) || [];
@@ -81,6 +58,7 @@ const SessionDetails = () => {
       setAttendanceSaved(true);
       alert("Attendance saved successfully. You can still edit until the session is ended.");
     } catch (error) {
+      console.error("Error saving attendance:", error);
       alert("Failed to save attendance.");
     }
   };
@@ -98,6 +76,7 @@ const SessionDetails = () => {
       );
       alert("Session ended and attendance finalized.");
     } catch (error) {
+      console.error("Error finalizing attendance:", error);
       alert("Failed to finalize attendance.");
     }
   };
@@ -119,9 +98,7 @@ const SessionDetails = () => {
         <p><strong>School:</strong> {school || "N/A"}</p>
         <p><strong>Section:</strong> {sectionName || "N/A"}</p>
         <p><strong>Section ID:</strong> {sectionId || "N/A"}</p>
-        <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || "N/A"}</p>
-        <p><strong>Chapter:</strong> {sessionDetails.chapter || "N/A"}</p>
-        <p><strong>Session Plan Details:</strong> {sessionPlanDetails.planDetails || "N/A"}</p>
+        <p><strong>Session Plan ID:</strong> {sessionPlanId || "N/A"}</p>
       </div>
 
       <div className="attendance-section">
