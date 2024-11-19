@@ -5,12 +5,14 @@ import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { schoolId, teacherId, classId, sectionId, sessionId } = useParams(); // Extract parameters from the route
+  const { schoolId, teacherId, classId, sectionId, subjectId, sessionId } = useParams(); // Extract parameters from the route
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error message
+  const [chapterName, setChapterName] = useState(''); // Chapter name
+  const [topics, setTopics] = useState([]); // Topics to cover
 
   // Fetch students from the backend
   useEffect(() => {
@@ -35,13 +37,41 @@ const SessionDetails = () => {
     }
   }, [teacherId, sectionId]);
 
+  // Fetch session details, including chapter name and topics
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const sessionResponse = await axiosInstance.get(
+          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+
+        const currentSession = sessionResponse.data.find((session) => session.id === parseInt(sessionId));
+        if (currentSession) {
+          setChapterName(currentSession.chapterName);
+
+          // Fetch session plan for topics
+          const sessionPlanResponse = await axiosInstance.get(`/sessions/${currentSession.id}/sessionPlans`);
+          const topicsList = sessionPlanResponse.data[0]?.Topics || [];
+          setTopics(topicsList);
+        } else {
+          setError('Session not found.');
+        }
+      } catch (err) {
+        console.error('Error fetching session details:', err);
+        setError('Failed to fetch session details.');
+      }
+    };
+
+    fetchSessionDetails();
+  }, [schoolId, classId, sectionId, subjectId, sessionId]);
+
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
     if (storedAbsentees) {
       setAbsentees(JSON.parse(storedAbsentees));
     }
   }, []); // Run only once on component mount
-  
+
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
     setAbsentees(selectedIds);
@@ -49,7 +79,6 @@ const SessionDetails = () => {
     localStorage.setItem('absentees', JSON.stringify(selectedIds));
   };
 
-  // Handle assignment dropdown change
   const handleAssignmentsChange = (e) => {
     setAssignments(e.target.value === 'yes');
   };
@@ -66,9 +95,9 @@ const SessionDetails = () => {
       date: new Date().toISOString().split('T')[0], // Current date
       status: absentees.includes(student.rollNumber) ? 'A' : 'P',
     }));
-  
+
     console.log('Saving attendance:', attendanceData); // Debugging log
-  
+
     try {
       await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
@@ -82,9 +111,7 @@ const SessionDetails = () => {
       alert('Error saving attendance');
     }
   };
-  
-  
-  
+
   return (
     <div className="session-details-container">
       <h2>Welcome, Teacher Name!</h2>
@@ -140,23 +167,24 @@ const SessionDetails = () => {
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
           <p>
-            <strong>Session Number:</strong> 05
+            <strong>Session Number:</strong> {sessionId}
           </p>
           <p>
-            <strong>Chapter:</strong> Respiration in Plants
+            <strong>Chapter:</strong> {chapterName || 'Loading...'}
           </p>
 
           <h4>Topics to Cover:</h4>
           <ul>
-            <li>
-              <input type="checkbox" /> Topic 1
-            </li>
-            <li>
-              <input type="checkbox" /> Topic 2
-            </li>
-            <li>
-              <input type="checkbox" /> Topic 3
-            </li>
+            {topics.length > 0 ? (
+              topics.map((topic, index) => (
+                <li key={index}>
+                  <input type="checkbox" id={`topic-${index}`} name={`topic-${index}`} />
+                  <label htmlFor={`topic-${index}`}>{topic}</label>
+                </li>
+              ))
+            ) : (
+              <p>No topics available for this session.</p>
+            )}
           </ul>
 
           <h4>Assignments:</h4>
