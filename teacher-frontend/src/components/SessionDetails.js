@@ -89,16 +89,21 @@ const SessionDetails = () => {
           ) : students.length === 0 ? (
             <p>No students found for this section.</p>
           ) : (
-            <Select
-              isMulti
-              options={studentOptions}
-              onChange={handleAbsenteeChange}
-              placeholder="Choose Absentees"
-              value={studentOptions.filter((option) => absentees.includes(option.value))}
-              className="multi-select-dropdown"
-              closeMenuOnSelect={false}
-              isClearable
-            />
+            <>
+              <button onClick={handleSaveAttendance} className="save-attendance-button">
+                Save Attendance
+              </button>
+              <Select
+                isMulti
+                options={studentOptions}
+                onChange={handleAbsenteeChange}
+                placeholder="Choose Absentees"
+                value={studentOptions.filter((option) => absentees.includes(option.value))}
+                className="multi-select-dropdown"
+                closeMenuOnSelect={false}
+                isClearable
+              />
+            </>
           )}
 
           {/* Display absentees list only if absentees are selected */}
@@ -119,6 +124,7 @@ const SessionDetails = () => {
             </div>
           )}
         </div>
+
         <button onClick={handleSaveAttendance} className="save-attendance-button">
           Save Attendance
         </button>
