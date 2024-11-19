@@ -193,21 +193,22 @@ const TeacherAssignments = () => {
                   <td>{assignment.startTime}</td>
                   <td>{assignment.endTime}</td>
                   <td>
-                    <ul>
-                      {assignment.chapters
-                        .sort((a, b) => a.priorityNumber - b.priorityNumber) // Sort chapters by priority
-                        .map((chapter) => (
-                          <li key={chapter.id}>
-                            <strong>{chapter.name}</strong> ({chapter.numberOfSessions} Sessions)
-                            <ul>
-                              {chapter.topics.map((topic, topicIndex) => (
-                                <li key={topicIndex}>{topic}</li>
-                              ))}
-                            </ul>
-                          </li>
-                        ))}
-                    </ul>
-                  </td>
+                  <ul>
+                    {(assignment.chapters || [])
+                      .sort((a, b) => a.priorityNumber - b.priorityNumber) // Sort chapters by priority
+                      .map((chapter) => (
+                        <li key={chapter.id}>
+                          <strong>{chapter.name}</strong> ({chapter.numberOfSessions} Sessions)
+                          <ul>
+                            {(chapter.topics || []).map((topic, topicIndex) => (
+                              <li key={topicIndex}>{topic}</li>
+                            ))}
+                          </ul>
+                        </li>
+                      ))}
+                  </ul>
+                </td>
+
                 </tr>
               </React.Fragment>
             ))}
