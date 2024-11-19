@@ -106,7 +106,12 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
+  console.log('Params:', req.params); // Debugging log
+
   const { sectionId } = req.params;
+  if (!sectionId) {
+    return res.status(400).json({ error: 'Section ID is missing' });
+  }
 
   try {
     const students = await Student.findAll({
@@ -123,7 +128,6 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
       ],
     });
 
-    // Return empty array instead of 404 if no students are found
     if (students.length === 0) {
       return res.status(200).json([]);
     }
@@ -134,6 +138,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // Route to delete a specific student by ID within a section
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/students/:studentId', async (req, res) => {
