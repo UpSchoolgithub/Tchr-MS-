@@ -11,16 +11,20 @@ const SessionDetails = () => {
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-        setSessionDetails(response.data.sessionDetails);
-        setSessionPlans(response.data.sessionPlans);
+        const sessionResponse = await axiosInstance.get(
+          `/sessions/${sessionId}`
+        );
+        setChapterName(sessionResponse.data.chapterName);
+        setTopics(sessionResponse.data.topics);
       } catch (error) {
         console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
       }
     };
-
+  
     fetchSessionDetails();
-  }, [teacherId, sessionId]);
+  }, [sessionId]);
+  
 
   const handlePlanCompletionToggle = async (planId) => {
     const updatedPlans = sessionPlans.map(plan =>
