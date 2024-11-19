@@ -78,9 +78,18 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
   } = req.body;
 
   try {
+    console.log('Incoming request body:', req.body);
+
+    // Validate required fields
+    if (!rollNumber || !studentName || !studentPhoneNumber || !parentName) {
+      console.error('Missing required fields');
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
     // Verify if section exists
     const section = await Section.findOne({ where: { id: sectionId } });
     if (!section) {
+      console.error(`Section with ID ${sectionId} not found`);
       return res.status(404).json({ error: 'Section not found' });
     }
 
@@ -102,9 +111,10 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
     res.status(201).json({ message: 'Student added successfully', student: newStudent });
   } catch (error) {
     console.error('Error adding student:', error);
-    res.status(400).json({ error: 'Error adding student' });
+    res.status(400).json({ error: error.message || 'Error adding student' });
   }
 });
+
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
