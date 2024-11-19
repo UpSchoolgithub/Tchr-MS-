@@ -106,12 +106,9 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
-  console.log('Params:', req.params); // Debugging log
-
   const { sectionId } = req.params;
-  if (!sectionId) {
-    return res.status(400).json({ error: 'Section ID is missing' });
-  }
+
+  console.log('Params:', req.params); // Debugging log
 
   try {
     const students = await Student.findAll({
