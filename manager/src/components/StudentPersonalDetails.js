@@ -51,7 +51,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
     try {
       // Create FormData object and append the file
       const formData = new FormData();
-      formData.append('file', file); // Ensure the key matches the backend
+      formData.append('file', file); // Ensure key is "file"
   
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
