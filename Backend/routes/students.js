@@ -13,10 +13,9 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   const { sectionId } = req.params;
   const transaction = await sequelize.transaction();
 
-  console.log('Request headers:', req.headers); // Verify Authorization header
-  console.log('Uploaded file:', req.file); // Log file information to ensure it's received
+  console.log('Headers:', req.headers); // Debug headers
+  console.log('File received:', req.file); // Debug file
 
-  // Check if file exists in the request
   if (!req.file) {
     return res.status(400).json({ error: 'File not uploaded. Please check the upload format.' });
   }
@@ -34,6 +33,9 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const students = XLSX.utils.sheet_to_json(worksheet);
 
+    // Log parsed data
+    console.log('Parsed students:', students);
+
     // Map and format student data for bulk insert
     const studentRecords = students.map((student) => ({
       rollNumber: student['Roll Number'],
@@ -49,9 +51,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       updatedAt: new Date(),
     }));
 
-    console.log('Parsed student records:', studentRecords); // Log parsed student data for debugging
-
-    // Insert into database
+    // Bulk insert student records
     await Student.bulkCreate(studentRecords, { transaction, ignoreDuplicates: true });
     await transaction.commit();
 
@@ -59,9 +59,10 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
   } catch (error) {
     await transaction.rollback();
     console.error('Error in student upload route:', error);
-    res.status(400).json({ error: error.message || 'Bad request during student upload.' });
+    res.status(400).json({ error: error.message || 'Error uploading students.' });
   }
 });
+
 
 // Route to add a student manually
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/manual', async (req, res) => {
