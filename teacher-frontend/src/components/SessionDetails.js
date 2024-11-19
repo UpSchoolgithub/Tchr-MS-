@@ -19,12 +19,15 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
         const response = await axiosInstance.get(
           `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`
         );
+        console.log('Fetched students:', response.data); // Debugging fetched data
         setStudents(response.data);
-        setLoading(false); // Set loading to false after data is fetched
+        setError(null); // Clear any previous error
       } catch (err) {
         console.error('Error fetching students:', err);
         setError('Failed to load students. Please try again.');
-        setLoading(false); // Set loading to false if there's an error
+        setStudents([]); // Clear students if there's an error
+      } finally {
+        setLoading(false); // Set loading to false after fetch
       }
     };
 
@@ -33,7 +36,7 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
 
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
-    const selectedIds = selectedOptions?.map(option => option.value) || [];
+    const selectedIds = selectedOptions?.map((option) => option.value) || [];
     setAbsentees(selectedIds);
   };
 
@@ -43,7 +46,7 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
   };
 
   // Convert students to options for the dropdown
-  const studentOptions = students.map(student => ({
+  const studentOptions = students.map((student) => ({
     value: student.rollNumber,
     label: student.studentName,
   }));
@@ -60,13 +63,15 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
             <p>Loading students...</p>
           ) : error ? (
             <p className="error-message">{error}</p>
+          ) : students.length === 0 ? (
+            <p>No students found for this section.</p>
           ) : (
             <Select
               isMulti
               options={studentOptions}
               onChange={handleAbsenteeChange}
               placeholder="Choose Absentees"
-              value={studentOptions.filter(option => absentees.includes(option.value))}
+              value={studentOptions.filter((option) => absentees.includes(option.value))}
               className="multi-select-dropdown"
               closeMenuOnSelect={false}
               isClearable
@@ -78,8 +83,8 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
             <div className="absentees-list">
               <h4>List of Absentees:</h4>
               <ul>
-                {absentees.map(id => {
-                  const student = studentOptions.find(s => s.value === id);
+                {absentees.map((id) => {
+                  const student = studentOptions.find((s) => s.value === id);
                   return (
                     <li key={id}>
                       {student?.label || 'Unknown'}{' '}
@@ -95,14 +100,24 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
         {/* Right Side: Session Notes and Details */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
-          <p><strong>Session Number:</strong> 05</p>
-          <p><strong>Chapter:</strong> Respiration in Plants</p>
+          <p>
+            <strong>Session Number:</strong> 05
+          </p>
+          <p>
+            <strong>Chapter:</strong> Respiration in Plants
+          </p>
 
           <h4>Topics to Cover:</h4>
           <ul>
-            <li><input type="checkbox" /> Topic 1</li>
-            <li><input type="checkbox" /> Topic 2</li>
-            <li><input type="checkbox" /> Topic 3</li>
+            <li>
+              <input type="checkbox" /> Topic 1
+            </li>
+            <li>
+              <input type="checkbox" /> Topic 2
+            </li>
+            <li>
+              <input type="checkbox" /> Topic 3
+            </li>
           </ul>
 
           <h4>Assignments:</h4>
@@ -119,7 +134,10 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
           )}
 
           <h4>Observations:</h4>
-          <textarea className="observations-textarea" placeholder="Add observations or notes here..."></textarea>
+          <textarea
+            className="observations-textarea"
+            placeholder="Add observations or notes here..."
+          ></textarea>
 
           <button className="end-session-button">End Session</button>
         </div>
