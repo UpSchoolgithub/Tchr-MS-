@@ -86,7 +86,7 @@ const TeacherSessions = () => {
         schoolId: session.schoolId || 'N/A',
         sectionName: session.sectionName || 'N/A',
         sectionId: session.sectionId,
-        sessionId: session.id || 'unknown',
+        sessionId: session.id,
         chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
         topics: session.topics || [], // Topics if already available
       },
