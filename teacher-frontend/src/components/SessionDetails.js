@@ -14,19 +14,17 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        setLoading(true);
+        console.log('schoolId:', schoolId, 'classId:', classId, 'sectionId:', sectionId); // Debug
         const response = await axiosInstance.get(
           `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`
         );
         setStudents(response.data);
-        setError(null); // Clear any previous errors
       } catch (err) {
         console.error('Error fetching students:', err);
         setError('Failed to load students. Please try again.');
-      } finally {
-        setLoading(false);
       }
     };
+    
 
     fetchStudents();
   }, [schoolId, classId, sectionId]);
