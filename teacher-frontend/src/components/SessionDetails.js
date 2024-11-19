@@ -35,10 +35,18 @@ const SessionDetails = () => {
     }
   }, [teacherId, sectionId]);
 
-  // Handle changes to the absentee selection
+  useEffect(() => {
+    const storedAbsentees = localStorage.getItem('absentees');
+    if (storedAbsentees) {
+      setAbsentees(JSON.parse(storedAbsentees));
+    }
+  }, []); // Run only once on component mount
+  
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
     setAbsentees(selectedIds);
+    // Save to local storage
+    localStorage.setItem('absentees', JSON.stringify(selectedIds));
   };
 
   // Handle assignment dropdown change
@@ -67,11 +75,14 @@ const SessionDetails = () => {
         { attendanceData }
       );
       alert('Attendance saved successfully!');
+      // Clear absentees from local storage
+      localStorage.removeItem('absentees');
     } catch (error) {
       console.error('Error saving attendance:', error);
       alert('Error saving attendance');
     }
   };
+  
   
   
   return (

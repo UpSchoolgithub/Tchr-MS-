@@ -1,46 +1,61 @@
-// models/Attendance.js
+const express = require('express');
+const { body, param, validationResult } = require('express-validator');
+const { Attendance, Student } = require('../models');
+const { Op } = require('sequelize');
 
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust this path to match your project structure
+const router = express.Router();
 
-class Attendance extends Model {}
+// Validation Middleware
+const validateAttendanceUpdate = [
+  param('sectionId').isInt().withMessage('Section ID must be an integer'),
+  body('attendanceData').isArray({ min: 1 }).withMessage('Attendance data must be an array'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
 
-Attendance.init({
-  studentId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'students', // Ensure this matches the table name in your database
-      key: 'id',
-    },
-    onDelete: 'CASCADE', // Optional: handles deletion of student records
-    onUpdate: 'CASCADE', // Optional: handles updates to student ID
-  },
-  sessionId: { // Optional: only add if attendance is linked to specific sessions
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'sessions', // Ensure this matches the table name for sessions if using sessions
-      key: 'id',
-    },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  },
-  date: {
-    type: DataTypes.DATEONLY, // Stores only date, without time
-    allowNull: false,
-    defaultValue: DataTypes.NOW // Defaults to today's date if not provided
-  },
-  status: {
-    type: DataTypes.ENUM('P', 'A'), // Update to ('Present', 'Absent') if preferred
-    allowNull: false,
-    comment: 'P = Present, A = Absent',
-  },
-}, {
-  sequelize,
-  modelName: 'Attendance',
-  tableName: 'attendances', // Specify the table name if it differs
-  timestamps: true, // Adds createdAt and updatedAt timestamps automatically
+// Fetch attendance
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/attendance', async (req, res) => {
+  const { sectionId } = req.params;
+  const { month, year } = req.query;
+
+  try {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    const studentsWithAttendance = await Student.findAll({
+      where: { sectionId },
+      include: [
+        {
+          model: Attendance,
+          where: { date: { [Op.between]: [startDate, endDate] } },
+          required: false,
+        },
+      ],
+    });
+
+    res.json(studentsWithAttendance);
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-module.exports = Attendance;
+// Update attendance
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/attendance', validateAttendanceUpdate, async (req, res) => {
+  const { attendanceData } = req.body;
+
+  try {
+    await Attendance.bulkCreate(attendanceData, { updateOnDuplicate: ['status'] });
+    res.json({ message: 'Attendance updated successfully' });
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+module.exports = router;
