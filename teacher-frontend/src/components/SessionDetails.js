@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { useParams } from 'react-router-dom'; // Import useParams
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
-const SessionDetails = ({ schoolId, classId, sectionId }) => {
-  const { teacherId,  sessionId } = useParams(); // Extract parameters from the routes
+const SessionDetails = () => {
+  const { teacherId, sectionId, sessionId } = useParams(); // Extract parameters from the route
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
@@ -22,16 +23,17 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
       } catch (error) {
         console.error('Error fetching students:', error);
         setError('Failed to load students. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
-  
+
     if (sectionId) {
       fetchStudents();
     } else {
       setError('Section ID is missing.');
     }
   }, [teacherId, sectionId]);
-  
 
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
