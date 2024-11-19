@@ -170,30 +170,50 @@ const TeacherAssignments = () => {
               <th>School</th>
               <th>Class</th>
               <th>Section</th>
-              <th>Section ID</th> {/* Add a column for Section ID */}
+              <th>Section ID</th>
               <th>Day</th>
               <th>Period</th>
               <th>Subject</th>
               <th>Start Time</th>
               <th>End Time</th>
+              <th>Chapters</th>
             </tr>
           </thead>
           <tbody>
             {filteredAssignments.map((assignment, index) => (
-              <tr key={index}>
-                <td>{assignment.schoolName}</td>
-                <td>{assignment.className}</td>
-                <td>{assignment.sectionName}</td>
-                <td>{assignment.sectionId}</td> {/* Display sectionId here */}
-                <td>{assignment.day}</td>
-                <td>{assignment.period}</td>
-                <td>{assignment.subjectName}</td>
-                <td>{assignment.startTime}</td>
-                <td>{assignment.endTime}</td>
-              </tr>
+              <React.Fragment key={index}>
+                <tr>
+                  <td>{assignment.schoolName}</td>
+                  <td>{assignment.className}</td>
+                  <td>{assignment.sectionName}</td>
+                  <td>{assignment.sectionId}</td>
+                  <td>{assignment.day}</td>
+                  <td>{assignment.period}</td>
+                  <td>{assignment.subjectName}</td>
+                  <td>{assignment.startTime}</td>
+                  <td>{assignment.endTime}</td>
+                  <td>
+                    <ul>
+                      {assignment.chapters
+                        .sort((a, b) => a.priorityNumber - b.priorityNumber) // Sort chapters by priority
+                        .map((chapter) => (
+                          <li key={chapter.id}>
+                            <strong>{chapter.name}</strong> ({chapter.numberOfSessions} Sessions)
+                            <ul>
+                              {chapter.topics.map((topic, topicIndex) => (
+                                <li key={topicIndex}>{topic}</li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                    </ul>
+                  </td>
+                </tr>
+              </React.Fragment>
             ))}
           </tbody>
         </table>
+
       )}
     </div>
   );
