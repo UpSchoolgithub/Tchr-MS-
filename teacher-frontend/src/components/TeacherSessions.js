@@ -59,24 +59,20 @@ const TeacherSessions = () => {
   };
 
   // Handle start session button click
-  const handleStartSession = (session) => {
-    if (!session.id || !session.sessionPlanId) {
-      console.error("Missing session ID or sessionPlan ID for navigation", session); // Log full session details for debugging
-      return;
-    }
+const handleStartSession = (session) => {
+  navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
+    state: {
+      classId: session.classId || 'N/A',
+      subject: session.subjectName || 'N/A',
+      school: session.schoolName || 'N/A',
+      sectionName: session.sectionName || 'N/A',
+      sectionId: session.sectionId || 'N/A',
+      sessionId: session.id || 'unknown',
+      sessionPlanId: session.sessionPlanId || 'N/A', // Pass placeholder if missing
+    },
+  });
+};
 
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
-      state: {
-        classId: session.classId,
-        subject: session.subjectName,
-        school: session.schoolName,
-        sectionName: session.sectionName,
-        sectionId: session.sectionId,
-        sessionId: session.id,
-        sessionPlanId: session.sessionPlanId, // Pass sessionPlanId for the next page
-      },
-    });
-  };
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
