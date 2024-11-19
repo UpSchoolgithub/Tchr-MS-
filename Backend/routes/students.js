@@ -113,20 +113,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
   try {
     const students = await Student.findAll({
       where: { sectionId },
-      attributes: [
-        'rollNumber',
-        'studentName',
-        'studentEmail',
-        'studentPhoneNumber',
-        'parentName',
-        'parentPhoneNumber1',
-        'parentPhoneNumber2',
-        'parentEmail',
-      ],
+      attributes: ['rollNumber', 'studentName', 'studentEmail', 'studentPhoneNumber'],
     });
 
     if (students.length === 0) {
-      return res.status(200).json([]);
+      return res.status(200).json([]); // Return an empty array if no students exist
     }
 
     res.status(200).json(students);
@@ -135,6 +126,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 // Route to delete a specific student by ID within a section
