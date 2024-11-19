@@ -125,10 +125,6 @@ const SessionDetails = () => {
           )}
         </div>
 
-        <button onClick={handleSaveAttendance} className="save-attendance-button">
-          Save Attendance
-        </button>
-
         {/* Right Side: Session Notes and Details */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
