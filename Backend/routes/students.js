@@ -11,14 +11,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Route to upload students from an Excel file
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', upload.single('file'), async (req, res) => {
   const { sectionId } = req.params;
-  const transaction = await sequelize.transaction();
 
-  console.log('Headers:', req.headers); // Debug headers
-  console.log('File received:', req.file); // Debug file
+  console.log('Headers:', req.headers); // Log headers for debugging
+  console.log('File:', req.file); // Log file to ensure it is received
+  console.log('Body:', req.body); // Log body for additional debugging
 
   if (!req.file) {
-    return res.status(400).json({ error: 'File not uploaded. Please check the upload format.' });
+    return res.status(400).json({ error: 'File not uploaded. Please ensure the field name is "file".' });
   }
+
+  const transaction = await sequelize.transaction();
 
   try {
     // Verify section exists
@@ -33,8 +35,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const students = XLSX.utils.sheet_to_json(worksheet);
 
-    // Log parsed data
-    console.log('Parsed students:', students);
+    console.log('Parsed students:', students); // Log parsed data for debugging
 
     // Map and format student data for bulk insert
     const studentRecords = students.map((student) => ({
