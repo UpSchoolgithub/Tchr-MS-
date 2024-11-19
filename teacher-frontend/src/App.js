@@ -42,8 +42,10 @@ function InnerApp() {
             {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
             <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
-            <Route path="/teacherportal/:teacherId/session-details/:sectionId/:sessionId" element={<SessionDetails />} />
-
+            <Route 
+              path="/teacherportal/:teacherId/session-details/:schoolId/:classId/:sectionId/:sessionId" 
+              element={<PrivateRoute><SessionDetails /></PrivateRoute>} 
+            />
           </Routes>
         </div>
       </Router>
