@@ -47,12 +47,12 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       setIsSuccess(false);
       return;
     }
-
+  
     try {
-      // Create FormData object to send file
+      // Create FormData object and append the file
       const formData = new FormData();
-      formData.append('file', file); // Append the file directly
-
+      formData.append('file', file); // Ensure the key matches the backend
+  
       const response = await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`,
         formData,
@@ -62,7 +62,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
           },
         }
       );
-
+  
       setFeedbackMessage(response.data.message || 'Student data uploaded successfully!');
       setIsSuccess(true);
       fetchStudentData(); // Refresh existing data
@@ -74,6 +74,7 @@ const StudentPersonalDetails = ({ schoolId, classId, sectionId }) => {
       console.error('Upload Error:', error);
     }
   };
+  
 
   // Render student data in a table
   const renderStudentTable = (data) => (
