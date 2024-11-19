@@ -46,6 +46,7 @@ function InnerApp() {
               path="/teacherportal/:teacherId/session-details/:schoolId/:classId/:sectionId/:sessionId" 
               element={<PrivateRoute><SessionDetails /></PrivateRoute>} 
             />
+
           </Routes>
         </div>
       </Router>
