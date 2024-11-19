@@ -4,27 +4,29 @@ import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = ({ schoolId, classId, sectionId }) => {
-  const [students, setStudents] = useState([]);
-  const [absentees, setAbsentees] = useState([]);
-  const [assignments, setAssignments] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [students, setStudents] = useState([]); // List of students
+  const [absentees, setAbsentees] = useState([]); // Selected absentees
+  const [assignments, setAssignments] = useState(false); // Assignment flag
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error message
 
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
+      setLoading(true); // Set loading to true before fetch
       try {
-        console.log('schoolId:', schoolId, 'classId:', classId, 'sectionId:', sectionId); // Debug
+        console.log('Fetching students for:', { schoolId, classId, sectionId });
         const response = await axiosInstance.get(
           `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`
         );
         setStudents(response.data);
+        setLoading(false); // Set loading to false after data is fetched
       } catch (err) {
         console.error('Error fetching students:', err);
         setError('Failed to load students. Please try again.');
+        setLoading(false); // Set loading to false if there's an error
       }
     };
-    
 
     fetchStudents();
   }, [schoolId, classId, sectionId]);
