@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { useParams } from 'react-router-dom'; // Import useParams
+import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
   const { teacherId, sectionId, sessionId } = useParams(); // Extract parameters from the route
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
@@ -41,9 +42,25 @@ const SessionDetails = () => {
     setAbsentees(selectedIds);
   };
 
-  // Handle assignment dropdown change
-  const handleAssignmentsChange = (e) => {
-    setAssignments(e.target.value === 'yes');
+  // Save attendance to the backend
+  const handleSaveAttendance = async () => {
+    const attendanceData = students.map((student) => ({
+      studentId: student.rollNumber,
+      date: new Date().toISOString().split('T')[0], // Current date
+      status: absentees.includes(student.rollNumber) ? 'A' : 'P', // Absent if in absentees, else Present
+    }));
+
+    try {
+      await axiosInstance.post(
+        `/teachers/${teacherId}/sections/${sectionId}/sessions/${sessionId}/attendance`,
+        { attendanceData }
+      );
+      alert('Attendance saved successfully!');
+      navigate(`/attendance/${schoolId}/${classId}/${sectionId}`); // Navigate to attendance page
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      alert('Error saving attendance. Please try again.');
+    }
   };
 
   // Convert students to options for the dropdown
@@ -96,6 +113,9 @@ const SessionDetails = () => {
               </ul>
             </div>
           )}
+          <button className="save-attendance-button" onClick={handleSaveAttendance}>
+            Save Attendance
+          </button>
         </div>
 
         {/* Right Side: Session Notes and Details */}

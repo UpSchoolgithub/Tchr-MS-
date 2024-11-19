@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
-import './Attendance.css';
+import './Attendance.css'; // Ensure the CSS file contains styles for circular indicators
 
 const Attendance = ({ schoolId, classId, sectionId }) => {
   const [students, setStudents] = useState([]);
@@ -21,17 +21,15 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
 
       const { students: fetchedStudents, attendanceRecords } = response.data;
 
-      // Set student list with roll numbers and names
-      const formattedStudents = fetchedStudents.map(student => ({
-        id: student.id, // Use unique student ID for attendance mapping
+      const formattedStudents = fetchedStudents.map((student) => ({
+        id: student.id,
         rollNumber: student.rollNumber,
-        name: student.studentName
+        name: student.studentName,
       }));
       setStudents(formattedStudents);
 
-      // Prepare attendance data in a structured format
       const attendanceData = {};
-      attendanceRecords.forEach(record => {
+      attendanceRecords.forEach((record) => {
         const date = record.date;
         const studentId = record.studentId;
         if (!attendanceData[studentId]) attendanceData[studentId] = {};
@@ -44,15 +42,15 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
   };
 
   const handleStatusChange = (studentId, date) => {
-    const currentStatus = attendance[studentId]?.[date] || 'P'; // Default to "P" for present
-    const newStatus = currentStatus === 'P' ? 'A' : 'P'; // Toggle status between "P" and "A"
+    const currentStatus = attendance[studentId]?.[date] || 'P';
+    const newStatus = currentStatus === 'P' ? 'A' : 'P';
 
-    setAttendance(prev => ({
+    setAttendance((prev) => ({
       ...prev,
       [studentId]: {
         ...prev[studentId],
-        [date]: newStatus
-      }
+        [date]: newStatus,
+      },
     }));
   };
 
@@ -63,15 +61,16 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
         attendanceData.push({
           studentId,
           date,
-          status: attendance[studentId][date]
+          status: attendance[studentId][date],
         });
       }
     }
 
     try {
-      await axiosInstance.post(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`, {
-        attendanceData
-      });
+      await axiosInstance.post(
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
+        { attendanceData }
+      );
       alert('Attendance updated successfully!');
     } catch (error) {
       console.error('Error saving attendance:', error);
@@ -84,14 +83,6 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
     return Array.from({ length: daysInMonth }, (_, i) => i + 1);
   };
 
-  const handleMonthChange = (e) => {
-    setCurrentMonth(parseInt(e.target.value, 10));
-  };
-
-  const handleYearChange = (e) => {
-    setCurrentYear(parseInt(e.target.value, 10));
-  };
-
   return (
     <div className="attendance-management">
       <h3>Attendance for {`${currentMonth}/${currentYear}`}</h3>
@@ -99,7 +90,7 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
       <div className="attendance-controls">
         <label>
           Month:
-          <select value={currentMonth} onChange={handleMonthChange}>
+          <select value={currentMonth} onChange={(e) => setCurrentMonth(parseInt(e.target.value, 10))}>
             {[...Array(12)].map((_, index) => (
               <option key={index + 1} value={index + 1}>
                 {new Date(0, index).toLocaleString('default', { month: 'long' })}
@@ -110,7 +101,7 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
 
         <label>
           Year:
-          <select value={currentYear} onChange={handleYearChange}>
+          <select value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value, 10))}>
             {[...Array(5)].map((_, index) => {
               const year = new Date().getFullYear() - 2 + index;
               return (
@@ -128,22 +119,31 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
           <tr>
             <th>Roll Number</th>
             <th>Name</th>
-            {renderDates().map(date => (
+            {renderDates().map((date) => (
               <th key={date}>{date}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {students.map(student => (
+          {students.map((student) => (
             <tr key={student.id}>
               <td>{student.rollNumber}</td>
               <td>{student.name}</td>
-              {renderDates().map(date => {
-                const fullDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+              {renderDates().map((date) => {
+                const fullDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(date).padStart(
+                  2,
+                  '0'
+                )}`;
                 const status = attendance[student.id]?.[fullDate] || '-';
 
                 return (
-                  <td key={date} onClick={() => handleStatusChange(student.id, fullDate)}>
+                  <td
+                    key={date}
+                    onClick={() => handleStatusChange(student.id, fullDate)}
+                    className={`attendance-cell ${
+                      status === 'A' ? 'absent' : status === 'P' ? 'present' : ''
+                    }`}
+                  >
                     {status}
                   </td>
                 );
