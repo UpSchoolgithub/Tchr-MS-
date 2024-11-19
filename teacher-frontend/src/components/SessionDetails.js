@@ -59,6 +59,8 @@ const SessionDetails = () => {
       status: absentees.includes(student.rollNumber) ? 'A' : 'P',
     }));
   
+    console.log('Saving attendance:', attendanceData); // Debugging log
+  
     try {
       await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
@@ -70,6 +72,7 @@ const SessionDetails = () => {
       alert('Error saving attendance');
     }
   };
+  
   
   return (
     <div className="session-details-container">
