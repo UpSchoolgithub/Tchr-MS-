@@ -545,7 +545,9 @@ app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used
 //app.use('/api', timetableRoutes); // Ensure this line is present
 app.use('/api', mteacherRoutes);
 app.use('/api', sectionsRouter); // Ensure the route is prefixed correctly
-app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
+//app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
+app.use('/schools', studentRoutes); // Example line
+
 app.use('/api', subjectRoutes);
 
 
