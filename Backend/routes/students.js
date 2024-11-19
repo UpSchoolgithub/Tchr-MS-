@@ -106,26 +106,52 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
-  const { sectionId } = req.params;
+  const { schoolId, classId, sectionId } = req.params;
 
-  console.log('Params:', req.params); // Debugging log
+  console.log('Route Params:', { schoolId, classId, sectionId }); // Debugging log
 
   try {
-    const students = await Student.findAll({
-      where: { sectionId },
-      attributes: ['rollNumber', 'studentName', 'studentEmail', 'studentPhoneNumber'],
+    // Validate the section exists
+    const section = await Section.findOne({
+      where: { id: sectionId },
     });
 
-    if (students.length === 0) {
-      return res.status(200).json([]); // Return an empty array if no students exist
+    if (!section) {
+      console.error(`Section with ID ${sectionId} not found.`);
+      return res.status(404).json({ error: 'Section not found' });
     }
 
+    // Fetch students for the section
+    const students = await Student.findAll({
+      where: { sectionId },
+      attributes: [
+        'rollNumber',
+        'studentName',
+        'studentEmail',
+        'studentPhoneNumber',
+        'parentName',
+        'parentPhoneNumber1',
+        'parentPhoneNumber2',
+        'parentEmail',
+      ],
+    });
+
+    // Log retrieved students for debugging
+    console.log(`Students for Section ${sectionId}:`, students);
+
+    // If no students found, return an empty array
+    if (students.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Return the list of students
     res.status(200).json(students);
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 
