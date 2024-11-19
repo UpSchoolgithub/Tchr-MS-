@@ -35,7 +35,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
     const students = XLSX.utils.sheet_to_json(worksheet);
 
     // Map and format student data for bulk insert
-    const studentRecords = students.map(student => ({
+    const studentRecords = students.map((student) => ({
       rollNumber: student['Roll Number'],
       studentName: student['Student Name'],
       studentEmail: student['Student Email'],
@@ -48,6 +48,8 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students', 
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
+
+    console.log('Parsed student records:', studentRecords); // Log parsed student data for debugging
 
     // Insert into database
     await Student.bulkCreate(studentRecords, { transaction, ignoreDuplicates: true });
@@ -124,10 +126,6 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
     });
 
     // Return empty array instead of 404 if no students are found
-    if (students.length === 0) {
-      return res.status(200).json([]);
-    }
-
     res.status(200).json(students);
   } catch (error) {
     console.error('Error fetching students:', error);
