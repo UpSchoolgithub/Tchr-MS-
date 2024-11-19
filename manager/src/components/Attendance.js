@@ -157,8 +157,6 @@ const Attendance = ({ schoolId, classId, sectionId }) => {
           ))}
         </tbody>
       </table>
-
-      <button onClick={handleSave} className="save-button">Save Attendance</button>
     </div>
   );
 };
