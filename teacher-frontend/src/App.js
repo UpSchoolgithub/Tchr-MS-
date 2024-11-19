@@ -44,8 +44,6 @@ function InnerApp() {
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/session-details/:sectionId/:sessionId" element={<SessionDetails />} />
 
-            {/* Route for Session Details */}
-            <Route path="/session-details" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
           </Routes>
         </div>
       </Router>

@@ -4,6 +4,7 @@ import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = ({ schoolId, classId, sectionId }) => {
+  const { teacherId, sectionId, sessionId } = useParams(); // Extract parameters from the routes
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
