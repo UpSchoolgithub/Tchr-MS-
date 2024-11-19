@@ -309,6 +309,7 @@ h3, h4 {
 
 .absentees-list span {
   font-weight: bold;
+  color: red;
 }
 
 .assignment-input,

@@ -6,17 +6,20 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [assignments, setAssignments] = useState(false);
 
+  // Example student data
   const studentOptions = [
     { value: 1, label: 'Shilpa' },
     { value: 2, label: 'Anirudh' },
     { value: 3, label: 'Anagha' },
   ];
 
+  // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map(option => option.value) || [];
     setAbsentees(selectedIds);
   };
 
+  // Handle assignment dropdown change
   const handleAssignmentsChange = (e) => {
     setAssignments(e.target.value === 'yes');
   };
@@ -40,21 +43,23 @@ const SessionDetails = () => {
             isClearable
           />
 
-          <div className="absentees-list">
-            <h4>List of Absentees:</h4>
-            <ul>
-              {studentOptions.map(student => (
-                <li key={student.value}>
-                  {student.label}{' '}
-                  {absentees.includes(student.value) ? (
-                    <span style={{ color: 'red' }}>Absent</span>
-                  ) : (
-                    <span style={{ color: 'green' }}>Mark Present</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Display absentees list only if absentees are selected */}
+          {absentees.length > 0 && (
+            <div className="absentees-list">
+              <h4>List of Absentees:</h4>
+              <ul>
+                {absentees.map(id => {
+                  const student = studentOptions.find(s => s.value === id);
+                  return (
+                    <li key={id}>
+                      {student?.label || 'Unknown'}{' '}
+                      <span style={{ color: 'red' }}>Absent</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Right Side: Session Notes and Details */}
