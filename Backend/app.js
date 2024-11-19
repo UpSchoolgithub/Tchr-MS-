@@ -62,7 +62,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 //const studentRoutes = require('./routes/student');
 const studentRoutes = require('./routes/students');
 const sectionsRouter = require('./routes/students');
-//const studentsRouter = require('./routes/students')
+const studentsRouter = require('./routes/students')
 const TimetablePeriods = require('./models/TimetablePeriods');
 //const subjectRoutes = require('./routes/subjectRoutes');
 const timetableRoutes = require('./routes/timetableRoutes'); // Import your timetable routes
@@ -545,9 +545,7 @@ app.use('/api', studentRoutes);  // Ensure the route prefix matches the one used
 //app.use('/api', timetableRoutes); // Ensure this line is present
 app.use('/api', mteacherRoutes);
 app.use('/api', sectionsRouter); // Ensure the route is prefixed correctly
-//app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
-//app.use('/schools', studentRoutes); // Example line
-
+app.use('/api', studentsRouter); // Ensure the route is prefixed correctly
 app.use('/api', subjectRoutes);
 
 

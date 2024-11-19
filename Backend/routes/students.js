@@ -106,22 +106,9 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/students/ma
 
 // Route to fetch students
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', async (req, res) => {
-  const { schoolId, classId, sectionId } = req.params;
-
-  console.log('Route Params:', { schoolId, classId, sectionId }); // Debugging log
+  const { sectionId } = req.params;
 
   try {
-    // Validate the section exists
-    const section = await Section.findOne({
-      where: { id: sectionId },
-    });
-
-    if (!section) {
-      console.error(`Section with ID ${sectionId} not found.`);
-      return res.status(404).json({ error: 'Section not found' });
-    }
-
-    // Fetch students for the section
     const students = await Student.findAll({
       where: { sectionId },
       attributes: [
@@ -136,24 +123,17 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/students', a
       ],
     });
 
-    // Log retrieved students for debugging
-    console.log(`Students for Section ${sectionId}:`, students);
-
-    // If no students found, return an empty array
+    // Return empty array instead of 404 if no students are found
     if (students.length === 0) {
       return res.status(200).json([]);
     }
 
-    // Return the list of students
     res.status(200).json(students);
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-
-
 
 // Route to delete a specific student by ID within a section
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/students/:studentId', async (req, res) => {
