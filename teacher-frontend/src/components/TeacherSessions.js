@@ -61,7 +61,7 @@ const TeacherSessions = () => {
   // Handle start session button click
   const handleStartSession = (session) => {
     if (!session.sectionId) {
-      console.error("Section ID is undefined for session:", session);
+      console.error("Section ID is undefined for the session:", session);
       alert("Unable to start session: Section ID is missing.");
       return;
     }
@@ -72,12 +72,12 @@ const TeacherSessions = () => {
         subject: session.subjectName || 'N/A',
         school: session.schoolName || 'N/A',
         sectionName: session.sectionName || 'N/A',
-        sectionId: session.sectionId || 'N/A',
+        sectionId: session.sectionId,
         sessionId: session.id || 'unknown',
-        sessionPlanId: session.sessionPlanId || 'N/A',
       },
     });
   };
+  
   
 
 

@@ -13,26 +13,24 @@ const SessionDetails = ({ schoolId, classId, sectionId }) => {
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
-      setLoading(true); // Set loading to true before fetch
       try {
-        console.log('Fetching students for:', { schoolId, classId, sectionId });
         const response = await axiosInstance.get(
-          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/students`
+          `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        console.log('Fetched students:', response.data); // Debugging fetched data
         setStudents(response.data);
-        setError(null); // Clear any previous error
-      } catch (err) {
-        console.error('Error fetching students:', err);
+      } catch (error) {
+        console.error('Error fetching students:', error);
         setError('Failed to load students. Please try again.');
-        setStudents([]); // Clear students if there's an error
-      } finally {
-        setLoading(false); // Set loading to false after fetch
       }
     };
-
-    fetchStudents();
-  }, [schoolId, classId, sectionId]);
+  
+    if (sectionId) {
+      fetchStudents();
+    } else {
+      setError('Section ID is missing.');
+    }
+  }, [teacherId, sectionId]);
+  
 
   // Handle changes to the absentee selection
   const handleAbsenteeChange = (selectedOptions) => {

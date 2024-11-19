@@ -203,4 +203,47 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   }
 });
 
+// Get students for a specific section
+router.get('/teachers/:teacherId/sections/:sectionId/students', async (req, res) => {
+  const { teacherId, sectionId } = req.params;
+
+  try {
+    // Validate sectionId
+    if (!sectionId) {
+      return res.status(400).json({ error: 'Section ID is required' });
+    }
+
+    // Validate if the section exists
+    const section = await Section.findOne({ where: { id: sectionId } });
+    if (!section) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    // Fetch students for the given section
+    const students = await Student.findAll({
+      where: { sectionId },
+      attributes: [
+        'id',
+        'rollNumber',
+        'studentName',
+        'studentEmail',
+        'studentPhoneNumber',
+        'parentName',
+        'parentPhoneNumber1',
+        'parentPhoneNumber2',
+        'parentEmail',
+      ],
+    });
+
+    if (students.length === 0) {
+      return res.status(404).json({ error: 'No students found for this section' });
+    }
+
+    res.status(200).json(students);
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    res.status(500).json({ error: 'Failed to fetch students for the section' });
+  }
+});
+
 module.exports = router;
