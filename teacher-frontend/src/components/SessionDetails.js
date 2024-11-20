@@ -102,26 +102,29 @@ const SessionDetails = () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         const sessionData = response.data;
-
+  
         if (sessionData.sessionDetails) {
-          setSessionDetails(sessionData.sessionDetails);
-          setChapterName(sessionData.sessionDetails.chapterName);
-        }
-
-        if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
-          const topics = sessionData.sessionPlans[0].planDetails || [];
-          setTopics(topics);
+          setSessionDetails({
+            chapterName: sessionData.sessionDetails.chapterName,
+            sessionNumber: sessionData.sessionDetails.sessionNumber,
+          });
+          setTopics(sessionData.sessionDetails.planDetails); // Topics from session plan
+        } else {
+          setSessionDetails({ chapterName: 'N/A', sessionNumber: 'N/A' });
         }
       } catch (error) {
-        console.error('Error fetching session details and session plans:', error);
-        setSessionError('Failed to fetch session details. Please try again.');
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details. Please try again.');
       } finally {
-        setLoadingSessionDetails(false);
+        setLoading(false);
       }
     };
-
-    fetchSessionDetails();
+  
+    if (sessionId && sessionId !== 'unknown') {
+      fetchSessionDetails();
+    }
   }, [teacherId, sessionId]);
+  
 
   useEffect(() => {
     const fetchAcademicStartDate = async () => {
@@ -251,7 +254,7 @@ const SessionDetails = () => {
 
           {/* Right Side: Session Notes and Details */}
           {/* Right Side: Session Notes and Details */}
-<div className="session-notes-section">
+          <div className="session-notes-section">
   <h3>Session Notes and Details:</h3>
   {loading ? (
     <p>Loading session details...</p>
@@ -263,47 +266,27 @@ const SessionDetails = () => {
         <strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}
       </p>
       <p>
-        <strong>Chapter:</strong> {chapterName || 'N/A'}
+        <strong>Chapter:</strong> {sessionDetails.chapterName || 'N/A'}
       </p>
 
       <h4>Topics to Cover:</h4>
       {topics.length > 0 ? (
         <ul>
-        {topics.map((topic, index) => (
-          <li key={index}>
-            <input
-              type="checkbox"
-              id={`topic-${index}`}
-              onChange={(e) => handleTopicChange(topic, !e.target.checked)}
-            />
-            <label htmlFor={`topic-${index}`}>{topic}</label>
-          </li>
-        ))}
-      </ul>
+          {topics.map((topic, index) => (
+            <li key={index}>
+              <input
+                type="checkbox"
+                id={`topic-${index}`}
+                name={`topic-${index}`}
+                defaultChecked={false} // Default unchecked
+              />
+              <label htmlFor={`topic-${index}`}>{topic}</label>
+            </li>
+          ))}
+        </ul>
       ) : (
         <p>No topics available for this session.</p>
       )}
-
-      <h4>Assignments:</h4>
-      <select onChange={handleAssignmentsChange} defaultValue="no">
-        <option value="no">No</option>
-        <option value="yes">Yes</option>
-      </select>
-
-      {assignments && (
-        <div className="assignment-input">
-          <label htmlFor="assignment-details">Enter Assignment Details:</label>
-          <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
-        </div>
-      )}
-
-      <h4>Observations:</h4>
-      <textarea
-        className="observations-textarea"
-        placeholder="Add observations or notes here..."
-      ></textarea>
-
-      <button className="end-session-button">End Session</button>
     </>
   )}
 </div>

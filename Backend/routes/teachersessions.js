@@ -83,10 +83,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 // Get session details for a specific teacher and session
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const { academicDay } = req.query;
 
   try {
-    // Fetch session details based on sessionId or academicDay
+    if (!sessionId || sessionId === 'unknown') {
+      return res.status(400).json({ error: 'Invalid session ID' });
+    }
+
+    // Fetch session with associations
     const session = await Session.findOne({
       where: { id: sessionId, teacherId },
       include: [
@@ -94,28 +97,30 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
         { model: ClassInfo, attributes: ['className'] },
         { model: Section, attributes: ['sectionName'] },
         { model: Subject, attributes: ['subjectName'] },
-        {
-          model: SessionPlan,
-          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'],
-          as: 'SessionPlan',
+        { 
+          model: SessionPlan, 
+          attributes: ['id', 'sessionNumber', 'planDetails'], 
+          as: 'SessionPlan' 
         },
       ],
     });
 
-    if (!session) return res.status(404).json({ error: 'Session not found' });
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
 
-    // Use academicDay to dynamically fetch the correct session/plan
-    const sessionPlan = await SessionPlan.findOne({
-      where: { sessionId, academicDay },
-    });
-
+    // Prepare the response
     res.json({
-      sessionDetails: session,
-      sessionPlans: sessionPlan ? [sessionPlan] : [],
+      sessionDetails: {
+        id: session.id,
+        chapterName: session.chapterName || 'N/A', // Chapter name from the session
+        sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A', // Session number from session plan
+        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [], // Topics from session plan
+      },
     });
   } catch (error) {
-    console.error("Error fetching session details:", error);
-    res.status(500).json({ error: "Failed to fetch session details" });
+    console.error('Error fetching session details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details' });
   }
 });
 
