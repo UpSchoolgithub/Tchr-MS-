@@ -15,7 +15,8 @@ const SessionDetails = () => {
   const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
-  
+  const [loadingSessionDetails, setLoadingSessionDetails] = useState(true); // Add this line
+
   
   
   // Fetch students from the backend
