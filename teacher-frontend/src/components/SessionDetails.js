@@ -16,26 +16,7 @@ const SessionDetails = () => {
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
   
-  useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(`/sessions/${sessionId}`);
-        const sessionData = response.data;
-
-        if (sessionData) {
-          setSessionDetails({
-            chapterName: sessionData.chapterName, // Include chapterName
-            ...sessionData, // Spread the rest of the session data for use in other parts
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-        setError('Failed to fetch session details.');
-      }
-    };
-
-    fetchSessionDetails();
-  }, [sessionId]);
+  
   
   // Fetch students from the backend
   useEffect(() => {
