@@ -24,12 +24,14 @@ const SessionDetails = () => {
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
+      if (!sectionId) {
+        setError('Section ID is missing.');
+        return;
+      }
       try {
-        console.log('Fetching students for teacherId:', teacherId, 'sectionId:', sectionId);
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        console.log('Student response:', response.data);
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -39,13 +41,9 @@ const SessionDetails = () => {
       }
     };
   
-    if (sectionId) {
-      fetchStudents();
-    } else {
-      console.error('Section ID is missing.');
-      setError('Section ID is missing.');
-    }
+    fetchStudents();
   }, [teacherId, sectionId]);
+  
   
 
   useEffect(() => {
@@ -141,12 +139,16 @@ const SessionDetails = () => {
   
   
   const calculateAcademicDay = () => {
-    if (!academicStartDate) return null;
+    if (!academicStartDate) {
+      console.error('Academic Start Date is missing.');
+      return null;
+    }
     const startDate = new Date(academicStartDate);
     const currentDate = new Date();
     const differenceInDays = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
     return differenceInDays + 1; // Add 1 for the current day
   };
+  
   
   const academicDay = calculateAcademicDay();
   
@@ -256,42 +258,35 @@ const SessionDetails = () => {
           {/* Right Side: Session Notes and Details */}
           {/* Right Side: Session Notes and Details */}
           <div className="session-notes-section">
-  <h3>Session Notes and Details:</h3>
-  {loading ? (
-    <p>Loading session details...</p>
-  ) : error ? (
-    <p className="error-message">{error}</p>
-  ) : (
-    <>
-      <p>
-        <strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}
-      </p>
-      <p>
-        <strong>Chapter:</strong> {sessionDetails.chapterName || 'N/A'}
-      </p>
-
-      <h4>Topics to Cover:</h4>
-      {topics.length > 0 ? (
-        <ul>
-          {topics.map((topic, index) => (
-            <li key={index}>
-              <input
-                type="checkbox"
-                id={`topic-${index}`}
-                name={`topic-${index}`}
-                defaultChecked={false} // Default unchecked
-              />
-              <label htmlFor={`topic-${index}`}>{topic}</label>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No topics available for this session.</p>
-      )}
-    </>
-  )}
-</div>
-
+            <h3>Session Notes and Details:</h3>
+            {loading ? (
+              <p>Loading session details...</p>
+            ) : error ? (
+              <p className="error-message">{error}</p>
+            ) : (
+              <>
+                <p>
+                  <strong>Session Number:</strong> {sessionDetails.sessionNumber ?? 'N/A'}
+                </p>
+                <p>
+                  <strong>Chapter:</strong> {sessionDetails.chapterName ?? 'N/A'}
+                </p>
+                <h4>Topics to Cover:</h4>
+                {topics.length > 0 ? (
+                  <ul>
+                    {topics.map((topic, index) => (
+                      <li key={index}>
+                        <input type="checkbox" id={`topic-${index}`} />
+                        <label htmlFor={`topic-${index}`}>{topic}</label>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No topics available for this session.</p>
+                )}
+              </>
+            )}
+          </div>
       </div>
     </div>
   );

@@ -25,23 +25,26 @@ const TeacherSessions = () => {
 
   // Fetch sessions assigned to the teacher along with session plans
   const fetchSessions = useCallback(async () => {
+    let localRetryCount = 0; // Use a local variable for retry count
     setLoading(true);
-    try {
-      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      setSessions(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching sessions:', err);
-      if (retryCount < maxRetries) {
-        retryCount += 1;
-        fetchSessions(); // Retry fetching sessions
-      } else {
-        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
+    while (localRetryCount < maxRetries) {
+      try {
+        const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+        setSessions(response.data);
+        setError(null);
+        break; // Break the loop on success
+      } catch (err) {
+        console.error('Error fetching sessions:', err);
+        localRetryCount += 1;
+        if (localRetryCount >= maxRetries) {
+          setError(`Failed to load sessions: ${err.message}. Please try again later.`);
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
     }
-  }, [teacherId, retryCount]);
+  }, [teacherId]);
+  
 
   useEffect(() => {
     fetchSessions();
@@ -81,17 +84,18 @@ const TeacherSessions = () => {
   
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
-        classId: session.classId || 'N/A',
-        subjectId: session.subjectId || 'N/A',
-        schoolId: session.schoolId || 'N/A',
-        sectionName: session.sectionName || 'N/A',
+        classId: session.classId ?? 'Unknown',
+        subjectId: session.subjectId ?? 'Unknown',
+        schoolId: session.schoolId ?? 'Unknown',
+        sectionName: session.sectionName ?? 'Unknown',
         sectionId: session.sectionId,
         sessionId: session.id,
-        chapterName: session.chapterName || 'N/A',
-        topics: session.topics || [],
+        chapterName: session.chapterName ?? 'Unknown',
+        topics: session.topics ?? [],
       },
     });
   };
+  
   
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
