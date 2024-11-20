@@ -1,190 +1,122 @@
-import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
-import { useParams } from 'react-router-dom'; // Import useParams
+import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
+import { useParams } from 'react-router-dom';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { schoolId, teacherId, classId, sectionId, sessionId } = useParams(); // Extract parameters from the route
-  const [students, setStudents] = useState([]); // List of students
-  const [absentees, setAbsentees] = useState([]); // Selected absentees
-  const [assignments, setAssignments] = useState(false); // Assignment flag
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error message
-  const [chapterName, setChapterName] = useState('');
-  const [topics, setTopics] = useState([]);
-  
-  // Fetch students from the backend
+  const { sessionId } = useParams();
+  const [sessionDetails, setSessionDetails] = useState({});
+  const [attendance, setAttendance] = useState([]);
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/students`
-        );
-        setStudents(response.data);
+        const response = await axiosInstance.get(`/sessions/${sessionId}`);
+        const sessionData = response.data;
+
+        if (sessionData) {
+          setSessionDetails({
+            schoolName: sessionData.schoolName,
+            className: sessionData.className,
+            sectionName: sessionData.sectionName,
+            subjectName: sessionData.subjectName,
+            day: sessionData.day,
+            period: sessionData.period,
+            startTime: sessionData.startTime,
+            endTime: sessionData.endTime,
+            assignments: sessionData.assignments,
+            chapterName: sessionData.chapterName, // Include chapterName
+          });
+        }
       } catch (error) {
-        console.error('Error fetching students:', error);
-        setError('Failed to load students. Please try again.');
-      } finally {
-        setLoading(false);
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
       }
     };
 
-    if (sectionId) {
-      fetchStudents();
-    } else {
-      setError('Section ID is missing.');
-    }
-  }, [teacherId, sectionId]);
+    const fetchAttendance = async () => {
+      try {
+        const attendanceResponse = await axiosInstance.get(`/sessions/${sessionId}/attendance`);
+        setAttendance(attendanceResponse.data);
+      } catch (error) {
+        console.error('Error fetching attendance:', error);
+        setError('Failed to fetch attendance data.');
+      }
+    };
 
-  useEffect(() => {
-    const storedAbsentees = localStorage.getItem('absentees');
-    if (storedAbsentees) {
-      setAbsentees(JSON.parse(storedAbsentees));
-    }
-  }, []); // Run only once on component mount
-  
-  const handleAbsenteeChange = (selectedOptions) => {
-    const selectedIds = selectedOptions?.map((option) => option.value) || [];
-    setAbsentees(selectedIds);
-    // Save to local storage
-    localStorage.setItem('absentees', JSON.stringify(selectedIds));
+    fetchSessionDetails();
+    fetchAttendance();
+  }, [sessionId]);
+
+  const handleAttendanceChange = (studentId, status) => {
+    setAttendance((prevAttendance) =>
+      prevAttendance.map((record) =>
+        record.studentId === studentId ? { ...record, status } : record
+      )
+    );
   };
 
-  // Handle assignment dropdown change
-  const handleAssignmentsChange = (e) => {
-    setAssignments(e.target.value === 'yes');
-  };
-
-  // Convert students to options for the dropdown
-  const studentOptions = students.map((student) => ({
-    value: student.rollNumber,
-    label: student.studentName,
-  }));
-
-  const handleSaveAttendance = async () => {
-    const attendanceData = students.map((student) => ({
-      studentId: student.id,
-      date: new Date().toISOString().split('T')[0], // Current date
-      status: absentees.includes(student.rollNumber) ? 'A' : 'P',
-    }));
-  
-    console.log('Saving attendance:', attendanceData); // Debugging log
-  
+  const saveAttendance = async () => {
     try {
-      await axiosInstance.post(
-        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
-        { attendanceData }
-      );
+      await axiosInstance.put(`/sessions/${sessionId}/attendance`, attendance);
       alert('Attendance saved successfully!');
-      // Clear absentees from local storage
-      localStorage.removeItem('absentees');
     } catch (error) {
       console.error('Error saving attendance:', error);
-      alert('Error saving attendance');
+      alert('Failed to save attendance.');
     }
   };
-  
-  
-  
+
   return (
     <div className="session-details-container">
-      <h2>Welcome, Teacher Name!</h2>
+      <h2>Session Notes and Details</h2>
+      {error && <p className="error-message">{error}</p>}
+      {!error && (
+        <div>
+          <div className="session-info">
+            <p><strong>Session Number:</strong> {sessionId}</p>
+            <p><strong>Chapter:</strong> {sessionDetails.chapterName}</p> {/* Display chapter name */}
+            <p><strong>School:</strong> {sessionDetails.schoolName}</p>
+            <p><strong>Class:</strong> {sessionDetails.className}</p>
+            <p><strong>Section:</strong> {sessionDetails.sectionName}</p>
+            <p><strong>Subject:</strong> {sessionDetails.subjectName}</p>
+            <p><strong>Day:</strong> {sessionDetails.day}</p>
+            <p><strong>Period:</strong> {sessionDetails.period}</p>
+            <p><strong>Start Time:</strong> {sessionDetails.startTime}</p>
+            <p><strong>End Time:</strong> {sessionDetails.endTime}</p>
+            <p><strong>Assignments:</strong> {sessionDetails.assignments}</p>
+          </div>
 
-      <div className="attendance-and-notes">
-        {/* Left Side: Mark Attendance */}
-        <div className="attendance-section">
-          <h3>Mark Attendance</h3>
-          {loading ? (
-            <p>Loading students...</p>
-          ) : error ? (
-            <p className="error-message">{error}</p>
-          ) : students.length === 0 ? (
-            <p>No students found for this section.</p>
-          ) : (
-            <>
-              <button onClick={handleSaveAttendance} className="save-attendance-button">
-                Save Attendance
-              </button>
-              <Select
-                isMulti
-                options={studentOptions}
-                onChange={handleAbsenteeChange}
-                placeholder="Choose Absentees"
-                value={studentOptions.filter((option) => absentees.includes(option.value))}
-                className="multi-select-dropdown"
-                closeMenuOnSelect={false}
-                isClearable
-              />
-            </>
-          )}
-
-          {/* Display absentees list only if absentees are selected */}
-          {absentees.length > 0 && (
-            <div className="absentees-list">
-              <h4>List of Absentees:</h4>
-              <ul>
-                {absentees.map((id) => {
-                  const student = studentOptions.find((s) => s.value === id);
-                  return (
-                    <li key={id}>
-                      {student?.label || 'Unknown'}{' '}
-                      <span style={{ color: 'red' }}>Absent</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+          <h3>Attendance</h3>
+          <table className="attendance-table">
+            <thead>
+              <tr>
+                <th>Roll Number</th>
+                <th>Name</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attendance.map((record) => (
+                <tr key={record.studentId}>
+                  <td>{record.rollNumber}</td>
+                  <td>{record.studentName}</td>
+                  <td>
+                    <select
+                      value={record.status}
+                      onChange={(e) => handleAttendanceChange(record.studentId, e.target.value)}
+                    >
+                      <option value="Present">Present</option>
+                      <option value="Absent">Absent</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button onClick={saveAttendance}>Save Attendance</button>
         </div>
-
-        {/* Right Side: Session Notes and Details */}
-        <div className="session-notes-section">
-          <h3>Session Notes and Details:</h3>
-          <p>
-            <strong>Session Number:</strong> 05
-          </p>
-          <p>
-            <strong>Chapter:</strong> Respiration in Plants
-          </p>
-
-          <h4>Topics to Cover:</h4>
-          <ul>
-            {topics.length > 0 ? (
-              topics.map((topic, index) => (
-                <li key={index}>
-                  <input type="checkbox" id={`topic-${index}`} name={`topic-${index}`} />
-                  <label htmlFor={`topic-${index}`}>{topic}</label>
-                </li>
-              ))
-            ) : (
-              <p>No topics available for this session.</p>
-            )}
-          </ul>
-
-
-          <h4>Assignments:</h4>
-          <select onChange={handleAssignmentsChange} defaultValue="no">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-
-          {assignments && (
-            <div className="assignment-input">
-              <label htmlFor="assignment-details">Enter Assignment Details:</label>
-              <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
-            </div>
-          )}
-
-          <h4>Observations:</h4>
-          <textarea
-            className="observations-textarea"
-            placeholder="Add observations or notes here..."
-          ></textarea>
-
-          <button className="end-session-button">End Session</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
