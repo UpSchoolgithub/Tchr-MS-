@@ -175,7 +175,7 @@ useEffect(() => {
           {/* Right Side: Session Notes and Details */}
           <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
-          {loadingSessionDetails ? (
+          {loading  ? (
             <p>Loading session details...</p>
           ) : (
             <>
