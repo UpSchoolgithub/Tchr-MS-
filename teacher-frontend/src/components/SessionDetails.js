@@ -129,15 +129,16 @@ const SessionDetails = () => {
   useEffect(() => {
     const fetchAcademicStartDate = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/academic-start-date`);
-        setAcademicStartDate(response.data.academicStartDate);
+        const response = await axiosInstance.get(`/classes/${classId}/academic-start-date`);
+        console.log('Academic Start Date:', response.data.academicStartDate);
       } catch (error) {
-        console.error("Error fetching academic start date:", error);
+        console.error('Error fetching academic start date:', error);
       }
     };
   
-    fetchAcademicStartDate();
-  }, [schoolId]);
+    if (classId) fetchAcademicStartDate();
+  }, [classId]);
+  
   
   const calculateAcademicDay = () => {
     if (!academicStartDate) return null;

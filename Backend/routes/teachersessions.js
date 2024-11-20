@@ -239,19 +239,20 @@ router.get('/teachers/:teacherId/sections/:sectionId/students', async (req, res)
 });
 
 
-// Fetch Academic Start Date
-router.get('/schools/:schoolId/academic-start-date', async (req, res) => {
+// Fetch Academic Start Date from ClassInfo table
+router.get('/classes/:classId/academic-start-date', async (req, res) => {
   try {
-    const school = await School.findByPk(req.params.schoolId, {
+    const classInfo = await ClassInfo.findByPk(req.params.classId, {
       attributes: ['academicStartDate'],
     });
-    if (!school) return res.status(404).json({ error: 'School not found' });
-    res.json({ academicStartDate: school.academicStartDate });
+    if (!classInfo) return res.status(404).json({ error: 'Class not found' });
+    res.json({ academicStartDate: classInfo.academicStartDate });
   } catch (error) {
-    console.error("Error fetching academic start date:", error);
-    res.status(500).json({ error: "Failed to fetch academic start date" });
+    console.error('Error fetching academic start date:', error);
+    res.status(500).json({ error: 'Failed to fetch academic start date' });
   }
 });
+
 
 // Handle Incomplete Topics
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
