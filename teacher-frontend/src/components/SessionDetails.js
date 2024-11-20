@@ -173,63 +173,65 @@ useEffect(() => {
         </div>
 
           {/* Right Side: Session Notes and Details */}
-          <div className="session-notes-section">
-          <h3>Session Notes and Details:</h3>
-          {loading  ? (
-            <p>Loading session details...</p>
-          ) : (
-            <>
-              <p>
-                <strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}
-              </p>
-              <p>
-                <strong>Chapter:</strong> {chapterName || 'N/A'}
-              </p>
+          {/* Right Side: Session Notes and Details */}
+<div className="session-notes-section">
+  <h3>Session Notes and Details:</h3>
+  {loading ? (
+    <p>Loading session details...</p>
+  ) : error ? (
+    <p className="error-message">{error}</p>
+  ) : (
+    <>
+      <p>
+        <strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}
+      </p>
+      <p>
+        <strong>Chapter:</strong> {chapterName || 'N/A'}
+      </p>
 
-              <h4>Topics to Cover:</h4>
-              {error  ? (
-                <p className="error-message">{errorSessionDetails}</p>
-              ) : topics.length > 0 ? (
-                <ul>
-                  {topics.map((topic, index) => (
-                    <li key={index}>
-                      <input
-                        type="checkbox"
-                        id={`topic-${index}`}
-                        name={`topic-${index}`}
-                        defaultChecked={false} // Default unchecked
-                      />
-                      <label htmlFor={`topic-${index}`}>{topic}</label>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No topics available for this session.</p>
-              )}
+      <h4>Topics to Cover:</h4>
+      {topics.length > 0 ? (
+        <ul>
+          {topics.map((topic, index) => (
+            <li key={index}>
+              <input
+                type="checkbox"
+                id={`topic-${index}`}
+                name={`topic-${index}`}
+                defaultChecked={false} // Default unchecked
+              />
+              <label htmlFor={`topic-${index}`}>{topic}</label>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No topics available for this session.</p>
+      )}
 
-              <h4>Assignments:</h4>
-              <select onChange={handleAssignmentsChange} defaultValue="no">
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+      <h4>Assignments:</h4>
+      <select onChange={handleAssignmentsChange} defaultValue="no">
+        <option value="no">No</option>
+        <option value="yes">Yes</option>
+      </select>
 
-              {assignments && (
-                <div className="assignment-input">
-                  <label htmlFor="assignment-details">Enter Assignment Details:</label>
-                  <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
-                </div>
-              )}
-
-              <h4>Observations:</h4>
-              <textarea
-                className="observations-textarea"
-                placeholder="Add observations or notes here..."
-              ></textarea>
-
-              <button className="end-session-button">End Session</button>
-              </>
-          )}
+      {assignments && (
+        <div className="assignment-input">
+          <label htmlFor="assignment-details">Enter Assignment Details:</label>
+          <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
         </div>
+      )}
+
+      <h4>Observations:</h4>
+      <textarea
+        className="observations-textarea"
+        placeholder="Add observations or notes here..."
+      ></textarea>
+
+      <button className="end-session-button">End Session</button>
+    </>
+  )}
+</div>
+
       </div>
     </div>
   );
