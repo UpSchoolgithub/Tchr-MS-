@@ -73,13 +73,13 @@ const TeacherSessions = () => {
 
   // Handle start session button click
   const handleStartSession = (session) => {
-    if (!session.sectionId) {
-      console.error('Section ID is undefined for the session:', session);
-      alert('Unable to start session: Section ID is missing.');
+    if (!session.sectionId || !session.id) {
+      console.error('Session ID or Section ID is missing:', session);
+      alert('Unable to start session due to missing data.');
       return;
     }
-
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
+  
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
       state: {
         classId: session.classId || 'N/A',
         subjectId: session.subjectId || 'N/A',
@@ -87,11 +87,12 @@ const TeacherSessions = () => {
         sectionName: session.sectionName || 'N/A',
         sectionId: session.sectionId,
         sessionId: session.id,
-        chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
-        topics: session.topics || [], // Topics if already available
+        chapterName: session.chapterName || 'N/A',
+        topics: session.topics || [],
       },
     });
   };
+  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
