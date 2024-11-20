@@ -187,7 +187,7 @@ useEffect(() => {
               </p>
 
               <h4>Topics to Cover:</h4>
-              {errorSessionDetails ? (
+              {error  ? (
                 <p className="error-message">{errorSessionDetails}</p>
               ) : topics.length > 0 ? (
                 <ul>
