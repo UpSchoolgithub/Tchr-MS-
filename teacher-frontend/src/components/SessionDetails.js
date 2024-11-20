@@ -94,32 +94,31 @@ const SessionDetails = () => {
   };
   
   // Fetch session details along with session plan
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-      const sessionData = response.data;
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
+        const sessionData = response.data;
 
-      if (sessionData.sessionDetails) {
-        setSessionDetails(sessionData.sessionDetails);
-        setChapterName(sessionData.sessionDetails.chapterName); // Set chapter name
+        if (sessionData.sessionDetails) {
+          setSessionDetails(sessionData.sessionDetails);
+          setChapterName(sessionData.sessionDetails.chapterName);
+        }
+
+        if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
+          const topics = sessionData.sessionPlans[0].planDetails || [];
+          setTopics(topics);
+        }
+      } catch (error) {
+        console.error('Error fetching session details and session plans:', error);
+        setSessionError('Failed to fetch session details. Please try again.');
+      } finally {
+        setLoadingSessionDetails(false);
       }
+    };
 
-      if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
-        const topics = sessionData.sessionPlans[0].planDetails || []; // Extract topics
-        setTopics(topics); // Set topics to be covered in the session
-      }
-    } catch (error) {
-      console.error('Error fetching session details and session plans:', error);
-      setError('Failed to fetch session details. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchSessionDetails();
-}, [teacherId, sessionId]);
-
+    fetchSessionDetails();
+  }, [teacherId, sessionId]);
   
   return (
     <div className="session-details-container">
