@@ -83,8 +83,10 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 // Get session details for a specific teacher and session
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
+  const { academicDay } = req.query;
 
   try {
+    // Fetch session details based on sessionId or academicDay
     const session = await Session.findOne({
       where: { id: sessionId, teacherId },
       include: [
@@ -94,41 +96,29 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
         { model: Subject, attributes: ['subjectName'] },
         {
           model: SessionPlan,
-          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], // Include topics
+          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'],
           as: 'SessionPlan',
         },
       ],
     });
 
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    // Use academicDay to dynamically fetch the correct session/plan
+    const sessionPlan = await SessionPlan.findOne({
+      where: { sessionId, academicDay },
+    });
 
     res.json({
-      sessionDetails: {
-        id: session.id,
-        chapterName: session.chapterName,
-        startTime: session.startTime,
-        endTime: session.endTime,
-        assignments: session.assignments || 'No assignments',
-        sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null,
-      },
-      sessionPlans: session.SessionPlan
-        ? [
-            {
-              id: session.SessionPlan.id,
-              sessionNumber: session.SessionPlan.sessionNumber,
-              planDetails: JSON.parse(session.SessionPlan.planDetails || '[]'), // Parse topics
-              completed: session.SessionPlan.completed,
-            },
-          ]
-        : [],
+      sessionDetails: session,
+      sessionPlans: sessionPlan ? [sessionPlan] : [],
     });
   } catch (error) {
-    console.error('Error fetching session and session plans:', error);
-    res.status(500).json({ error: 'Failed to fetch session details and plans' });
+    console.error("Error fetching session details:", error);
+    res.status(500).json({ error: "Failed to fetch session details" });
   }
 });
+
 
 
 
@@ -240,6 +230,51 @@ router.get('/teachers/:teacherId/sections/:sectionId/students', async (req, res)
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ error: 'Failed to fetch students for the section' });
+  }
+});
+
+
+// Fetch Academic Start Date
+router.get('/schools/:schoolId/academic-start-date', async (req, res) => {
+  try {
+    const school = await School.findByPk(req.params.schoolId, {
+      attributes: ['academicStartDate'],
+    });
+    if (!school) return res.status(404).json({ error: 'School not found' });
+    res.json({ academicStartDate: school.academicStartDate });
+  } catch (error) {
+    console.error("Error fetching academic start date:", error);
+    res.status(500).json({ error: "Failed to fetch academic start date" });
+  }
+});
+
+// Handle Incomplete Topics
+router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
+  const { teacherId, sessionId } = req.params;
+  const { incompleteTopics } = req.body;
+
+  try {
+    // Save incomplete topics to the next session
+    const sessionPlan = await SessionPlan.findOne({ where: { sessionId } });
+    if (!sessionPlan) return res.status(404).json({ error: 'Session Plan not found' });
+
+    // Append incomplete topics to the next session's plan
+    const nextSession = await SessionPlan.findOne({
+      where: { sessionNumber: sessionPlan.sessionNumber + 1 },
+    });
+
+    if (nextSession) {
+      nextSession.planDetails = [
+        ...incompleteTopics,
+        ...JSON.parse(nextSession.planDetails || '[]'),
+      ];
+      await nextSession.save();
+    }
+
+    res.json({ message: 'Session ended and topics rolled over.' });
+  } catch (error) {
+    console.error("Error ending session:", error);
+    res.status(500).json({ error: "Failed to end session" });
   }
 });
 

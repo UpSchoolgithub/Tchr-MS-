@@ -17,6 +17,7 @@ const SessionDetails = () => {
   const [topics, setTopics] = useState([]);
   const [loadingSessionDetails, setLoadingSessionDetails] = useState(true); // Add this line
   const [sessionError, setSessionError] = useState(null);
+  const [academicStartDate, setAcademicStartDate] = useState(null);
 
   
   
@@ -121,6 +122,81 @@ const SessionDetails = () => {
 
     fetchSessionDetails();
   }, [teacherId, sessionId]);
+
+  useEffect(() => {
+    const fetchAcademicStartDate = async () => {
+      try {
+        const response = await axiosInstance.get(`/schools/${schoolId}/academic-start-date`);
+        setAcademicStartDate(response.data.academicStartDate);
+      } catch (error) {
+        console.error("Error fetching academic start date:", error);
+      }
+    };
+  
+    fetchAcademicStartDate();
+  }, [schoolId]);
+  
+  const calculateAcademicDay = () => {
+    if (!academicStartDate) return null;
+    const startDate = new Date(academicStartDate);
+    const currentDate = new Date();
+    const differenceInDays = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+    return differenceInDays + 1; // Add 1 for the current day
+  };
+  
+  const academicDay = calculateAcademicDay();
+  
+
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sessions/${sessionId}`, 
+          { params: { academicDay } } // Pass the academic day to the backend
+        );
+        const sessionData = response.data;
+  
+        if (sessionData.sessionDetails) {
+          setSessionDetails(sessionData.sessionDetails);
+          setChapterName(sessionData.sessionDetails.chapterName);
+        }
+  
+        if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
+          const topics = sessionData.sessionPlans[0].planDetails || [];
+          setTopics(topics);
+        }
+      } catch (error) {
+        console.error("Error fetching session details and session plans:", error);
+        setError("Failed to fetch session details. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    if (academicDay) fetchSessionDetails();
+  }, [teacherId, sessionId, academicDay]);
+  
+  const handleTopicChange = (topic, isChecked) => {
+    if (isChecked) {
+      setIncompleteTopics((prev) => [...prev, topic]);
+    } else {
+      setIncompleteTopics((prev) => prev.filter((t) => t !== topic));
+    }
+  };
+  
+
+  const handleEndSession = async () => {
+    try {
+      await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/end`, {
+        incompleteTopics,
+      });
+      alert("Session ended successfully!");
+    } catch (error) {
+      console.error("Error ending session:", error);
+      alert("Error ending session.");
+    }
+  };
+
   
   return (
     <div className="session-details-container">
@@ -193,18 +269,17 @@ const SessionDetails = () => {
       <h4>Topics to Cover:</h4>
       {topics.length > 0 ? (
         <ul>
-          {topics.map((topic, index) => (
-            <li key={index}>
-              <input
-                type="checkbox"
-                id={`topic-${index}`}
-                name={`topic-${index}`}
-                defaultChecked={false} // Default unchecked
-              />
-              <label htmlFor={`topic-${index}`}>{topic}</label>
-            </li>
-          ))}
-        </ul>
+        {topics.map((topic, index) => (
+          <li key={index}>
+            <input
+              type="checkbox"
+              id={`topic-${index}`}
+              onChange={(e) => handleTopicChange(topic, !e.target.checked)}
+            />
+            <label htmlFor={`topic-${index}`}>{topic}</label>
+          </li>
+        ))}
+      </ul>
       ) : (
         <p>No topics available for this session.</p>
       )}
