@@ -16,6 +16,7 @@ const SessionDetails = () => {
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
   const [loadingSessionDetails, setLoadingSessionDetails] = useState(true); // Add this line
+  const [sessionError, setSessionError] = useState(null);
 
   
   
