@@ -9,33 +9,10 @@ const SessionDetails = () => {
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
-  const [sessionDetails, setSessionDetails] = useState({});
   const [loading, setLoading] = useState(true); // Loading state
-  const [attendance, setAttendance] = useState([]);
   const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
-  
-  useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(`/sessions/${sessionId}`);
-        const sessionData = response.data;
-
-        if (sessionData) {
-          setSessionDetails({
-            chapterName: sessionData.chapterName, // Include chapterName
-            ...sessionData, // Spread the rest of the session data for use in other parts
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-        setError('Failed to fetch session details.');
-      }
-    };
-
-    fetchSessionDetails();
-  }, [sessionId]);
   
   // Fetch students from the backend
   useEffect(() => {
@@ -108,7 +85,24 @@ const SessionDetails = () => {
     }
   };
   
-  
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(`/sessions/${sessionId}`);
+        const sessionData = response.data;
+
+        if (sessionData) {
+          setChapterName(sessionData.chapterName || 'N/A'); // Set chapter name
+          setTopics(sessionData.topics || []); // Set topics if available
+        }
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
+      }
+    };
+
+    fetchSessionDetails();
+  }, [sessionId]);
   
   return (
     <div className="session-details-container">
@@ -163,9 +157,7 @@ const SessionDetails = () => {
 
         {/* Right Side: Session Notes and Details */}
         <div className="session-notes-section">
-          
           <h3>Session Notes and Details:</h3>
-          
           <p>
             <strong>Session Number:</strong> 05
           </p>
