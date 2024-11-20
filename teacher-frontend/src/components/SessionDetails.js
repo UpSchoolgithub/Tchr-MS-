@@ -93,7 +93,33 @@ const SessionDetails = () => {
     }
   };
   
-  
+  // Fetch session details along with session plan
+useEffect(() => {
+  const fetchSessionDetails = async () => {
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
+      const sessionData = response.data;
+
+      if (sessionData.sessionDetails) {
+        setSessionDetails(sessionData.sessionDetails);
+        setChapterName(sessionData.sessionDetails.chapterName); // Set chapter name
+      }
+
+      if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
+        const topics = sessionData.sessionPlans[0].planDetails || []; // Extract topics
+        setTopics(topics); // Set topics to be covered in the session
+      }
+    } catch (error) {
+      console.error('Error fetching session details and session plans:', error);
+      setError('Failed to fetch session details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSessionDetails();
+}, [teacherId, sessionId]);
+
   
   return (
     <div className="session-details-container">
@@ -163,7 +189,12 @@ const SessionDetails = () => {
             {topics.length > 0 ? (
               topics.map((topic, index) => (
                 <li key={index}>
-                  <input type="checkbox" id={`topic-${index}`} name={`topic-${index}`} />
+                  <input
+                    type="checkbox"
+                    id={`topic-${index}`}
+                    name={`topic-${index}`}
+                    defaultChecked={false} // Default unchecked
+                  />
                   <label htmlFor={`topic-${index}`}>{topic}</label>
                 </li>
               ))
@@ -171,6 +202,7 @@ const SessionDetails = () => {
               <p>No topics available for this session.</p>
             )}
           </ul>
+
 
 
           <h4>Assignments:</h4>

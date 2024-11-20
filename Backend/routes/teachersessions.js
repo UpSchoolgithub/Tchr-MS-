@@ -81,12 +81,10 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 
 
 // Get session details for a specific teacher and session
-// Get session details for a specific teacher and session
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
   try {
-    // Fetch session with associations
     const session = await Session.findOne({
       where: { id: sessionId, teacherId },
       include: [
@@ -94,10 +92,10 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
         { model: ClassInfo, attributes: ['className'] },
         { model: Section, attributes: ['sectionName'] },
         { model: Subject, attributes: ['subjectName'] },
-        { 
-          model: SessionPlan, 
-          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], 
-          as: 'SessionPlan' 
+        {
+          model: SessionPlan,
+          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], // Include topics
+          as: 'SessionPlan',
         },
       ],
     });
@@ -106,33 +104,32 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    // Prepare the response format
     res.json({
       sessionDetails: {
         id: session.id,
-        schoolName: session.School ? session.School.name : 'N/A',
-        className: session.ClassInfo ? session.ClassInfo.className : 'N/A',
-        sectionName: session.Section ? session.Section.sectionName : 'N/A',
-        subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
-        day: session.day,
-        period: session.period,
+        chapterName: session.chapterName,
         startTime: session.startTime,
         endTime: session.endTime,
         assignments: session.assignments || 'No assignments',
-        sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null // Add sessionPlanId here as well
+        sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null,
       },
-      sessionPlans: session.SessionPlan ? [{
-        id: session.SessionPlan.id,
-        sessionNumber: session.SessionPlan.sessionNumber,
-        planDetails: JSON.parse(session.SessionPlan.planDetails), // Assuming planDetails is a JSON string
-        completed: session.SessionPlan.completed,
-      }] : []
+      sessionPlans: session.SessionPlan
+        ? [
+            {
+              id: session.SessionPlan.id,
+              sessionNumber: session.SessionPlan.sessionNumber,
+              planDetails: JSON.parse(session.SessionPlan.planDetails || '[]'), // Parse topics
+              completed: session.SessionPlan.completed,
+            },
+          ]
+        : [],
     });
   } catch (error) {
     console.error('Error fetching session and session plans:', error);
     res.status(500).json({ error: 'Failed to fetch session details and plans' });
   }
 });
+
 
 
 
