@@ -270,44 +270,28 @@ router.get('/teachers/:teacherId/sections/:sectionId/students', async (req, res)
 
 
 // Fetch Academic Start Date from ClassInfo table
-// Fetch Academic Start Date based on Class, School, or Teacher (if applicable)
+// Fetch academic start date from the subjects table
 router.get('/classes/:classId/academic-start-date', async (req, res) => {
   const { classId } = req.params;
 
   try {
-    // Fetch class information to get academicStartDate
-    const classInfo = await ClassInfo.findByPk(classId, {
-      include: [
-        {
-          model: School, // Include School info
-          attributes: ['academicStartDate'], // Fetch academicStartDate from School if defined
-        },
-        {
-          model: Teacher, // Optionally include Teacher info if linked to academicStartDate
-          attributes: ['academicStartDate'],
-        },
-      ],
-      attributes: ['academicStartDate'], // Academic Start Date directly from ClassInfo
+    const subjects = await Subject.findAll({
+      where: { classInfoId: classId },
+      attributes: ['academicStartDate'],
     });
 
-    if (!classInfo) return res.status(404).json({ error: 'Class not found' });
-
-    // Prefer the class's academicStartDate; fallback to school's academicStartDate if unavailable
-    const academicStartDate =
-      classInfo.academicStartDate ||
-      (classInfo.School ? classInfo.School.academicStartDate : null) ||
-      (classInfo.Teacher ? classInfo.Teacher.academicStartDate : null);
-
-    if (!academicStartDate) {
-      return res.status(404).json({ error: 'Academic start date not defined for the class, school, or teacher' });
+    if (subjects.length === 0) {
+      return res.status(404).json({ error: 'No subjects found for the class' });
     }
 
-    res.json({ academicStartDate });
+    // Assuming academicStartDate should be the same for all subjects
+    res.json({ academicStartDate: subjects[0].academicStartDate });
   } catch (error) {
     console.error('Error fetching academic start date:', error);
     res.status(500).json({ error: 'Failed to fetch academic start date' });
   }
 });
+
 
 
 
