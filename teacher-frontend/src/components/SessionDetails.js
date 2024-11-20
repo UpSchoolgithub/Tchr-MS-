@@ -41,9 +41,11 @@ const SessionDetails = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
+        console.log('Fetching students for teacherId:', teacherId, 'sectionId:', sectionId);
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
+        console.log('Student response:', response.data);
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -52,13 +54,15 @@ const SessionDetails = () => {
         setLoading(false);
       }
     };
-
+  
     if (sectionId) {
       fetchStudents();
     } else {
+      console.error('Section ID is missing.');
       setError('Section ID is missing.');
     }
   }, [teacherId, sectionId]);
+  
 
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
