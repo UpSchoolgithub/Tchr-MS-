@@ -10,13 +10,14 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
   const [sessionDetails, setSessionDetails] = useState({});
-  const [loadingStudents, setLoadingStudents] = useState(true); // Separate loading for students
-  const [errorStudents, setErrorStudents] = useState(null); // Separate error for students
-  const [loadingSessionDetails, setLoadingSessionDetails] = useState(true); // Loading for session details
-  const [errorSessionDetails, setErrorSessionDetails] = useState(null); // Error for session details
+  const [loading, setLoading] = useState(true); // Loading state
+  const [attendance, setAttendance] = useState([]);
+  const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
-
+  
+  
+  
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
@@ -29,48 +30,28 @@ const SessionDetails = () => {
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
-        setErrorStudents('Failed to load students. Please try again.');
+        setError('Failed to load students. Please try again.');
       } finally {
-        setLoadingStudents(false);
+        setLoading(false);
       }
     };
-
+  
     if (sectionId) {
       fetchStudents();
     } else {
       console.error('Section ID is missing.');
-      setErrorStudents('Section ID is missing.');
-      setLoadingStudents(false);
+      setError('Section ID is missing.');
     }
   }, [teacherId, sectionId]);
+  
 
-  // Fetch session details along with session plan
   useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-        const sessionData = response.data;
-
-        if (sessionData.sessionDetails) {
-          setSessionDetails(sessionData.sessionDetails);
-          setChapterName(sessionData.sessionDetails.chapterName); // Set chapter name
-        }
-
-        if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
-          const topics = sessionData.sessionPlans[0].planDetails || []; // Extract topics
-          setTopics(topics); // Set topics to be covered in the session
-        }
-      } catch (error) {
-        console.error('Error fetching session details and session plans:', error);
-        setErrorSessionDetails('Failed to fetch session details. Please try again.');
-      } finally {
-        setLoadingSessionDetails(false);
-      }
-    };
-
-    fetchSessionDetails();
-  }, [teacherId, sessionId]);
-
+    const storedAbsentees = localStorage.getItem('absentees');
+    if (storedAbsentees) {
+      setAbsentees(JSON.parse(storedAbsentees));
+    }
+  }, []); // Run only once on component mount
+  
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
     setAbsentees(selectedIds);
@@ -78,10 +59,12 @@ const SessionDetails = () => {
     localStorage.setItem('absentees', JSON.stringify(selectedIds));
   };
 
+  // Handle assignment dropdown change
   const handleAssignmentsChange = (e) => {
     setAssignments(e.target.value === 'yes');
   };
 
+  // Convert students to options for the dropdown
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
     label: student.studentName,
@@ -93,9 +76,9 @@ const SessionDetails = () => {
       date: new Date().toISOString().split('T')[0], // Current date
       status: absentees.includes(student.rollNumber) ? 'A' : 'P',
     }));
-
+  
     console.log('Saving attendance:', attendanceData); // Debugging log
-
+  
     try {
       await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
@@ -109,7 +92,35 @@ const SessionDetails = () => {
       alert('Error saving attendance');
     }
   };
+  
+  // Fetch session details along with session plan
+useEffect(() => {
+  const fetchSessionDetails = async () => {
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
+      const sessionData = response.data;
 
+      if (sessionData.sessionDetails) {
+        setSessionDetails(sessionData.sessionDetails);
+        setChapterName(sessionData.sessionDetails.chapterName); // Set chapter name
+      }
+
+      if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
+        const topics = sessionData.sessionPlans[0].planDetails || []; // Extract topics
+        setTopics(topics); // Set topics to be covered in the session
+      }
+    } catch (error) {
+      console.error('Error fetching session details and session plans:', error);
+      setError('Failed to fetch session details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSessionDetails();
+}, [teacherId, sessionId]);
+
+  
   return (
     <div className="session-details-container">
       <h2>Welcome, Teacher Name!</h2>
@@ -118,10 +129,10 @@ const SessionDetails = () => {
         {/* Left Side: Mark Attendance */}
         <div className="attendance-section">
           <h3>Mark Attendance</h3>
-          {loadingStudents ? (
+          {loading ? (
             <p>Loading students...</p>
-          ) : errorStudents ? (
-            <p className="error-message">{errorStudents}</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
           ) : students.length === 0 ? (
             <p>No students found for this section.</p>
           ) : (
@@ -141,15 +152,31 @@ const SessionDetails = () => {
               />
             </>
           )}
+
+          {/* Display absentees list only if absentees are selected */}
+          {absentees.length > 0 && (
+            <div className="absentees-list">
+              <h4>List of Absentees:</h4>
+              <ul>
+                {absentees.map((id) => {
+                  const student = studentOptions.find((s) => s.value === id);
+                  return (
+                    <li key={id}>
+                      {student?.label || 'Unknown'}{' '}
+                      <span style={{ color: 'red' }}>Absent</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </div>
 
-        {/* Right Side: Session Notes and Details */}
-        <div className="session-notes-section">
+          {/* Right Side: Session Notes and Details */}
+          <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
           {loadingSessionDetails ? (
             <p>Loading session details...</p>
-          ) : errorSessionDetails ? (
-            <p className="error-message">{errorSessionDetails}</p>
           ) : (
             <>
               <p>
@@ -160,9 +187,11 @@ const SessionDetails = () => {
               </p>
 
               <h4>Topics to Cover:</h4>
-              <ul>
-                {topics.length > 0 ? (
-                  topics.map((topic, index) => (
+              {errorSessionDetails ? (
+                <p className="error-message">{errorSessionDetails}</p>
+              ) : topics.length > 0 ? (
+                <ul>
+                  {topics.map((topic, index) => (
                     <li key={index}>
                       <input
                         type="checkbox"
@@ -172,11 +201,11 @@ const SessionDetails = () => {
                       />
                       <label htmlFor={`topic-${index}`}>{topic}</label>
                     </li>
-                  ))
-                ) : (
-                  <p>No topics available for this session.</p>
-                )}
-              </ul>
+                  ))}
+                </ul>
+              ) : (
+                <p>No topics available for this session.</p>
+              )}
 
               <h4>Assignments:</h4>
               <select onChange={handleAssignmentsChange} defaultValue="no">
@@ -198,7 +227,7 @@ const SessionDetails = () => {
               ></textarea>
 
               <button className="end-session-button">End Session</button>
-            </>
+              </>
           )}
         </div>
       </div>
