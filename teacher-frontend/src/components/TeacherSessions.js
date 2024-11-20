@@ -76,6 +76,7 @@ const TeacherSessions = () => {
 
   // Handle start session button click
   const handleStartSession = (session) => {
+    console.log('Session data:', session); // Debugging
     if (!session.sectionId || !session.id) {
       console.error('Session ID or Section ID is missing:', session);
       alert('Unable to start session due to missing data.');

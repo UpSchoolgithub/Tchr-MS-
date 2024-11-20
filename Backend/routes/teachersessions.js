@@ -27,6 +27,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       schoolName: session.School ? session.School.name : 'N/A',
       className: session.ClassInfo ? session.ClassInfo.className : 'N/A',
       sectionName: session.Section ? session.Section.sectionName : 'N/A',
+      sectionId: session.Section ? session.Section.id : null, // Ensure this is populated
       subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
       day: session.day,
       period: session.period,
