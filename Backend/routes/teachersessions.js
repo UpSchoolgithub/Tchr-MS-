@@ -139,30 +139,57 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
+  const { day, date } = req.query;
 
   try {
+    const whereClause = {
+      teacherId,
+      sectionId,
+      subjectId,
+    };
+
+    if (day) whereClause.day = day;
+    if (date) whereClause.date = date;
+
     const sessions = await Session.findAll({
-      where: { teacherId, sectionId, subjectId },
+      where: whereClause,
       include: [
         {
           model: SessionPlan,
-          attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
-          as: 'SessionPlan'
-        }
+          attributes: ['id', 'sessionNumber', 'planDetails', 'completed'], // Include session plan details
+        },
       ],
-      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'] // Fetch session details
+      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber', 'startTime', 'endTime'],
     });
 
     if (sessions.length === 0) {
-      return res.status(404).json({ error: 'No sessions found' });
+      return res.status(404).json({ error: 'No sessions found for the given filters' });
     }
 
-    res.json(sessions);
+    // Format response
+    const formattedSessions = sessions.map((session) => ({
+      sessionId: session.id,
+      chapterName: session.chapterName,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      sessionPlan: session.SessionPlan
+        ? {
+            id: session.SessionPlan.id,
+            sessionNumber: session.SessionPlan.sessionNumber,
+            topicsCompleted: session.SessionPlan.completed,
+            totalTopics: JSON.parse(session.SessionPlan.planDetails || '[]').length,
+            planDetails: JSON.parse(session.SessionPlan.planDetails || '[]'),
+          }
+        : null,
+    }));
+
+    res.json(formattedSessions);
   } catch (error) {
-    console.error('Error fetching sessions and session plans:', error);
+    console.error('Error fetching sessions with session plans:', error);
     res.status(500).json({ error: 'Failed to fetch sessions and session plans' });
   }
 });
+
 
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
