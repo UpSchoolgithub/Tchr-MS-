@@ -72,26 +72,44 @@ const TeacherSessions = () => {
   };
 
   // Handle start session button click
-  const handleStartSession = (session) => {
-    if (!session.sectionId) {
-      console.error('Section ID is undefined for the session:', session);
-      alert('Unable to start session: Section ID is missing.');
+  // Handle start session button click
+const handleStartSession = async (session) => {
+  try {
+    const response = await axiosInstance.get(
+      `/teachers/${teacherId}/sessions/find`, // Backend endpoint to find session
+      {
+        params: {
+          schoolId: session.schoolId,
+          classId: session.classId,
+          sectionId: session.sectionId,
+          subjectId: session.subjectId,
+        },
+      }
+    );
+
+    const { sessionId } = response.data;
+
+    if (!sessionId) {
+      alert('Session not found for the given details.');
       return;
     }
 
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${sessionId}`, {
       state: {
-        classId: session.classId || 'N/A',
-        subjectId: session.subjectId || 'N/A',
-        schoolId: session.schoolId || 'N/A',
-        sectionName: session.sectionName || 'N/A',
+        classId: session.classId,
+        subjectId: session.subjectId,
+        schoolId: session.schoolId,
         sectionId: session.sectionId,
-        sessionId: session.id,
+        sessionId: sessionId,
         chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
         topics: session.topics || [], // Topics if already available
       },
     });
-  };
+  } catch (error) {
+    console.error('Error finding session ID:', error);
+    alert('Failed to fetch session details. Please try again.');
+  }
+};
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 

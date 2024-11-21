@@ -326,4 +326,33 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   }
 });
 
+
+// Find session ID based on school, class, section, and subject
+router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
+  const { teacherId } = req.params;
+  const { schoolId, classId, sectionId, subjectId } = req.query;
+
+  try {
+    const session = await Session.findOne({
+      where: {
+        teacherId,
+        schoolId,
+        classInfoId: classId,
+        sectionId,
+        subjectId,
+      },
+      attributes: ['id'], // Only fetch session ID
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found for the specified criteria' });
+    }
+
+    res.json({ sessionId: session.id });
+  } catch (error) {
+    console.error('Error finding session:', error);
+    res.status(500).json({ error: 'Failed to fetch session ID' });
+  }
+});
+
 module.exports = router;
