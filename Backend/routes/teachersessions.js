@@ -83,6 +83,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 
 // Get session details for a specific teacher and session
 // Get session details for a specific teacher and session, with academic day
+// Get session details for a specific teacher and session, with academic day
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -95,15 +96,11 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
     const session = await Session.findOne({
       where: { id: sessionId, teacherId },
       include: [
-        { model: School, attributes: ['name', 'academicStartDate'] }, // Include School's academicStartDate
-        { model: ClassInfo, attributes: ['className', 'academicStartDate'] }, // Include ClassInfo's academicStartDate
+        { model: School, attributes: ['name', 'academicStartDate'] },
+        { model: ClassInfo, attributes: ['className', 'academicStartDate'] },
         { model: Section, attributes: ['sectionName'] },
-        { model: Subject, attributes: ['subjectName'] },
-        { 
-          model: SessionPlan, 
-          attributes: ['id', 'sessionNumber', 'planDetails'], 
-          as: 'SessionPlan' 
-        },
+        { model: Subject, attributes: ['subjectName', 'academicStartDate', 'revisionStartDate'] },
+        { model: SessionPlan, attributes: ['id', 'sessionNumber', 'planDetails'], as: 'SessionPlan' },
       ],
     });
 
@@ -111,9 +108,9 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    // Determine academic start date from ClassInfo or School
+    // Determine the start date (from Subject or ClassInfo/School)
     const academicStartDate =
-      session.ClassInfo.academicStartDate || session.School.academicStartDate;
+      session.Subject?.academicStartDate || session.ClassInfo?.academicStartDate || session.School?.academicStartDate;
 
     if (!academicStartDate) {
       return res.status(400).json({ error: 'Academic start date is missing' });
@@ -127,14 +124,16 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
     );
     const academicDay = differenceInDays + 1; // Add 1 for the current day
 
-    // Prepare the response
+    // Return session details with academic day
     res.json({
       sessionDetails: {
         id: session.id,
-        chapterName: session.chapterName || 'N/A', // Chapter name from the session
-        sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A', // Session number from session plan
-        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [], // Topics from session plan
+        chapterName: session.chapterName || 'N/A',
+        sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
+        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [],
         academicDay, // Include academic day in the response
+        academicStartDate, // Include academicStartDate for transparency
+        revisionStartDate: session.Subject?.revisionStartDate || 'N/A', // Include revision start date if available
       },
     });
   } catch (error) {
@@ -142,6 +141,7 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session details' });
   }
 });
+
 
 
 
