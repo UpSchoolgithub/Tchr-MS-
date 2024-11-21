@@ -95,30 +95,31 @@ const SessionDetails = () => {
   
   // Fetch session details along with session plan
 useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-        const sessionData = response.data;
+  const fetchSessionDetails = async () => {
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
+      const sessionData = response.data;
 
-        if (sessionData.sessionDetails) {
-          setSessionDetails(sessionData.sessionDetails);
-          setChapterName(sessionData.sessionDetails.chapterName);
-        }
-
-        if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
-          const topics = sessionData.sessionPlans[0].planDetails || [];
-          setTopics(topics);
-        }
-      } catch (error) {
-        console.error('Error fetching session details and session plans:', error);
-        setSessionError('Failed to fetch session details. Please try again.');
-      } finally {
-        setLoadingSessionDetails(false);
+      if (sessionData.sessionDetails) {
+        setSessionDetails(sessionData.sessionDetails);
+        setChapterName(sessionData.sessionDetails.chapterName); // Set chapter name
       }
-    };
 
-    fetchSessionDetails();
-  }, [teacherId, sessionId]);
+      if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
+        const topics = sessionData.sessionPlans[0].planDetails || []; // Extract topics
+        setTopics(topics); // Set topics to be covered in the session
+      }
+    } catch (error) {
+      console.error('Error fetching session details and session plans:', error);
+      setError('Failed to fetch session details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSessionDetails();
+}, [teacherId, sessionId]);
+
   
   return (
     <div className="session-details-container">
@@ -171,66 +172,60 @@ useEffect(() => {
           )}
         </div>
 
-          {/* Right Side: Session Notes and Details */}
-          {/* Right Side: Session Notes and Details */}
-<div className="session-notes-section">
-  <h3>Session Notes and Details:</h3>
-  {loading ? (
-    <p>Loading session details...</p>
-  ) : error ? (
-    <p className="error-message">{error}</p>
-  ) : (
-    <>
-      <p>
-        <strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}
-      </p>
-      <p>
-        <strong>Chapter:</strong> {chapterName || 'N/A'}
-      </p>
+        {/* Right Side: Session Notes and Details */}
+        <div className="session-notes-section">
+          
+          <h3>Session Notes and Details:</h3>
+          
+          <p>
+            <strong>Session Number:</strong> 05
+          </p>
+          <p>
+            <strong>Chapter:</strong> {chapterName} {/* Display fetched chapter name */}
+          </p>
 
-      <h4>Topics to Cover:</h4>
-      {topics.length > 0 ? (
-        <ul>
-          {topics.map((topic, index) => (
-            <li key={index}>
-              <input
-                type="checkbox"
-                id={`topic-${index}`}
-                name={`topic-${index}`}
-                defaultChecked={false} // Default unchecked
-              />
-              <label htmlFor={`topic-${index}`}>{topic}</label>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No topics available for this session.</p>
-      )}
+          <h4>Topics to Cover:</h4>
+          <ul>
+            {topics.length > 0 ? (
+              topics.map((topic, index) => (
+                <li key={index}>
+                  <input
+                    type="checkbox"
+                    id={`topic-${index}`}
+                    name={`topic-${index}`}
+                    defaultChecked={false} // Default unchecked
+                  />
+                  <label htmlFor={`topic-${index}`}>{topic}</label>
+                </li>
+              ))
+            ) : (
+              <p>No topics available for this session.</p>
+            )}
+          </ul>
 
-      <h4>Assignments:</h4>
-      <select onChange={handleAssignmentsChange} defaultValue="no">
-        <option value="no">No</option>
-        <option value="yes">Yes</option>
-      </select>
 
-      {assignments && (
-        <div className="assignment-input">
-          <label htmlFor="assignment-details">Enter Assignment Details:</label>
-          <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
+
+          <h4>Assignments:</h4>
+          <select onChange={handleAssignmentsChange} defaultValue="no">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+
+          {assignments && (
+            <div className="assignment-input">
+              <label htmlFor="assignment-details">Enter Assignment Details:</label>
+              <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
+            </div>
+          )}
+
+          <h4>Observations:</h4>
+          <textarea
+            className="observations-textarea"
+            placeholder="Add observations or notes here..."
+          ></textarea>
+
+          <button className="end-session-button">End Session</button>
         </div>
-      )}
-
-      <h4>Observations:</h4>
-      <textarea
-        className="observations-textarea"
-        placeholder="Add observations or notes here..."
-      ></textarea>
-
-      <button className="end-session-button">End Session</button>
-    </>
-  )}
-</div>
-
       </div>
     </div>
   );
