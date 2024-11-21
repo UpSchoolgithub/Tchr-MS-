@@ -184,70 +184,86 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { date } = req.query;
 
   try {
-    // Fetch sessions with related data
-    const sessions = await Session.findAll({
-      include: [
-        {
-          model: SessionPlan,
-          attributes: ['id', 'sessionNumber', 'planDetails'],
-          as: 'SessionPlan',
+    // Perform query to fetch sessions
+    const sessions = await sequelize.query(
+      `
+      SELECT
+          schools.name AS School,
+          classinfos.className AS Class,
+          sections.sectionName AS Section,
+          subjects.subjectName AS Subject,
+          sessions.chapterName AS Chapter,
+          sp.sessionNumber AS SessionNumber,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2]')) AS Topic3,
+          sessions.priorityNumber AS ChapterPriority,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS SessionDate,
+          timetable_entries.startTime AS StartTime,
+          timetable_entries.endTime AS EndTime
+      FROM
+          timetable_entries
+      JOIN
+          subjects ON timetable_entries.subjectId = subjects.id
+      JOIN
+          sessions ON (
+              sessions.subjectId = timetable_entries.subjectId AND
+              sessions.sectionId = timetable_entries.sectionId
+          )
+      JOIN
+          \`SessionPlans\` sp ON sp.sessionId = sessions.id
+      JOIN
+          schools ON timetable_entries.schoolId = schools.id
+      JOIN
+          classinfos ON timetable_entries.classId = classinfos.id
+      JOIN
+          sections ON timetable_entries.sectionId = sections.id
+      WHERE
+          timetable_entries.teacherId = :teacherId
+          AND timetable_entries.sectionId = :sectionId
+          AND timetable_entries.subjectId = :subjectId
+          ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
+      ORDER BY
+          SessionDate ASC, StartTime ASC, ChapterPriority ASC, sp.sessionNumber ASC;
+      `,
+      {
+        replacements: {
+          teacherId,
+          sectionId,
+          subjectId,
+          date, // Optional date filter
         },
-        {
-          model: TimetableEntry,
-          as: 'TimetableEntry',
-          where: {
-            teacherId,
-            sectionId,
-            subjectId,
-          },
-          attributes: ['startTime', 'endTime'],
-          required: true,
-        },
-        { model: Subject, attributes: ['subjectName', 'academicStartDate'] },
-        { model: Section, attributes: ['sectionName'] },
-        { model: School, attributes: ['name'] },
-        { model: ClassInfo, attributes: ['className'] },
-      ],
-      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'],
-    });
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
-    // Filter sessions by date (if provided)
-    const filteredSessions = sessions.filter((session) => {
-      if (!date) return true;
-
-      const academicStartDate = new Date(session.Subject.academicStartDate);
-      const sessionDate = new Date(
-        academicStartDate.getTime() +
-        ((session.priorityNumber - 1) * 7 + (session.SessionPlan.sessionNumber - 1)) * 24 * 60 * 60 * 1000
-      );
-
-      return sessionDate.toISOString().split('T')[0] === date;
-    });
-
-    if (filteredSessions.length === 0) {
-      return res.status(404).json({ error: 'No sessions found' });
+    // Check if sessions exist
+    if (!sessions.length) {
+      return res.status(404).json({ error: 'No sessions found for the specified criteria' });
     }
 
-    // Format and respond with session details
-    const sessionDetails = filteredSessions.map((session) => ({
-      sessionId: session.id,
-      chapterName: session.chapterName || 'N/A',
-      sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
-      topics: JSON.parse(session.SessionPlan?.planDetails || '[]'),
-      priorityNumber: session.priorityNumber || 'N/A',
-      sessionDate: session.Subject?.academicStartDate || 'N/A',
-      startTime: session.TimetableEntry?.startTime || 'N/A',
-      endTime: session.TimetableEntry?.endTime || 'N/A',
-      subjectName: session.Subject?.subjectName || 'N/A',
-      sectionName: session.Section?.sectionName || 'N/A',
-      schoolName: session.School?.name || 'N/A',
-      className: session.ClassInfo?.className || 'N/A',
-    }));
-
-    res.json({ sessions: sessionDetails });
+    // Format response
+    res.json({
+      sessions: sessions.map((session) => ({
+        school: session.School,
+        class: session.Class,
+        section: session.Section,
+        subject: session.Subject,
+        chapter: session.Chapter,
+        sessionNumber: session.SessionNumber,
+        topics: [session.Topic1, session.Topic2, session.Topic3].filter(Boolean), // Filter out null topics
+        chapterPriority: session.ChapterPriority,
+        sessionDate: session.SessionDate,
+        startTime: session.StartTime,
+        endTime: session.EndTime,
+      })),
+    });
   } catch (error) {
     console.error('Error fetching teacher sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions' });
+    res.status(500).json({ error: 'Failed to fetch teacher sessions' });
   }
 });
 
