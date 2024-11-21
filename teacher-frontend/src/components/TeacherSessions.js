@@ -70,17 +70,18 @@ const fetchSessions = useCallback(async () => {
   const handleStartSession = (session) => {
     if (!session.sessionId) {
       alert('Session ID is missing. Proceeding with a generic session.');
-      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}`, {
+      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId || 'temporary-session-id'}`, {
         state: {
           classId: session.classId,
           subjectId: session.subjectId,
           schoolId: session.schoolId,
           sectionId: session.sectionId,
-          sessionId: 'temporary-session-id',  // Use placeholder ID
+          sessionId: session.sessionId || 'temporary-session-id',  // Placeholder if missing
           chapterName: session.chapterName || 'N/A',
           topics: session.topics || [],
         },
       });
+      
       return;  // Early return if sessionId is missing
     }
   
