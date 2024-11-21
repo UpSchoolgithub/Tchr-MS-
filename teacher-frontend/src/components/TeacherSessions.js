@@ -71,7 +71,7 @@ const TeacherSessions = () => {
       alert('Session ID is missing. Cannot proceed to session details.');
       return;
     }
-
+  
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId}`, {
       state: {
         classId: session.classId,
@@ -84,6 +84,7 @@ const TeacherSessions = () => {
       },
     });
   };
+  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 

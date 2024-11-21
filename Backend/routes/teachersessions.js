@@ -3,39 +3,71 @@ const router = express.Router();
 const { Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models'); // Import models as needed
 
 // Get sessions for a specific teacher
+// Get sessions for a specific teacher
 router.get('/teachers/:teacherId/assignments', async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    // Fetch sessions assigned to the teacher
+    // Fetch sessions indirectly linked to the teacher via timetable_entries
     const sessions = await Session.findAll({
-      where: { teacherId },
       include: [
-        { model: School, attributes: ['id', 'name'] },
-        { model: ClassInfo, attributes: ['id', 'className'] },
-        { model: Subject, attributes: ['id', 'subjectName'] },
-        { model: Section, attributes: ['id', 'sectionName'] },
-        { model: SessionPlan, attributes: ['id'], as: 'SessionPlan' } // Include sessionPlanId
+        {
+          model: Subject,
+          include: [
+            {
+              model: Section,
+              include: [
+                {
+                  model: ClassInfo,
+                  include: [
+                    {
+                      model: School,
+                      include: [
+                        {
+                          model: Teacher,
+                          where: { id: teacherId }, // Filter by teacherId
+                          attributes: [] // Exclude teacher attributes from response
+                        }
+                      ],
+                    }
+                  ],
+                }
+              ]
+            }
+          ]
+        },
+        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'sessionNumber', 'planDetails'] }
       ],
-      attributes: ['id', 'day', 'period', 'startTime', 'endTime', 'assignments'],
+      attributes: [
+        'id',
+        'chapterName',
+        'priorityNumber',
+        'startTime',
+        'endTime',
+      ],
     });
-    
 
     // Format response with session details
-    const formattedSessions = sessions.map((session) => ({
-      id: session.id,
-      schoolName: session.School ? session.School.name : 'N/A',
-      className: session.ClassInfo ? session.ClassInfo.className : 'N/A',
-      sectionName: session.Section ? session.Section.sectionName : 'N/A',
-      sectionId: session.Section ? session.Section.id : null, // Ensure this is populated
-      subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
-      day: session.day,
-      period: session.period,
-      startTime: session.startTime,
-      endTime: session.endTime,
-      assignments: session.assignments,
-      sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null // Add sessionPlanId
-    }));
+    const formattedSessions = sessions.map((session) => {
+      const subject = session.Subject || {};
+      const section = subject.Section || {};
+      const classInfo = section.ClassInfo || {};
+      const school = classInfo.School || {};
+
+      return {
+        id: session.id,
+        schoolName: school.name || 'N/A',
+        className: classInfo.className || 'N/A',
+        sectionName: section.sectionName || 'N/A',
+        subjectName: subject.subjectName || 'N/A',
+        chapterName: session.chapterName || 'N/A',
+        priorityNumber: session.priorityNumber,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
+        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [],
+      };
+    });
 
     res.json(formattedSessions);
   } catch (error) {
@@ -43,6 +75,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
+
 
 // Mark attendance for a session
 router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, res) => {
