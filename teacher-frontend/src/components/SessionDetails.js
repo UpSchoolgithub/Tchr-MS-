@@ -15,23 +15,18 @@ const SessionDetails = () => {
   const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
-  const [loadingSessionDetails, setLoadingSessionDetails] = useState(true); // Add this line
-  const [sessionError, setSessionError] = useState(null);
-  const [academicStartDate, setAcademicStartDate] = useState(null);
-
+  
   
   
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
-      if (!sectionId) {
-        setError('Section ID is missing.');
-        return;
-      }
       try {
+        console.log('Fetching students for teacherId:', teacherId, 'sectionId:', sectionId);
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
+        console.log('Student response:', response.data);
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -41,9 +36,13 @@ const SessionDetails = () => {
       }
     };
   
-    fetchStudents();
+    if (sectionId) {
+      fetchStudents();
+    } else {
+      console.error('Section ID is missing.');
+      setError('Section ID is missing.');
+    }
   }, [teacherId, sectionId]);
-  
   
 
   useEffect(() => {
@@ -95,114 +94,31 @@ const SessionDetails = () => {
   };
   
   // Fetch session details along with session plan
-  useEffect(() => {
+useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
         const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
         const sessionData = response.data;
-  
-        if (sessionData.sessionDetails) {
-          setSessionDetails({
-            chapterName: sessionData.sessionDetails.chapterName,
-            sessionNumber: sessionData.sessionDetails.sessionNumber,
-          });
-          setTopics(sessionData.sessionDetails.planDetails); // Topics from session plan
-        } else {
-          setSessionDetails({ chapterName: 'N/A', sessionNumber: 'N/A' });
-        }
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-        setError('Failed to fetch session details. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    if (sessionId && sessionId !== 'unknown') {
-      fetchSessionDetails();
-    }
-  }, [teacherId, sessionId]);
-  
 
-  useEffect(() => {
-    const fetchAcademicStartDate = async () => {
-      try {
-        const response = await axiosInstance.get(`/classes/${classId}/academic-start-date`);
-        console.log('Academic Start Date:', response.data.academicStartDate);
-      } catch (error) {
-        console.error('Error fetching academic start date:', error);
-      }
-    };
-  
-    if (classId) fetchAcademicStartDate();
-  }, [classId]);
-  
-  
-  const calculateAcademicDay = () => {
-    if (!academicStartDate) {
-      console.error('Academic Start Date is missing.');
-      return null;
-    }
-    const startDate = new Date(academicStartDate);
-    const currentDate = new Date();
-    const differenceInDays = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
-    return differenceInDays + 1; // Add 1 for the current day
-  };
-  
-  
-  const academicDay = calculateAcademicDay();
-  
-
-  useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sessions/${sessionId}`, 
-          { params: { academicDay } } // Pass the academic day to the backend
-        );
-        const sessionData = response.data;
-  
         if (sessionData.sessionDetails) {
           setSessionDetails(sessionData.sessionDetails);
           setChapterName(sessionData.sessionDetails.chapterName);
         }
-  
+
         if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
           const topics = sessionData.sessionPlans[0].planDetails || [];
           setTopics(topics);
         }
       } catch (error) {
-        console.error("Error fetching session details and session plans:", error);
-        setError("Failed to fetch session details. Please try again.");
+        console.error('Error fetching session details and session plans:', error);
+        setSessionError('Failed to fetch session details. Please try again.');
       } finally {
-        setLoading(false);
+        setLoadingSessionDetails(false);
       }
     };
-  
-    if (academicDay) fetchSessionDetails();
-  }, [teacherId, sessionId, academicDay]);
-  
-  const handleTopicChange = (topic, isChecked) => {
-    if (isChecked) {
-      setIncompleteTopics((prev) => [...prev, topic]);
-    } else {
-      setIncompleteTopics((prev) => prev.filter((t) => t !== topic));
-    }
-  };
-  
 
-  const handleEndSession = async () => {
-    try {
-      await axiosInstance.post(`/teachers/${teacherId}/sessions/${sessionId}/end`, {
-        incompleteTopics,
-      });
-      alert("Session ended successfully!");
-    } catch (error) {
-      console.error("Error ending session:", error);
-      alert("Error ending session.");
-    }
-  };
-
+    fetchSessionDetails();
+  }, [teacherId, sessionId]);
   
   return (
     <div className="session-details-container">
@@ -257,36 +173,64 @@ const SessionDetails = () => {
 
           {/* Right Side: Session Notes and Details */}
           {/* Right Side: Session Notes and Details */}
-          <div className="session-notes-section">
-          <h3>Session Notes and Details:</h3>
-          {loading ? (
-            <p>Loading session details...</p>
-          ) : error ? (
-            <p className="error-message">{error}</p>
-          ) : (
-            <>
-              <p>
-                <strong>Session Number:</strong> {sessionDetails.sessionNumber ?? 'N/A'}
-              </p>
-              <p>
-                <strong>Chapter:</strong> {sessionDetails.chapterName ?? 'N/A'}
-              </p>
-              <h4>Topics to Cover:</h4>
-              {topics.length > 0 ? (
-                <ul>
-                  {topics.map((topic, index) => (
-                    <li key={index}>
-                      <input type="checkbox" id={`topic-${index}`} />
-                      <label htmlFor={`topic-${index}`}>{topic}</label>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No topics available for this session.</p>
-              )}
-            </>
-          )}
+<div className="session-notes-section">
+  <h3>Session Notes and Details:</h3>
+  {loading ? (
+    <p>Loading session details...</p>
+  ) : error ? (
+    <p className="error-message">{error}</p>
+  ) : (
+    <>
+      <p>
+        <strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}
+      </p>
+      <p>
+        <strong>Chapter:</strong> {chapterName || 'N/A'}
+      </p>
+
+      <h4>Topics to Cover:</h4>
+      {topics.length > 0 ? (
+        <ul>
+          {topics.map((topic, index) => (
+            <li key={index}>
+              <input
+                type="checkbox"
+                id={`topic-${index}`}
+                name={`topic-${index}`}
+                defaultChecked={false} // Default unchecked
+              />
+              <label htmlFor={`topic-${index}`}>{topic}</label>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No topics available for this session.</p>
+      )}
+
+      <h4>Assignments:</h4>
+      <select onChange={handleAssignmentsChange} defaultValue="no">
+        <option value="no">No</option>
+        <option value="yes">Yes</option>
+      </select>
+
+      {assignments && (
+        <div className="assignment-input">
+          <label htmlFor="assignment-details">Enter Assignment Details:</label>
+          <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
         </div>
+      )}
+
+      <h4>Observations:</h4>
+      <textarea
+        className="observations-textarea"
+        placeholder="Add observations or notes here..."
+      ></textarea>
+
+      <button className="end-session-button">End Session</button>
+    </>
+  )}
+</div>
+
       </div>
     </div>
   );
