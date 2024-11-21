@@ -22,24 +22,25 @@ const TeacherSessions = () => {
     return days[date.getDay()];
   };
 
-  const fetchSessions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      setSessions(response.data); 
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching sessions:', err);
-      if (retryCount < maxRetries) {
-        retryCount += 1;
-        fetchSessions();
-      } else {
-        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
-      }
-    } finally {
-      setLoading(false);
+  // Change this:
+const fetchSessions = useCallback(async () => {
+  setLoading(true);
+  try {
+    const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+    setSessions(response.data); 
+    setError(null);
+  } catch (err) {
+    console.error('Error fetching sessions:', err);
+    if (retryCount < maxRetries) {
+      retryCount += 1;
+      fetchSessions();
+    } else {
+      setError(`Failed to load sessions: ${err.message}. Please try again later.`);
     }
-  }, [teacherId, retryCount]);
+  } finally {
+    setLoading(false);
+  }
+}, [teacherId, retryCount]);
 
   useEffect(() => {
     fetchSessions();

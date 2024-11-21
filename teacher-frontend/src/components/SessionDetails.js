@@ -44,9 +44,7 @@ const SessionDetails = () => {
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`
-        );
+        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
         setChapterName(response.data.chapterName || 'Unknown Chapter');
         setTopics(response.data.topics || []);
       } catch (error) {
@@ -54,12 +52,12 @@ const SessionDetails = () => {
         setError('Failed to load session details. Please try again.');
       }
     };
-
+  
     if (sessionId) {
       fetchSessionDetails();
     }
   }, [schoolId, classId, sectionId, sessionId]);
-
+  
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
     if (storedAbsentees) {
@@ -94,6 +92,7 @@ const SessionDetails = () => {
       alert('Failed to end session. Please try again.');
     }
   };
+  
 
   const handleTopicToggle = (index) => {
     setTopics((prevTopics) =>
@@ -200,6 +199,7 @@ const SessionDetails = () => {
               <p>No topics available for this session.</p>
             )}
           </ul>
+
 
           <h4>Assignments:</h4>
           <select onChange={handleAssignmentsChange} defaultValue="no">
