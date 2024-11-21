@@ -181,30 +181,81 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
+  const { date } = req.query; // Optional date filter
 
   try {
     const sessions = await Session.findAll({
-      where: { teacherId, sectionId, subjectId },
       include: [
         {
           model: SessionPlan,
           attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
-          as: 'SessionPlan'
-        }
+          as: 'SessionPlan',
+        },
+        {
+          model: TimetableEntry,
+          where: {
+            teacherId,
+            sectionId,
+            subjectId,
+          },
+          attributes: ['startTime', 'endTime'], // Fetch timetable details
+          required: true,
+        },
+        { model: Subject, attributes: ['subjectName', 'academicStartDate'] }, // Fetch subject details
+        { model: Section, attributes: ['sectionName'] }, // Fetch section details
+        { model: School, attributes: ['name'] }, // Fetch school details
+        { model: ClassInfo, attributes: ['className'] }, // Fetch class details
       ],
-      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'] // Fetch session details
+      attributes: [
+        'id',
+        'chapterName',
+        'numberOfSessions',
+        'priorityNumber',
+      ], // Fetch session details
     });
 
-    if (sessions.length === 0) {
+    // Filter by date if provided
+    const filteredSessions = sessions.filter((session) => {
+      if (!date) return true;
+
+      // Calculate session date based on academic start date and session plan
+      const sessionDate = new Date(
+        session.Subject.academicStartDate
+      );
+      sessionDate.setDate(
+        sessionDate.getDate() + (session.priorityNumber - 1) * 7 + (session.SessionPlan.sessionNumber - 1)
+      );
+
+      return sessionDate.toISOString().split('T')[0] === date; // Compare dates in yyyy-MM-dd format
+    });
+
+    if (filteredSessions.length === 0) {
       return res.status(404).json({ error: 'No sessions found' });
     }
 
-    res.json(sessions);
+    // Format response
+    const sessionDetails = filteredSessions.map((session) => ({
+      sessionId: session.id,
+      chapterName: session.chapterName,
+      sessionNumber: session.SessionPlan.sessionNumber,
+      topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
+      priorityNumber: session.priorityNumber,
+      sessionDate: session.Subject.academicStartDate,
+      startTime: session.TimetableEntry?.startTime,
+      endTime: session.TimetableEntry?.endTime,
+      subjectName: session.Subject.subjectName,
+      sectionName: session.Section.sectionName,
+      schoolName: session.School.name,
+      className: session.ClassInfo.className,
+    }));
+
+    res.json({ sessions: sessionDetails });
   } catch (error) {
-    console.error('Error fetching sessions and session plans:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions and session plans' });
+    console.error('Error fetching teacher sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
+
 
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
