@@ -6,6 +6,7 @@ import './SessionDetails.css';
 
 const SessionDetails = () => {
   const { schoolId, teacherId, classId, sectionId, sessionId } = useParams();
+  console.log({ schoolId, teacherId, classId, sectionId, sessionId });
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [assignments, setAssignments] = useState(false);
