@@ -258,35 +258,35 @@ const SessionDetails = () => {
           {/* Right Side: Session Notes and Details */}
           {/* Right Side: Session Notes and Details */}
           <div className="session-notes-section">
-            <h3>Session Notes and Details:</h3>
-            {loading ? (
-              <p>Loading session details...</p>
-            ) : error ? (
-              <p className="error-message">{error}</p>
-            ) : (
-              <>
-                <p>
-                  <strong>Session Number:</strong> {sessionDetails.sessionNumber ?? 'N/A'}
-                </p>
-                <p>
-                  <strong>Chapter:</strong> {sessionDetails.chapterName ?? 'N/A'}
-                </p>
-                <h4>Topics to Cover:</h4>
-                {topics.length > 0 ? (
-                  <ul>
-                    {topics.map((topic, index) => (
-                      <li key={index}>
-                        <input type="checkbox" id={`topic-${index}`} />
-                        <label htmlFor={`topic-${index}`}>{topic}</label>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No topics available for this session.</p>
-                )}
-              </>
-            )}
-          </div>
+          <h3>Session Notes and Details:</h3>
+          {loading ? (
+            <p>Loading session details...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : (
+            <>
+              <p>
+                <strong>Session Number:</strong> {sessionDetails.sessionNumber ?? 'N/A'}
+              </p>
+              <p>
+                <strong>Chapter:</strong> {sessionDetails.chapterName ?? 'N/A'}
+              </p>
+              <h4>Topics to Cover:</h4>
+              {topics.length > 0 ? (
+                <ul>
+                  {topics.map((topic, index) => (
+                    <li key={index}>
+                      <input type="checkbox" id={`topic-${index}`} />
+                      <label htmlFor={`topic-${index}`}>{topic}</label>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No topics available for this session.</p>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

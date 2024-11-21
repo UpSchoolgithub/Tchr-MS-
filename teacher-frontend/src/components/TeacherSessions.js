@@ -25,26 +25,23 @@ const TeacherSessions = () => {
 
   // Fetch sessions assigned to the teacher along with session plans
   const fetchSessions = useCallback(async () => {
-    let localRetryCount = 0; // Use a local variable for retry count
     setLoading(true);
-    while (localRetryCount < maxRetries) {
-      try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-        setSessions(response.data);
-        setError(null);
-        break; // Break the loop on success
-      } catch (err) {
-        console.error('Error fetching sessions:', err);
-        localRetryCount += 1;
-        if (localRetryCount >= maxRetries) {
-          setError(`Failed to load sessions: ${err.message}. Please try again later.`);
-        }
-      } finally {
-        setLoading(false);
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      setSessions(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching sessions:', err);
+      if (retryCount < maxRetries) {
+        retryCount += 1;
+        fetchSessions(); // Retry fetching sessions
+      } else {
+        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
       }
+    } finally {
+      setLoading(false);
     }
-  }, [teacherId]);
-  
+  }, [teacherId, retryCount]);
 
   useEffect(() => {
     fetchSessions();
@@ -76,28 +73,25 @@ const TeacherSessions = () => {
 
   // Handle start session button click
   const handleStartSession = (session) => {
-    console.log('Session data:', session); // Debugging
-    if (!session.sectionId || !session.id) {
-      console.error('Session ID or Section ID is missing:', session);
-      alert('Unable to start session due to missing data.');
+    if (!session.sectionId) {
+      console.error('Section ID is undefined for the session:', session);
+      alert('Unable to start session: Section ID is missing.');
       return;
     }
-  
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id}`, {
+
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
       state: {
-        classId: session.classId ?? 'Unknown',
-        subjectId: session.subjectId ?? 'Unknown',
-        schoolId: session.schoolId ?? 'Unknown',
-        sectionName: session.sectionName ?? 'Unknown',
+        classId: session.classId || 'N/A',
+        subjectId: session.subjectId || 'N/A',
+        schoolId: session.schoolId || 'N/A',
+        sectionName: session.sectionName || 'N/A',
         sectionId: session.sectionId,
         sessionId: session.id,
-        chapterName: session.chapterName ?? 'Unknown',
-        topics: session.topics ?? [],
+        chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
+        topics: session.topics || [], // Topics if already available
       },
     });
   };
-  
-  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
