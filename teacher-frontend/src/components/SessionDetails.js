@@ -9,24 +9,18 @@ const SessionDetails = () => {
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [assignments, setAssignments] = useState(false); // Assignment flag
-  const [sessionDetails, setSessionDetails] = useState({});
   const [loading, setLoading] = useState(true); // Loading state
-  const [attendance, setAttendance] = useState([]);
   const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
   const [topics, setTopics] = useState([]);
-  
-  
   
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        console.log('Fetching students for teacherId:', teacherId, 'sectionId:', sectionId);
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        console.log('Student response:', response.data);
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -35,15 +29,13 @@ const SessionDetails = () => {
         setLoading(false);
       }
     };
-  
+
     if (sectionId) {
       fetchStudents();
     } else {
-      console.error('Section ID is missing.');
       setError('Section ID is missing.');
     }
   }, [teacherId, sectionId]);
-  
 
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
@@ -93,33 +85,7 @@ const SessionDetails = () => {
     }
   };
   
-  // Fetch session details along with session plan
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(`/teachers/${teacherId}/sessions/${sessionId}`);
-      const sessionData = response.data;
-
-      if (sessionData.sessionDetails) {
-        setSessionDetails(sessionData.sessionDetails);
-        setChapterName(sessionData.sessionDetails.chapterName); // Set chapter name
-      }
-
-      if (sessionData.sessionPlans && sessionData.sessionPlans.length > 0) {
-        const topics = sessionData.sessionPlans[0].planDetails || []; // Extract topics
-        setTopics(topics); // Set topics to be covered in the session
-      }
-    } catch (error) {
-      console.error('Error fetching session details and session plans:', error);
-      setError('Failed to fetch session details. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchSessionDetails();
-}, [teacherId, sessionId]);
-
+  
   
   return (
     <div className="session-details-container">
@@ -174,14 +140,12 @@ useEffect(() => {
 
         {/* Right Side: Session Notes and Details */}
         <div className="session-notes-section">
-          
           <h3>Session Notes and Details:</h3>
-          
           <p>
             <strong>Session Number:</strong> 05
           </p>
           <p>
-            <strong>Chapter:</strong> {chapterName} {/* Display fetched chapter name */}
+            <strong>Chapter:</strong> Respiration in Plants
           </p>
 
           <h4>Topics to Cover:</h4>
@@ -189,12 +153,7 @@ useEffect(() => {
             {topics.length > 0 ? (
               topics.map((topic, index) => (
                 <li key={index}>
-                  <input
-                    type="checkbox"
-                    id={`topic-${index}`}
-                    name={`topic-${index}`}
-                    defaultChecked={false} // Default unchecked
-                  />
+                  <input type="checkbox" id={`topic-${index}`} name={`topic-${index}`} />
                   <label htmlFor={`topic-${index}`}>{topic}</label>
                 </li>
               ))
@@ -202,7 +161,6 @@ useEffect(() => {
               <p>No topics available for this session.</p>
             )}
           </ul>
-
 
 
           <h4>Assignments:</h4>
