@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models'); // Import models as needed
+const { TimetableEntry, Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models');
 
 // Get sessions for a specific teacher
 // Get sessions for a specific teacher
