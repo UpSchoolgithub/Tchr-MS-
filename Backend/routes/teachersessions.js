@@ -260,15 +260,31 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   try {
     // Fetch sessions based on teacherId, sectionId, and subjectId
     const sessions = await Session.findAll({
-      where: { teacherId, sectionId, subjectId },
       include: [
-        { model: SessionPlan, attributes: ['id', 'sessionNumber', 'planDetails'], as: 'SessionPlan' },
-        { model: ClassInfo, attributes: ['className', 'academicStartDate'] },
-        { model: Section, attributes: ['sectionName'] },
-        { model: Subject, attributes: ['subjectName'] },
+        {
+          model: SessionPlan,
+          attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
+          as: 'SessionPlan',
+        },
+        {
+          model: TimetableEntry,
+          as: 'TimetableEntry', // Use the alias defined in the association
+          where: {
+            teacherId,
+            sectionId,
+            subjectId,
+          },
+          attributes: ['startTime', 'endTime'], // Fetch timetable details
+          required: true,
+        },
+        { model: Subject, attributes: ['subjectName', 'academicStartDate'] }, // Fetch subject details
+        { model: Section, attributes: ['sectionName'] }, // Fetch section details
+        { model: School, attributes: ['name'] }, // Fetch school details
+        { model: ClassInfo, attributes: ['className'] }, // Fetch class details
       ],
-      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber', 'startTime', 'endTime'],
+      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Fetch session details
     });
+    
 
     if (!sessions.length) {
       return res.status(404).json({ error: 'No sessions found for the specified criteria' });
