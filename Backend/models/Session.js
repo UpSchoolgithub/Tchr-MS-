@@ -1,6 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const SessionPlan = require('./SessionPlan'); // Import SessionPlan model
 
 class Session extends Model {
   static associate(models) {
@@ -8,11 +7,11 @@ class Session extends Model {
     this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
-    this.belongsTo(models.TimetableEntry, { foreignKey: 'timetableEntryId', as: 'TimetableEntry', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Link to TimetableEntry
+    this.belongsTo(models.TimetableEntry, { foreignKey: 'timetableEntryId', as: 'TimetableEntry', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.hasOne(models.SessionPlan, { foreignKey: 'sessionId', as: 'SessionPlan', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   }
 }
+
 Session.init({
   id: {
     type: DataTypes.INTEGER,
@@ -62,11 +61,11 @@ Session.init({
       key: 'id',
     },
   },
-  teacherId: { 
+  timetableEntryId: {
     type: DataTypes.INTEGER,
-    allowNull: true, 
+    allowNull: true,
     references: {
-      model: 'teachers', 
+      model: 'timetable_entries',
       key: 'id',
     },
   },
@@ -76,6 +75,5 @@ Session.init({
   tableName: 'sessions',
   timestamps: true,
 });
-
 
 module.exports = Session;

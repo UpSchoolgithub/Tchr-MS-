@@ -1,6 +1,5 @@
-// models/TimetableEntry.js
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path if necessary
+const sequelize = require('../config/db');
 
 class TimetableEntry extends Model {
   static associate(models) {
@@ -9,7 +8,7 @@ class TimetableEntry extends Model {
     this.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.belongsTo(models.ClassInfo, { foreignKey: 'classId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.hasMany(models.Session, { foreignKey: 'timetableEntryId', as: 'Sessions', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Link to Session
+    this.hasMany(models.Session, { foreignKey: 'timetableEntryId', as: 'Sessions', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   }
 }
 
