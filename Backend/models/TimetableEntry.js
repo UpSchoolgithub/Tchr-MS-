@@ -8,8 +8,8 @@ class TimetableEntry extends Model {
     this.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
     this.belongsTo(models.ClassInfo, { foreignKey: 'classId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-    this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Updated sectionId
-    this.hasMany(models.TeacherTimetable, { foreignKey: 'timetableEntryId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.hasMany(models.Session, { foreignKey: 'timetableEntryId', as: 'Sessions', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Link to Session
   }
 }
 

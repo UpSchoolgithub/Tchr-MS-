@@ -2,8 +2,17 @@ const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const SessionPlan = require('./SessionPlan'); // Import SessionPlan model
 
-class Session extends Model {}
-
+class Session extends Model {
+  static associate(models) {
+    this.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    this.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+    this.belongsTo(models.TimetableEntry, { foreignKey: 'timetableEntryId', as: 'TimetableEntry', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); // Link to TimetableEntry
+    this.hasOne(models.SessionPlan, { foreignKey: 'sessionId', as: 'SessionPlan', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  }
+}
 Session.init({
   id: {
     type: DataTypes.INTEGER,
@@ -68,13 +77,5 @@ Session.init({
   timestamps: true,
 });
 
-Session.associate = (models) => {
-  Session.belongsTo(models.School, { foreignKey: 'schoolId', onDelete: 'CASCADE' });
-  Session.belongsTo(models.Section, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
-  Session.belongsTo(models.Subject, { foreignKey: 'subjectId', onDelete: 'CASCADE' });
-  Session.belongsTo(models.ClassInfo, { foreignKey: 'classInfoId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  Session.belongsTo(models.Teacher, { foreignKey: 'teacherId', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
-  Session.hasOne(models.SessionPlan, { foreignKey: 'sessionId', as: 'SessionPlan' });
-};
 
 module.exports = Session;
