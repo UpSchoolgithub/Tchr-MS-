@@ -26,7 +26,7 @@ const TeacherSessions = () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      setSessions(response.data);
+      setSessions(response.data); 
       setError(null);
     } catch (err) {
       console.error('Error fetching sessions:', err);
@@ -47,7 +47,7 @@ const TeacherSessions = () => {
 
   useEffect(() => {
     const day = getDayName(selectedDate);
-    let filtered = sessions.filter((session) => session.sessionDate === selectedDate.toISOString().split('T')[0]);
+    let filtered = sessions.filter((session) => session.day === day);
 
     if (filter.subject) {
       filtered = filtered.filter((session) => session.subjectName === filter.subject);
@@ -71,7 +71,7 @@ const TeacherSessions = () => {
       alert('Session ID is missing. Cannot proceed to session details.');
       return;
     }
-
+  
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId}`, {
       state: {
         classId: session.classId,
@@ -84,6 +84,7 @@ const TeacherSessions = () => {
       },
     });
   };
+  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
@@ -127,34 +128,45 @@ const TeacherSessions = () => {
               <th>School</th>
               <th>Class</th>
               <th>Section</th>
-              <th>Session Date</th>
+              <th>Section ID</th>
+              <th>Day</th>
+              <th>Period</th>
               <th>Subject</th>
               <th>Progress</th>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Actions</th>
+              <th>Session Started</th>
+              <th>Session Ended</th>
+              <th>Assignments</th>
             </tr>
           </thead>
           <tbody>
             {filteredSessions.map((session, index) => (
               <tr key={index}>
-                <td>{session.school}</td>
-                <td>{session.class}</td>
-                <td>{session.section}</td>
-                <td>{session.sessionDate}</td>
-                <td>{session.subject}</td>
+                <td>{session.schoolName}</td>
+                <td>{session.className}</td>
+                <td>{session.sectionName}</td>
+                <td>{session.sectionId}</td>
+                <td>{session.day}</td>
+                <td>{session.period}</td>
+                <td>{session.subjectName}</td>
                 <td>
-                  {session.completedTopics}/{session.totalTopics} topics completed
+                  {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
                 </td>
-                <td>{session.startTime}</td>
+                <td>
+                  {isToday(selectedDate) ? (
+                    <button
+                      onClick={() => handleStartSession(session)}
+                      style={{ backgroundColor: 'orange', color: 'black' }}
+                    >
+                      Start Session
+                    </button>
+                  ) : (
+                    <span>-</span>
+                  )}
+                </td>
                 <td>{session.endTime}</td>
                 <td>
-                  <button
-                    onClick={() => handleStartSession(session)}
-                    style={{ backgroundColor: 'orange', color: 'black' }}
-                  >
-                    Start Session
-                  </button>
+                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
+                  <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
                 </td>
               </tr>
             ))}

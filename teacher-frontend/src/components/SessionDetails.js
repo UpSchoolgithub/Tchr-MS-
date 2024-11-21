@@ -6,6 +6,7 @@ import './SessionDetails.css';
 
 const SessionDetails = () => {
   const { schoolId, teacherId, classId, sectionId, sessionId } = useParams();
+  console.log({ schoolId, teacherId, classId, sectionId, sessionId });
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [assignments, setAssignments] = useState(false);
@@ -16,10 +17,13 @@ const SessionDetails = () => {
   const [topics, setTopics] = useState([]);
   const [observations, setObservations] = useState('');
 
+  // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sections/${sectionId}/students`);
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/students`
+        );
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -36,10 +40,13 @@ const SessionDetails = () => {
     }
   }, [teacherId, sectionId]);
 
+  // Fetch topics and chapter name for the session
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+        const response = await axiosInstance.get(
+          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`
+        );
         setChapterName(response.data.chapterName || 'Unknown Chapter');
         setTopics(response.data.topics || []);
       } catch (error) {
