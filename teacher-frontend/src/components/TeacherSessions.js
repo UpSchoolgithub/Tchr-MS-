@@ -69,23 +69,25 @@ const fetchSessions = useCallback(async () => {
 
   const handleStartSession = (session) => {
     if (!session.sessionId) {
+      // Handle the case where sessionId is missing but still allow session start.
       alert('Session ID is missing. Proceeding with a generic session.');
-      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId || 'temporary-session-id'}`, {
+      
+      // Use the values available in the session object (session.sectionId, session.classId, etc.)
+      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}`, {
         state: {
-          classId: session.classId,
-          subjectId: session.subjectId,
-          schoolId: session.schoolId,
-          sectionId: session.sectionId,
-          sessionId: session.sessionId || 'temporary-session-id',  // Placeholder if missing
+          classId: session.classId || 'temporary-class-id', // Use fallback or placeholder ID
+          subjectId: session.subjectId || 'temporary-subject-id', // Use fallback or placeholder ID
+          schoolId: session.schoolId || 'temporary-school-id', // Use fallback or placeholder ID
+          sectionId: session.sectionId || 'temporary-section-id', // Ensure sectionId is passed
+          sessionId: 'temporary-session-id',  // Use a placeholder session ID
           chapterName: session.chapterName || 'N/A',
           topics: session.topics || [],
         },
       });
-      
-      return;  // Early return if sessionId is missing
+      return;  // Early return as the session ID is missing
     }
-  
-    // Proceed with normal navigation
+    
+    // Proceed with normal navigation when sessionId is available
     navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId}`, {
       state: {
         classId: session.classId,
@@ -98,6 +100,7 @@ const fetchSessions = useCallback(async () => {
       },
     });
   };
+  
   
   
   

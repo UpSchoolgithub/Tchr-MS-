@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
   const { schoolId, teacherId, classId, sectionId, sessionId } = useParams();
-  console.log({ schoolId, teacherId, classId, sectionId, sessionId });
+  const { state } = useLocation();  // This will grab the state passed through navigate()
+
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [assignments, setAssignments] = useState(false);
@@ -17,12 +18,15 @@ const SessionDetails = () => {
   const [topics, setTopics] = useState([]);
   const [observations, setObservations] = useState('');
 
+  const fetchedTeacherId = teacherId || state?.teacherId;  // Use either the param or state for teacherId
+  const fetchedSessionId = sessionId || state?.sessionId;  // Use sessionId from the route or state
+
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/students`
+          `/teachers/${fetchedTeacherId}/sections/${sectionId}/students`
         );
         setStudents(response.data);
       } catch (error) {
@@ -38,13 +42,13 @@ const SessionDetails = () => {
     } else {
       setError('Section ID is missing.');
     }
-  }, [teacherId, sectionId]);
+  }, [fetchedTeacherId, sectionId]);
 
   // Fetch topics and chapter name for the session
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+        const response = await axiosInstance.get(`/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${fetchedSessionId}`);
         setChapterName(response.data.chapterName || 'Unknown Chapter');
         setTopics(response.data.topics || []);
       } catch (error) {
@@ -53,10 +57,10 @@ const SessionDetails = () => {
       }
     };
   
-    if (sessionId) {
+    if (fetchedSessionId) {
       fetchSessionDetails();
     }
-  }, [schoolId, classId, sectionId, sessionId]);
+  }, [schoolId, classId, sectionId, fetchedSessionId]);
   
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
@@ -79,7 +83,7 @@ const SessionDetails = () => {
     const completedTopics = topics.filter((topic) => topic.completed).map((topic) => topic.name);
     try {
       await axiosInstance.post(
-        `/teachers/${teacherId}/sections/${sectionId}/sessions/${sessionId}/end`,
+        `/teachers/${fetchedTeacherId}/sections/${sectionId}/sessions/${fetchedSessionId}/end`,
         {
           completedTopics,
           observations,
@@ -92,7 +96,6 @@ const SessionDetails = () => {
       alert('Failed to end session. Please try again.');
     }
   };
-  
 
   const handleTopicToggle = (index) => {
     setTopics((prevTopics) =>
@@ -199,7 +202,6 @@ const SessionDetails = () => {
               <p>No topics available for this session.</p>
             )}
           </ul>
-
 
           <h4>Assignments:</h4>
           <select onChange={handleAssignmentsChange} defaultValue="no">
