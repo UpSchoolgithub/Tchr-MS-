@@ -40,13 +40,14 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'sessionNumber', 'planDetails'] }
       ],
       attributes: [
-        'id',
+        'id',  // Ensure session.id is included
         'chapterName',
         'priorityNumber',
         'startTime',
         'endTime',
       ],
     });
+    
 
     // Format response with session details
     const formattedSessions = sessions.map((session) => {
