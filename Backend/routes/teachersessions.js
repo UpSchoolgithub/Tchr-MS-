@@ -193,6 +193,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
         },
         {
           model: TimetableEntry,
+          as: 'TimetableEntry', // Use the alias defined in the association
           where: {
             teacherId,
             sectionId,
@@ -206,28 +207,23 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
         { model: School, attributes: ['name'] }, // Fetch school details
         { model: ClassInfo, attributes: ['className'] }, // Fetch class details
       ],
-      attributes: [
-        'id',
-        'chapterName',
-        'numberOfSessions',
-        'priorityNumber',
-      ], // Fetch session details
+      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Fetch session details
     });
+    
 
     // Filter by date if provided
     const filteredSessions = sessions.filter((session) => {
       if (!date) return true;
-
-      // Calculate session date based on academic start date and session plan
+    
+      const academicStartDate = new Date(session.Subject.academicStartDate);
       const sessionDate = new Date(
-        session.Subject.academicStartDate
+        academicStartDate.getTime() +
+        ((session.priorityNumber - 1) * 7 + (session.SessionPlan.sessionNumber - 1)) * 24 * 60 * 60 * 1000
       );
-      sessionDate.setDate(
-        sessionDate.getDate() + (session.priorityNumber - 1) * 7 + (session.SessionPlan.sessionNumber - 1)
-      );
-
-      return sessionDate.toISOString().split('T')[0] === date; // Compare dates in yyyy-MM-dd format
+    
+      return sessionDate.toISOString().split('T')[0] === date;
     });
+    
 
     if (filteredSessions.length === 0) {
       return res.status(404).json({ error: 'No sessions found' });
@@ -236,18 +232,19 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     // Format response
     const sessionDetails = filteredSessions.map((session) => ({
       sessionId: session.id,
-      chapterName: session.chapterName,
-      sessionNumber: session.SessionPlan.sessionNumber,
-      topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
-      priorityNumber: session.priorityNumber,
-      sessionDate: session.Subject.academicStartDate,
-      startTime: session.TimetableEntry?.startTime,
-      endTime: session.TimetableEntry?.endTime,
-      subjectName: session.Subject.subjectName,
-      sectionName: session.Section.sectionName,
-      schoolName: session.School.name,
-      className: session.ClassInfo.className,
+      chapterName: session.chapterName || 'N/A',
+      sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
+      topics: JSON.parse(session.SessionPlan?.planDetails || '[]'),
+      priorityNumber: session.priorityNumber || 'N/A',
+      sessionDate: session.Subject?.academicStartDate || 'N/A',
+      startTime: session.TimetableEntry?.startTime || 'N/A',
+      endTime: session.TimetableEntry?.endTime || 'N/A',
+      subjectName: session.Subject?.subjectName || 'N/A',
+      sectionName: session.Section?.sectionName || 'N/A',
+      schoolName: session.School?.name || 'N/A',
+      className: session.ClassInfo?.className || 'N/A',
     }));
+    
 
     res.json({ sessions: sessionDetails });
   } catch (error) {
