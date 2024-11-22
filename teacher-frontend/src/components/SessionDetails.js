@@ -14,6 +14,7 @@ const SessionDetails = () => {
     classId,
     sectionId,
     subjectId,
+    schoolId, // Added schoolId
     day,
     period,
   } = location.state || {};
@@ -23,63 +24,34 @@ const SessionDetails = () => {
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
-
   const [assignments, setAssignments] = useState(false); // Assignment flag
-  const [attendance, setAttendance] = useState([]);
-  const [topics, setTopics] = useState([]);
-  
-  
+  const [topics, setTopics] = useState([]); // Topics
+
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        console.log('Fetching students for teacherId:', teacherId, 'sectionId:', sectionId);
+        setLoading(true);
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        console.log('Student response:', response.data);
         setStudents(response.data);
       } catch (error) {
-        console.error('Error fetching students:', error);
         setError('Failed to load students. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-  
-    if (sectionId) {
-      fetchStudents();
-    } else {
-      console.error('Section ID is missing.');
-      setError('Section ID is missing.');
-    }
-  }, [teacherId, sectionId]);
-  
 
-  useEffect(() => {
-    const storedAbsentees = localStorage.getItem('absentees');
-    if (storedAbsentees) {
-      setAbsentees(JSON.parse(storedAbsentees));
-    }
-  }, []); // Run only once on component mount
-  
+    if (sectionId) fetchStudents();
+    else setError('Section ID is missing.');
+  }, [teacherId, sectionId]);
+
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
     setAbsentees(selectedIds);
-    // Save to local storage
     localStorage.setItem('absentees', JSON.stringify(selectedIds));
   };
-
-  // Handle assignment dropdown change
-  const handleAssignmentsChange = (e) => {
-    setAssignments(e.target.value === 'yes');
-  };
-
-  // Convert students to options for the dropdown
-  const studentOptions = students.map((student) => ({
-    value: student.rollNumber,
-    label: student.studentName,
-  }));
 
   const handleSaveAttendance = async () => {
     const attendanceData = students.map((student) => ({
@@ -87,27 +59,35 @@ const SessionDetails = () => {
       date: new Date().toISOString().split('T')[0], // Current date
       status: absentees.includes(student.rollNumber) ? 'A' : 'P',
     }));
-  
-    console.log('Saving attendance:', attendanceData); // Debugging log
-  
+
     try {
       await axiosInstance.post(
         `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
         { attendanceData }
       );
       alert('Attendance saved successfully!');
-      // Clear absentees from local storage
       localStorage.removeItem('absentees');
     } catch (error) {
-      console.error('Error saving attendance:', error);
-      alert('Error saving attendance');
+      alert('Failed to save attendance.');
     }
   };
-  
-  
-  
+
+  const studentOptions = students.map((student) => ({
+    value: student.rollNumber,
+    label: student.studentName,
+  }));
+
   return (
     <div className="session-details-container">
+      {/* Top-right details */}
+      <div className="session-details-header">
+        <p><strong>School ID:</strong> {schoolId}</p>
+        <p><strong>Class ID:</strong> {classId}</p>
+        <p><strong>Teacher ID:</strong> {teacherId}</p>
+        <p><strong>Section ID:</strong> {sectionId}</p>
+        <p><strong>Subject ID:</strong> {subjectId}</p>
+      </div>
+
       <h2>Welcome, Teacher Name!</h2>
 
       <div className="attendance-and-notes">
@@ -122,9 +102,6 @@ const SessionDetails = () => {
             <p>No students found for this section.</p>
           ) : (
             <>
-              <button onClick={handleSaveAttendance} className="save-attendance-button">
-                Save Attendance
-              </button>
               <Select
                 isMulti
                 options={studentOptions}
@@ -133,41 +110,32 @@ const SessionDetails = () => {
                 value={studentOptions.filter((option) => absentees.includes(option.value))}
                 className="multi-select-dropdown"
                 closeMenuOnSelect={false}
-                isClearable
               />
+              <button onClick={handleSaveAttendance} className="save-attendance-button">
+                Save Attendance
+              </button>
             </>
           )}
 
-          {/* Display absentees list only if absentees are selected */}
+          {/* Absentee List */}
           {absentees.length > 0 && (
             <div className="absentees-list">
               <h4>List of Absentees:</h4>
               <ul>
                 {absentees.map((id) => {
                   const student = studentOptions.find((s) => s.value === id);
-                  return (
-                    <li key={id}>
-                      {student?.label || 'Unknown'}{' '}
-                      <span style={{ color: 'red' }}>Absent</span>
-                    </li>
-                  );
+                  return <li key={id}>{student?.label || 'Unknown'} (Absent)</li>;
                 })}
               </ul>
             </div>
           )}
         </div>
 
-        {/* Right Side: Session Notes and Details */}
+        {/* Right Side: Session Notes */}
         <div className="session-notes-section">
-          
           <h3>Session Notes and Details:</h3>
-          
-          <p>
-            <strong>Session Number:</strong> 05
-          </p>
-          <p>
-            <strong>Chapter:</strong> {chapterName} {/* Display fetched chapter name */}
-          </p>
+          <p><strong>Session Number:</strong> 05</p>
+          <p><strong>Chapter:</strong> {chapterName || 'No chapter specified'}</p>
 
           <h4>Topics to Cover:</h4>
           <ul>
@@ -183,9 +151,8 @@ const SessionDetails = () => {
             )}
           </ul>
 
-
           <h4>Assignments:</h4>
-          <select onChange={handleAssignmentsChange} defaultValue="no">
+          <select onChange={(e) => setAssignments(e.target.value === 'yes')} defaultValue="no">
             <option value="no">No</option>
             <option value="yes">Yes</option>
           </select>
