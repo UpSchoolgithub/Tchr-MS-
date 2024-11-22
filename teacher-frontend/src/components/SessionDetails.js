@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { useParams } from 'react-router-dom'; // Import useParams
+import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { schoolId, teacherId, classId, sectionId, sessionId } = useParams(); // Extract parameters from the route
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Extract data from navigation state
+  const {
+    teacherId,
+    classId,
+    sectionId,
+    subjectId,
+    day,
+    period,
+  } = location.state || {};
+
   const [students, setStudents] = useState([]); // List of students
   const [absentees, setAbsentees] = useState([]); // Selected absentees
-  const [assignments, setAssignments] = useState(false); // Assignment flag
-  const [sessionDetails, setSessionDetails] = useState({});
   const [loading, setLoading] = useState(true); // Loading state
-  const [attendance, setAttendance] = useState([]);
   const [error, setError] = useState(null); // Error message
-  const [chapterName, setChapterName] = useState('');
-  const [topics, setTopics] = useState([]);
-  
   
   
   // Fetch students from the backend
