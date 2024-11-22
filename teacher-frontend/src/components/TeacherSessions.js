@@ -68,17 +68,17 @@ const fetchSessions = useCallback(async () => {
   };
 
   const handleStartSession = (session) => {
-    if (!session.sessionId) {
-      alert('Session ID is missing. Proceeding with a generic session.');
-      
-      // Ensure sessionId and sessionPlanId are correctly passed in the URL
+    if (!session.sessionId || !session.sessionPlanId) {
+      alert('Session details are missing. Proceeding with a generic session.');
+      // Navigate with a fallback session ID and session plan ID if needed
       navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId || 'temporary-session-id'}/${session.sessionPlanId || 'temporary-session-plan-id'}`, {
         state: {
           classId: session.classId,
           subjectId: session.subjectId,
           schoolId: session.schoolId,  // Ensure schoolId is passed correctly
           sectionId: session.sectionId,
-          sessionId: session.sessionId || 'temporary-session-id',  // If sessionId is missing, use this placeholder
+          sessionId: session.sessionId || 'temporary-session-id',  // Use temporary session ID if sessionId is missing
+          sessionPlanId: session.sessionPlanId || 'temporary-session-plan-id',
           chapterName: session.chapterName || 'N/A',
           topics: session.topics || [],
         },
@@ -86,7 +86,7 @@ const fetchSessions = useCallback(async () => {
       return;
     }
   
-    // Proceed with normal navigation when sessionId is available
+    // Proceed with normal navigation when sessionId and sessionPlanId are available
     navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId}/${session.sessionPlanId}`, {
       state: {
         classId: session.classId,
@@ -94,11 +94,13 @@ const fetchSessions = useCallback(async () => {
         schoolId: session.schoolId,
         sectionId: session.sectionId,
         sessionId: session.sessionId,
+        sessionPlanId: session.sessionPlanId,
         chapterName: session.chapterName || 'N/A',
         topics: session.topics || [],
       },
     });
   };
+  
   
   
   

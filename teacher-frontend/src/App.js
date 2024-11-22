@@ -38,8 +38,10 @@ function InnerApp() {
             <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
             <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
-            <Route path="/teacherportal/:teacherId/session-details/:classId/:sectionId/:subjectId/:sessionId/:sessionPlanId" 
-            element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
+            <Route path="/teacherportal/:teacherId/sections/:sectionId/subjects/:subjectId/sessions" 
+            element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
+
+
             </Routes>
         </div>
       </Router>
