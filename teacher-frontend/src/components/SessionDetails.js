@@ -21,11 +21,12 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState(null); // Store session details
+  const [sessionDetails, setSessionDetails] = useState(null);
   const [observations, setObservations] = useState('');
-  const [assignmentsEnabled, setAssignmentsEnabled] = useState(false); // State to control assignment box
-  const [assignmentDetails, setAssignmentDetails] = useState(''); // Assignment input content
-  const [existingFile, setExistingFile] = useState(null); // Store existing uploaded file
+  const [assignmentsEnabled, setAssignmentsEnabled] = useState(false);
+  const [assignmentDetails, setAssignmentDetails] = useState('');
+  const [existingFile, setExistingFile] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Fetch students for attendance
   useEffect(() => {
@@ -64,7 +65,7 @@ const SessionDetails = () => {
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
 
-  // Fetch assignment details for the session
+  // Fetch assignment details
   useEffect(() => {
     const fetchAssignmentDetails = async () => {
       try {
@@ -112,18 +113,8 @@ const SessionDetails = () => {
     setAssignmentsEnabled(e.target.value === 'Yes');
   };
 
-  const handleAssignmentNavigate = () => {
-    navigate(`/update-assignment`, {
-      state: {
-        teacherId,
-        sessionId: sessionDetails?.sessionId,
-        sessionDate: sessionDetails?.sessionDate,
-        sessionNumber: sessionDetails?.sessionNumber,
-        chapterName: sessionDetails?.chapterName,
-        assignmentDetails, // Pass existing assignment details
-        existingFile, // Pass existing file URL
-      },
-    });
+  const handleSaveAssignment = () => {
+    setSuccessMessage('Assignment saved successfully!');
   };
 
   const studentOptions = students.map((student) => ({
@@ -225,7 +216,7 @@ const SessionDetails = () => {
               onChange={(e) => setAssignmentDetails(e.target.value)}
               placeholder="Enter assignment details here..."
             ></textarea>
-            <button onClick={() => setAssignmentDetails(assignmentDetails)}>Save</button>
+            <button onClick={handleSaveAssignment}>Save</button>
           </div>
         )}
 
@@ -240,6 +231,9 @@ const SessionDetails = () => {
           <button onClick={handleSaveObservations} className="save-observations-button">
             Save Observations
           </button>
+
+          {/* Success message */}
+          {successMessage && <p className="success-message">{successMessage}</p>}
         </div>
       </div>
     </div>
