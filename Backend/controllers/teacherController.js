@@ -23,12 +23,15 @@ const getTeacherAssignments = async (req, res) => {
 
     // Format the data as needed for frontend
     const formattedAssignments = assignments.map(assignment => ({
+      schoolId: assignment.School.id, // Add schoolId
       schoolName: assignment.School.name,
+      classId: assignment.ClassInfo.id, // Add classId
       className: assignment.ClassInfo.className,
       sectionName: assignment.Section.sectionName,
       sectionId: assignment.Section.id, // Ensure sectionId is included
       day: assignment.day,
       period: assignment.period,
+      subjectId: assignment.Subject.id, // Add subjectId
       subjectName: assignment.Subject.subjectName,
       startTime: assignment.startTime,
       endTime: assignment.endTime,
