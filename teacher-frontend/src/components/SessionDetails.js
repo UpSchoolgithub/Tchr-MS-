@@ -24,6 +24,10 @@ const SessionDetails = () => {
   const [error, setError] = useState(null); // Error message
   const [chapterName, setChapterName] = useState('');
 
+  const [assignments, setAssignments] = useState(false); // Assignment flag
+  const [attendance, setAttendance] = useState([]);
+  const [topics, setTopics] = useState([]);
+  
   
   // Fetch students from the backend
   useEffect(() => {
