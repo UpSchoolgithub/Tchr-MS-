@@ -118,8 +118,10 @@ const SessionDetails = () => {
       const formData = new FormData();
       formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Use sessionPlanId
       formData.append('assignmentDetails', assignmentDetails);
+      
+      // Only append the file if it exists
       if (file) {
-        formData.append('file', file); // Add file if present
+        formData.append('file', file);
       }
   
       const response = await axiosInstance.post('/assignments', formData, {
@@ -130,7 +132,7 @@ const SessionDetails = () => {
       setSuccessMessage(response.data.message);
       setAssignmentDetails(response.data.assignmentDetails || '');
       setExistingFile(response.data.assignmentFileUrl || null);
-      setFile(null); // Reset file input
+      setFile(null); // Reset file input after successful upload
     } catch (error) {
       console.error('Error saving assignment:', error);
       alert('Failed to save assignment.');
@@ -241,15 +243,19 @@ const SessionDetails = () => {
           </select>
           {assignmentsEnabled && (
             <div className="assignment-input">
-              <textarea
-                value={assignmentDetails}
-                onChange={(e) => setAssignmentDetails(e.target.value)}
-                placeholder="Enter assignment details here..."
-              ></textarea>
-              <input type="file" onChange={handleFileChange} />
-              <button onClick={handleSaveAssignment}>Save</button>
-              {successMessage && <p className="success-message">{successMessage}</p>}
-            </div>
+            <textarea
+              value={assignmentDetails}
+              onChange={(e) => setAssignmentDetails(e.target.value)}
+              placeholder="Enter assignment details here..."
+            ></textarea>
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files[0])}
+              accept=".pdf,.doc,.docx,.jpg,.png" // Optional: Restrict file types
+            />
+            <button onClick={handleSaveAssignment}>Save</button>
+          </div>
+          
           )}
 
           <h4>Observations:</h4>
