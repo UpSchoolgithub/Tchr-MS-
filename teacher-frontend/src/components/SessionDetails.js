@@ -8,7 +8,6 @@ const SessionDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Extract data from navigation state
   const {
     teacherId,
     classId,
@@ -26,6 +25,7 @@ const SessionDetails = () => {
   const [assignmentsEnabled, setAssignmentsEnabled] = useState(false);
   const [assignmentDetails, setAssignmentDetails] = useState('');
   const [existingFile, setExistingFile] = useState(null);
+  const [file, setFile] = useState(null); // File state
   const [successMessage, setSuccessMessage] = useState('');
 
   // Fetch students for attendance
@@ -78,10 +78,9 @@ const SessionDetails = () => {
         console.error('Error fetching assignment details:', error);
       }
     };
-  
+
     if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
   }, [sessionDetails?.sessionPlanId]);
-  
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
@@ -106,36 +105,38 @@ const SessionDetails = () => {
     }
   };
 
-  const handleSaveObservations = () => {
-    alert(`Observations Saved: ${observations}`);
-  };
-
-  const handleAssignmentChange = (e) => {
-    setAssignmentsEnabled(e.target.value === 'Yes');
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]); // Update the file state
   };
 
   const handleSaveAssignment = async () => {
     try {
+      if (!assignmentDetails.trim() && !file) {
+        alert('Please provide assignment details or upload a file.');
+        return;
+      }
+
       const formData = new FormData();
       formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Use sessionPlanId
       formData.append('assignmentDetails', assignmentDetails);
-      formData.append('file', file); // Only include if a file is selected
-  
+      if (file) {
+        formData.append('file', file); // Add file if present
+      }
+
       const response = await axiosInstance.post('/api/assignments', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-  
+
       alert('Assignment saved successfully!');
       setSuccessMessage(response.data.message);
+      setAssignmentDetails(response.data.assignmentDetails || '');
+      setExistingFile(response.data.assignmentFileUrl || null);
+      setFile(null); // Reset file input
     } catch (error) {
       console.error('Error saving assignment:', error);
       alert('Failed to save assignment.');
     }
   };
-  
-  
-  
-  
 
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
@@ -230,17 +231,17 @@ const SessionDetails = () => {
             <option value="Yes">Yes</option>
           </select>
           {assignmentsEnabled && (
-          <div className="assignment-input">
-          <textarea
-            value={assignmentDetails}
-            onChange={(e) => setAssignmentDetails(e.target.value)}
-            placeholder="Enter assignment details here..."
-          ></textarea>
-          <button onClick={handleSaveAssignment}>Save</button>
-          {successMessage && <p className="success-message">{successMessage}</p>}
-        </div>
-        
-        )}
+            <div className="assignment-input">
+              <textarea
+                value={assignmentDetails}
+                onChange={(e) => setAssignmentDetails(e.target.value)}
+                placeholder="Enter assignment details here..."
+              ></textarea>
+              <input type="file" onChange={handleFileChange} />
+              <button onClick={handleSaveAssignment}>Save</button>
+              {successMessage && <p className="success-message">{successMessage}</p>}
+            </div>
+          )}
 
           <h4>Observations:</h4>
           <textarea
@@ -253,9 +254,6 @@ const SessionDetails = () => {
           <button onClick={handleSaveObservations} className="save-observations-button">
             Save Observations
           </button>
-
-          {/* Success message */}
-          {successMessage && <p className="success-message">{successMessage}</p>}
         </div>
       </div>
     </div>
