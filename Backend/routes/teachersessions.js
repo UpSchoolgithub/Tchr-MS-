@@ -299,16 +299,19 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     }
 
     // Respond with the current session details
-    res.json({
-      sessionDetails: {
-        chapterName: currentSession.Chapter,
-        sessionNumber: currentSession.SessionNumber,
-        topics: [currentSession.Topic1, currentSession.Topic2, currentSession.Topic3].filter(Boolean),
-        startTime: currentSession.StartTime,
-        endTime: currentSession.EndTime,
-        sessionDate: currentSession.SessionDate,
-      },
-    });
+      res.json({
+        sessionDetails: {
+          chapterName: currentSession.Chapter,
+          sessionNumber: currentSession.SessionNumber,
+          topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
+            .concat(JSON.parse(currentSession.Topic2 || "[]"))
+            .concat(JSON.parse(currentSession.Topic3 || "[]")),
+          startTime: currentSession.StartTime,
+          endTime: currentSession.EndTime,
+          sessionDate: currentSession.SessionDate,
+        },
+      });
+
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
