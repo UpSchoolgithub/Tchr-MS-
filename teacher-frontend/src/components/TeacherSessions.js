@@ -83,12 +83,13 @@ const TeacherSessions = () => {
       state: {
         teacherId,
         classId: session.classId,
-        sectionId: session.sectionId,
+        sectionId: session.sectionId, // Ensure this is not null or undefined
         subjectId: session.subjectId,
         day: session.day,
         period: session.period,
       },
     });
+    
   };
   
   const isToday = (date) => date.toDateString() === new Date().toDateString();
