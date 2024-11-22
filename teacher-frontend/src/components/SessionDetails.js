@@ -118,26 +118,24 @@ const SessionDetails = () => {
       const formData = new FormData();
       formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Use sessionPlanId
       formData.append('assignmentDetails', assignmentDetails);
-      
-      // Only append the file if it exists
+  
+      // Append file if selected
       if (file) {
         formData.append('file', file);
       }
   
-      const response = await axiosInstance.post('/assignments', formData, {
+      const response = await axiosInstance.post('/api/assignments', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
   
       alert('Assignment saved successfully!');
       setSuccessMessage(response.data.message);
-      setAssignmentDetails(response.data.assignmentDetails || '');
-      setExistingFile(response.data.assignmentFileUrl || null);
-      setFile(null); // Reset file input after successful upload
     } catch (error) {
       console.error('Error saving assignment:', error);
       alert('Failed to save assignment.');
     }
   };
+  
   
 
   const handleSaveObservations = async () => {
