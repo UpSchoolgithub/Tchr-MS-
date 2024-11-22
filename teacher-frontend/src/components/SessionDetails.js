@@ -219,15 +219,21 @@ const SessionDetails = () => {
             <option value="Yes">Yes</option>
           </select>
           {assignmentsEnabled && (
-            <div className="assignment-input">
-              <textarea
-                value={assignmentDetails}
-                onChange={(e) => setAssignmentDetails(e.target.value)}
-                placeholder="Enter assignment details here..."
-              ></textarea>
-              <button onClick={handleAssignmentNavigate}>Update Assignment</button>
-            </div>
-          )}
+          <div className="assignment-input">
+            <textarea
+              value={assignmentDetails}
+              onChange={(e) => setAssignmentDetails(e.target.value)}
+              placeholder="Enter assignment details here..."
+            ></textarea>
+            <button onClick={() => alert(`Saved: ${assignmentDetails}`)}>Save</button>
+            {assignmentDetails && (
+              <div className="saved-assignment">
+                <h3>Saved Assignment:</h3>
+                <p>{assignmentDetails}</p>
+              </div>
+            )}
+          </div>
+        )}
 
           <h4>Observations:</h4>
           <textarea
