@@ -135,50 +135,45 @@ const SessionDetails = () => {
 
         {/* Right Side: Session Details */}
         <div className="session-notes-section">
-          <h3>Session Notes and Details:</h3>
-          {sessionDetails ? (
-            <div className="session-item">
-              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-              <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-              <h4>Topics:</h4>
-              <ul>
-                {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
-                  sessionDetails.topics.map((topic, idx) => (
-                    <li key={idx}>
-                      <input
-                        type="checkbox"
-                        id={`topic-${idx}`}
-                        name={`topic-${idx}`}
-                        value={topic}
-                      />
-                      <label htmlFor={`topic-${idx}`}>{topic}</label>
-                    </li>
-                  ))
-                ) : (
-                  <p>No topics available for this session.</p>
-                )}
-              </ul>
+        <h3>Session Notes and Details:</h3>
+        {sessionDetails ? (
+          <div className="session-item">
+            <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+            <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+            <h4>Topics to Cover:</h4>
+            <ul>
+              {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
+                sessionDetails.topics.map((topic, idx) => (
+                  <li key={idx}>
+                    <input type="checkbox" id={`topic-${idx}`} name={`topic-${idx}`} />
+                    <label htmlFor={`topic-${idx}`}>{topic}</label>
+                  </li>
+                ))
+              ) : (
+                <p>No topics available for this session.</p>
+              )}
+            </ul>
+            <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
+            <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
+            <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
+          </div>
+        ) : (
+          <p>No session details available for today.</p>
+        )}
 
-              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
-              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
-              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
-            </div>
-          ) : (
-            <p>No session details available for today.</p>
-          )}
+        <h4>Observations:</h4>
+        <textarea
+          value={observations}
+          onChange={(e) => setObservations(e.target.value)}
+          className="observations-textarea"
+          placeholder="Add observations or notes here..."
+        ></textarea>
 
-          <h4>Observations:</h4>
-          <textarea
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-            className="observations-textarea"
-            placeholder="Add observations or notes here..."
-          ></textarea>
+        <button onClick={handleSaveObservations} className="save-observations-button">
+          Save Observations
+        </button>
+      </div>
 
-          <button onClick={handleSaveObservations} className="save-observations-button">
-            Save Observations
-          </button>
-        </div>
       </div>
     </div>
   );
