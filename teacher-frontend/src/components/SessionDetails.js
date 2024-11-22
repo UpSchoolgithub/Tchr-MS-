@@ -20,7 +20,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState(null); // Store the current session details
+  const [sessionDetails, setSessionDetails] = useState([]); // Store session details
   const [observations, setObservations] = useState('');
 
   // Fetch students for attendance
@@ -31,7 +31,7 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        setStudents(response.data);
+        setStudents(response.data || []);
       } catch (error) {
         setError('Failed to load students. Please try again.');
       } finally {
@@ -43,32 +43,22 @@ const SessionDetails = () => {
     else setError('Section ID is missing.');
   }, [teacherId, sectionId]);
 
-  // Fetch session details for the current day
+  // Fetch session details
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
-  
-        console.log('Session Details Response:', response.data); // Debugging
-  
-        // Ensure the response is structured as expected
-        if (response.data && Array.isArray(response.data.sessions)) {
-          setSessionDetails(response.data.sessions);
-        } else {
-          console.error('Unexpected session details response:', response.data);
-          setSessionDetails([]); // Fallback to empty array
-        }
+        setSessionDetails(response.data.sessions || []);
       } catch (error) {
         console.error('Error fetching session details:', error);
         setError('Failed to fetch session details.');
       }
     };
-  
+
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
-  
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
@@ -145,41 +135,40 @@ const SessionDetails = () => {
 
         {/* Right Side: Session Details */}
         <div className="session-notes-section">
-  <h3>Session Notes and Details:</h3>
-  {error ? (
-    <p className="error-message">{error}</p>
-  ) : sessionDetails.length > 0 ? (
-    sessionDetails.map((session, index) => (
-      <div key={index} className="session-item">
-        <p><strong>Chapter Name:</strong> {session.chapter || 'N/A'}</p>
-        <p><strong>Session Number:</strong> {session.sessionNumber || 'N/A'}</p>
-        <h4>Topics:</h4>
-        <ul>
-          {session.topics?.length > 0 ? (
-            session.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
+          <h3>Session Notes and Details:</h3>
+          {error ? (
+            <p className="error-message">{error}</p>
+          ) : sessionDetails.length > 0 ? (
+            sessionDetails.map((session, index) => (
+              <div key={index} className="session-item">
+                <p><strong>Chapter Name:</strong> {session.chapter || 'N/A'}</p>
+                <p><strong>Session Number:</strong> {session.sessionNumber || 'N/A'}</p>
+                <h4>Topics:</h4>
+                <ul>
+                  {session.topics && session.topics.length > 0 ? (
+                    session.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
+                  ) : (
+                    <p>No topics available for this session.</p>
+                  )}
+                </ul>
+              </div>
+            ))
           ) : (
-            <p>No topics available for this session.</p>
+            <p>No session details available for today.</p>
           )}
-        </ul>
-      </div>
-    ))
-  ) : (
-    <p>No session details available for today.</p>
-  )}
 
-  <h4>Observations:</h4>
-  <textarea
-    value={observations}
-    onChange={(e) => setObservations(e.target.value)}
-    className="observations-textarea"
-    placeholder="Add observations or notes here..."
-  ></textarea>
+          <h4>Observations:</h4>
+          <textarea
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            className="observations-textarea"
+            placeholder="Add observations or notes here..."
+          ></textarea>
 
-  <button onClick={handleSaveObservations} className="save-observations-button">
-    Save Observations
-  </button>
-</div>
-
+          <button onClick={handleSaveObservations} className="save-observations-button">
+            Save Observations
+          </button>
+        </div>
       </div>
     </div>
   );
