@@ -70,10 +70,9 @@ const fetchSessions = useCallback(async () => {
   const handleStartSession = (session) => {
     if (!session.sessionId) {
       alert('Session ID is missing. Proceeding with a generic session.');
-  
-      // This might be incorrect, as you're passing a placeholder. 
-      // Remove or replace the placeholder with an actual sessionId if available.
-      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}`, {
+      
+      // Ensure sessionId and sessionPlanId are correctly passed in the URL
+      navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId || 'temporary-session-id'}/${session.sessionPlanId || 'temporary-session-plan-id'}`, {
         state: {
           classId: session.classId,
           subjectId: session.subjectId,
@@ -88,7 +87,7 @@ const fetchSessions = useCallback(async () => {
     }
   
     // Proceed with normal navigation when sessionId is available
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId}`, {
+    navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId}/${session.sessionPlanId}`, {
       state: {
         classId: session.classId,
         subjectId: session.subjectId,
@@ -100,6 +99,7 @@ const fetchSessions = useCallback(async () => {
       },
     });
   };
+  
   
   
   
@@ -141,59 +141,60 @@ const fetchSessions = useCallback(async () => {
       </div>
 
       {filteredSessions.length === 0 ? (
-        <p>No sessions found for {getDayName(selectedDate)}.</p>
-      ) : (
-        <table className="sessions-table">
-          <thead>
-            <tr>
-              <th>School</th>
-              <th>Class</th>
-              <th>Section</th>
-              <th>Section ID</th>
-              <th>Day</th>
-              <th>Period</th>
-              <th>Subject</th>
-              <th>Progress</th>
-              <th>Session Started</th>
-              <th>Session Ended</th>
-              <th>Assignments</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSessions.map((session, index) => (
-              <tr key={index}>
-                <td>{session.schoolName}</td>
-                <td>{session.className}</td>
-                <td>{session.sectionName}</td>
-                <td>{session.sectionId}</td>
-                <td>{session.day}</td>
-                <td>{session.period}</td>
-                <td>{session.subjectName}</td>
-                <td>
-                  {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
-                </td>
-                <td>
-                  {isToday(selectedDate) ? (
-                    <button
-                      onClick={() => handleStartSession(session)}
-                      style={{ backgroundColor: 'orange', color: 'black' }}
-                    >
-                      Start Session
-                    </button>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </td>
-                <td>{session.endTime}</td>
-                <td>
-                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
-                  <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  <p>No sessions found for {getDayName(selectedDate)}.</p>
+) : (
+  <table className="sessions-table">
+    <thead>
+      <tr>
+        <th>School</th>
+        <th>Class</th>
+        <th>Section</th>
+        <th>Section ID</th>
+        <th>Day</th>
+        <th>Period</th>
+        <th>Subject</th>
+        <th>Progress</th>
+        <th>Session Started</th>
+        <th>Session Ended</th>
+        <th>Assignments</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredSessions.map((session, index) => (
+        <tr key={index}>
+          <td>{session.schoolName}</td>
+          <td>{session.className}</td>
+          <td>{session.sectionName}</td>
+          <td>{session.sectionId}</td>
+          <td>{session.day}</td>
+          <td>{session.period}</td>
+          <td>{session.subjectName}</td>
+          <td>
+            {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+          </td>
+          <td>
+            {isToday(selectedDate) ? (
+              <button
+                onClick={() => handleStartSession(session)}
+                style={{ backgroundColor: 'orange', color: 'black' }}
+              >
+                {session.sessionId ? 'Start Session' : 'No Session Available'}
+              </button>
+            ) : (
+              <span>-</span>
+            )}
+          </td>
+          <td>{session.endTime}</td>
+          <td>
+            <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
+            <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
+
     </div>
   );
 };

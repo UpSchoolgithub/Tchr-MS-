@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { useParams, useLocation } from 'react-router-dom';  // Add useLocation for state access
+import { useParams } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
-  const { schoolId, teacherId, classId, sectionId, sessionId } = useParams();
-  const { state } = useLocation(); // Access the state passed via navigate
+  const { schoolId, teacherId, classId, sectionId, subjectId, sessionId, sessionPlanId } = useParams();
+  console.log({ schoolId, teacherId, classId, sectionId, subjectId, sessionId, sessionPlanId });
+
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [assignments, setAssignments] = useState(false);
@@ -17,18 +18,13 @@ const SessionDetails = () => {
   const [topics, setTopics] = useState([]);
   const [observations, setObservations] = useState('');
 
-  // Use state as a fallback when URL params are missing
-  const actualSchoolId = schoolId || state?.schoolId;
-  const actualClassId = classId || state?.classId;
-  const actualSessionId = sessionId || state?.sessionId;
-
-  console.log({ actualSchoolId, teacherId, actualClassId, sectionId, actualSessionId });
-
   // Fetch students from the backend
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await axiosInstance.get(`/teachers/${teacherId}/sections/${sectionId}/students`);
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/students`
+        );
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -45,11 +41,13 @@ const SessionDetails = () => {
     }
   }, [teacherId, sectionId]);
 
-  // Fetch topics and chapter name for the session
+  // Fetch session details for the session
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
-        const response = await axiosInstance.get(`/schools/${actualSchoolId}/classes/${actualClassId}/sections/${sectionId}/sessions/${actualSessionId}`);
+        const response = await axiosInstance.get(
+          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/${sessionId}/session-plans/${sessionPlanId}`
+        );
         setChapterName(response.data.chapterName || 'Unknown Chapter');
         setTopics(response.data.topics || []);
       } catch (error) {
@@ -57,12 +55,11 @@ const SessionDetails = () => {
         setError('Failed to load session details. Please try again.');
       }
     };
-  
-    if (actualSessionId) {
+
+    if (sessionId) {
       fetchSessionDetails();
     }
-  }, [actualSchoolId, actualClassId, sectionId, actualSessionId]);
-  
+  }, [schoolId, classId, sectionId, subjectId, sessionId, sessionPlanId]);
 
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
@@ -85,7 +82,7 @@ const SessionDetails = () => {
     const completedTopics = topics.filter((topic) => topic.completed).map((topic) => topic.name);
     try {
       await axiosInstance.post(
-        `/teachers/${teacherId}/sections/${sectionId}/sessions/${actualSessionId}/end`,
+        `/teachers/${teacherId}/sections/${sectionId}/sessions/${sessionId}/end`,
         {
           completedTopics,
           observations,
@@ -121,7 +118,7 @@ const SessionDetails = () => {
 
     try {
       await axiosInstance.post(
-        `/schools/${actualSchoolId}/classes/${actualClassId}/sections/${sectionId}/attendance`,
+        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
         { attendanceData }
       );
       alert('Attendance saved successfully!');

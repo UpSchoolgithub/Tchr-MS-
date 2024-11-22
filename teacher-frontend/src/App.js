@@ -44,9 +44,7 @@ function InnerApp() {
 
             {/* Corrected session-details routes */}
             <Route path="/teacherportal/:teacherId/session-details/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
-            {/* Removed duplicate route */}
-            {/* <Route path="/teacherportal/:teacherId/session-details/:schoolId/:classId/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} /> */}
-          </Routes>
+            </Routes>
         </div>
       </Router>
     </WebSocketProvider>
