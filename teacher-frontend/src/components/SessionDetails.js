@@ -105,6 +105,10 @@ const SessionDetails = () => {
     }
   };
 
+  const handleAssignmentChange = (e) => {
+    setAssignmentsEnabled(e.target.value === 'Yes');
+  };
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]); // Update the file state
   };
@@ -145,7 +149,6 @@ const SessionDetails = () => {
 
   return (
     <div className="session-details-container">
-      {/* Top-right IDs */}
       <div className="session-details-header">
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
@@ -157,7 +160,6 @@ const SessionDetails = () => {
       <h2>Welcome, Teacher Name!</h2>
 
       <div className="attendance-and-notes">
-        {/* Left Side: Mark Attendance */}
         <div className="attendance-section">
           <h3>Mark Attendance</h3>
           {loading ? (
@@ -184,7 +186,6 @@ const SessionDetails = () => {
           )}
         </div>
 
-        {/* Right Side: Session Details */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
           {sessionDetails ? (
@@ -212,7 +213,6 @@ const SessionDetails = () => {
             <p>No session details available for today.</p>
           )}
 
-          {/* Assignment Section */}
           <h4>Assignments:</h4>
           {assignmentDetails && (
             <div>
