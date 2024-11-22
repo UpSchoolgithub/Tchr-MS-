@@ -20,7 +20,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState([]); // Store session details
+  const [sessionDetails, setSessionDetails] = useState(null); // Store session details
   const [observations, setObservations] = useState('');
 
   // Fetch students for attendance
@@ -31,7 +31,7 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        setStudents(response.data || []);
+        setStudents(response.data);
       } catch (error) {
         setError('Failed to load students. Please try again.');
       } finally {
@@ -50,7 +50,7 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
-        setSessionDetails(response.data.sessions || []);
+        setSessionDetails(response.data.sessionDetails || null);
       } catch (error) {
         console.error('Error fetching session details:', error);
         setError('Failed to fetch session details.');
@@ -136,23 +136,22 @@ const SessionDetails = () => {
         {/* Right Side: Session Details */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
-          {error ? (
-            <p className="error-message">{error}</p>
-          ) : sessionDetails.length > 0 ? (
-            sessionDetails.map((session, index) => (
-              <div key={index} className="session-item">
-                <p><strong>Chapter Name:</strong> {session.chapter || 'N/A'}</p>
-                <p><strong>Session Number:</strong> {session.sessionNumber || 'N/A'}</p>
-                <h4>Topics:</h4>
-                <ul>
-                  {session.topics && session.topics.length > 0 ? (
-                    session.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
-                  ) : (
-                    <p>No topics available for this session.</p>
-                  )}
-                </ul>
-              </div>
-            ))
+          {sessionDetails ? (
+            <div className="session-item">
+              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+              <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+              <h4>Topics:</h4>
+              <ul>
+                {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
+                  sessionDetails.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
+                ) : (
+                  <p>No topics available for this session.</p>
+                )}
+              </ul>
+              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
+              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
+              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
+            </div>
           ) : (
             <p>No session details available for today.</p>
           )}
