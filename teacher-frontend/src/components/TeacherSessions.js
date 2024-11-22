@@ -68,25 +68,25 @@ const fetchSessions = useCallback(async () => {
   };
 
   const handleStartSession = (session) => {
-    if (!session.sessionId || !session.sessionPlanId) {
-      alert('Session details are missing. Proceeding with a generic session.');
-      // Navigate with a fallback session ID and session plan ID if needed
+    if (!session.sessionId) {
+      alert('Session ID is missing. Proceeding with a generic session.');
+
+      // Passing all required params in the navigate function
       navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId || 'temporary-session-id'}/${session.sessionPlanId || 'temporary-session-plan-id'}`, {
         state: {
           classId: session.classId,
           subjectId: session.subjectId,
           schoolId: session.schoolId,  // Ensure schoolId is passed correctly
           sectionId: session.sectionId,
-          sessionId: session.sessionId || 'temporary-session-id',  // Use temporary session ID if sessionId is missing
-          sessionPlanId: session.sessionPlanId || 'temporary-session-plan-id',
+          sessionId: session.sessionId || 'temporary-session-id',
           chapterName: session.chapterName || 'N/A',
           topics: session.topics || [],
         },
       });
       return;
     }
-  
-    // Proceed with normal navigation when sessionId and sessionPlanId are available
+
+    // Proceed with normal navigation when sessionId is available
     navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId}/${session.sessionPlanId}`, {
       state: {
         classId: session.classId,
@@ -94,12 +94,12 @@ const fetchSessions = useCallback(async () => {
         schoolId: session.schoolId,
         sectionId: session.sectionId,
         sessionId: session.sessionId,
-        sessionPlanId: session.sessionPlanId,
         chapterName: session.chapterName || 'N/A',
         topics: session.topics || [],
       },
     });
-  };
+};
+
   
   
   
