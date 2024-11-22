@@ -336,3 +336,14 @@ textarea {
 .end-session-button:hover {
   background-color: #FFC107;
 }
+
+.session-notes-section ul {
+  list-style-type: none; /* Removes the bullet points */
+  padding: 0; /* Removes the padding for the list */
+}
+
+.session-notes-section li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Adjusts spacing between checkbox and label */
+}
