@@ -1,30 +1,29 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
-import './UpdateAssignment.css';
 
 const UpdateAssignment = () => {
   const { state } = useLocation();
-  const { teacherId, sessionId, sessionDate, sessionNumber, chapterName } = state || {};
+  const { sessionId, sessionNumber, chapterName, sessionDate, assignmentDetails: existingDetails } = state || {};
 
-  const [assignmentDetails, setAssignmentDetails] = useState('');
+  const [assignmentDetails, setAssignmentDetails] = useState(existingDetails || '');
   const [file, setFile] = useState(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleSaveAssignment = async () => {
+  const handleSave = async () => {
     const formData = new FormData();
     formData.append('sessionId', sessionId);
     formData.append('assignmentDetails', assignmentDetails);
-    if (file) formData.append('file', file);
+    if (file) {
+      formData.append('file', file);
+    }
 
     try {
-      const response = await axiosInstance.post('/assignments', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      await axiosInstance.post('/assignments', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       alert('Assignment updated successfully!');
     } catch (error) {
@@ -34,30 +33,27 @@ const UpdateAssignment = () => {
   };
 
   return (
-    <div className="update-assignment-container">
+    <div>
       <h2>Update Assignment</h2>
       <p><strong>Session Date:</strong> {sessionDate}</p>
       <p><strong>Session Number:</strong> {sessionNumber}</p>
       <p><strong>Chapter:</strong> {chapterName}</p>
 
-      <div className="assignment-details">
-        <label htmlFor="assignmentDetails">Assignment Details:</label>
+      <label>
+        Assignments:
         <textarea
-          id="assignmentDetails"
           value={assignmentDetails}
           onChange={(e) => setAssignmentDetails(e.target.value)}
-          placeholder="Enter assignment details here..."
-        ></textarea>
-      </div>
+          placeholder="Enter assignment details..."
+        />
+      </label>
 
-      <div className="assignment-file-upload">
-        <label htmlFor="fileUpload">Upload File:</label>
-        <input type="file" id="fileUpload" onChange={handleFileChange} />
-      </div>
+      <label>
+        Upload File:
+        <input type="file" onChange={handleFileChange} />
+      </label>
 
-      <button onClick={handleSaveAssignment} style={{ backgroundColor: 'orange', color: 'black' }}>
-        Submit
-      </button>
+      <button onClick={handleSave}>Save</button>
     </div>
   );
 };

@@ -25,6 +25,7 @@ const SessionDetails = () => {
   const [observations, setObservations] = useState('');
   const [assignmentsEnabled, setAssignmentsEnabled] = useState(false); // State to control assignment box
   const [assignmentDetails, setAssignmentDetails] = useState(''); // Assignment input content
+  const [existingFile, setExistingFile] = useState(null); // Store existing uploaded file
 
   // Fetch students for attendance
   useEffect(() => {
@@ -62,6 +63,23 @@ const SessionDetails = () => {
 
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+
+  // Fetch assignment details for the session
+  useEffect(() => {
+    const fetchAssignmentDetails = async () => {
+      try {
+        if (sessionDetails?.sessionId) {
+          const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionId}`);
+          setAssignmentDetails(response.data.assignmentDetails || '');
+          setExistingFile(response.data.assignmentFileUrl || null);
+        }
+      } catch (error) {
+        console.error('Error fetching assignment details:', error);
+      }
+    };
+
+    if (sessionDetails?.sessionId) fetchAssignmentDetails();
+  }, [sessionDetails?.sessionId]);
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
@@ -102,6 +120,8 @@ const SessionDetails = () => {
         sessionDate: sessionDetails?.sessionDate,
         sessionNumber: sessionDetails?.sessionNumber,
         chapterName: sessionDetails?.chapterName,
+        assignmentDetails, // Pass existing assignment details
+        existingFile, // Pass existing file URL
       },
     });
   };
@@ -182,6 +202,18 @@ const SessionDetails = () => {
 
           {/* Assignment Section */}
           <h4>Assignments:</h4>
+          {assignmentDetails && (
+            <div>
+              <p>Existing Assignment: {assignmentDetails}</p>
+              {existingFile && (
+                <p>
+                  <a href={existingFile} target="_blank" rel="noopener noreferrer">
+                    View Uploaded File
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
           <select onChange={handleAssignmentChange}>
             <option value="No">No</option>
             <option value="Yes">Yes</option>
