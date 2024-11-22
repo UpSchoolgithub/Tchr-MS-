@@ -98,6 +98,7 @@ const fetchSessions = useCallback(async () => {
         topics: session.topics || [],
       },
     });
+    
 };
 
   

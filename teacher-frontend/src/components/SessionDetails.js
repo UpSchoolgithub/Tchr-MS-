@@ -55,12 +55,12 @@ const SessionDetails = () => {
         setError('Failed to load session details. Please try again.');
       }
     };
-
+  
     if (sessionId) {
       fetchSessionDetails();
     }
   }, [schoolId, classId, sectionId, subjectId, sessionId, sessionPlanId]);
-
+  
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
     if (storedAbsentees) {
