@@ -13,43 +13,46 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filter, setFilter] = useState({ subject: '', progress: '' });
+  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Add filtering options
   const maxRetries = 3;
   let retryCount = 0;
 
+  // Utility function to get the day name
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
   };
 
-  // Change this:
-const fetchSessions = useCallback(async () => {
-  setLoading(true);
-  try {
-    const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-    setSessions(response.data); 
-    setError(null);
-  } catch (err) {
-    console.error('Error fetching sessions:', err);
-    if (retryCount < maxRetries) {
-      retryCount += 1;
-      fetchSessions();
-    } else {
-      setError(`Failed to load sessions: ${err.message}. Please try again later.`);
+  // Fetch sessions assigned to the teacher along with session plans
+  const fetchSessions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      setSessions(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching sessions:', err);
+      if (retryCount < maxRetries) {
+        retryCount += 1;
+        fetchSessions(); // Retry fetching sessions
+      } else {
+        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-}, [teacherId, retryCount]);
+  }, [teacherId, retryCount]);
 
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
 
+  // Filter sessions based on selected day and additional filters
   useEffect(() => {
     const day = getDayName(selectedDate);
     let filtered = sessions.filter((session) => session.day === day);
 
+    // Apply subject and progress filters
     if (filter.subject) {
       filtered = filtered.filter((session) => session.subjectName === filter.subject);
     }
@@ -63,60 +66,32 @@ const fetchSessions = useCallback(async () => {
     setFilteredSessions(filtered);
   }, [selectedDate, sessions, filter]);
 
+  // Handle date change for filtering sessions
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
 
+  // Handle start session button click
   const handleStartSession = (session) => {
-    // Hardcoded values for testing
-    const hardcodedSchoolId = 1;
-    const hardcodedClassId = 115;
-    const hardcodedSectionId = 158;
-    const hardcodedSubjectId = 101;
-    const hardcodedSessionId = 'temporary-session-id';
-    const hardcodedSessionPlanId = 'temporary-session-plan-id';
-  
-    if (!session.sessionId) {
-      alert('Session ID is missing. Proceeding with a generic session.');
-  
-      // Hardcoded URL for testing
-      navigate(`/teacherportal/11/session-details/${hardcodedClassId}/${hardcodedSectionId}/${hardcodedSubjectId}/${hardcodedSessionId}/${hardcodedSessionPlanId}`, {
-        state: {
-          classId: hardcodedClassId,
-          subjectId: hardcodedSubjectId,
-          schoolId: hardcodedSchoolId,
-          sectionId: hardcodedSectionId,
-          sessionId: hardcodedSessionId,
-          chapterName: 'N/A', // Hardcoded chapter name
-          topics: [], // Hardcoded empty topics
-        },
-      });
+    if (!session.sectionId) {
+      console.error('Section ID is undefined for the session:', session);
+      alert('Unable to start session: Section ID is missing.');
       return;
     }
-  
-    // Proceed with normal navigation when sessionId is available, using hardcoded values
-    navigate(`/teacherportal/11/session-details/${hardcodedClassId}/${hardcodedSectionId}/${hardcodedSubjectId}/${hardcodedSessionId}/${hardcodedSessionPlanId}`, {
+
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
       state: {
-        classId: hardcodedClassId,
-        subjectId: hardcodedSubjectId,
-        schoolId: hardcodedSchoolId,
-        sectionId: hardcodedSectionId,
-        sessionId: hardcodedSessionId,
-        chapterName: 'N/A', // Hardcoded chapter name
-        topics: [], // Hardcoded empty topics
+        classId: session.classId || 'N/A',
+        subjectId: session.subjectId || 'N/A',
+        schoolId: session.schoolId || 'N/A',
+        sectionName: session.sectionName || 'N/A',
+        sectionId: session.sectionId,
+        sessionId: session.id,
+        chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
+        topics: session.topics || [], // Topics if already available
       },
     });
   };
-  
-
-  
-  
-  
-  
-  
-  
-  
-  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
@@ -135,6 +110,7 @@ const fetchSessions = useCallback(async () => {
           dateFormat="yyyy-MM-dd"
         />
 
+        {/* Filters for subject and progress */}
         <select onChange={(e) => setFilter({ ...filter, subject: e.target.value })}>
           <option value="">All Subjects</option>
           {Array.from(new Set(sessions.map((session) => session.subjectName))).map((subject) => (
@@ -152,60 +128,59 @@ const fetchSessions = useCallback(async () => {
       </div>
 
       {filteredSessions.length === 0 ? (
-  <p>No sessions found for {getDayName(selectedDate)}.</p>
-) : (
-  <table className="sessions-table">
-    <thead>
-      <tr>
-        <th>School</th>
-        <th>Class</th>
-        <th>Section</th>
-        <th>Section ID</th>
-        <th>Day</th>
-        <th>Period</th>
-        <th>Subject</th>
-        <th>Progress</th>
-        <th>Session Started</th>
-        <th>Session Ended</th>
-        <th>Assignments</th>
-      </tr>
-    </thead>
-    <tbody>
-      {filteredSessions.map((session, index) => (
-        <tr key={index}>
-          <td>{session.schoolName}</td>
-          <td>{session.className}</td>
-          <td>{session.sectionName}</td>
-          <td>{session.sectionId}</td>
-          <td>{session.day}</td>
-          <td>{session.period}</td>
-          <td>{session.subjectName}</td>
-          <td>
-            {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
-          </td>
-          <td>
-            {isToday(selectedDate) ? (
-              <button
-                onClick={() => handleStartSession(session)}
-                style={{ backgroundColor: 'orange', color: 'black' }}
-              >
-                {session.sessionId ? 'Start Session' : 'No Session Available'}
-              </button>
-            ) : (
-              <span>-</span>
-            )}
-          </td>
-          <td>{session.endTime}</td>
-          <td>
-            <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
-            <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-)}
-
+        <p>No sessions found for {getDayName(selectedDate)}.</p>
+      ) : (
+        <table className="sessions-table">
+          <thead>
+            <tr>
+              <th>School</th>
+              <th>Class</th>
+              <th>Section</th>
+              <th>Section ID</th>
+              <th>Day</th>
+              <th>Period</th>
+              <th>Subject</th>
+              <th>Progress</th>
+              <th>Session Started</th>
+              <th>Session Ended</th>
+              <th>Assignments</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSessions.map((session, index) => (
+              <tr key={index}>
+                <td>{session.schoolName}</td>
+                <td>{session.className}</td>
+                <td>{session.sectionName}</td>
+                <td>{session.sectionId}</td>
+                <td>{session.day}</td>
+                <td>{session.period}</td>
+                <td>{session.subjectName}</td>
+                <td>
+                  {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+                </td>
+                <td>
+                  {isToday(selectedDate) ? (
+                    <button
+                      onClick={() => handleStartSession(session)}
+                      style={{ backgroundColor: 'orange', color: 'black' }}
+                    >
+                      Start Session
+                    </button>
+                  ) : (
+                    <span>-</span>
+                  )}
+                </td>
+                <td>{session.endTime}</td>
+                <td>
+                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
+                  <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
