@@ -145,7 +145,7 @@ const SessionDetails = () => {
               {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
                 sessionDetails.topics.map((topic, idx) => (
                   <li key={idx}>
-                    <input type="checkbox" id={`topic-${idx}`} name={`topic-${idx}`} />
+                    <input type="checkbox" id={`topic-${idx}`} />
                     <label htmlFor={`topic-${idx}`}>{topic}</label>
                   </li>
                 ))
@@ -153,6 +153,7 @@ const SessionDetails = () => {
                 <p>No topics available for this session.</p>
               )}
             </ul>
+
             <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
             <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
             <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
