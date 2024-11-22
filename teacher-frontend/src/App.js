@@ -40,12 +40,12 @@ function InnerApp() {
             <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
 
             {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
-            <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
 
-            {/* Corrected session details route order */}
-            <Route path="/teacherportal/:teacherId/session-details/:schoolId/:classId/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
+            {/* Corrected session-details routes */}
             <Route path="/teacherportal/:teacherId/session-details/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
+            {/* Removed duplicate route */}
+            {/* <Route path="/teacherportal/:teacherId/session-details/:schoolId/:classId/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} /> */}
           </Routes>
         </div>
       </Router>
