@@ -209,7 +209,7 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
-  const { date } = req.query; // Optional date filter
+  const { date } = req.query; // Optional date filter for flexibility
 
   try {
     // Run the query to fetch all sessions
@@ -268,30 +268,32 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
+    // No sessions found
     if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found for the specified criteria' });
+      return res.status(404).json({ error: 'No sessions found for the specified criteria.' });
     }
 
-    // Process sessions to determine the current session based on academic start date
+    // Get academic start date
     const academicStartDate = new Date(sessions[0].SessionDate);
-    const currentDate = new Date();
+
+    // Calculate today's date
+    const currentDate = date ? new Date(date) : new Date();
+
+    // Academic day
     const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
 
+    // Academic session not started yet
     if (academicDay <= 0) {
       return res.status(400).json({ error: 'Academic session has not started yet.' });
     }
 
-    // Find the current session based on the academic day
-    let currentSession = null;
-
-    for (let session of sessions) {
+    // Find today's session
+    const currentSession = sessions.find((session) => {
       const sessionDate = new Date(session.SessionDate);
-      if (currentDate.toDateString() === sessionDate.toDateString()) {
-        currentSession = session;
-        break;
-      }
-    }
+      return sessionDate.toDateString() === currentDate.toDateString();
+    });
 
+    // No session scheduled for today
     if (!currentSession) {
       return res.status(404).json({ error: 'No session is scheduled for today.' });
     }
@@ -312,6 +314,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 
 
