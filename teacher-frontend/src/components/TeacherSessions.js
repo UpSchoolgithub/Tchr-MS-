@@ -82,13 +82,15 @@ const TeacherSessions = () => {
     navigate(`/teacherportal/${teacherId}/session-details`, {
       state: {
         teacherId,
-        classId: session.classId,
-        sectionId: session.sectionId,
-        subjectId: session.subjectId,
+        classId: session.classId, // Ensure this value exists
+        sectionId: session.sectionId, // Ensure this value exists
+        subjectId: session.subjectId, // Ensure this value exists
+        schoolId: session.schoolId, // Ensure this value exists
         day: session.day,
         period: session.period,
       },
     });
+    
   };
   
   
