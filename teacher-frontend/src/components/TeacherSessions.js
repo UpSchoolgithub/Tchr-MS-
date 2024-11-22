@@ -13,46 +13,43 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Add filtering options
+  const [filter, setFilter] = useState({ subject: '', progress: '' });
   const maxRetries = 3;
   let retryCount = 0;
 
-  // Utility function to get the day name
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
   };
 
-  // Fetch sessions assigned to the teacher along with session plans
-  const fetchSessions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      setSessions(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching sessions:', err);
-      if (retryCount < maxRetries) {
-        retryCount += 1;
-        fetchSessions(); // Retry fetching sessions
-      } else {
-        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
-      }
-    } finally {
-      setLoading(false);
+  // Change this:
+const fetchSessions = useCallback(async () => {
+  setLoading(true);
+  try {
+    const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+    setSessions(response.data); 
+    setError(null);
+  } catch (err) {
+    console.error('Error fetching sessions:', err);
+    if (retryCount < maxRetries) {
+      retryCount += 1;
+      fetchSessions();
+    } else {
+      setError(`Failed to load sessions: ${err.message}. Please try again later.`);
     }
-  }, [teacherId, retryCount]);
+  } finally {
+    setLoading(false);
+  }
+}, [teacherId, retryCount]);
 
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
 
-  // Filter sessions based on selected day and additional filters
   useEffect(() => {
     const day = getDayName(selectedDate);
     let filtered = sessions.filter((session) => session.day === day);
 
-    // Apply subject and progress filters
     if (filter.subject) {
       filtered = filtered.filter((session) => session.subjectName === filter.subject);
     }
@@ -66,32 +63,43 @@ const TeacherSessions = () => {
     setFilteredSessions(filtered);
   }, [selectedDate, sessions, filter]);
 
-  // Handle date change for filtering sessions
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
 
-  // Handle start session button click
   const handleStartSession = (session) => {
-    if (!session.sectionId) {
-      console.error('Section ID is undefined for the session:', session);
-      alert('Unable to start session: Section ID is missing.');
-      return;
+    if (!session.sessionId) {
+      alert('Session ID is missing. Proceeding with a generic session.');
+      navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}`, {
+        state: {
+          classId: session.classId,
+          subjectId: session.subjectId,
+          schoolId: session.schoolId,
+          sectionId: session.sectionId,
+          sessionId: 'temporary-session-id',  // Use placeholder ID
+          chapterName: session.chapterName || 'N/A',
+          topics: session.topics || [],
+        },
+      });
+      return;  // Early return if sessionId is missing
     }
-
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
+  
+    // Proceed with normal navigation
+    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.sessionId}`, {
       state: {
-        classId: session.classId || 'N/A',
-        subjectId: session.subjectId || 'N/A',
-        schoolId: session.schoolId || 'N/A',
-        sectionName: session.sectionName || 'N/A',
+        classId: session.classId,
+        subjectId: session.subjectId,
+        schoolId: session.schoolId,
         sectionId: session.sectionId,
-        sessionId: session.id,
-        chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
-        topics: session.topics || [], // Topics if already available
+        sessionId: session.sessionId,
+        chapterName: session.chapterName || 'N/A',
+        topics: session.topics || [],
       },
     });
   };
+  
+  
+  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
@@ -110,7 +118,6 @@ const TeacherSessions = () => {
           dateFormat="yyyy-MM-dd"
         />
 
-        {/* Filters for subject and progress */}
         <select onChange={(e) => setFilter({ ...filter, subject: e.target.value })}>
           <option value="">All Subjects</option>
           {Array.from(new Set(sessions.map((session) => session.subjectName))).map((subject) => (
