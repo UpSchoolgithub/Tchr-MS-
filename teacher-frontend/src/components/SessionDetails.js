@@ -14,17 +14,14 @@ const SessionDetails = () => {
     sectionId,
     subjectId,
     schoolId,
-    day,
-    period,
   } = location.state || {};
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [topics, setTopics] = useState([]); // Topics for the session
-  const [assignments, setAssignments] = useState(false); // Assignment status
-  const [observations, setObservations] = useState(''); // Session observations
+  const [sessionDetails, setSessionDetails] = useState([]); // Store session details
+  const [observations, setObservations] = useState('');
 
   // Fetch students for attendance
   useEffect(() => {
@@ -46,21 +43,22 @@ const SessionDetails = () => {
     else setError('Section ID is missing.');
   }, [teacherId, sectionId]);
 
-  // Fetch session topics
+  // Fetch session details
   useEffect(() => {
-    const fetchTopics = async () => {
+    const fetchSessionDetails = async () => {
       try {
         const response = await axiosInstance.get(
-          `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/topics`
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
-        setTopics(response.data);
+        setSessionDetails(response.data.sessions || []);
       } catch (error) {
-        console.error('Error fetching topics:', error);
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
       }
     };
 
-    if (schoolId && classId && sectionId && subjectId) fetchTopics();
-  }, [schoolId, classId, sectionId, subjectId]);
+    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+  }, [teacherId, sectionId, subjectId]);
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
@@ -83,10 +81,6 @@ const SessionDetails = () => {
     } catch (error) {
       alert('Failed to save attendance.');
     }
-  };
-
-  const handleAssignmentChange = (e) => {
-    setAssignments(e.target.value === 'yes');
   };
 
   const handleSaveObservations = () => {
@@ -139,37 +133,26 @@ const SessionDetails = () => {
           )}
         </div>
 
-        {/* Right Side: Session Notes */}
+        {/* Right Side: Session Details */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
-          <p><strong>Day:</strong> {day || 'Not Available'}</p>
-          <p><strong>Period:</strong> {period || 'Not Available'}</p>
-
-          <h4>Topics to Cover:</h4>
-          <ul>
-            {topics.length > 0 ? (
-              topics.map((topic, index) => (
-                <li key={index}>
-                  <input type="checkbox" id={`topic-${index}`} name={`topic-${index}`} />
-                  <label htmlFor={`topic-${index}`}>{topic.name}</label>
-                </li>
-              ))
-            ) : (
-              <p>No topics available for this session.</p>
-            )}
-          </ul>
-
-          <h4>Assignments:</h4>
-          <select onChange={handleAssignmentChange} defaultValue="no">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-
-          {assignments && (
-            <div className="assignment-input">
-              <label htmlFor="assignment-details">Enter Assignment Details:</label>
-              <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
-            </div>
+          {sessionDetails.length > 0 ? (
+            sessionDetails.map((session, index) => (
+              <div key={index} className="session-item">
+                <p><strong>Chapter Name:</strong> {session.chapter || 'N/A'}</p>
+                <p><strong>Session Number:</strong> {session.sessionNumber || 'N/A'}</p>
+                <h4>Topics:</h4>
+                <ul>
+                  {session.topics.length > 0 ? (
+                    session.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
+                  ) : (
+                    <p>No topics available for this session.</p>
+                  )}
+                </ul>
+              </div>
+            ))
+          ) : (
+            <p>No session details available.</p>
           )}
 
           <h4>Observations:</h4>
