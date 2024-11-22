@@ -17,31 +17,23 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Save or Update Assignment
-router.post('/assignments', upload.single('file'), async (req, res) => {
-  const { sessionId, assignmentDetails } = req.body;
-  const file = req.file ? `/uploads/assignments/${req.file.filename}` : null;
-
-  try {
-    // Ensure session exists
-    const session = await Session.findByPk(sessionId);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
+router.get('/assignments/:sessionPlanId', async (req, res) => {
+    const { sessionPlanId } = req.params;
+  
+    try {
+      const assignment = await Assignment.findOne({ where: { sessionPlanId } });
+      if (!assignment) {
+        return res.status(404).json({ error: 'No assignment found for this session plan.' });
+      }
+  
+      res.status(200).json(assignment);
+    } catch (error) {
+      console.error('Error fetching assignment:', error);
+      res.status(500).json({ error: 'Failed to fetch assignment.' });
     }
-
-    // Create or update the assignment
-    const assignment = await Assignment.upsert({
-      sessionId,
-      assignmentDetails,
-      assignmentFileUrl: file,
-    });
-
-    res.status(200).json({ message: 'Assignment saved successfully', assignment });
-  } catch (error) {
-    console.error('Error saving assignment:', error);
-    res.status(500).json({ error: 'Failed to save assignment' });
-  }
-});
-
+  });
+  
+  
 // Fetch Assignments
 router.get('/assignments/:sessionId', async (req, res) => {
   const { sessionId } = req.params;

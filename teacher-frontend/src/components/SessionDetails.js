@@ -69,8 +69,8 @@ const SessionDetails = () => {
   useEffect(() => {
     const fetchAssignmentDetails = async () => {
       try {
-        if (sessionDetails?.sessionId) {
-          const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionId}`);
+        if (sessionDetails?.sessionPlanId) {
+          const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionPlanId}`);
           setAssignmentDetails(response.data.assignmentDetails || '');
           setExistingFile(response.data.assignmentFileUrl || null);
         }
@@ -78,9 +78,10 @@ const SessionDetails = () => {
         console.error('Error fetching assignment details:', error);
       }
     };
-
-    if (sessionDetails?.sessionId) fetchAssignmentDetails();
-  }, [sessionDetails?.sessionId]);
+  
+    if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
+  }, [sessionDetails?.sessionPlanId]);
+  
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
@@ -113,14 +114,25 @@ const SessionDetails = () => {
     setAssignmentsEnabled(e.target.value === 'Yes');
   };
 
-  const handleSaveAssignment = () => {
+  const handleSaveAssignment = async () => {
     if (!assignmentDetails.trim()) {
       alert('Assignment details cannot be empty.');
       return;
     }
   
-    setSuccessMessage('Assignment saved successfully!');
+    try {
+      await axiosInstance.post('/assignments', {
+        sessionPlanId: sessionDetails?.sessionPlanId, // Use sessionPlanId
+        assignmentDetails,
+      });
+  
+      alert('Assignment saved successfully!');
+    } catch (error) {
+      console.error('Error saving assignment:', error);
+      alert('Failed to save assignment.');
+    }
   };
+  
   
   
 

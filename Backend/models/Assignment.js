@@ -10,20 +10,20 @@ Assignment.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    sessionId: {
+    sessionPlanId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'sessions',
+        model: 'SessionPlans',
         key: 'id',
       },
     },
     assignmentDetails: {
-      type: DataTypes.TEXT, // To store long text data
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     assignmentFileUrl: {
-      type: DataTypes.STRING, // URL of the uploaded file (if any)
+      type: DataTypes.STRING,
       allowNull: true,
     },
   },
@@ -31,7 +31,7 @@ Assignment.init(
     sequelize,
     modelName: 'Assignment',
     tableName: 'assignments',
-    timestamps: true, // Includes `createdAt` and `updatedAt`
+    timestamps: true,
   }
 );
 
