@@ -22,7 +22,8 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error message
-  
+  const [chapterName, setChapterName] = useState('');
+
   
   // Fetch students from the backend
   useEffect(() => {
