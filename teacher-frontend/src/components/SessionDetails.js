@@ -225,13 +225,7 @@ const SessionDetails = () => {
               onChange={(e) => setAssignmentDetails(e.target.value)}
               placeholder="Enter assignment details here..."
             ></textarea>
-            <button onClick={() => alert(`Saved: ${assignmentDetails}`)}>Save</button>
-            {assignmentDetails && (
-              <div className="saved-assignment">
-                <h3>Saved Assignment:</h3>
-                <p>{assignmentDetails}</p>
-              </div>
-            )}
+            <button onClick={() => setAssignmentDetails(assignmentDetails)}>Save</button>
           </div>
         )}
 
