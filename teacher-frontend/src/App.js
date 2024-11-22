@@ -13,13 +13,11 @@ import { WebSocketProvider } from './WebSocketContext';
 import TeacherSessions from './components/TeacherSessions';
 import SessionDetails from './components/SessionDetails'; // Import the SessionDetails component
 
-// PrivateRoute component to ensure only authenticated users can access certain routes
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
   return token ? children : <Navigate to="/login" />;
 }
 
-// Main component with routing logic
 function InnerApp() {
   const { token } = useTeacherAuth();
 
@@ -41,11 +39,13 @@ function InnerApp() {
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
             <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
 
-            {/* Teacher sessions and session details with parameters */}
+            {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
+            <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
-            <Route path="/teacherportal/:teacherId/session-details/:classId/:sectionId/:subjectId/:sessionId/:sessionPlanId"
-           element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
 
+            {/* Corrected session details route order */}
+            <Route path="/teacherportal/:teacherId/session-details/:schoolId/:classId/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
+            <Route path="/teacherportal/:teacherId/session-details/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
           </Routes>
         </div>
       </Router>
