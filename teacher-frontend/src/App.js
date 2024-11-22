@@ -38,12 +38,8 @@ function InnerApp() {
             <Route path="/request" element={<PrivateRoute><Request /></PrivateRoute>} />
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
             <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
-
-            {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
-            <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
-
-            {/* Corrected session-details routes */}
-            <Route path="/teacherportal/:teacherId/session-details/:sectionId/:sessionId" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
+            <Route path="/teacherportal/:teacherId/session-details/:classId/:sectionId/:subjectId/:sessionId/:sessionPlanId" 
+            element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
             </Routes>
         </div>
       </Router>
