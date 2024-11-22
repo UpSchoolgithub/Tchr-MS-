@@ -53,25 +53,23 @@ router.get('/assignments/:sessionId', async (req, res) => {
 
 // Save or Update Assignment
 router.post('/assignments', upload.single('file'), async (req, res) => {
-    const { sessionPlanId, assignmentDetails } = req.body;
-    
-    // Check if a file is uploaded
-    const file = req.file ? `/uploads/assignments/${req.file.filename}` : null;
-  
+    const { sessionPlanId, assignmentDetails } = req.body; // Get sessionPlanId from the request body
+    const file = req.file ? `/uploads/assignments/${req.file.filename}` : null; // Uploaded file
+
     try {
-      // Create or update the assignment
-      const assignment = await Assignment.upsert({
-        sessionPlanId,
-        assignmentDetails,
-        assignmentFileUrl: file, // Null if no file is uploaded
-      });
-  
-      res.status(200).json({ message: 'Assignment saved successfully', assignment });
+        // Save or update assignment
+        const assignment = await Assignment.upsert({
+            sessionPlanId,
+            assignmentDetails,
+            assignmentFileUrl: file,
+        });
+
+        res.status(200).json({ message: 'Assignment saved successfully', assignment });
     } catch (error) {
-      console.error('Error saving assignment:', error);
-      res.status(500).json({ error: 'Failed to save assignment' });
+        console.error('Error saving assignment:', error);
+        res.status(500).json({ error: 'Failed to save assignment.' });
     }
-  });
-  
+});
+
   
 module.exports = router;

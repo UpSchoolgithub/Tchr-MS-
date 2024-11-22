@@ -115,26 +115,25 @@ const SessionDetails = () => {
 
   const handleSaveAssignment = async () => {
     try {
-      const formData = new FormData();
-      formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Use sessionPlanId
-      formData.append('assignmentDetails', assignmentDetails);
-  
-      // Append file if selected
-      if (file) {
-        formData.append('file', file);
-      }
-  
-      const response = await axiosInstance.post('/api/assignments', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-  
-      alert('Assignment saved successfully!');
-      setSuccessMessage(response.data.message);
+        const formData = new FormData();
+        formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Include sessionPlanId
+        formData.append('assignmentDetails', assignmentDetails); // Include assignment details
+        if (file) {
+            formData.append('file', file); // Optional: Include the file only if selected
+        }
+
+        const response = await axiosInstance.post('/api/assignments', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        alert('Assignment saved successfully!');
+        setSuccessMessage(response.data.message);
     } catch (error) {
-      console.error('Error saving assignment:', error);
-      alert('Failed to save assignment.');
+        console.error('Error saving assignment:', error);
+        alert('Failed to save assignment.');
     }
-  };
+};
+
   
   
 
