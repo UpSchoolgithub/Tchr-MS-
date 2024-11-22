@@ -93,9 +93,27 @@ const SessionDetails = () => {
     setAssignmentsEnabled(e.target.value === 'Yes');
   };
 
-  const handleAssignmentSave = () => {
-    alert(`Assignment Details Saved: ${assignmentDetails}`);
+  const handleAssignmentSave = async () => {
+    const formData = new FormData();
+    formData.append('sessionId', sessionDetails.sessionId);
+    formData.append('assignmentDetails', assignmentDetails);
+    if (file) {
+      formData.append('file', file);
+    }
+  
+    try {
+      const response = await axiosInstance.post('/assignments', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      alert('Assignment saved successfully!');
+    } catch (error) {
+      console.error('Error saving assignment:', error);
+      alert('Failed to save assignment.');
+    }
   };
+  
 
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
@@ -173,7 +191,7 @@ const SessionDetails = () => {
 
           {/* Assignment Section */}
           <h4>Assignments:</h4>
-          <select onChange={handleAssignmentChange}>
+          <select onChange={handleAssignmentChange} defaultValue="No">
             <option value="No">No</option>
             <option value="Yes">Yes</option>
           </select>
@@ -183,10 +201,14 @@ const SessionDetails = () => {
                 value={assignmentDetails}
                 onChange={(e) => setAssignmentDetails(e.target.value)}
                 placeholder="Enter assignment details here..."
+                className="assignment-textarea"
               ></textarea>
-              <button onClick={handleAssignmentSave}>Save Assignment</button>
+              <button onClick={handleAssignmentSave} className="save-assignment-button">
+                Save Assignment
+              </button>
             </div>
           )}
+
 
           <h4>Observations:</h4>
           <textarea
