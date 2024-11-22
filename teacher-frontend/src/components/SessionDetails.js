@@ -22,52 +22,44 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]); // Selected absentees
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error message
-  
-  
-  // Fetch students from the backend
+
+  // Handle missing data
+  if (!sectionId || !classId || !subjectId) {
+    console.error('Missing critical data:', { sectionId, classId, subjectId });
+    return (
+      <div className="error-container">
+        <p>Error: Missing critical data. Please navigate correctly.</p>
+        <button onClick={() => navigate(-1)}>Go Back</button>
+      </div>
+    );
+  }
+
+  // Fetch students for the section
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        console.log('Fetching students for teacherId:', teacherId, 'sectionId:', sectionId);
+        setLoading(true);
+        console.log('Fetching students for Section ID:', sectionId);
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/students`
         );
-        console.log('Student response:', response.data);
         setStudents(response.data);
-      } catch (error) {
-        console.error('Error fetching students:', error);
-        setError('Failed to load students. Please try again.');
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setError('Failed to load students. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
-  
-    if (sectionId) {
-      fetchStudents();
-    } else {
-      console.error('Section ID is missing.');
-      setError('Section ID is missing.');
-    }
-  }, [teacherId, sectionId]);
-  
 
-  useEffect(() => {
-    const storedAbsentees = localStorage.getItem('absentees');
-    if (storedAbsentees) {
-      setAbsentees(JSON.parse(storedAbsentees));
-    }
-  }, []); // Run only once on component mount
-  
+    fetchStudents();
+  }, [teacherId, sectionId]);
+
+  // Handle absentee selection
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
     setAbsentees(selectedIds);
-    // Save to local storage
-    localStorage.setItem('absentees', JSON.stringify(selectedIds));
-  };
-
-  // Handle assignment dropdown change
-  const handleAssignmentsChange = (e) => {
-    setAssignments(e.target.value === 'yes');
   };
 
   // Convert students to options for the dropdown
@@ -76,130 +68,87 @@ const SessionDetails = () => {
     label: student.studentName,
   }));
 
+  // Save attendance
   const handleSaveAttendance = async () => {
     const attendanceData = students.map((student) => ({
       studentId: student.id,
       date: new Date().toISOString().split('T')[0], // Current date
-      status: absentees.includes(student.rollNumber) ? 'A' : 'P',
+      status: absentees.includes(student.rollNumber) ? 'A' : 'P', // 'A' for absent, 'P' for present
     }));
-  
-    console.log('Saving attendance:', attendanceData); // Debugging log
-  
+
+    console.log('Saving attendance:', attendanceData);
+
     try {
       await axiosInstance.post(
-        `/schools/${schoolId}/classes/${classId}/sections/${sectionId}/attendance`,
+        `/schools/${classId}/classes/${classId}/sections/${sectionId}/attendance`,
         { attendanceData }
       );
       alert('Attendance saved successfully!');
-      // Clear absentees from local storage
-      localStorage.removeItem('absentees');
-    } catch (error) {
-      console.error('Error saving attendance:', error);
-      alert('Error saving attendance');
+    } catch (err) {
+      console.error('Error saving attendance:', err);
+      alert('Failed to save attendance. Please try again.');
     }
   };
-  
-  
-  
+
   return (
     <div className="session-details-container">
-      <h2>Welcome, Teacher Name!</h2>
+      <h2>Session Details</h2>
+      <div className="session-info">
+        <p>
+          <strong>Teacher ID:</strong> {teacherId}
+        </p>
+        <p>
+          <strong>Class ID:</strong> {classId}
+        </p>
+        <p>
+          <strong>Section ID:</strong> {sectionId}
+        </p>
+        <p>
+          <strong>Subject ID:</strong> {subjectId}
+        </p>
+        <p>
+          <strong>Day:</strong> {day}
+        </p>
+        <p>
+          <strong>Period:</strong> {period}
+        </p>
+      </div>
 
-      <div className="attendance-and-notes">
-        {/* Left Side: Mark Attendance */}
-        <div className="attendance-section">
-          <h3>Mark Attendance</h3>
-          {loading ? (
-            <p>Loading students...</p>
-          ) : error ? (
-            <p className="error-message">{error}</p>
-          ) : students.length === 0 ? (
-            <p>No students found for this section.</p>
-          ) : (
-            <>
-              <button onClick={handleSaveAttendance} className="save-attendance-button">
-                Save Attendance
-              </button>
-              <Select
-                isMulti
-                options={studentOptions}
-                onChange={handleAbsenteeChange}
-                placeholder="Choose Absentees"
-                value={studentOptions.filter((option) => absentees.includes(option.value))}
-                className="multi-select-dropdown"
-                closeMenuOnSelect={false}
-                isClearable
-              />
-            </>
-          )}
+      <div className="attendance-section">
+        <h3>Mark Attendance</h3>
+        {loading ? (
+          <p>Loading students...</p>
+        ) : error ? (
+          <p className="error-message">{error}</p>
+        ) : students.length === 0 ? (
+          <p>No students found for this section.</p>
+        ) : (
+          <>
+            <Select
+              isMulti
+              options={studentOptions}
+              onChange={handleAbsenteeChange}
+              placeholder="Select Absentees"
+              className="multi-select-dropdown"
+              closeMenuOnSelect={false}
+            />
+            <button onClick={handleSaveAttendance} className="save-attendance-button">
+              Save Attendance
+            </button>
+          </>
+        )}
 
-          {/* Display absentees list only if absentees are selected */}
-          {absentees.length > 0 && (
-            <div className="absentees-list">
-              <h4>List of Absentees:</h4>
-              <ul>
-                {absentees.map((id) => {
-                  const student = studentOptions.find((s) => s.value === id);
-                  return (
-                    <li key={id}>
-                      {student?.label || 'Unknown'}{' '}
-                      <span style={{ color: 'red' }}>Absent</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Right Side: Session Notes and Details */}
-        <div className="session-notes-section">
-          
-          <h3>Session Notes and Details:</h3>
-          
-          <p>
-            <strong>Session Number:</strong> 05
-          </p>
-          <p>
-            <strong>Chapter:</strong> {chapterName} {/* Display fetched chapter name */}
-          </p>
-
-          <h4>Topics to Cover:</h4>
-          <ul>
-            {topics.length > 0 ? (
-              topics.map((topic, index) => (
-                <li key={index}>
-                  <input type="checkbox" id={`topic-${index}`} name={`topic-${index}`} />
-                  <label htmlFor={`topic-${index}`}>{topic}</label>
-                </li>
-              ))
-            ) : (
-              <p>No topics available for this session.</p>
-            )}
-          </ul>
-
-
-          <h4>Assignments:</h4>
-          <select onChange={handleAssignmentsChange} defaultValue="no">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-
-          {assignments && (
-            <div className="assignment-input">
-              <label htmlFor="assignment-details">Enter Assignment Details:</label>
-              <textarea id="assignment-details" placeholder="Provide assignment details here..."></textarea>
-            </div>
-          )}
-
-          <h4>Observations:</h4>
-          <textarea
-            className="observations-textarea"
-            placeholder="Add observations or notes here..."
-          ></textarea>
-
-          <button className="end-session-button">End Session</button>
-        </div>
+        {absentees.length > 0 && (
+          <div className="absentees-list">
+            <h4>List of Absentees:</h4>
+            <ul>
+              {absentees.map((id) => {
+                const student = studentOptions.find((s) => s.value === id);
+                return <li key={id}>{student?.label || 'Unknown'} (Absent)</li>;
+              })}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
