@@ -143,11 +143,22 @@ const SessionDetails = () => {
               <h4>Topics:</h4>
               <ul>
                 {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
-                  sessionDetails.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
+                  sessionDetails.topics.map((topic, idx) => (
+                    <li key={idx}>
+                      <input
+                        type="checkbox"
+                        id={`topic-${idx}`}
+                        name={`topic-${idx}`}
+                        value={topic}
+                      />
+                      <label htmlFor={`topic-${idx}`}>{topic}</label>
+                    </li>
+                  ))
                 ) : (
                   <p>No topics available for this session.</p>
                 )}
               </ul>
+
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
               <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
