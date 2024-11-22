@@ -85,7 +85,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
   const { date, absentees, sectionId } = req.body;
 
   try {
-    // Mark attendance as "Absent" for absentees
+    // Mark attendance as "Absent" for students listed in absentees
     for (const studentId of absentees) {
       await Attendance.upsert({
         studentId,
@@ -95,9 +95,9 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       });
     }
 
-    // Mark remaining students as "Present"
+    // Automatically mark others as "Present"
     const allStudents = await Student.findAll({ where: { sectionId } });
-    const presentStudents = allStudents.filter((student) => !absentees.includes(student.id));
+    const presentStudents = allStudents.filter(student => !absentees.includes(student.id));
 
     for (const student of presentStudents) {
       await Attendance.upsert({
@@ -108,39 +108,12 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       });
     }
 
-    // Fetch session details for the academic day
-    const session = await Session.findOne({
-      where: { id: sessionId },
-      include: [
-        { model: SessionPlan, attributes: ['sessionNumber', 'planDetails'], as: 'SessionPlan' },
-        { model: Subject, attributes: ['academicStartDate'] },
-      ],
-    });
-
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found.' });
-    }
-
-    const academicStartDate = new Date(session.Subject.academicStartDate);
-    const currentDate = new Date();
-    const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
-
-    res.json({
-      message: 'Attendance marked successfully',
-      sessionDetails: {
-        id: session.id,
-        chapterName: session.chapterName,
-        sessionNumber: session.SessionPlan.sessionNumber,
-        topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
-        academicDay,
-      },
-    });
+    res.json({ message: 'Attendance marked successfully' });
   } catch (error) {
-    console.error('Error saving attendance:', error);
-    res.status(500).json({ error: 'Failed to mark attendance.' });
+    console.error('Error marking attendance:', error);
+    res.status(500).json({ error: 'Failed to mark attendance' });
   }
 });
-
 
 
 // Get session details for a specific teacher and session
@@ -210,70 +183,89 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
+  const { date } = req.query;
 
   try {
-    // Fetch the academic start date
-    const subject = await Subject.findOne({ where: { id: subjectId } });
-    if (!subject || !subject.academicStartDate) {
-      return res.status(400).json({ error: 'Academic start date not found for this subject.' });
-    }
-
-    const academicStartDate = new Date(subject.academicStartDate);
-    const currentDate = new Date();
-    const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
-
-    if (academicDay <= 0) {
-      return res.status(400).json({ error: 'Academic session has not started yet.' });
-    }
-
-    // Fetch all sessions for the subject
-    const sessions = await Session.findAll({
-      where: { subjectId, sectionId },
-      include: [
-        { model: SessionPlan, attributes: ['sessionNumber', 'planDetails'], as: 'SessionPlan' },
-      ],
-      order: [['priorityNumber', 'ASC']],
-    });
-
-    if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found for this subject and section.' });
-    }
-
-    // Determine the current chapter and session
-    let sessionDayCount = 0;
-    let currentChapter = null;
-    let sessionNumber = null;
-
-    for (let session of sessions) {
-      sessionDayCount += session.numberOfSessions;
-      if (academicDay <= sessionDayCount) {
-        currentChapter = session;
-        sessionNumber = academicDay - (sessionDayCount - session.numberOfSessions);
-        break;
+    // Perform query to fetch sessions
+    const sessions = await sequelize.query(
+      `
+      SELECT
+          schools.name AS School,
+          classinfos.className AS Class,
+          sections.sectionName AS Section,
+          subjects.subjectName AS Subject,
+          sessions.chapterName AS Chapter,
+          sp.sessionNumber AS SessionNumber,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2]')) AS Topic3,
+          sessions.priorityNumber AS ChapterPriority,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS SessionDate,
+          timetable_entries.startTime AS StartTime,
+          timetable_entries.endTime AS EndTime
+      FROM
+          timetable_entries
+      JOIN
+          subjects ON timetable_entries.subjectId = subjects.id
+      JOIN
+          sessions ON (
+              sessions.subjectId = timetable_entries.subjectId AND
+              sessions.sectionId = timetable_entries.sectionId
+          )
+      JOIN
+          \`SessionPlans\` sp ON sp.sessionId = sessions.id
+      JOIN
+          schools ON timetable_entries.schoolId = schools.id
+      JOIN
+          classinfos ON timetable_entries.classId = classinfos.id
+      JOIN
+          sections ON timetable_entries.sectionId = sections.id
+      WHERE
+          timetable_entries.teacherId = :teacherId
+          AND timetable_entries.sectionId = :sectionId
+          AND timetable_entries.subjectId = :subjectId
+          ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
+      ORDER BY
+          SessionDate ASC, StartTime ASC, ChapterPriority ASC, sp.sessionNumber ASC;
+      `,
+      {
+        replacements: {
+          teacherId,
+          sectionId,
+          subjectId,
+          date, // Optional date filter
+        },
+        type: sequelize.QueryTypes.SELECT,
       }
-    }
-
-    if (!currentChapter) {
-      return res.status(400).json({ error: 'All sessions have been completed.' });
-    }
-
-    // Extract topics for the current session
-    const sessionPlan = currentChapter.SessionPlan.find(
-      (plan) => plan.sessionNumber === sessionNumber
     );
 
-    const topics = sessionPlan ? JSON.parse(sessionPlan.planDetails) : [];
+    // Check if sessions exist
+    if (!sessions.length) {
+      return res.status(404).json({ error: 'No sessions found for the specified criteria' });
+    }
 
-    // Respond with the current session details
+    // Format response
     res.json({
-      chapterName: currentChapter.chapterName,
-      sessionNumber,
-      topics,
-      academicDay,
+      sessions: sessions.map((session) => ({
+        school: session.School,
+        class: session.Class,
+        section: session.Section,
+        subject: session.Subject,
+        chapter: session.Chapter,
+        sessionNumber: session.SessionNumber,
+        topics: [session.Topic1, session.Topic2, session.Topic3].filter(Boolean), // Filter out null topics
+        chapterPriority: session.ChapterPriority,
+        sessionDate: session.SessionDate,
+        startTime: session.StartTime,
+        endTime: session.EndTime,
+      })),
     });
   } catch (error) {
-    console.error('Error fetching sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions.' });
+    console.error('Error fetching teacher sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch teacher sessions' });
   }
 });
 
