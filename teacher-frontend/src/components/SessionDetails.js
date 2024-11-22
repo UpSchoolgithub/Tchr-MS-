@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
 
 const SessionDetails = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Extract data from navigation state
   const {
@@ -93,27 +94,17 @@ const SessionDetails = () => {
     setAssignmentsEnabled(e.target.value === 'Yes');
   };
 
-  const handleAssignmentSave = async () => {
-    const formData = new FormData();
-    formData.append('sessionId', sessionDetails.sessionId);
-    formData.append('assignmentDetails', assignmentDetails);
-    if (file) {
-      formData.append('file', file);
-    }
-  
-    try {
-      const response = await axiosInstance.post('/assignments', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      alert('Assignment saved successfully!');
-    } catch (error) {
-      console.error('Error saving assignment:', error);
-      alert('Failed to save assignment.');
-    }
+  const handleAssignmentNavigate = () => {
+    navigate(`/update-assignment`, {
+      state: {
+        teacherId,
+        sessionId: sessionDetails?.sessionId,
+        sessionDate: sessionDetails?.sessionDate,
+        sessionNumber: sessionDetails?.sessionNumber,
+        chapterName: sessionDetails?.chapterName,
+      },
+    });
   };
-  
 
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
@@ -191,7 +182,7 @@ const SessionDetails = () => {
 
           {/* Assignment Section */}
           <h4>Assignments:</h4>
-          <select onChange={handleAssignmentChange} defaultValue="No">
+          <select onChange={handleAssignmentChange}>
             <option value="No">No</option>
             <option value="Yes">Yes</option>
           </select>
@@ -201,14 +192,10 @@ const SessionDetails = () => {
                 value={assignmentDetails}
                 onChange={(e) => setAssignmentDetails(e.target.value)}
                 placeholder="Enter assignment details here..."
-                className="assignment-textarea"
               ></textarea>
-              <button onClick={handleAssignmentSave} className="save-assignment-button">
-                Save Assignment
-              </button>
+              <button onClick={handleAssignmentNavigate}>Update Assignment</button>
             </div>
           )}
-
 
           <h4>Observations:</h4>
           <textarea
@@ -216,7 +203,7 @@ const SessionDetails = () => {
             onChange={(e) => setObservations(e.target.value)}
             className="observations-textarea"
             placeholder="Add observations of the class here..."
-            ></textarea>
+          ></textarea>
 
           <button onClick={handleSaveObservations} className="save-observations-button">
             Save Observations
