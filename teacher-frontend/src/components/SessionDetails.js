@@ -27,6 +27,7 @@ const SessionDetails = () => {
   const [assignmentDetails, setAssignmentDetails] = useState('');
   const [existingFile, setExistingFile] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch students for attendance
   useEffect(() => {
@@ -113,9 +114,33 @@ const SessionDetails = () => {
     setAssignmentsEnabled(e.target.value === 'Yes');
   };
 
-  const handleSaveAssignment = () => {
-    setSuccessMessage('Assignment saved successfully!');
+  const handleSaveAssignment = async () => {
+    if (!assignmentDetails.trim()) {
+      alert('Assignment details cannot be empty.');
+      return;
+    }
+  
+    if (!sessionDetails?.sessionId) {
+      alert('Session details are missing. Cannot save assignment.');
+      return;
+    }
+  
+    setIsSaving(true);
+    try {
+      await axiosInstance.post(`/assignments`, {
+        sessionId: sessionDetails.sessionId,
+        assignmentDetails,
+      });
+      setAssignmentDetails(''); // Clear the input field
+      setSuccessMessage('Assignment saved successfully!');
+    } catch (error) {
+      console.error('Error saving assignment:', error);
+      alert('Failed to save assignment. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
+  
 
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
