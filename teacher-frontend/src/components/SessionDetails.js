@@ -115,11 +115,6 @@ const SessionDetails = () => {
 
   const handleSaveAssignment = async () => {
     try {
-      if (!assignmentDetails.trim() && !file) {
-        alert('Please provide assignment details or upload a file.');
-        return;
-      }
-
       const formData = new FormData();
       formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Use sessionPlanId
       formData.append('assignmentDetails', assignmentDetails);
@@ -139,6 +134,19 @@ const SessionDetails = () => {
     } catch (error) {
       console.error('Error saving assignment:', error);
       alert('Failed to save assignment.');
+    }
+  };
+
+  const handleSaveObservations = async () => {
+    try {
+      const response = await axiosInstance.post('/api/observations', {
+        sessionPlanId: sessionDetails?.sessionPlanId,
+        observations,
+      });
+      alert('Observations saved successfully!');
+    } catch (error) {
+      console.error('Error saving observations:', error);
+      alert('Failed to save observations.');
     }
   };
 
@@ -250,7 +258,6 @@ const SessionDetails = () => {
             className="observations-textarea"
             placeholder="Add observations of the class here..."
           ></textarea>
-
           <button onClick={handleSaveObservations} className="save-observations-button">
             Save Observations
           </button>
