@@ -70,14 +70,16 @@ const fetchSessions = useCallback(async () => {
   const handleStartSession = (session) => {
     if (!session.sessionId) {
       alert('Session ID is missing. Proceeding with a generic session.');
-      
+  
+      // This might be incorrect, as you're passing a placeholder. 
+      // Remove or replace the placeholder with an actual sessionId if available.
       navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}`, {
         state: {
           classId: session.classId,
           subjectId: session.subjectId,
           schoolId: session.schoolId,  // Ensure schoolId is passed correctly
           sectionId: session.sectionId,
-          sessionId: 'temporary-session-id',  // Placeholder for missing sessionId
+          sessionId: session.sessionId || 'temporary-session-id',  // If sessionId is missing, use this placeholder
           chapterName: session.chapterName || 'N/A',
           topics: session.topics || [],
         },
@@ -98,6 +100,7 @@ const fetchSessions = useCallback(async () => {
       },
     });
   };
+  
   
   
   

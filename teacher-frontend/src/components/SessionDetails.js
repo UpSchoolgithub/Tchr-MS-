@@ -62,6 +62,7 @@ const SessionDetails = () => {
       fetchSessionDetails();
     }
   }, [actualSchoolId, actualClassId, sectionId, actualSessionId]);
+  
 
   useEffect(() => {
     const storedAbsentees = localStorage.getItem('absentees');
