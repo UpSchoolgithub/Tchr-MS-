@@ -115,23 +115,24 @@ const SessionDetails = () => {
   };
 
   const handleSaveAssignment = async () => {
-    if (!assignmentDetails.trim()) {
-      alert('Assignment details cannot be empty.');
-      return;
-    }
-  
     try {
-      await axiosInstance.post('/assignments', {
-        sessionPlanId: sessionDetails?.sessionPlanId, // Use sessionPlanId
-        assignmentDetails,
+      const formData = new FormData();
+      formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Use sessionPlanId
+      formData.append('assignmentDetails', assignmentDetails);
+      formData.append('file', file); // Only include if a file is selected
+  
+      const response = await axiosInstance.post('/api/assignments', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
   
       alert('Assignment saved successfully!');
+      setSuccessMessage(response.data.message);
     } catch (error) {
       console.error('Error saving assignment:', error);
       alert('Failed to save assignment.');
     }
   };
+  
   
   
   
