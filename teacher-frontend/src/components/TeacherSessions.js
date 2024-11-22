@@ -78,21 +78,19 @@ const TeacherSessions = () => {
       alert('Unable to start session: Section ID is missing.');
       return;
     }
-
-    navigate(`/teacherportal/${teacherId}/session-details/${session.sectionId}/${session.id || 'unknown'}`, {
+  
+    navigate(`/teacherportal/${teacherId}/session-details`, {
       state: {
-        classId: session.classId || 'N/A',
-        subjectId: session.subjectId || 'N/A',
-        schoolId: session.schoolId || 'N/A',
-        sectionName: session.sectionName || 'N/A',
+        teacherId,
+        classId: session.classId,
         sectionId: session.sectionId,
-        sessionId: session.id,
-        chapterName: session.chapterName || 'N/A', // Pass additional data for SessionDetails
-        topics: session.topics || [], // Topics if already available
+        subjectId: session.subjectId,
+        day: session.day,
+        period: session.period,
       },
     });
   };
-
+  
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
   if (loading) return <p>Loading...</p>;
