@@ -10,10 +10,10 @@ const getTeacherAssignments = async (req, res) => {
     const assignments = await TimetableEntry.findAll({
       where: { teacherId },
       include: [
-        { model: School, attributes: ['name'] },
-        { model: ClassInfo, attributes: ['className'] },
+        { model: School, attributes: ['name','id'] },
+        { model: ClassInfo, attributes: ['className','id'] },
         { model: Section, attributes: ['sectionName', 'id'] },
-        { model: Subject, attributes: ['subjectName'] }
+        { model: Subject, attributes: ['subjectName','id'] }
       ],
       attributes: ['day', 'period', 'startTime', 'endTime']
     });
