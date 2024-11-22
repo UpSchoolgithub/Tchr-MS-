@@ -68,39 +68,46 @@ const fetchSessions = useCallback(async () => {
   };
 
   const handleStartSession = (session) => {
+    // Hardcoded values for testing
+    const hardcodedSchoolId = 1;
+    const hardcodedClassId = 115;
+    const hardcodedSectionId = 158;
+    const hardcodedSubjectId = 101;
+    const hardcodedSessionId = 'temporary-session-id';
+    const hardcodedSessionPlanId = 'temporary-session-plan-id';
+  
     if (!session.sessionId) {
       alert('Session ID is missing. Proceeding with a generic session.');
-
-      // Passing all required params in the navigate function
-      navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId || 'temporary-session-id'}/${session.sessionPlanId || 'temporary-session-plan-id'}`, {
+  
+      // Hardcoded URL for testing
+      navigate(`/teacherportal/11/session-details/${hardcodedClassId}/${hardcodedSectionId}/${hardcodedSubjectId}/${hardcodedSessionId}/${hardcodedSessionPlanId}`, {
         state: {
-          classId: session.classId,
-          subjectId: session.subjectId,
-          schoolId: session.schoolId,  // Ensure schoolId is passed correctly
-          sectionId: session.sectionId,
-          sessionId: session.sessionId || 'temporary-session-id',
-          chapterName: session.chapterName || 'N/A',
-          topics: session.topics || [],
+          classId: hardcodedClassId,
+          subjectId: hardcodedSubjectId,
+          schoolId: hardcodedSchoolId,
+          sectionId: hardcodedSectionId,
+          sessionId: hardcodedSessionId,
+          chapterName: 'N/A', // Hardcoded chapter name
+          topics: [], // Hardcoded empty topics
         },
       });
-      
       return;
     }
-
-    // Proceed with normal navigation when sessionId is available
-    navigate(`/teacherportal/${teacherId}/session-details/${session.classId}/${session.sectionId}/${session.subjectId}/${session.sessionId}/${session.sessionPlanId}`, {
+  
+    // Proceed with normal navigation when sessionId is available, using hardcoded values
+    navigate(`/teacherportal/11/session-details/${hardcodedClassId}/${hardcodedSectionId}/${hardcodedSubjectId}/${hardcodedSessionId}/${hardcodedSessionPlanId}`, {
       state: {
-        classId: session.classId,
-        subjectId: session.subjectId,
-        schoolId: session.schoolId,
-        sectionId: session.sectionId,
-        sessionId: session.sessionId,
-        chapterName: session.chapterName || 'N/A',
-        topics: session.topics || [],
+        classId: hardcodedClassId,
+        subjectId: hardcodedSubjectId,
+        schoolId: hardcodedSchoolId,
+        sectionId: hardcodedSectionId,
+        sessionId: hardcodedSessionId,
+        chapterName: 'N/A', // Hardcoded chapter name
+        topics: [], // Hardcoded empty topics
       },
     });
-    
-};
+  };
+  
 
   
   
