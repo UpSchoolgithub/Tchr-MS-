@@ -121,11 +121,11 @@ const SessionDetails = () => {
       if (file) {
         formData.append('file', file); // Add file if present
       }
-
-      const response = await axiosInstance.post('/api/assignments', formData, {
+  
+      const response = await axiosInstance.post('/assignments', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
+  
       alert('Assignment saved successfully!');
       setSuccessMessage(response.data.message);
       setAssignmentDetails(response.data.assignmentDetails || '');
@@ -136,6 +136,7 @@ const SessionDetails = () => {
       alert('Failed to save assignment.');
     }
   };
+  
 
   const handleSaveObservations = async () => {
     try {
