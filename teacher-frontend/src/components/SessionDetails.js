@@ -20,7 +20,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState(null); // Store session details
+  const [sessionDetails, setSessionDetails] = useState(null); // Single session detail
   const [observations, setObservations] = useState('');
 
   // Fetch students for attendance
@@ -50,7 +50,10 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
-        setSessionDetails(response.data.sessionDetails || null);
+        // Ensure correct parsing of topics
+        const session = response.data.sessionDetails;
+        session.topics = JSON.parse(session.topics || '[]');
+        setSessionDetails(session);
       } catch (error) {
         console.error('Error fetching session details:', error);
         setError('Failed to fetch session details.');
@@ -137,12 +140,12 @@ const SessionDetails = () => {
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
           {sessionDetails ? (
-            <div className="session-item">
+            <div>
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics:</h4>
               <ul>
-                {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
+                {sessionDetails.topics.length > 0 ? (
                   sessionDetails.topics.map((topic, idx) => <li key={idx}>{topic}</li>)
                 ) : (
                   <p>No topics available for this session.</p>
