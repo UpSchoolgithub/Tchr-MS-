@@ -85,7 +85,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
   const { date, absentees, sectionId } = req.body;
 
   try {
-    // Mark attendance as "Absent" for students listed in absentees
+    // Mark attendance as "Absent" for absentees
     for (const studentId of absentees) {
       await Attendance.upsert({
         studentId,
@@ -95,9 +95,9 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       });
     }
 
-    // Automatically mark others as "Present"
+    // Mark remaining students as "Present"
     const allStudents = await Student.findAll({ where: { sectionId } });
-    const presentStudents = allStudents.filter(student => !absentees.includes(student.id));
+    const presentStudents = allStudents.filter((student) => !absentees.includes(student.id));
 
     for (const student of presentStudents) {
       await Attendance.upsert({
@@ -108,10 +108,36 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       });
     }
 
-    res.json({ message: 'Attendance marked successfully' });
+    // Fetch session details for the academic day
+    const session = await Session.findOne({
+      where: { id: sessionId },
+      include: [
+        { model: SessionPlan, attributes: ['sessionNumber', 'planDetails'], as: 'SessionPlan' },
+        { model: Subject, attributes: ['academicStartDate'] },
+      ],
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found.' });
+    }
+
+    const academicStartDate = new Date(session.Subject.academicStartDate);
+    const currentDate = new Date();
+    const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    res.json({
+      message: 'Attendance marked successfully',
+      sessionDetails: {
+        id: session.id,
+        chapterName: session.chapterName,
+        sessionNumber: session.SessionPlan.sessionNumber,
+        topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
+        academicDay,
+      },
+    });
   } catch (error) {
-    console.error('Error marking attendance:', error);
-    res.status(500).json({ error: 'Failed to mark attendance' });
+    console.error('Error saving attendance:', error);
+    res.status(500).json({ error: 'Failed to mark attendance.' });
   }
 });
 
@@ -183,10 +209,10 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
-  const { date } = req.query;
+  const { date } = req.query; // Optional date filter
 
   try {
-    // Perform query to fetch sessions
+    // Run the query to fetch all sessions
     const sessions = await sequelize.query(
       `
       SELECT
@@ -242,32 +268,51 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
-    // Check if sessions exist
     if (!sessions.length) {
       return res.status(404).json({ error: 'No sessions found for the specified criteria' });
     }
 
-    // Format response
+    // Process sessions to determine the current session based on academic start date
+    const academicStartDate = new Date(sessions[0].SessionDate);
+    const currentDate = new Date();
+    const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (academicDay <= 0) {
+      return res.status(400).json({ error: 'Academic session has not started yet.' });
+    }
+
+    // Find the current session based on the academic day
+    let currentSession = null;
+
+    for (let session of sessions) {
+      const sessionDate = new Date(session.SessionDate);
+      if (currentDate.toDateString() === sessionDate.toDateString()) {
+        currentSession = session;
+        break;
+      }
+    }
+
+    if (!currentSession) {
+      return res.status(404).json({ error: 'No session is scheduled for today.' });
+    }
+
+    // Respond with the current session details
     res.json({
-      sessions: sessions.map((session) => ({
-        school: session.School,
-        class: session.Class,
-        section: session.Section,
-        subject: session.Subject,
-        chapter: session.Chapter,
-        sessionNumber: session.SessionNumber,
-        topics: [session.Topic1, session.Topic2, session.Topic3].filter(Boolean), // Filter out null topics
-        chapterPriority: session.ChapterPriority,
-        sessionDate: session.SessionDate,
-        startTime: session.StartTime,
-        endTime: session.EndTime,
-      })),
+      sessionDetails: {
+        chapterName: currentSession.Chapter,
+        sessionNumber: currentSession.SessionNumber,
+        topics: [currentSession.Topic1, currentSession.Topic2, currentSession.Topic3].filter(Boolean),
+        startTime: currentSession.StartTime,
+        endTime: currentSession.EndTime,
+        sessionDate: currentSession.SessionDate,
+      },
     });
   } catch (error) {
-    console.error('Error fetching teacher sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher sessions' });
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 
 
