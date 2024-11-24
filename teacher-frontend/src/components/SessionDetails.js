@@ -55,6 +55,7 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
+        console.log('Fetched session details:', response.data);
         setSessionDetails(response.data.sessionDetails || null);
       } catch (error) {
         console.error('Error fetching session details:', error);
@@ -64,6 +65,7 @@ const SessionDetails = () => {
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
   
   // Fetch assignment details
   useEffect(() => {
@@ -248,7 +250,7 @@ const SessionDetails = () => {
           {sessionDetails ? (
             <div className="session-item">
               <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-              <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId}</p>
+              <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
