@@ -307,8 +307,10 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
         sessionId: currentSession.sessionId, // Add sessionId here
         chapterName: currentSession.Chapter,
         sessionNumber: currentSession.SessionNumber,
-        topics: [currentSession.Topic1, currentSession.Topic2, currentSession.Topic3].filter(Boolean), // Combine topics
-        startTime: currentSession.StartTime,
+          topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
+            .concat(JSON.parse(currentSession.Topic2 || "[]"))
+            .concat(JSON.parse(currentSession.Topic3 || "[]")),
+            startTime: currentSession.StartTime,
         endTime: currentSession.EndTime,
         sessionDate: currentSession.SessionDate,
       },
