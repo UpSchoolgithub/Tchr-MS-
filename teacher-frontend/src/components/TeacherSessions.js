@@ -177,6 +177,27 @@ const TeacherSessions = () => {
                   <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
                   <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
                 </td>
+                <td>
+                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
+                  <button
+                    style={{
+                      backgroundColor: 'lightgreen',
+                      color: 'black',
+                      marginLeft: '5px',
+                    }}
+                  >
+                    Notify
+                  </button>
+                </td>
+                <td>
+                  <button
+                    style={{ backgroundColor: 'blue', color: 'white' }}
+                    onClick={() => navigate(`/session-reports/${session.sessionId}`)}
+                  >
+                    Session Report
+                  </button>
+                </td>
+
               </tr>
             ))}
           </tbody>

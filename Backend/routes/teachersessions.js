@@ -499,20 +499,14 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 // Save session details
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const {
-    incompleteTopics,
-    completedTopics,
-    assignmentDetails,
-    observations,
-    absentees,
-  } = req.body;
+  const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
-    // Fetch the session details
+    // Validate session existence
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
-        { model: SessionPlan, attributes: ['id', 'sessionNumber', 'planDetails'], as: 'SessionPlan' },
+        { model: SessionPlan, attributes: ['id'], as: 'SessionPlan' },
         { model: Subject, attributes: ['subjectName'] },
         { model: Section, attributes: ['sectionName'] },
         { model: ClassInfo, attributes: ['className'] },
@@ -524,7 +518,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Save session details in the SessionDetails table
+    // Save session details
     await sequelize.models.SessionDetails.create({
       sessionPlanId: session.SessionPlan.id,
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
@@ -533,14 +527,14 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       observationDetails: observations,
     });
 
-    // Save session report in the SessionReports table
+    // Generate session report
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: 'Teacher Name', // Add logic to fetch teacher name if needed
+      teacherName: 'Teacher Name', // Replace with the actual teacher name if available
       className: session.ClassInfo.className,
       sectionName: session.Section.sectionName,
       subjectName: session.Subject.subjectName,
