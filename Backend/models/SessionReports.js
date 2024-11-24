@@ -1,3 +1,6 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Ensure the correct path to your Sequelize instance
+
 const SessionReport = sequelize.define('SessionReport', {
     id: {
       type: DataTypes.INTEGER,
