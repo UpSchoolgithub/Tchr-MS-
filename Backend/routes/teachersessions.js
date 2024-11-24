@@ -356,7 +356,6 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       ],
       attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Fetch session details
     });
-    
 
     if (!sessions.length) {
       return res.status(404).json({ error: 'No sessions found for the specified criteria' });
@@ -364,7 +363,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
 
     // Prepare response with session and session plan details
     const sessionDetails = sessions.map((session) => {
-      const academicStartDate = session.ClassInfo.academicStartDate;
+      const academicStartDate = session.Subject?.academicStartDate || 'N/A';
 
       // Calculate academic day
       const startDate = new Date(academicStartDate);
@@ -377,12 +376,13 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       return {
         sessionId: session.id,
         chapterName: session.chapterName,
-        startTime: session.startTime,
-        endTime: session.endTime,
-        sessionPlanId: session.SessionPlan ? session.SessionPlan.id : null,
-        sessionPlanDetails: session.SessionPlan ? session.SessionPlan.planDetails : null,
-        subjectName: session.Subject ? session.Subject.subjectName : 'N/A',
-        sectionName: session.Section ? session.Section.sectionName : 'N/A',
+        startTime: session.TimetableEntry?.startTime || 'N/A',
+        endTime: session.TimetableEntry?.endTime || 'N/A',
+        sessionPlanId: session.SessionPlan?.id || 'N/A', // Include SessionPlan ID
+        sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
+        planDetails: session.SessionPlan?.planDetails ? JSON.parse(session.SessionPlan.planDetails) : [],
+        subjectName: session.Subject?.subjectName || 'N/A',
+        sectionName: session.Section?.sectionName || 'N/A',
         academicDay, // Include academic day
       };
     });
@@ -393,6 +393,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch session details and plans' });
   }
 });
+
 
 
 // Get students for a specific section
