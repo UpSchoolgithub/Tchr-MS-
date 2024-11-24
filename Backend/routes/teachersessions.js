@@ -520,4 +520,78 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
   }
 });
 
+// Save session details
+router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
+  const { teacherId, sessionId } = req.params;
+  const {
+    incompleteTopics,
+    completedTopics,
+    assignmentDetails,
+    observationDetails,
+  } = req.body;
+
+  try {
+    // Fetch session plan for the session
+    const sessionPlan = await SessionPlan.findOne({ where: { sessionId } });
+    if (!sessionPlan) {
+      return res.status(404).json({ error: 'Session Plan not found.' });
+    }
+
+    // Save session details in the new table
+    await sequelize.models.SessionDetails.create({
+      sessionPlanId: sessionPlan.id,
+      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
+      sessionsCompleted: JSON.stringify(completedTopics),
+      assignmentDetails,
+      observationDetails,
+    });
+
+    // Append incomplete topics to the next session's plan
+    const nextSessionPlan = await SessionPlan.findOne({
+      where: { sessionNumber: sessionPlan.sessionNumber + 1 },
+    });
+
+    if (nextSessionPlan) {
+      nextSessionPlan.planDetails = JSON.stringify([
+        ...incompleteTopics,
+        ...JSON.parse(nextSessionPlan.planDetails || '[]'),
+      ]);
+      await nextSessionPlan.save();
+    }
+
+    res.json({ message: 'Session details saved and topics rolled over.' });
+  } catch (error) {
+    console.error('Error saving session details:', error);
+    res.status(500).json({ error: 'Failed to save session details.' });
+  }
+});
+
+// Fetch session details by session ID
+router.get('/sessions/:sessionId/details', async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const sessionDetails = await sequelize.models.SessionDetails.findOne({
+      where: { sessionPlanId: sessionId },
+    });
+
+    if (!sessionDetails) {
+      return res.status(404).json({ error: 'Session details not found.' });
+    }
+
+    res.json({
+      sessionDetails: {
+        sessionsToComplete: JSON.parse(sessionDetails.sessionsToComplete),
+        sessionsCompleted: JSON.parse(sessionDetails.sessionsCompleted),
+        assignmentDetails: sessionDetails.assignmentDetails,
+        observationDetails: sessionDetails.observationDetails,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching session details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details.' });
+  }
+});
+
+
 module.exports = router;

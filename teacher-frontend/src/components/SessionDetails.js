@@ -150,10 +150,49 @@ const SessionDetails = () => {
     }
   };
 
+  //to save session details 
+  const handleEndSession = async () => {
+    try {
+      // Collect completed and uncompleted topics
+      const completedTopics = [];
+      const uncompletedTopics = [];
+  
+      sessionDetails.topics.forEach((topic, idx) => {
+        const checkbox = document.getElementById(`topic-${idx}`);
+        if (checkbox?.checked) {
+          completedTopics.push(topic);
+        } else {
+          uncompletedTopics.push(topic);
+        }
+      });
+  
+      // Prepare payload for backend
+      const payload = {
+        completedTopics,
+        incompleteTopics: uncompletedTopics,
+        assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
+        observations,
+      };
+  
+      // Send data to the backend
+      await axiosInstance.post(
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionPlanId}/end`,
+        payload
+      );
+  
+      alert('Session ended successfully! Topics have been carried forward.');
+      navigate('/'); // Redirect to a relevant page after completion
+    } catch (error) {
+      console.error('Error ending session:', error);
+      alert('Failed to end the session.');
+    }
+  };
+  
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
     label: student.studentName,
   }));
+
 
   return (
     <div className="session-details-container">
@@ -265,6 +304,12 @@ const SessionDetails = () => {
           <button onClick={handleSaveObservations} className="save-observations-button">
             Save Observations
           </button>
+          <div className="end-session">
+            <button onClick={handleEndSession} className="end-session-button">
+              End Session
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
