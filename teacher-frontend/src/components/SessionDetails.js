@@ -61,10 +61,10 @@ const SessionDetails = () => {
         setError('Failed to fetch session details.');
       }
     };
-
+  
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
-
+  
   // Fetch assignment details
   useEffect(() => {
     const fetchAssignmentDetails = async () => {
@@ -152,8 +152,13 @@ const SessionDetails = () => {
 
   //to save session details 
   const handleEndSession = async () => {
+    if (!sessionDetails || !sessionDetails.sessionPlanId) {
+      alert('Session Plan ID is missing. Cannot end the session.');
+      console.error('Session Plan ID is missing:', sessionDetails);
+      return;
+    }
+  
     try {
-      // Collect completed and uncompleted topics
       const completedTopics = [];
       const uncompletedTopics = [];
   
@@ -166,7 +171,6 @@ const SessionDetails = () => {
         }
       });
   
-      // Prepare payload for backend
       const payload = {
         completedTopics,
         incompleteTopics: uncompletedTopics,
@@ -174,19 +178,19 @@ const SessionDetails = () => {
         observations,
       };
   
-      // Send data to the backend
       await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionPlanId}/end`,
         payload
       );
   
-      alert('Session ended successfully! Topics have been carried forward.');
-      navigate('/'); // Redirect to a relevant page after completion
+      alert('Session ended successfully!');
+      navigate('/');
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
