@@ -520,7 +520,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     // Save session details directly to the SessionReports table
     await sequelize.models.SessionReports.create({
-      sessionPlanId: session.SessionPlan.id,
+      sessionPlanId: session.SessionPlan?.id,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
@@ -530,12 +530,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       sectionName: session.Section.sectionName,
       subjectName: session.Subject.subjectName,
       schoolName: session.School.name,
-      absentStudents: JSON.stringify(absentees || []), // Handle null or undefined absentees
-      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]) || '[]', // Handle null
-      sessionsCompleted: JSON.stringify(completedTopics) || '[]', // Handle null
-      assignmentDetails: assignmentDetails || null, // Handle null
-      observationDetails: observations || '', // Handle null
+      absentStudents: JSON.stringify(absentees || []), // Handle nullable absentees
+      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics] || []), // Handle nullable fields
+      sessionsCompleted: JSON.stringify(completedTopics || []),
+      assignmentDetails: assignmentDetails || null,
+      observationDetails: observations || null,
     });
+    
 
     res.json({ message: 'Session ended and report saved successfully!' });
   } catch (error) {
@@ -550,9 +551,10 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    const sessionDetails = await sequelize.models.SessionDetails.findOne({
+    const sessionDetails = await sequelize.models.SessionReports.findOne({
       where: { sessionPlanId: sessionId },
     });
+    
 
     if (!sessionDetails) {
       return res.status(404).json({ error: 'Session details not found.' });
@@ -560,12 +562,14 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
 
     res.json({
       sessionDetails: {
-        sessionsToComplete: JSON.parse(sessionDetails.sessionsToComplete),
-        sessionsCompleted: JSON.parse(sessionDetails.sessionsCompleted),
-        assignmentDetails: sessionDetails.assignmentDetails,
-        observationDetails: sessionDetails.observationDetails,
+        sessionsToComplete: JSON.parse(sessionDetails.sessionsToComplete || '[]'),
+        sessionsCompleted: JSON.parse(sessionDetails.sessionsCompleted || '[]'),
+        assignmentDetails: sessionDetails.assignmentDetails || null,
+        observationDetails: sessionDetails.observationDetails || null,
+        absentStudents: JSON.parse(sessionDetails.absentStudents || '[]'),
       },
     });
+    
   } catch (error) {
     console.error('Error fetching session details:', error);
     res.status(500).json({ error: 'Failed to fetch session details.' });
@@ -584,11 +588,30 @@ router.get('/reports/sessions', async (req, res) => {
 
     const reports = await sequelize.models.SessionReports.findAll({ where: whereConditions });
 
-    res.json(reports);
+    res.json(
+      reports.map((report) => ({
+        sessionPlanId: report.sessionPlanId,
+        sessionId: report.sessionId,
+        teacherId: report.teacherId,
+        teacherName: report.teacherName,
+        className: report.className,
+        sectionName: report.sectionName,
+        subjectName: report.subjectName,
+        schoolName: report.schoolName,
+        absentStudents: JSON.parse(report.absentStudents || '[]'),
+        sessionsToComplete: JSON.parse(report.sessionsToComplete || '[]'),
+        sessionsCompleted: JSON.parse(report.sessionsCompleted || '[]'),
+        assignmentDetails: report.assignmentDetails,
+        observationDetails: report.observationDetails,
+        date: report.date,
+        day: report.day,
+      }))
+    );
   } catch (error) {
     console.error('Error fetching session reports:', error);
     res.status(500).json({ error: 'Failed to fetch session reports.' });
   }
 });
+
 
 module.exports = router;

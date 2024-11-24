@@ -21,10 +21,11 @@ router.get('/assignments/:sessionPlanId', async (req, res) => {
     const { sessionPlanId } = req.params;
   
     try {
-      const assignment = await Assignment.findOne({ where: { sessionPlanId } });
-      if (!assignment) {
-        return res.status(404).json({ error: 'No assignment found for this session plan.' });
-      }
+        const assignment = await Assignment.findOne({ where: { sessionPlanId } });
+        if (!assignment) {
+          return res.status(404).json({ error: 'Assignment not found for the provided sessionPlanId.' });
+        }
+        
   
       res.status(200).json(assignment);
     } catch (error) {
