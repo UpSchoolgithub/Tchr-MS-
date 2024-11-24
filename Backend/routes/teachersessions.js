@@ -67,6 +67,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         priorityNumber: session.priorityNumber,
         startTime: session.startTime,
         endTime: session.endTime,
+        sessionPlanId: session.SessionPlan?.id || 'N/A', // Add sessionPlanId here
         sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
         planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [],
       };
@@ -305,6 +306,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.json({
       sessionDetails: {
         sessionId: currentSession.sessionId, // Add sessionId here
+        sessionPlanId: currentSession.sessionPlanId,
         chapterName: currentSession.Chapter,
         sessionNumber: currentSession.SessionNumber,
           topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
