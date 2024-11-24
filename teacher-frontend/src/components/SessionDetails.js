@@ -178,6 +178,8 @@ const SessionDetails = () => {
         observations,
       };
   
+      console.log('Payload being sent:', payload);
+  
       await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionPlanId}/end`,
         payload
@@ -190,6 +192,7 @@ const SessionDetails = () => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
   const studentOptions = students.map((student) => ({

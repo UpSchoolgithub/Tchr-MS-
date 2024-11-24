@@ -464,30 +464,45 @@ router.get('/classes/:classId/academic-start-date', async (req, res) => {
 // Handle Incomplete Topics
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const { incompleteTopics } = req.body;
+  const {
+    incompleteTopics,
+    completedTopics,
+    assignmentDetails,
+    observationDetails,
+  } = req.body;
 
   try {
-    // Save incomplete topics to the next session
     const sessionPlan = await SessionPlan.findOne({ where: { sessionId } });
-    if (!sessionPlan) return res.status(404).json({ error: 'Session Plan not found' });
+    if (!sessionPlan) {
+      return res.status(404).json({ error: 'Session Plan not found for the provided session ID.' });
+    }
 
-    // Append incomplete topics to the next session's plan
-    const nextSession = await SessionPlan.findOne({
+    // Save session details in the database
+    await sequelize.models.SessionDetails.create({
+      sessionPlanId: sessionPlan.id,
+      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
+      sessionsCompleted: JSON.stringify(completedTopics),
+      assignmentDetails,
+      observationDetails,
+    });
+
+    // Carry forward incomplete topics to the next session
+    const nextSessionPlan = await SessionPlan.findOne({
       where: { sessionNumber: sessionPlan.sessionNumber + 1 },
     });
 
-    if (nextSession) {
-      nextSession.planDetails = [
+    if (nextSessionPlan) {
+      nextSessionPlan.planDetails = JSON.stringify([
         ...incompleteTopics,
-        ...JSON.parse(nextSession.planDetails || '[]'),
-      ];
-      await nextSession.save();
+        ...JSON.parse(nextSessionPlan.planDetails || '[]'),
+      ]);
+      await nextSessionPlan.save();
     }
 
-    res.json({ message: 'Session ended and topics rolled over.' });
+    res.json({ message: 'Session details saved and topics rolled over.' });
   } catch (error) {
-    console.error("Error ending session:", error);
-    res.status(500).json({ error: "Failed to end session" });
+    console.error('Error saving session details:', error);
+    res.status(500).json({ error: 'Failed to save session details.' });
   }
 });
 
