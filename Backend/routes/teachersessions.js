@@ -217,11 +217,13 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     const sessions = await sequelize.query(
       `
       SELECT
+          sessions.id AS sessionId, -- Include sessionId here
           schools.name AS School,
           classinfos.className AS Class,
           sections.sectionName AS Section,
           subjects.subjectName AS Subject,
           sessions.chapterName AS Chapter,
+          sp.id AS sessionPlanId, -- Include sessionPlanId for completeness
           sp.sessionNumber AS SessionNumber,
           JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
           JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
@@ -300,27 +302,23 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     }
 
     // Respond with the current session details
-      res.json({
-        sessionDetails: {
-          sessionId: currentSession.sessionId, // Add this
-          chapterName: currentSession.Chapter,
-          sessionNumber: currentSession.SessionNumber,
-          topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
-            .concat(JSON.parse(currentSession.Topic2 || "[]"))
-            .concat(JSON.parse(currentSession.Topic3 || "[]")),
-          startTime: currentSession.StartTime,
-          endTime: currentSession.EndTime,
-          sessionDate: currentSession.SessionDate,
-        },
-      });
+    res.json({
+      sessionDetails: {
+        sessionId: currentSession.sessionId, // Add sessionId here
+        chapterName: currentSession.Chapter,
+        sessionNumber: currentSession.SessionNumber,
+        topics: [currentSession.Topic1, currentSession.Topic2, currentSession.Topic3].filter(Boolean), // Combine topics
+        startTime: currentSession.StartTime,
+        endTime: currentSession.EndTime,
+        sessionDate: currentSession.SessionDate,
+      },
+    });
 
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
-
-
 
 
 
