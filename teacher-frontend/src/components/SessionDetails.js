@@ -244,6 +244,7 @@ const SessionDetails = () => {
           <h3>Session Notes and Details:</h3>
           {sessionDetails ? (
             <div className="session-item">
+              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>

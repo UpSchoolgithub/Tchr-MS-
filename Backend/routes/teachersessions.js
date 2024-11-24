@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { TimetableEntry, Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models');
+const { Op } = require('sequelize');
 const sequelize = require('../config/db'); // Adjust the path based on your folder structure
 
 // Get sessions for a specific teacher
@@ -301,6 +302,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     // Respond with the current session details
       res.json({
         sessionDetails: {
+          sessionId: currentSession.sessionId, // Add this
           chapterName: currentSession.Chapter,
           sessionNumber: currentSession.SessionNumber,
           topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
@@ -461,50 +463,6 @@ router.get('/classes/:classId/academic-start-date', async (req, res) => {
 
 
 
-// Handle Incomplete Topics
-router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
-  const { teacherId, sessionId } = req.params;
-  const {
-    incompleteTopics,
-    completedTopics,
-    assignmentDetails,
-    observationDetails,
-  } = req.body;
-
-  try {
-    const sessionPlan = await SessionPlan.findOne({ where: { sessionId } });
-    if (!sessionPlan) {
-      return res.status(404).json({ error: 'Session Plan not found for the provided session ID.' });
-    }
-
-    // Save session details in the database
-    await sequelize.models.SessionDetails.create({
-      sessionPlanId: sessionPlan.id,
-      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
-      sessionsCompleted: JSON.stringify(completedTopics),
-      assignmentDetails,
-      observationDetails,
-    });
-
-    // Carry forward incomplete topics to the next session
-    const nextSessionPlan = await SessionPlan.findOne({
-      where: { sessionNumber: sessionPlan.sessionNumber + 1 },
-    });
-
-    if (nextSessionPlan) {
-      nextSessionPlan.planDetails = JSON.stringify([
-        ...incompleteTopics,
-        ...JSON.parse(nextSessionPlan.planDetails || '[]'),
-      ]);
-      await nextSessionPlan.save();
-    }
-
-    res.json({ message: 'Session details saved and topics rolled over.' });
-  } catch (error) {
-    console.error('Error saving session details:', error);
-    res.status(500).json({ error: 'Failed to save session details.' });
-  }
-});
 
 
 // Find session ID based on school, class, section, and subject
@@ -538,34 +496,30 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 // Save session details
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const {
-    incompleteTopics,
-    completedTopics,
-    assignmentDetails,
-    observationDetails,
-  } = req.body;
+  const { incompleteTopics, completedTopics, assignmentDetails, observationDetails } = req.body;
 
   try {
-    // Fetch session plan for the session
-    const sessionPlan = await SessionPlan.findOne({ where: { sessionId } });
-    if (!sessionPlan) {
-      return res.status(404).json({ error: 'Session Plan not found.' });
+    // Fetch all session plans related to the session ID
+    const sessionPlans = await SessionPlan.findAll({ where: { sessionId } });
+
+    // Find the current session plan based on your criteria
+    const currentSessionPlan = sessionPlans.find(plan => plan.id === sessionId);
+
+    if (!currentSessionPlan) {
+      return res.status(404).json({ error: 'Session plan not found.' });
     }
 
-    // Save session details in the new table
+    // Save session details
     await sequelize.models.SessionDetails.create({
-      sessionPlanId: sessionPlan.id,
+      sessionPlanId: currentSessionPlan.id,
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
       sessionsCompleted: JSON.stringify(completedTopics),
       assignmentDetails,
       observationDetails,
     });
 
-    // Append incomplete topics to the next session's plan
-    const nextSessionPlan = await SessionPlan.findOne({
-      where: { sessionNumber: sessionPlan.sessionNumber + 1 },
-    });
-
+    // Find the next session plan (incrementing session number logic)
+    const nextSessionPlan = sessionPlans.find(plan => plan.sessionNumber === currentSessionPlan.sessionNumber + 1);
     if (nextSessionPlan) {
       nextSessionPlan.planDetails = JSON.stringify([
         ...incompleteTopics,
@@ -580,6 +534,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     res.status(500).json({ error: 'Failed to save session details.' });
   }
 });
+
 
 // Fetch session details by session ID
 router.get('/sessions/:sessionId/details', async (req, res) => {
@@ -608,5 +563,23 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
   }
 });
 
+router.get('/reports/sessions', async (req, res) => {
+  const { startDate, endDate, teacherId, className, sectionName } = req.query;
+
+  try {
+    const whereConditions = {};
+    if (startDate && endDate) whereConditions.date = { [Op.between]: [startDate, endDate] };
+    if (teacherId) whereConditions.teacherId = teacherId;
+    if (className) whereConditions.className = className;
+    if (sectionName) whereConditions.sectionName = sectionName;
+
+    const reports = await sequelize.models.SessionReports.findAll({ where: whereConditions });
+
+    res.json(reports);
+  } catch (error) {
+    console.error('Error fetching session reports:', error);
+    res.status(500).json({ error: 'Failed to fetch session reports.' });
+  }
+});
 
 module.exports = router;
