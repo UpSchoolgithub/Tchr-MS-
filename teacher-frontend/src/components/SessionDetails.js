@@ -152,7 +152,6 @@ const SessionDetails = () => {
     }
   };
 
-  //to save session details 
   const handleEndSession = async () => {
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
@@ -161,6 +160,7 @@ const SessionDetails = () => {
     }
   
     try {
+      // Prepare completed and uncompleted topics
       const completedTopics = [];
       const uncompletedTopics = [];
   
@@ -173,8 +173,9 @@ const SessionDetails = () => {
         }
       });
   
+      // Construct the payload
       const payload = {
-        sessionPlanId: sessionDetails.sessionPlanId, // Include sessionPlanId
+        sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
         incompleteTopics: uncompletedTopics,
         assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
@@ -185,36 +186,21 @@ const SessionDetails = () => {
       console.log('Payload being sent:', payload);
   
       // Send data to API to end the session
-      await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`, // Ensure the URL is correct
+      const response = await axiosInstance.post(
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`, // Ensure the endpoint is correct
         payload
       );
   
-      // Create Session Report
-      const sessionReportPayload = {
-        sessionPlanId: sessionDetails.sessionPlanId,
-        sessionId: sessionDetails.sessionId,
-        date: new Date().toISOString().split('T')[0], // Use current date
-        day: new Date().toLocaleString('en-US', { weekday: 'long' }), // Day of the week
-        teacherId: teacherId,
-        teacherName: 'Teacher Name', // Modify based on actual teacher data
-        className: sessionDetails.className, // Modify based on session data
-        sectionName: sessionDetails.sectionName, // Modify based on session data
-        subjectName: sessionDetails.subjectName, // Modify based on session data
-        schoolName: 'School Name', // Modify based on session data
-        absentStudents: absentees, // Store absentee roll numbers
-      };
-  
-      // Send session report to the API
-      await axiosInstance.post('/api/sessionreports', sessionReportPayload);
-  
-      alert('Session ended successfully and report saved!');
-      navigate('/'); // Redirect after successful operation
+      alert(response.data.message || 'Session ended successfully and report saved!');
+      
+      // Redirect to another page or refresh after successful operation
+      navigate(`/session-reports/${sessionDetails.sessionId}`); // Redirect to session reports
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
