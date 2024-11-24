@@ -518,16 +518,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Save session details
-    await sequelize.models.SessionDetails.create({
-      sessionPlanId: session.SessionPlan.id,
-      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
-      sessionsCompleted: JSON.stringify(completedTopics),
-      assignmentDetails,
-      observationDetails: observations,
-    });
-
-    // Generate session report
+    // Save session details directly to the SessionReports table
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
@@ -539,7 +530,11 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       sectionName: session.Section.sectionName,
       subjectName: session.Subject.subjectName,
       schoolName: session.School.name,
-      absentStudents: JSON.stringify(absentees),
+      absentStudents: JSON.stringify(absentees || []), // Handle null or undefined absentees
+      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]) || '[]', // Handle null
+      sessionsCompleted: JSON.stringify(completedTopics) || '[]', // Handle null
+      assignmentDetails: assignmentDetails || null, // Handle null
+      observationDetails: observations || '', // Handle null
     });
 
     res.json({ message: 'Session ended and report saved successfully!' });
