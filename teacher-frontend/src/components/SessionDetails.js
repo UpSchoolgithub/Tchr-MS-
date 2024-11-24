@@ -178,8 +178,6 @@ const SessionDetails = () => {
         observations,
       };
   
-      console.log('Payload being sent:', payload);
-  
       await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionPlanId}/end`,
         payload
@@ -192,7 +190,6 @@ const SessionDetails = () => {
       alert('Failed to end the session.');
     }
   };
-  
   
   
   const studentOptions = students.map((student) => ({
@@ -244,7 +241,6 @@ const SessionDetails = () => {
           <h3>Session Notes and Details:</h3>
           {sessionDetails ? (
             <div className="session-item">
-              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
