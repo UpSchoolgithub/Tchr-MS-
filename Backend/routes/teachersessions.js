@@ -518,25 +518,29 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Save session details directly to the SessionReports table
+    // Handle null or undefined fields
+    const sessionsToComplete = JSON.stringify([...completedTopics || [], ...incompleteTopics || []]);
+    const sessionsCompleted = JSON.stringify(completedTopics || []);
+    const absentStudents = JSON.stringify(absentees || []);
+
+    // Save session report
     await sequelize.models.SessionReports.create({
-      sessionPlanId: session.SessionPlan?.id,
+      sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: 'Teacher Name', // Replace with the actual teacher name if available
+      teacherName: 'Teacher Name', // Replace with actual teacher name
       className: session.ClassInfo.className,
       sectionName: session.Section.sectionName,
       subjectName: session.Subject.subjectName,
       schoolName: session.School.name,
-      absentStudents: JSON.stringify(absentees || []), // Handle nullable absentees
-      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics] || []), // Handle nullable fields
-      sessionsCompleted: JSON.stringify(completedTopics || []),
+      absentStudents,
+      sessionsToComplete,
+      sessionsCompleted,
       assignmentDetails: assignmentDetails || null,
-      observationDetails: observations || null,
+      observationDetails: observations || '',
     });
-    
 
     res.json({ message: 'Session ended and report saved successfully!' });
   } catch (error) {
@@ -544,6 +548,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     res.status(500).json({ error: 'Failed to save session details and report.' });
   }
 });
+
 
 
 // Fetch session details by session ID
