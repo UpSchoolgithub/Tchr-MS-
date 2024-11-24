@@ -144,8 +144,6 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 
 
 // Get session details for a specific teacher and session
-// Get session details for a specific teacher and session, with academic day
-// Get session details for a specific teacher and session, with academic day
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -154,7 +152,7 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
       return res.status(400).json({ error: 'Invalid session ID' });
     }
 
-    // Fetch session with associations
+    // Fetch session with associated SessionPlan
     const session = await Session.findOne({
       where: { id: sessionId, teacherId },
       include: [
@@ -186,10 +184,11 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
     );
     const academicDay = differenceInDays + 1; // Add 1 for the current day
 
-    // Return session details with academic day
+    // Return session details with sessionPlanId
     res.json({
       sessionDetails: {
         id: session.id,
+        sessionPlanId: session.SessionPlan ? session.SessionPlan.id : 'N/A',
         chapterName: session.chapterName || 'N/A',
         sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
         planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [],

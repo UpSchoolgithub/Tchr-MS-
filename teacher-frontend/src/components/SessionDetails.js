@@ -172,6 +172,7 @@ const SessionDetails = () => {
       });
   
       const payload = {
+        sessionPlanId: sessionDetails.sessionPlanId, // Include sessionPlanId
         completedTopics,
         incompleteTopics: uncompletedTopics,
         assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
@@ -182,7 +183,7 @@ const SessionDetails = () => {
       console.log('Payload being sent:', payload);
   
       await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionPlanId}/end`,
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`, // Ensure the URL is correct
         payload
       );
   
@@ -193,6 +194,7 @@ const SessionDetails = () => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
@@ -246,6 +248,7 @@ const SessionDetails = () => {
           {sessionDetails ? (
             <div className="session-item">
               <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+              <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId}</p>
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
