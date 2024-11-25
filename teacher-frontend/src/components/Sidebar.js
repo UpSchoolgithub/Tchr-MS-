@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaTachometerAlt, FaCalendarAlt, FaEnvelope, FaTasks, FaChalkboardTeacher } from 'react-icons/fa';
 import { useTeacherAuth } from '../context/TeacherAuthContext';
 import './Sidebar.css';
 
@@ -8,26 +9,41 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
+      <div className="sidebar-logo">
+        <img src="/Upschool_2x.png" alt="UpSchool Logo" />
+      </div>
       <ul>
         <li>
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/dashboard">
+            <FaTachometerAlt className="icon" />
+            Dashboard
+          </Link>
         </li>
         <li>
-          <Link to="/classroom">Classroom</Link>
+          <Link to="/school-calendar">
+            <FaCalendarAlt className="icon" />
+            School Calendar
+          </Link>
         </li>
         <li>
-          <Link to="/school-calendar">School Calendar</Link>
+          <Link to="/request">
+            <FaEnvelope className="icon" />
+            Request
+          </Link>
         </li>
         <li>
-          <Link to="/request">Request</Link>
-        </li>
-        <li>
-          <Link to="/view-activities">View Activities</Link>
+          <Link to="/view-activities">
+            <FaTasks className="icon" />
+            View Activities
+          </Link>
         </li>
         {/* New Teacher Sessions Link */}
         {teacherId && (
           <li>
-            <Link to={`/teacherportal/${teacherId}/teacher-sessions`}>Teacher Sessions</Link>
+            <Link to={`/teacherportal/${teacherId}/teacher-sessions`}>
+              <FaChalkboardTeacher className="icon" />
+              Teacher Sessions
+            </Link>
           </li>
         )}
       </ul>
