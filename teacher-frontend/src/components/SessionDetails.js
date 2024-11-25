@@ -160,7 +160,6 @@ const SessionDetails = () => {
     }
   
     try {
-      // Prepare completed and uncompleted topics
       const completedTopics = [];
       const uncompletedTopics = [];
   
@@ -173,33 +172,34 @@ const SessionDetails = () => {
         }
       });
   
-      // Construct the payload
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
         incompleteTopics: uncompletedTopics,
         assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
         observations,
-        absentees, // Include absentees in the payload
+        absentees,
       };
   
       console.log('Payload being sent:', payload);
   
-      // Send data to API to end the session
       const response = await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`, // Ensure the endpoint is correct
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
   
       alert(response.data.message || 'Session ended successfully and report saved!');
-      
-      // Redirect to another page or refresh after successful operation
-      navigate(`/session-reports/${sessionDetails.sessionId}`); // Redirect to session reports
+  
+      // Navigate back to TeacherSessions with sessionId
+      navigate(`/teacherportal/${teacherId}`, {
+        state: { sessionId: sessionDetails.sessionId },
+      });
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   

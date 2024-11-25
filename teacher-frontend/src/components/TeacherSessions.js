@@ -21,6 +21,16 @@ const TeacherSessions = () => {
   const maxRetries = 3;
   let retryCount = 0;
 
+  const { sessionId } = location.state || {}; // Extract sessionId from navigation state
+
+  // Automatically fetch session report if sessionId exists in location state
+  useEffect(() => {
+    if (sessionId) {
+      fetchSessionReport(sessionId); // Fetch the session report
+      navigate('/teacherportal/' + teacherId, { replace: true }); // Clear sessionId from state
+    }
+  }, [sessionId, teacherId, navigate]);
+
   // Utility function to get the day name
   const getDayName = (date) => {
     const days = [
@@ -113,7 +123,7 @@ const TeacherSessions = () => {
     setLoadingReport(true);
     try {
       const response = await axiosInstance.get(`/sessions/${sessionId}/details`);
-      setSessionReport(response.data.sessionDetails || response.data.sessionReport);
+      setSessionReport(response.data.sessionReport);
       setReportError(null);
     } catch (err) {
       console.error('Error fetching session report:', err);
