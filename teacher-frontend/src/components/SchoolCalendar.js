@@ -75,26 +75,27 @@ const SchoolCalendar = () => {
     <div className="school-calendar-container">
       <h1>School Calendar</h1>
       <div className="filters">
-        <label>
-          Select School:
-          <select value={selectedSchool} onChange={handleSchoolChange}>
-            <option value="">-- Select a School --</option>
-            {schools.map((school) => (
-              <option key={school.id} value={school.id}>
-                {school.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Filter:
-          <select onChange={(e) => setFilter(e.target.value)} value={filter}>
-            <option value="all">All</option>
-            <option value="events">Events</option>
-            <option value="holidays">Holidays</option>
-          </select>
-        </label>
-      </div>
+  <label>
+    Select School:
+    <select value={selectedSchool} onChange={handleSchoolChange}>
+      <option value="">-- Select a School --</option>
+      {schools.map((school) => (
+        <option key={school.id} value={school.id}>
+          {school.name}
+        </option>
+      ))}
+    </select>
+  </label>
+  <label>
+    Filter:
+    <select onChange={(e) => setFilter(e.target.value)} value={filter}>
+      <option value="all">All</option>
+      <option value="events">Events</option>
+      <option value="holidays">Holidays</option>
+    </select>
+  </label>
+</div>
+
       <div className="calendar">
         {selectedSchool ? (
           filteredList.length > 0 ? (

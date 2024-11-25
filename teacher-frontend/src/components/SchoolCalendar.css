@@ -1,24 +1,49 @@
 .school-calendar-container {
     padding: 20px;
+    max-width: 800px; /* Limit the width for better alignment */
+    margin: 0 auto; /* Center the content */
   }
   
   .filters {
+    display: flex;
+    gap: 20px;
     margin-bottom: 20px;
+    align-items: center; /* Align dropdowns vertically */
+  }
+  
+  .filters label {
+    display: flex;
+    flex-direction: column; /* Stack label and input */
+    font-size: 14px;
+  }
+  
+  .filters select {
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
   
   .calendar-table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px; /* Add spacing between filters and the table */
   }
   
   .calendar-table th,
   .calendar-table td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 10px;
     text-align: left;
+    font-size: 14px;
   }
   
   .calendar-table th {
     background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
+  .calendar-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
   }
   
