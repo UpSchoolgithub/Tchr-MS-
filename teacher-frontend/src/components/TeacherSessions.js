@@ -178,7 +178,7 @@ const TeacherSessions = () => {
           ) : isToday(selectedDate) ? (
             <button
               onClick={() => handleStartSession(session)}
-              style={{ backgroundColor: 'orange', color: 'white' }}
+              style={{ backgroundColor: '#dc3545', color: 'white' }}
             >
               Start Session
             </button>
@@ -200,7 +200,7 @@ const TeacherSessions = () => {
         </td>
         <td>
           <button
-            style={{ backgroundColor: 'blue' }}
+            style={{ backgroundColor: '#343a40' }}
             onClick={() => {
               navigate(`/session-reports/${session.sessionId}`);
             }}
