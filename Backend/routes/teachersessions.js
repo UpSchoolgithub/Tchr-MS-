@@ -502,7 +502,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
-    // Validate session existence
+    // Fetch session and include all required associations
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -514,33 +514,35 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       ],
     });
 
+    // Validate if session exists
     if (!session) {
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Handle null or undefined fields
+    // Handle null fields safely
     const sessionsToComplete = JSON.stringify([...completedTopics || [], ...incompleteTopics || []]);
     const sessionsCompleted = JSON.stringify(completedTopics || []);
     const absentStudents = JSON.stringify(absentees || []);
 
-    // Save session report
+    // Save session details to the SessionReports table
     await sequelize.models.SessionReports.create({
-      sessionPlanId: session.SessionPlan.id,
+      sessionPlanId: session.SessionPlan?.id || null,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: 'Teacher Name', // Replace with actual teacher name
-      className: session.ClassInfo.className,
-      sectionName: session.Section.sectionName,
-      subjectName: session.Subject.subjectName,
-      schoolName: session.School.name,
+      teacherName: teacher.name || 'Unknown Teacher', // Fetch and pass the actual teacher name
+      className: session.ClassInfo?.className || 'Unknown Class', // Fetch className
+      sectionName: session.Section?.sectionName || 'Unknown Section', // Fetch sectionName
+      subjectName: session.Subject?.subjectName || 'Unknown Subject', // Fetch subjectName
+      schoolName: session.School?.name || 'Unknown School', // Fetch schoolName
       absentStudents,
       sessionsToComplete,
       sessionsCompleted,
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
+    
 
     res.json({ message: 'Session ended and report saved successfully!' });
   } catch (error) {
@@ -551,35 +553,36 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
 
 
+
 // Fetch session details by session ID
+// Endpoint to fetch session report details
 router.get('/sessions/:sessionId/details', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    const sessionDetails = await sequelize.models.SessionReports.findOne({
-      where: { sessionPlanId: sessionId },
+    const sessionReport = await sequelize.models.SessionReports.findOne({
+      where: { sessionId }, // Match the sessionId
     });
-    
 
-    if (!sessionDetails) {
-      return res.status(404).json({ error: 'Session details not found.' });
+    if (!sessionReport) {
+      return res.status(404).json({ error: 'Session report not found.' });
     }
 
     res.json({
-      sessionDetails: {
-        sessionsToComplete: JSON.parse(sessionDetails.sessionsToComplete || '[]'),
-        sessionsCompleted: JSON.parse(sessionDetails.sessionsCompleted || '[]'),
-        assignmentDetails: sessionDetails.assignmentDetails || null,
-        observationDetails: sessionDetails.observationDetails || null,
-        absentStudents: JSON.parse(sessionDetails.absentStudents || '[]'),
+      sessionReport: {
+        sessionsCompleted: JSON.parse(sessionReport.sessionsCompleted || '[]'),
+        sessionsToComplete: JSON.parse(sessionReport.sessionsToComplete || '[]'),
+        absentStudents: JSON.parse(sessionReport.absentStudents || '[]'),
+        assignmentDetails: sessionReport.assignmentDetails || null,
+        observationDetails: sessionReport.observationDetails || null,
       },
     });
-    
   } catch (error) {
-    console.error('Error fetching session details:', error);
-    res.status(500).json({ error: 'Failed to fetch session details.' });
+    console.error('Error fetching session report:', error);
+    res.status(500).json({ error: 'Failed to fetch session report.' });
   }
 });
+
 
 router.get('/reports/sessions', async (req, res) => {
   const { startDate, endDate, teacherId, className, sectionName } = req.query;
