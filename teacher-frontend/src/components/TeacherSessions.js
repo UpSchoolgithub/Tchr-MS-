@@ -129,84 +129,80 @@ const TeacherSessions = () => {
       </div>
 
       {filteredSessions.length === 0 ? (
-        <p>No sessions found for {getDayName(selectedDate)}.</p>
-      ) : (
-        <table className="sessions-table">
-          <thead>
-            <tr>
-              <th>School</th>
-              <th>Class</th>
-              <th>Section</th>
-              <th>Section ID</th>
-              <th>Day</th>
-              <th>Period</th>
-              <th>Subject</th>
-              <th>Progress</th>
-              <th>Session Started</th>
-              <th>Session Ended</th>
-              <th>Assignments</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSessions.map((session, index) => (
-              <tr key={index}>
-                <td>{session.schoolName}</td>
-                <td>{session.className}</td>
-                <td>{session.sectionName}</td>
-                <td>{session.sectionId}</td>
-                <td>{session.day}</td>
-                <td>{session.period}</td>
-                <td>{session.subjectName}</td>
-                <td>
-                  {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
-                </td>
-                <td>
-                {session.completed ? (
-                  <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
-                ) : isToday(selectedDate) ? (
-                  <button
-                    onClick={() => handleStartSession(session)}
-                    style={{ backgroundColor: 'orange', color: 'black' }}
-                  >
-                    Start Session
-                  </button>
-                ) : (
-                  <span>-</span>
-                )}
-              </td>
+  <p className="no-sessions-message">No sessions found for {getDayName(selectedDate)}.</p>
+) : (
+  <table className="sessions-table">
+    <thead>
+      <tr>
+        <th>School</th>
+        <th>Class</th>
+        <th>Section</th>
+        <th>Section ID</th>
+        <th>Day</th>
+        <th>Period</th>
+        <th>Subject</th>
+        <th>Progress</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Assignments</th>
+        <th>Session Report</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredSessions.map((session, index) => (
+        <tr key={index}>
+          <td>{session.schoolName}</td>
+          <td>{session.className}</td>
+          <td>{session.sectionName}</td>
+          <td>{session.sectionId}</td>
+          <td>{session.day}</td>
+          <td>{session.period}</td>
+          <td>{session.subjectName}</td>
+          <td>
+            {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+          </td>
+          <td>
+            {session.completed ? (
+              <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
+            ) : isToday(selectedDate) ? (
+              <button
+                onClick={() => handleStartSession(session)}
+                style={{ backgroundColor: 'orange', color: 'white' }}
+              >
+                Start Session
+              </button>
+            ) : (
+              <span>-</span>
+            )}
+          </td>
+          <td>{session.endTime}</td>
+          <td>
+            <button style={{ backgroundColor: 'green' }}>Update</button>
+            <button
+              style={{
+                backgroundColor: 'lightgreen',
+                marginLeft: '5px',
+              }}
+            >
+              Notify
+            </button>
+          </td>
+          <td>
+            <button
+              style={{ backgroundColor: 'blue' }}
+              onClick={() => {
+                navigate(`/session-reports/${session.sessionId}`);
+              }}
+            >
+              Session Report
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
 
-                <td>{session.endTime}</td>
-                <td>
-                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
-                  <button
-                    style={{
-                      backgroundColor: 'lightgreen',
-                      color: 'black',
-                      marginLeft: '5px',
-                    }}
-                  >
-                    Notify
-                  </button>
-                </td>
-                <td>
-                  <button
-                    style={{ backgroundColor: 'blue', color: 'white' }}
-                    onClick={() => {
-                      console.log('Navigating to session report with sessionId:', session.sessionId);
-                      navigate(`/session-reports/${session.sessionId}`);
-                    }}
-                  >
-                    Session Report
-                  </button>
-                </td>
-
-
-
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 };

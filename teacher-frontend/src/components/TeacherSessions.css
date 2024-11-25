@@ -1,22 +1,105 @@
-/* src/components/TeacherSessions.css */
 .sessions-container {
-    padding: 20px;
-  }
-  
-  .sessions-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  
-  .sessions-table th, .sessions-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
-  
-  .sessions-table th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-  }
-  
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-family: 'Arial', sans-serif;
+}
+
+.sessions-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.navigation-buttons select,
+.navigation-buttons .react-datepicker-wrapper {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  width: 200px;
+}
+
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.sessions-table th,
+.sessions-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.sessions-table th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.sessions-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.sessions-table tr:hover {
+  background-color: #e0f7fa;
+}
+
+.sessions-table td button {
+  padding: 5px 10px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.sessions-table td button:hover {
+  transform: scale(1.05);
+}
+
+.sessions-table td button[style*="orange"] {
+  background-color: orange;
+  color: white;
+}
+
+.sessions-table td button[style*="green"] {
+  background-color: green;
+  color: white;
+}
+
+.sessions-table td button[style*="blue"] {
+  background-color: blue;
+  color: white;
+}
+
+.sessions-table td button[style*="lightgreen"] {
+  background-color: lightgreen;
+  color: black;
+}
+
+.sessions-table td span {
+  font-size: 14px;
+  color: #555;
+}
+
+.no-sessions-message {
+  text-align: center;
+  color: #777;
+  font-size: 18px;
+  margin-top: 20px;
+}
