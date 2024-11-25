@@ -1,52 +1,57 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaTachometerAlt, FaCalendarAlt, FaEnvelope, FaTasks, FaChalkboardTeacher } from 'react-icons/fa';
-import { useTeacherAuth } from '../context/TeacherAuthContext';
+import { FaHome, FaSchool, FaUserTie, FaCalendarAlt, FaTasks, FaSignOutAlt } from 'react-icons/fa';
 import './Sidebar.css';
 
 const Sidebar = () => {
-  const { teacherId } = useTeacherAuth(); // Assuming teacherId is available in the context
-
   return (
     <div className="sidebar">
+      {/* Sidebar Logo */}
       <div className="sidebar-logo">
         <img src="/Upschool_2x.png" alt="UpSchool Logo" />
       </div>
-      <ul>
+
+      {/* Sidebar Menu */}
+      <ul className="sidebar-menu">
         <li>
           <Link to="/dashboard">
-            <FaTachometerAlt className="icon" />
+            <FaHome className="icon" />
             Dashboard
+          </Link>
+        </li>
+        <li>
+          <Link to="/school">
+            <FaSchool className="icon" />
+            School
+          </Link>
+        </li>
+        <li>
+          <Link to="/manager">
+            <FaUserTie className="icon" />
+            Manager
           </Link>
         </li>
         <li>
           <Link to="/school-calendar">
             <FaCalendarAlt className="icon" />
-            School Calendar
+            Calendar
           </Link>
         </li>
         <li>
-          <Link to="/request">
-            <FaEnvelope className="icon" />
-            Request
-          </Link>
-        </li>
-        <li>
-          <Link to="/view-activities">
+          <Link to="/activities">
             <FaTasks className="icon" />
-            View Activities
+            Activities
           </Link>
         </li>
-        {/* New Teacher Sessions Link */}
-        {teacherId && (
-          <li>
-            <Link to={`/teacherportal/${teacherId}/teacher-sessions`}>
-              <FaChalkboardTeacher className="icon" />
-              Teacher Sessions
-            </Link>
-          </li>
-        )}
       </ul>
+
+      {/* Logout Button */}
+      <div className="sidebar-logout">
+        <Link to="/logout">
+          <FaSignOutAlt className="icon" />
+          Logout
+        </Link>
+      </div>
     </div>
   );
 };
