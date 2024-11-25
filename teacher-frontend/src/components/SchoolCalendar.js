@@ -4,32 +4,34 @@ import { useTeacherAuth } from '../context/TeacherAuthContext';
 import './SchoolCalendar.css'; // Optional: Add styles for the calendar
 
 const SchoolCalendar = () => {
-  const { teacherId } = useTeacherAuth(); // Get the logged-in teacher's ID from context
+  const { teacherId } = useTeacherAuth(); // Get teacherId from the auth context
   const [schools, setSchools] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState('');
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [holidays, setHolidays] = useState([]);
-  const [filter, setFilter] = useState('all'); // To toggle between events and holidays
+  const [filter, setFilter] = useState('all'); // Toggle between events and holidays
 
-  useEffect(() => {
-    if (teacherId) {
-      // Fetch schools assigned to the logged-in teacher
-      const fetchSchools = async () => {
-        try {
-          const response = await axiosInstance.get(`/teachers/${teacherId}/schools`);
-          setSchools(response.data);
-        } catch (error) {
-          console.error('Error fetching schools:', error);
-        }
-      };
-
-      fetchSchools();
+  // Fetch schools related to the teacher
+  const fetchSchools = async () => {
+    try {
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      const uniqueSchools = [
+        ...new Map(
+          response.data.map((assignment) => [
+            assignment.schoolId,
+            { id: assignment.schoolId, name: assignment.schoolName },
+          ])
+        ).values(),
+      ];
+      setSchools(uniqueSchools);
+    } catch (error) {
+      console.error('Error fetching schools:', error);
     }
-  }, [teacherId]);
+  };
 
+  // Fetch calendar events and holidays for the selected school
   useEffect(() => {
     if (selectedSchool) {
-      // Fetch calendar events and holidays for the selected school
       const fetchCalendarData = async () => {
         try {
           const eventsResponse = await axiosInstance.get(`/schools/${selectedSchool}/calendar`);
@@ -44,6 +46,11 @@ const SchoolCalendar = () => {
       fetchCalendarData();
     }
   }, [selectedSchool]);
+
+  // Fetch schools on component mount
+  useEffect(() => {
+    if (teacherId) fetchSchools();
+  }, [teacherId]);
 
   const handleSchoolChange = (e) => {
     setSelectedSchool(e.target.value);
