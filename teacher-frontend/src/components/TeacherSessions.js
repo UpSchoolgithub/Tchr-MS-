@@ -149,57 +149,70 @@ const TeacherSessions = () => {
       </tr>
     </thead>
     <tbody>
-      {filteredSessions.map((session, index) => (
-        <tr key={index}>
-          <td>{session.schoolName}</td>
-          <td>{session.className}</td>
-          <td>{session.sectionName}</td>
-          <td>{session.sectionId}</td>
-          <td>{session.day}</td>
-          <td>{session.period}</td>
-          <td>{session.subjectName}</td>
-          <td>
-            {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
-          </td>
-          <td>
-            {session.completed ? (
-              <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
-            ) : isToday(selectedDate) ? (
-              <button
-                onClick={() => handleStartSession(session)}
-                style={{ backgroundColor: 'orange', color: 'white' }}
-              >
-                Start Session
-              </button>
-            ) : (
-              <span>-</span>
-            )}
-          </td>
-          <td>{session.endTime}</td>
-          <td>
-            <button style={{ backgroundColor: 'green' }}>Update</button>
+  {filteredSessions.map((session, index) => {
+    const progressPercentage =
+      session.totalTopics > 0 ? (session.completedTopics / session.totalTopics) * 100 : 0;
+
+    return (
+      <tr key={index}>
+        <td>{session.schoolName}</td>
+        <td>{session.className}</td>
+        <td>{session.sectionName}</td>
+        <td>{session.sectionId}</td>
+        <td>{session.day}</td>
+        <td>{session.period}</td>
+        <td>{session.subjectName}</td>
+        <td>
+          <div className="progress-container">
+            <div className="progress-bar">
+              <span style={{ width: `${progressPercentage}%` }}></span>
+            </div>
+            <small>
+              {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+            </small>
+          </div>
+        </td>
+        <td>
+          {session.completed ? (
+            <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
+          ) : isToday(selectedDate) ? (
             <button
-              style={{
-                backgroundColor: 'lightgreen',
-                marginLeft: '5px',
-              }}
+              onClick={() => handleStartSession(session)}
+              style={{ backgroundColor: 'orange', color: 'white' }}
             >
-              Notify
+              Start Session
             </button>
-          </td>
-          <td>
-            <button
-              style={{ backgroundColor: 'blue' }}
-              onClick={() => {
-                navigate(`/session-reports/${session.sessionId}`);
-              }}
-            >
-              Session Report
-            </button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
+          ) : (
+            <span>-</span>
+          )}
+        </td>
+        <td>{session.endTime}</td>
+        <td>
+          <button style={{ backgroundColor: 'green' }}>Update</button>
+          <button
+            style={{
+              backgroundColor: 'lightgreen',
+              marginLeft: '5px',
+            }}
+          >
+            Notify
+          </button>
+        </td>
+        <td>
+          <button
+            style={{ backgroundColor: 'blue' }}
+            onClick={() => {
+              navigate(`/session-reports/${session.sessionId}`);
+            }}
+          >
+            Session Report
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
   </table>
 )}
 
