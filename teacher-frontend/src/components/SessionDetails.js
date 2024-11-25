@@ -190,7 +190,7 @@ useEffect(() => {
   
       console.log('Payload being sent:', payload);
   
-      // Send data to API to end the session
+      // Send data to API to end the session and update the next session
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
@@ -205,6 +205,7 @@ useEffect(() => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
   

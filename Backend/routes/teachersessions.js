@@ -504,47 +504,22 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
-    console.log('Request Params:', { teacherId, sessionId });
-    console.log('Request Body:', { incompleteTopics, completedTopics, assignmentDetails, observations, absentees });
-
-    // Fetch session with required associations
+    // Fetch the current session and session plan
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
-        { model: SessionPlan, attributes: ['id'], as: 'SessionPlan' },
-        { model: Subject, attributes: ['subjectName'] },
-        { model: Section, attributes: ['sectionName'] },
-        { model: ClassInfo, attributes: ['className'] },
-        { model: School, attributes: ['name'] },
-        { model: Teacher, attributes: ['name'], as: 'Teacher' }, // Use alias here
+        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
+        { model: Subject, attributes: ['id'] },
       ],
     });
 
     if (!session) {
-      console.error('Session not found:', sessionId);
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Check for missing fields in associations
-    console.log('Fetched Session:', session);
-
-    if (!session.SessionPlan) {
-      console.error('SessionPlan is null for session:', sessionId);
-    }
-    if (!session.Subject) {
-      console.error('Subject is null for session:', sessionId);
-    }
-    if (!session.School) {
-      console.error('School is null for session:', sessionId);
-    }
-
-    const sessionsToComplete = JSON.stringify([...completedTopics || [], ...incompleteTopics || []]);
-    const sessionsCompleted = JSON.stringify(completedTopics || []);
-    const absentStudents = JSON.stringify(absentees || []);
-
-    // Save session details in the SessionReports table
+    // Add session report for the current session
     await sequelize.models.SessionReports.create({
-      sessionPlanId: session.SessionPlan?.id || null,
+      sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
@@ -554,19 +529,44 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       sectionName: session.Section?.sectionName || 'Unknown Section',
       subjectName: session.Subject?.subjectName || 'Unknown Subject',
       schoolName: session.School?.name || 'Unknown School',
-      absentStudents,
-      sessionsToComplete,
-      sessionsCompleted,
+      absentStudents: JSON.stringify(absentees || []),
+      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
+      sessionsCompleted: JSON.stringify(completedTopics || []),
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
 
-    res.json({ message: 'Session ended and report saved successfully!' });
+    // Append incomplete topics to the next session
+    if (incompleteTopics.length > 0) {
+      const nextSession = await Session.findOne({
+        where: {
+          subjectId: session.subjectId,
+          sectionId: session.sectionId,
+          id: { [Op.gt]: sessionId }, // Fetch the next session
+        },
+        include: [{ model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] }],
+        order: [['id', 'ASC']], // Ensure the next session is picked
+      });
+
+      if (nextSession && nextSession.SessionPlan) {
+        const currentPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
+        const updatedPlanDetails = [...incompleteTopics, ...currentPlanDetails];
+
+        // Update the next session's plan details
+        await SessionPlan.update(
+          { planDetails: JSON.stringify(updatedPlanDetails) },
+          { where: { id: nextSession.SessionPlan.id } }
+        );
+      }
+    }
+
+    res.json({ message: 'Session ended and next session updated successfully!' });
   } catch (error) {
-    console.error('Error in /teachers/:teacherId/sessions/:sessionId/end:', error);
-    res.status(500).json({ error: 'Failed to save session details and report.' });
+    console.error('Error ending session and updating next session:', error);
+    res.status(500).json({ error: 'Failed to save session details and update next session.' });
   }
 });
+
 
 
 
