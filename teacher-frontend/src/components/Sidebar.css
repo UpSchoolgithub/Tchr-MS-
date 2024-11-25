@@ -1,46 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+body {
+  font-family: 'Rubik', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  display: flex;
+}
+
 .sidebar {
-  width: 250px;
-  background-color: #007bff;
-  color: white;
+  width: 200px;
+  background-color: #ffffff;
+  padding: 15px;
   height: 100vh;
   position: fixed;
+  font-family: 'Rubik', sans-serif;
+  font-size: 13px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px 10px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
 }
 
 .sidebar-logo img {
-  max-width: 150px;
-  margin-bottom: 30px;
+  width: 90%;
+  margin-bottom: 20px;
 }
 
 .sidebar ul {
-  list-style: none;
+  list-style-type: none;
   padding: 0;
-  width: 100%;
 }
 
 .sidebar ul li {
-  margin: 10px 0;
+  margin-bottom: 20px;
+  background-color: #ffffff;
 }
 
 .sidebar ul li a {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
-  color: white;
   text-decoration: none;
-  border-radius: 4px;
+  color: #000000;
+  font-size: 13px;
+  padding: 10px;
+  border-radius: 8px;
   transition: background-color 0.3s ease;
 }
 
 .sidebar ul li a:hover {
-  background-color: #0056b3;
+  background-color: #3482FF;
+  color: #ffffff;
 }
 
 .sidebar ul li a .icon {
   margin-right: 10px;
-  font-size: 18px;
+  font-size: 18px; /* Adjust icon size for better appearance */
+}
+
+.sidebar-bottom {
+  margin-top: auto; /* Push the logout link to the bottom */
+}
+
+.main-content {
+  padding: 20px;
+  flex-grow: 1;
+  margin-left: 215px;
+}
+
+h1 {
+  margin-top: 0;
 }
