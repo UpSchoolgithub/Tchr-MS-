@@ -126,7 +126,8 @@ const TeacherSessions = () => {
     setLoadingReport(true);
     try {
       const response = await axiosInstance.get(`/sessions/${sessionId}/details`);
-      setSessionReport(response.data.sessionReport);
+      console.log('Session Report:', response.data); // Log to verify data
+      setSessionReport(response.data.sessionReport); // Ensure this is called
       setReportError(null);
     } catch (err) {
       console.error('Error fetching session report:', err);
@@ -135,6 +136,7 @@ const TeacherSessions = () => {
       setLoadingReport(false);
     }
   };
+  
 
   // Handle view session report button click
   const handleViewSessionReport = (sessionId) => {
@@ -143,8 +145,10 @@ const TeacherSessions = () => {
       alert('Cannot fetch report. Session ID is missing.');
       return;
     }
+    console.log('Fetching report for sessionId:', sessionId); // Debugging log
     fetchSessionReport(sessionId);
   };
+  
   
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
@@ -273,42 +277,32 @@ const TeacherSessions = () => {
       {loadingReport && <p>Loading session report...</p>}
       {reportError && <p className="error">{reportError}</p>}
       {sessionReport && (
-        <div className="session-report-container">
-          <h3>Session Report</h3>
-          <p>
-            <strong>Sessions Completed:</strong>{' '}
-            {sessionReport.sessionsCompleted
-              ? sessionReport.sessionsCompleted.join(', ')
-              : 'None'}
-          </p>
-          <p>
-            <strong>Sessions To Complete:</strong>{' '}
-            {sessionReport.sessionsToComplete
-              ? sessionReport.sessionsToComplete.join(', ')
-              : 'None'}
-          </p>
-          <p>
-            <strong>Absent Students:</strong>{' '}
-            {sessionReport.absentStudents
-              ? sessionReport.absentStudents.join(', ')
-              : 'None'}
-          </p>
-          <p>
-            <strong>Assignment Details:</strong>{' '}
-            {sessionReport.assignmentDetails || 'None'}
-          </p>
-          <p>
-            <strong>Observation Details:</strong>{' '}
-            {sessionReport.observationDetails || 'None'}
-          </p>
-          <button
-            onClick={() => setSessionReport(null)}
-            style={{ marginTop: '10px' }}
-          >
-            Close Report
-          </button>
-        </div>
-      )}
+  <div className="session-report-container">
+    <h3>Session Report</h3>
+    <p>
+      <strong>Sessions Completed:</strong>{' '}
+      {sessionReport.sessionsCompleted?.join(', ') || 'None'}
+    </p>
+    <p>
+      <strong>Sessions To Complete:</strong>{' '}
+      {sessionReport.sessionsToComplete?.join(', ') || 'None'}
+    </p>
+    <p>
+      <strong>Absent Students:</strong>{' '}
+      {sessionReport.absentStudents?.join(', ') || 'None'}
+    </p>
+    <p>
+      <strong>Assignment Details:</strong>{' '}
+      {sessionReport.assignmentDetails || 'None'}
+    </p>
+    <p>
+      <strong>Observation Details:</strong>{' '}
+      {sessionReport.observationDetails || 'None'}
+    </p>
+    <button onClick={() => setSessionReport(null)}>Close Report</button>
+  </div>
+)}
+
     </div>
   );
 };
