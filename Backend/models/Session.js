@@ -29,6 +29,13 @@ class Session extends Model {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
+    this.belongsTo(models.Teacher, {
+      foreignKey: 'teacherId',
+      as: 'Teacher', // Alias for association
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    });
+    
     this.hasOne(models.SessionPlan, {
       foreignKey: 'sessionId',
       as: 'SessionPlan', // Alias for association

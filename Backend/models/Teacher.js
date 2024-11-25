@@ -6,6 +6,10 @@ class Teacher extends Model {
     this.belongsTo(models.Manager, { foreignKey: 'ManagerId' });
     this.belongsToMany(models.School, { through: 'TeacherSchools', foreignKey: 'teacherId' }); // Many-to-many association
     this.hasMany(models.TimetableEntry, { foreignKey: 'teacherId' }); // One-to-many association with TimetableEntry
+    this.hasMany(models.Session, {
+      foreignKey: 'teacherId',
+      as: 'Sessions', // Alias for association
+    });
   }
 }
 
