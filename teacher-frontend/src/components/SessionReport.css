@@ -1,0 +1,34 @@
+.session-report-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .report-details p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  .report-details ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .report-details ul li {
+    background-color: #e6f7ff;
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 5px;
+  }
+  
+  button {
+    padding: 10px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  

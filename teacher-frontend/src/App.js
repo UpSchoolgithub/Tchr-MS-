@@ -12,6 +12,7 @@ import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContex
 import { WebSocketProvider } from './WebSocketContext';
 import TeacherSessions from './components/TeacherSessions';
 import SessionDetails from './components/SessionDetails'; // Import the SessionDetails component
+import SessionReport from './components/SessionReport';
 
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
@@ -46,6 +47,7 @@ function InnerApp() {
             {/* Corrected session details route order */}
             <Route path="/teacherportal/:teacherId/sessions" element={<TeacherSessions />} />
             <Route path="/teacherportal/:teacherId/session-details" element={<SessionDetails />} />
+            <Route path="/session-reports/:sessionId" element={<SessionReport />} />
           </Routes>
         </div>
       </Router>

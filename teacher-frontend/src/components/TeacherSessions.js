@@ -194,9 +194,10 @@ const TeacherSessions = () => {
                     style={{ backgroundColor: 'blue', color: 'white' }}
                     onClick={() => navigate(`/session-reports/${session.sessionId}`)}
                   >
-                    Session Report
+                    View Report
                   </button>
                 </td>
+
 
               </tr>
             ))}
