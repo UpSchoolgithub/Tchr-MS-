@@ -14,7 +14,10 @@ const SessionDetails = () => {
     sectionId,
     subjectId,
     schoolId,
+    sessionDetails: initialSessionDetails, // Include sessionDetails from location.state
   } = location.state || {};
+  
+ 
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
@@ -49,22 +52,24 @@ const SessionDetails = () => {
   }, [teacherId, sectionId]);
 
   // Fetch session details
-  useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-        console.log('Fetched session details:', response.data);
-        setSessionDetails(response.data.sessionDetails || null);
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-        setError('Failed to fetch session details.');
-      }
-    };
-  
-    if (teacherId && sectionId && subjectId) fetchSessionDetails();
-  }, [teacherId, sectionId, subjectId]);
+  // Fetch session details
+useEffect(() => {
+  const fetchSessionDetails = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+      );
+      console.log('Fetched session details:', response.data);
+      setSessionDetails(response.data.sessionDetails || null);
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      setError('Failed to fetch session details.');
+    }
+  };
+
+  if (teacherId && sectionId && subjectId) fetchSessionDetails();
+}, [teacherId, sectionId, subjectId]);
+
   
   
   // Fetch assignment details
@@ -160,7 +165,6 @@ const SessionDetails = () => {
     }
   
     try {
-      // Prepare completed and uncompleted topics
       const completedTopics = [];
       const uncompletedTopics = [];
   
@@ -173,33 +177,28 @@ const SessionDetails = () => {
         }
       });
   
-      // Construct the payload
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
         incompleteTopics: uncompletedTopics,
         assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
         observations,
-        absentees, // Include absentees in the payload
+        absentees,
       };
   
-      console.log('Payload being sent:', payload);
-  
-      // Send data to API to end the session
       const response = await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`, // Ensure the endpoint is correct
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
   
       alert(response.data.message || 'Session ended successfully and report saved!');
-      
-      // Redirect to another page or refresh after successful operation
-      navigate(`/session-reports/${sessionDetails.sessionId}`); // Redirect to session reports
+      navigate(`/session-reports/${sessionDetails.sessionId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
@@ -262,23 +261,13 @@ const SessionDetails = () => {
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
               <ul>
-  {sessionDetails.topics && Array.isArray(sessionDetails.topics)
-    ? sessionDetails.topics.map((topic, idx) => (
-        <li key={idx}>
-          <input type="checkbox" id={`topic-${idx}`} />
-          <label htmlFor={`topic-${idx}`}>{topic}</label>
-        </li>
-      ))
-    : typeof sessionDetails.topics === 'string'
-    ? JSON.parse(sessionDetails.topics).map((topic, idx) => (
-        <li key={idx}>
-          <input type="checkbox" id={`topic-${idx}`} />
-          <label htmlFor={`topic-${idx}`}>{topic}</label>
-        </li>
-      ))
-    : <p>No topics available for this session.</p>}
-</ul>
-
+                {sessionDetails.topics.map((topic, idx) => (
+                  <li key={idx}>
+                    <input type="checkbox" id={`topic-${idx}`} />
+                    <label htmlFor={`topic-${idx}`}>{topic}</label>
+                  </li>
+                ))}
+              </ul>
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
               <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
@@ -286,6 +275,7 @@ const SessionDetails = () => {
           ) : (
             <p>No session details available for today.</p>
           )}
+
 
           <h4>Assignments:</h4>
           {assignmentDetails && (
