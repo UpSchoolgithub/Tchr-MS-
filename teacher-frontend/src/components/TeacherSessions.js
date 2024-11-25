@@ -212,56 +212,59 @@ const TeacherSessions = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredSessions.map((session, index) => (
-              <tr key={index}>
-                <td>{session.schoolName}</td>
-                <td>{session.className}</td>
-                <td>{session.sectionName}</td>
-                <td>{session.sectionId}</td>
-                <td>{session.day}</td>
-                <td>{session.period}</td>
-                <td>{session.subjectName}</td>
-                <td>
-                  {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
-                </td>
-                <td>
-                  {isToday(selectedDate) ? (
-                    <button
-                      onClick={() => handleStartSession(session)}
-                      style={{ backgroundColor: 'orange', color: 'black' }}
-                    >
-                      Start Session
-                    </button>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </td>
-                <td>{session.endTime || '-'}</td>
-                <td>
-                  <button style={{ backgroundColor: 'green', color: 'white' }}>
-                    Update
-                  </button>
-                  <button
-                    style={{
-                      backgroundColor: 'lightgreen',
-                      color: 'black',
-                      marginLeft: '5px',
-                    }}
-                  >
-                    Notify
-                  </button>
-                </td>
-                <td>
-                <button
-                  style={{ backgroundColor: 'blue', color: 'white' }}
-                  onClick={() => handleViewSessionReport(session.sessionId || session.id)}
-                >
-                  View Report
-                </button>
+          {filteredSessions.map((session, index) => {
+  console.log('Session Data:', session); // Debugging session data
+  return (
+    <tr key={index}>
+      <td>{session.schoolName}</td>
+      <td>{session.className}</td>
+      <td>{session.sectionName}</td>
+      <td>{session.sectionId}</td>
+      <td>{session.day}</td>
+      <td>{session.period}</td>
+      <td>{session.subjectName}</td>
+      <td>
+        {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+      </td>
+      <td>
+        {isToday(selectedDate) ? (
+          <button
+            onClick={() => handleStartSession(session)}
+            style={{ backgroundColor: 'orange', color: 'black' }}
+          >
+            Start Session
+          </button>
+        ) : (
+          <span>-</span>
+        )}
+      </td>
+      <td>{session.endTime || '-'}</td>
+      <td>
+        <button style={{ backgroundColor: 'green', color: 'white' }}>
+          Update
+        </button>
+        <button
+          style={{
+            backgroundColor: 'lightgreen',
+            color: 'black',
+            marginLeft: '5px',
+          }}
+        >
+          Notify
+        </button>
+      </td>
+      <td>
+        <button
+          style={{ backgroundColor: 'blue', color: 'white' }}
+          onClick={() => handleViewSessionReport(session.sessionId || session.id)}
+        >
+          View Report
+        </button>
+      </td>
+    </tr>
+  );
+})}
 
-                </td>
-              </tr>
-            ))}
           </tbody>
         </table>
       )}
