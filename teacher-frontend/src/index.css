@@ -14,5 +14,5 @@ code {
 }
 .main-content {
   flex: 1; /* Allow content to take the remaining space */
-  margin-left: 220px; /* Align content with the sidebar */
+  margin-left: 500px; /* Align content with the sidebar */
 }
