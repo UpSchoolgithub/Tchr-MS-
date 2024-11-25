@@ -12,7 +12,3 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-.main-content {
-  flex: 1; /* Allow content to take the remaining space */
-  margin-left: 500px; /* Align content with the sidebar */
-}
