@@ -73,56 +73,56 @@ const SchoolCalendar = () => {
 
   return (
     <div className="school-calendar-container">
-      <h1>School Calendar</h1>
-      <div className="filters">
-  <label>
-    Select School:
-    <select value={selectedSchool} onChange={handleSchoolChange}>
-      <option value="">-- Select a School --</option>
-      {schools.map((school) => (
-        <option key={school.id} value={school.id}>
-          {school.name}
-        </option>
-      ))}
-    </select>
-  </label>
-  <label>
-    Filter:
-    <select onChange={(e) => setFilter(e.target.value)} value={filter}>
-      <option value="all">All</option>
-      <option value="events">Events</option>
-      <option value="holidays">Holidays</option>
-    </select>
-  </label>
+  <h1>School Calendar</h1>
+  <div className="filters">
+    <label>
+      Select School:
+      <select value={selectedSchool} onChange={handleSchoolChange}>
+        <option value="">-- Select a School --</option>
+        {schools.map((school) => (
+          <option key={school.id} value={school.id}>
+            {school.name}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label>
+      Filter:
+      <select onChange={(e) => setFilter(e.target.value)} value={filter}>
+        <option value="all">All</option>
+        <option value="events">Events</option>
+        <option value="holidays">Holidays</option>
+      </select>
+    </label>
+  </div>
+  <div className="calendar">
+    {selectedSchool ? (
+      filteredList.length > 0 ? (
+        <table className="calendar-table">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredList.map((item, index) => (
+              <tr key={index}>
+                <td>{item.eventName || item.name}</td>
+                <td>{formatDate(item.date || item.startDate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="no-data-message">No events found for the selected filter.</p>
+      )
+    ) : (
+      <p className="no-data-message">Please select a school to view the calendar.</p>
+    )}
+  </div>
 </div>
 
-      <div className="calendar">
-        {selectedSchool ? (
-          filteredList.length > 0 ? (
-            <table className="calendar-table">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredList.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.eventName || item.name}</td>
-                    <td>{formatDate(item.date || item.startDate)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No events or holidays found for this school.</p>
-          )
-        ) : (
-          <p>Please select a school to view the calendar.</p>
-        )}
-      </div>
-    </div>
   );
 };
 
