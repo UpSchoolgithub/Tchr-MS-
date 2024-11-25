@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
+import { useTeacherAuth } from '../context/TeacherAuthContext';
 import './SchoolCalendar.css'; // Optional: Add styles for the calendar
 
 const SchoolCalendar = () => {
+  const { teacherId } = useTeacherAuth(); // Get the logged-in teacher's ID from context
   const [schools, setSchools] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState('');
   const [calendarEvents, setCalendarEvents] = useState([]);
@@ -10,18 +12,20 @@ const SchoolCalendar = () => {
   const [filter, setFilter] = useState('all'); // To toggle between events and holidays
 
   useEffect(() => {
-    // Fetch all schools
-    const fetchSchools = async () => {
-      try {
-        const response = await axiosInstance.get('/schools'); // API endpoint to fetch schools
-        setSchools(response.data);
-      } catch (error) {
-        console.error('Error fetching schools:', error);
-      }
-    };
+    if (teacherId) {
+      // Fetch schools assigned to the logged-in teacher
+      const fetchSchools = async () => {
+        try {
+          const response = await axiosInstance.get(`/teachers/${teacherId}/schools`);
+          setSchools(response.data);
+        } catch (error) {
+          console.error('Error fetching schools:', error);
+        }
+      };
 
-    fetchSchools();
-  }, []);
+      fetchSchools();
+    }
+  }, [teacherId]);
 
   useEffect(() => {
     if (selectedSchool) {
