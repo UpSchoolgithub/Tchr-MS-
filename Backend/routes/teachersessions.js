@@ -577,9 +577,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 router.get('/sessions/:sessionId/details', async (req, res) => {
   const { sessionId } = req.params;
 
+  if (!sessionId || sessionId === 'undefined') {
+    return res.status(400).json({ error: 'Invalid session ID provided.' });
+  }
+
   try {
     const sessionReport = await sequelize.models.SessionReports.findOne({
-      where: { sessionId }, // Match the sessionId
+      where: { sessionId },
     });
 
     if (!sessionReport) {
@@ -600,6 +604,7 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session report.' });
   }
 });
+
 
 
 router.get('/reports/sessions', async (req, res) => {

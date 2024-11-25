@@ -12,16 +12,20 @@ const SessionReport = () => {
 
   useEffect(() => {
     const fetchReport = async () => {
+      if (!sessionId) {
+        console.error('Session ID is undefined. Cannot fetch session report.');
+        return;
+      }
+    
       try {
         const response = await axiosInstance.get(`/sessions/${sessionId}/details`);
         setReport(response.data.sessionReport);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching session report:', err);
+      } catch (error) {
+        console.error('Error fetching session report:', error);
         setError('Failed to load session report.');
-        setLoading(false);
       }
     };
+    
 
     fetchReport();
   }, [sessionId]);
