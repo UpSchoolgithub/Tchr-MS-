@@ -73,7 +73,7 @@
 }
 
 .sessions-table td button[style*="orange"] {
-  background-color: orange;
+  background-color: #ffcc00;
   color: white;
 }
 
@@ -153,7 +153,7 @@
 }
 
 .sessions-table th {
-  background-color: #007bff;
+  background-color: #dc3545;
   color: white;
   font-weight: bold;
 }
