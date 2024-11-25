@@ -20,6 +20,15 @@ const Sidebar = () => {
             Dashboard
           </Link>
         </li>
+        {/* New Teacher Sessions Link */}
+        {teacherId && (
+          <li>
+            <Link to={`/teacherportal/${teacherId}/teacher-sessions`}>
+              <FaChalkboardTeacher className="icon" />
+              Teacher Sessions
+            </Link>
+          </li>
+        )}
         <li>
           <Link to="/school-calendar">
             <FaCalendarAlt className="icon" />
@@ -38,15 +47,7 @@ const Sidebar = () => {
             View Activities
           </Link>
         </li>
-        {/* New Teacher Sessions Link */}
-        {teacherId && (
-          <li>
-            <Link to={`/teacherportal/${teacherId}/teacher-sessions`}>
-              <FaChalkboardTeacher className="icon" />
-              Teacher Sessions
-            </Link>
-          </li>
-        )}
+        
       </ul>
     </div>
   );
