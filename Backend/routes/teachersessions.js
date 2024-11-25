@@ -503,6 +503,9 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
+    console.log('Request Params:', { teacherId, sessionId });
+    console.log('Request Body:', { incompleteTopics, completedTopics, assignmentDetails, observations, absentees });
+
     // Fetch session with required associations
     const session = await Session.findOne({
       where: { id: sessionId },
@@ -512,18 +515,27 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
         { model: Section, attributes: ['sectionName'] },
         { model: ClassInfo, attributes: ['className'] },
         { model: School, attributes: ['name'] },
-        { model: Teacher, attributes: ['name'] }, // Include teacher name
+        { model: Teacher, attributes: ['name'] },
       ],
     });
 
     if (!session) {
+      console.error('Session not found:', sessionId);
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Debugging logs for missing fields
-    if (!session.SessionPlan) console.error('SessionPlan is null for session:', sessionId);
-    if (!session.Subject) console.error('Subject is null for session:', sessionId);
-    if (!session.School) console.error('School is null for session:', sessionId);
+    // Check for missing fields in associations
+    console.log('Fetched Session:', session);
+
+    if (!session.SessionPlan) {
+      console.error('SessionPlan is null for session:', sessionId);
+    }
+    if (!session.Subject) {
+      console.error('Subject is null for session:', sessionId);
+    }
+    if (!session.School) {
+      console.error('School is null for session:', sessionId);
+    }
 
     const sessionsToComplete = JSON.stringify([...completedTopics || [], ...incompleteTopics || []]);
     const sessionsCompleted = JSON.stringify(completedTopics || []);
@@ -536,11 +548,11 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: session.Teacher?.name || 'Unknown Teacher', // Safe handling for teacher name
-      className: session.ClassInfo?.className || 'Unknown Class', // Safe handling for className
-      sectionName: session.Section?.sectionName || 'Unknown Section', // Safe handling for sectionName
-      subjectName: session.Subject?.subjectName || 'Unknown Subject', // Safe handling for subjectName
-      schoolName: session.School?.name || 'Unknown School', // Safe handling for schoolName
+      teacherName: session.Teacher?.name || 'Unknown Teacher',
+      className: session.ClassInfo?.className || 'Unknown Class',
+      sectionName: session.Section?.sectionName || 'Unknown Section',
+      subjectName: session.Subject?.subjectName || 'Unknown Subject',
+      schoolName: session.School?.name || 'Unknown School',
       absentStudents,
       sessionsToComplete,
       sessionsCompleted,
@@ -550,10 +562,11 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     res.json({ message: 'Session ended and report saved successfully!' });
   } catch (error) {
-    console.error('Error saving session details:', error);
+    console.error('Error in /teachers/:teacherId/sessions/:sessionId/end:', error);
     res.status(500).json({ error: 'Failed to save session details and report.' });
   }
 });
+
 
 
 
