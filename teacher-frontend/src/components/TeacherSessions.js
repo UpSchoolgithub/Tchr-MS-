@@ -190,16 +190,17 @@ const TeacherSessions = () => {
                   </button>
                 </td>
                 <td>
-                <button
-                  style={{ backgroundColor: 'blue', color: 'white' }}
-                  onClick={() => navigate(`/session-reports/${session.sessionId}`)}
-                >
-                  Session Report
-                </button>
-
-
-
+                  <button
+                    style={{ backgroundColor: 'blue', color: 'white' }}
+                    onClick={() => {
+                      console.log('Navigating to session report with sessionId:', session.sessionId);
+                      navigate(`/session-reports/${session.sessionId}`);
+                    }}
+                  >
+                    Session Report
+                  </button>
                 </td>
+
 
 
               </tr>

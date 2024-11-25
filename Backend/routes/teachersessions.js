@@ -60,6 +60,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
 
       return {
         id: session.id,
+        sessionId: session.id, // Correctly map session.id to sessionId
         schoolName: school.name || 'N/A',
         className: classInfo.className || 'N/A',
         sectionName: section.sectionName || 'N/A',
