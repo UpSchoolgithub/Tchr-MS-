@@ -13,13 +13,25 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Add filtering options
+  const [filter, setFilter] = useState({ subject: '', progress: '' });
+  const [sessionReport, setSessionReport] = useState(null);
+  const [reportError, setReportError] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
+
   const maxRetries = 3;
   let retryCount = 0;
 
   // Utility function to get the day name
   const getDayName = (date) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     return days[date.getDay()];
   };
 
@@ -41,7 +53,7 @@ const TeacherSessions = () => {
     } finally {
       setLoading(false);
     }
-  }, [teacherId, retryCount]);
+  }, [teacherId]);
 
   useEffect(() => {
     fetchSessions();
@@ -57,10 +69,14 @@ const TeacherSessions = () => {
       filtered = filtered.filter((session) => session.subjectName === filter.subject);
     }
     if (filter.progress === 'completed') {
-      filtered = filtered.filter((session) => session.completedTopics === session.totalTopics);
+      filtered = filtered.filter(
+        (session) => session.completedTopics === session.totalTopics
+      );
     }
     if (filter.progress === 'incomplete') {
-      filtered = filtered.filter((session) => session.completedTopics < session.totalTopics);
+      filtered = filtered.filter(
+        (session) => session.completedTopics < session.totalTopics
+      );
     }
 
     setFilteredSessions(filtered);
@@ -78,7 +94,7 @@ const TeacherSessions = () => {
       alert('Unable to start session: Section ID is missing.');
       return;
     }
-  
+
     navigate(`/teacherportal/${teacherId}/session-details`, {
       state: {
         teacherId,
@@ -91,9 +107,27 @@ const TeacherSessions = () => {
       },
     });
   };
-  
-  
-  
+
+  // Fetch session report data
+  const fetchSessionReport = async (sessionId) => {
+    setLoadingReport(true);
+    try {
+      const response = await axiosInstance.get(`/sessions/${sessionId}/details`);
+      setSessionReport(response.data.sessionDetails || response.data.sessionReport);
+      setReportError(null);
+    } catch (err) {
+      console.error('Error fetching session report:', err);
+      setReportError(`Failed to load session report: ${err.message}`);
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  // Handle view session report button click
+  const handleViewSessionReport = (sessionId) => {
+    fetchSessionReport(sessionId);
+  };
+
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
   if (loading) return <p>Loading...</p>;
@@ -101,7 +135,9 @@ const TeacherSessions = () => {
 
   return (
     <div className="sessions-container">
-      <h2>Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})</h2>
+      <h2>
+        Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})
+      </h2>
 
       <div className="navigation-buttons">
         <DatePicker
@@ -112,16 +148,24 @@ const TeacherSessions = () => {
         />
 
         {/* Filters for subject and progress */}
-        <select onChange={(e) => setFilter({ ...filter, subject: e.target.value })}>
+        <select
+          onChange={(e) => setFilter({ ...filter, subject: e.target.value })}
+          value={filter.subject}
+        >
           <option value="">All Subjects</option>
-          {Array.from(new Set(sessions.map((session) => session.subjectName))).map((subject) => (
-            <option key={subject} value={subject}>
-              {subject}
-            </option>
-          ))}
+          {Array.from(new Set(sessions.map((session) => session.subjectName))).map(
+            (subject) => (
+              <option key={subject} value={subject}>
+                {subject}
+              </option>
+            )
+          )}
         </select>
 
-        <select onChange={(e) => setFilter({ ...filter, progress: e.target.value })}>
+        <select
+          onChange={(e) => setFilter({ ...filter, progress: e.target.value })}
+          value={filter.progress}
+        >
           <option value="">All Progress</option>
           <option value="completed">Completed</option>
           <option value="incomplete">Incomplete</option>
@@ -145,6 +189,7 @@ const TeacherSessions = () => {
               <th>Session Started</th>
               <th>Session Ended</th>
               <th>Assignments</th>
+              <th>Session Report</th>
             </tr>
           </thead>
           <tbody>
@@ -172,13 +217,11 @@ const TeacherSessions = () => {
                     <span>-</span>
                   )}
                 </td>
-                <td>{session.endTime}</td>
+                <td>{session.endTime || '-'}</td>
                 <td>
-                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
-                  <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
-                </td>
-                <td>
-                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
+                  <button style={{ backgroundColor: 'green', color: 'white' }}>
+                    Update
+                  </button>
                   <button
                     style={{
                       backgroundColor: 'lightgreen',
@@ -192,16 +235,56 @@ const TeacherSessions = () => {
                 <td>
                   <button
                     style={{ backgroundColor: 'blue', color: 'white' }}
-                    onClick={() => navigate(`/session-reports/${session.sessionId}`)}
+                    onClick={() => handleViewSessionReport(session.sessionId)}
                   >
-                    Session Report
+                    View Report
                   </button>
                 </td>
-
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Display Session Report */}
+      {loadingReport && <p>Loading session report...</p>}
+      {reportError && <p className="error">{reportError}</p>}
+      {sessionReport && (
+        <div className="session-report-container">
+          <h3>Session Report</h3>
+          <p>
+            <strong>Sessions Completed:</strong>{' '}
+            {sessionReport.sessionsCompleted
+              ? sessionReport.sessionsCompleted.join(', ')
+              : 'None'}
+          </p>
+          <p>
+            <strong>Sessions To Complete:</strong>{' '}
+            {sessionReport.sessionsToComplete
+              ? sessionReport.sessionsToComplete.join(', ')
+              : 'None'}
+          </p>
+          <p>
+            <strong>Absent Students:</strong>{' '}
+            {sessionReport.absentStudents
+              ? sessionReport.absentStudents.join(', ')
+              : 'None'}
+          </p>
+          <p>
+            <strong>Assignment Details:</strong>{' '}
+            {sessionReport.assignmentDetails || 'None'}
+          </p>
+          <p>
+            <strong>Observation Details:</strong>{' '}
+            {sessionReport.observationDetails || 'None'}
+          </p>
+          <button
+            onClick={() => setSessionReport(null)}
+            style={{ marginTop: '10px' }}
+          >
+            Close Report
+          </button>
+        </div>
       )}
     </div>
   );
