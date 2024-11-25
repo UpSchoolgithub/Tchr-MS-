@@ -1,4 +1,5 @@
 body {
+  display: flex;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -10,4 +11,8 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+.main-content {
+  flex: 1; /* Allow content to take the remaining space */
+  margin-left: 220px; /* Align content with the sidebar */
 }

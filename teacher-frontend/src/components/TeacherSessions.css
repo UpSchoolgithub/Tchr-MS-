@@ -1,12 +1,13 @@
 .sessions-container {
-  max-width: 1200px;
-  margin: 20px auto;
+  margin-left: 220px; /* Adjusted to give space for the sidebar */
+  max-width: calc(100% - 220px); /* Dynamically calculate width */
   padding: 20px;
   background-color: #f9f9f9;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   font-family: 'Arial', sans-serif;
 }
+
 
 .sessions-container h2 {
   text-align: center;
@@ -103,15 +104,7 @@
   font-size: 18px;
   margin-top: 20px;
 }
-.sessions-container {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background-color: #f9f9f9;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  font-family: 'Arial', sans-serif;
-}
+
 
 .sessions-container h2 {
   text-align: center;

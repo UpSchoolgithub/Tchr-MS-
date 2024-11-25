@@ -200,7 +200,7 @@ const TeacherSessions = () => {
         </td>
         <td>
           <button
-            style={{ backgroundColor: '#343a40' }}
+            style={{ backgroundColor: 'white'}}
             onClick={() => {
               navigate(`/session-reports/${session.sessionId}`);
             }}
