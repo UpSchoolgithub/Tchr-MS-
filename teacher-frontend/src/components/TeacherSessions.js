@@ -252,12 +252,13 @@ const TeacherSessions = () => {
                   </button>
                 </td>
                 <td>
-                  <button
-                    style={{ backgroundColor: 'blue', color: 'white' }}
-                    onClick={() => handleViewSessionReport(session.sessionId || session.id)}
-                  >
-                    View Report
-                  </button>
+                <button
+                  style={{ backgroundColor: 'blue', color: 'white' }}
+                  onClick={() => handleViewSessionReport(session.sessionId || session.id)}
+                >
+                  View Report
+                </button>
+
                 </td>
               </tr>
             ))}
