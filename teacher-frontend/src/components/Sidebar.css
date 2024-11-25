@@ -5,7 +5,7 @@
   height: 100vh;
   position: fixed;
   font-family: 'Rubik', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -17,18 +17,16 @@
 }
 
 .sidebar-logo img {
-  width: 80%; /* Adjust logo size */
-  margin: 0 auto;
+  width: 80%; /* Resize the logo */
 }
 
 .sidebar ul {
-  list-style-type: none;
+  list-style: none;
   padding: 0;
-  margin-top: 10px; /* Ensure spacing below the logo */
 }
 
 .sidebar ul li {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .sidebar ul li a {
@@ -36,22 +34,22 @@
   align-items: center;
   text-decoration: none;
   color: #000000;
-  font-size: 13px;
-  padding: 10px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
+  font-size: 14px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .sidebar ul li a:hover {
-  background-color: #3482FF;
+  background-color: #007bff;
   color: #ffffff;
 }
 
 .sidebar ul li a .icon {
-  margin-right: 10px;
+  margin-right: 8px;
   font-size: 18px;
 }
 
-.sidebar-bottom {
-  margin-top: auto; /* Push the logout button to the bottom */
+.sidebar ul li:last-child {
+  margin-top: auto; /* Push the last list item (logout) to the bottom */
 }
