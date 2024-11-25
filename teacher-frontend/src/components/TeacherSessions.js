@@ -161,17 +161,20 @@ const TeacherSessions = () => {
                   {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
                 </td>
                 <td>
-                  {isToday(selectedDate) ? (
-                    <button
-                      onClick={() => handleStartSession(session)}
-                      style={{ backgroundColor: 'orange', color: 'black' }}
-                    >
-                      Start Session
-                    </button>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </td>
+                {session.completed ? (
+                  <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
+                ) : isToday(selectedDate) ? (
+                  <button
+                    onClick={() => handleStartSession(session)}
+                    style={{ backgroundColor: 'orange', color: 'black' }}
+                  >
+                    Start Session
+                  </button>
+                ) : (
+                  <span>-</span>
+                )}
+              </td>
+
                 <td>{session.endTime}</td>
                 <td>
                   <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>

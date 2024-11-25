@@ -160,51 +160,38 @@ useEffect(() => {
   const handleEndSession = async () => {
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
-      console.error('Session Plan ID is missing:', sessionDetails);
       return;
     }
   
     try {
-      // Prepare completed and uncompleted topics
-      const completedTopics = [];
-      const uncompletedTopics = [];
-  
-      sessionDetails.topics.forEach((topic, idx) => {
-        const checkbox = document.getElementById(`topic-${idx}`);
-        if (checkbox?.checked) {
-          completedTopics.push(topic);
-        } else {
-          uncompletedTopics.push(topic);
-        }
-      });
-  
-      // Construct the payload
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
-        completedTopics,
-        incompleteTopics: uncompletedTopics,
-        assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
+        completedTopics: sessionDetails.topics.filter((_, idx) => 
+          document.getElementById(`topic-${idx}`).checked
+        ),
+        incompleteTopics: sessionDetails.topics.filter((_, idx) => 
+          !document.getElementById(`topic-${idx}`).checked
+        ),
         observations,
-        absentees, // Include absentees in the payload
+        absentees,
+        completed: true,
       };
   
-      console.log('Payload being sent:', payload);
-  
-      // Send data to API to end the session and update the next session
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
   
-      alert(response.data.message || 'Session ended successfully and report saved!');
+      alert(response.data.message || 'Session ended successfully!');
   
-      // Redirect to another page or refresh after successful operation
-      navigate(`/session-reports/${sessionDetails.sessionId}`);
+      // Redirect or refresh page
+      navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
