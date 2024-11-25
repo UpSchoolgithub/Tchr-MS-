@@ -46,6 +46,8 @@ const TeacherSessions = () => {
   };
 
   // Fetch sessions assigned to the teacher along with session plans
+  const retryCountRef = useRef(0);
+
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,8 +56,8 @@ const TeacherSessions = () => {
       setError(null);
     } catch (err) {
       console.error('Error fetching sessions:', err);
-      if (retryCount < maxRetries) {
-        retryCount += 1;
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current += 1;
         fetchSessions(); // Retry fetching sessions
       } else {
         setError(`Failed to load sessions: ${err.message}. Please try again later.`);
@@ -64,6 +66,7 @@ const TeacherSessions = () => {
       setLoading(false);
     }
   }, [teacherId]);
+  
 
   useEffect(() => {
     fetchSessions();
@@ -135,8 +138,14 @@ const TeacherSessions = () => {
 
   // Handle view session report button click
   const handleViewSessionReport = (sessionId) => {
+    if (!sessionId) {
+      console.error('Session ID is undefined.');
+      alert('Cannot fetch report. Session ID is missing.');
+      return;
+    }
     fetchSessionReport(sessionId);
   };
+  
 
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 

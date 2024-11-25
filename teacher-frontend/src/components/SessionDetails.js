@@ -151,7 +151,13 @@ const SessionDetails = () => {
       alert('Failed to save observations.');
     }
   };
-
+   
+  navigate('/teacherportal/' + teacherId, {
+      state: {
+        sessionId: sessionDetails.sessionId, // Ensure sessionId is passed here
+      },
+    });
+  
   const handleEndSession = async () => {
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
