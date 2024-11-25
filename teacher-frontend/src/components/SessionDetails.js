@@ -151,13 +151,7 @@ const SessionDetails = () => {
       alert('Failed to save observations.');
     }
   };
-   
-  navigate('/teacherportal/' + teacherId, {
-      state: {
-        sessionId: sessionDetails.sessionId, // Ensure sessionId is passed here
-      },
-    });
-  
+
   const handleEndSession = async () => {
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
@@ -166,6 +160,7 @@ const SessionDetails = () => {
     }
   
     try {
+      // Prepare completed and uncompleted topics
       const completedTopics = [];
       const uncompletedTopics = [];
   
@@ -178,34 +173,33 @@ const SessionDetails = () => {
         }
       });
   
+      // Construct the payload
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
         incompleteTopics: uncompletedTopics,
         assignmentDetails: assignmentsEnabled ? assignmentDetails : null,
         observations,
-        absentees,
+        absentees, // Include absentees in the payload
       };
   
       console.log('Payload being sent:', payload);
   
+      // Send data to API to end the session
       const response = await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`, // Ensure the endpoint is correct
         payload
       );
   
       alert(response.data.message || 'Session ended successfully and report saved!');
-  
-      // Navigate back to TeacherSessions with sessionId
-      navigate(`/teacherportal/${teacherId}`, {
-        state: { sessionId: sessionDetails.sessionId },
-      });
+      
+      // Redirect to another page or refresh after successful operation
+      navigate(`/session-reports/${sessionDetails.sessionId}`); // Redirect to session reports
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
-  
   
   
   
