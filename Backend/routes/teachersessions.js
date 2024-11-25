@@ -515,7 +515,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
         { model: Section, attributes: ['sectionName'] },
         { model: ClassInfo, attributes: ['className'] },
         { model: School, attributes: ['name'] },
-        { model: Teacher, attributes: ['name'] },
+        { model: Teacher, attributes: ['name'], as: 'Teacher' }, // Use alias here
       ],
     });
 
