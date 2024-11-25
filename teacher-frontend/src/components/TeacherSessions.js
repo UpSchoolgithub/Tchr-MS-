@@ -27,18 +27,7 @@ const TeacherSessions = () => {
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
-      const startOfWeek = new Date(selectedDate);
-      startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-      const endOfWeek = new Date(selectedDate);
-      endOfWeek.setDate(selectedDate.getDate() + (6 - selectedDate.getDay()));
-  
-      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`, {
-        params: {
-          startDate: startOfWeek.toISOString().split('T')[0],
-          endDate: endOfWeek.toISOString().split('T')[0],
-        },
-      });
-  
+      const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
       setSessions(response.data);
       setError(null);
     } catch (err) {
@@ -52,8 +41,7 @@ const TeacherSessions = () => {
     } finally {
       setLoading(false);
     }
-  }, [teacherId, selectedDate, retryCount]);
-  
+  }, [teacherId, retryCount]);
 
   useEffect(() => {
     fetchSessions();
@@ -61,15 +49,9 @@ const TeacherSessions = () => {
 
   // Filter sessions based on selected day and additional filters
   useEffect(() => {
-    let filtered = sessions.filter((session) => {
-      const sessionDate = new Date(session.sessionDate); // Assuming session.sessionDate exists
-      const startOfWeek = new Date(selectedDate);
-      startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Start of the week (Sunday)
-      const endOfWeek = new Date(selectedDate);
-      endOfWeek.setDate(selectedDate.getDate() + (6 - selectedDate.getDay())); // End of the week (Saturday)
-      return sessionDate >= startOfWeek && sessionDate <= endOfWeek;
-    });
-    
+    const day = getDayName(selectedDate);
+    let filtered = sessions.filter((session) => session.day === day);
+
     // Apply subject and progress filters
     if (filter.subject) {
       filtered = filtered.filter((session) => session.subjectName === filter.subject);
@@ -116,12 +98,6 @@ const TeacherSessions = () => {
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
-  const getEndOfWeek = (date) => {
-    const endOfWeek = new Date(date);
-    endOfWeek.setDate(date.getDate() + (6 - date.getDay())); // Calculate the Saturday of the current week
-    return endOfWeek;
-  };
-
 
   return (
     <div className="sessions-container">
@@ -131,7 +107,7 @@ const TeacherSessions = () => {
         <DatePicker
           selected={selectedDate}
           onChange={handleDateChange}
-          maxDate={getEndOfWeek(new Date())} // Allow the entire week
+          maxDate={new Date()}
           dateFormat="yyyy-MM-dd"
         />
 
@@ -194,7 +170,6 @@ const TeacherSessions = () => {
                   >
                     Start Session
                   </button>
-
                 ) : (
                   <span>-</span>
                 )}
