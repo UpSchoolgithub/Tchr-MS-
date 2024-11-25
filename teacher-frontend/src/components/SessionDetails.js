@@ -53,23 +53,32 @@ const SessionDetails = () => {
 
   // Fetch session details
   // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
-
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
-
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+  
+        if (response.data?.sessionDetails) {
+          // Combine previous session's incomplete topics with current session's topics
+          const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
+          const currentTopics = response.data.sessionDetails.topics || [];
+  
+          setSessionDetails({
+            ...response.data.sessionDetails,
+            topics: [...previousIncompleteTopics, ...currentTopics],
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
+      }
+    };
+  
+    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+  }, [teacherId, sectionId, subjectId]);
+  
   
   
   // Fetch assignment details
@@ -164,14 +173,23 @@ useEffect(() => {
     }
   
     try {
+      // Collect completed and incomplete topics based on checkbox states
+      const completedTopics = [];
+      const incompleteTopics = [];
+  
+      sessionDetails.topics.forEach((topic, idx) => {
+        const isChecked = document.getElementById(`topic-${idx}`).checked;
+        if (isChecked) {
+          completedTopics.push(topic);
+        } else {
+          incompleteTopics.push(topic);
+        }
+      });
+  
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
-        completedTopics: sessionDetails.topics.filter((_, idx) => 
-          document.getElementById(`topic-${idx}`).checked
-        ),
-        incompleteTopics: sessionDetails.topics.filter((_, idx) => 
-          !document.getElementById(`topic-${idx}`).checked
-        ),
+        completedTopics,
+        incompleteTopics, // Send incomplete topics to backend
         observations,
         absentees,
         completed: true,
@@ -191,6 +209,7 @@ useEffect(() => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
@@ -261,9 +280,13 @@ useEffect(() => {
                   <li key={idx}>
                     <input type="checkbox" id={`topic-${idx}`} />
                     <label htmlFor={`topic-${idx}`}>{topic}</label>
+                    {sessionDetails.previousIncompleteTopics?.includes(topic) && (
+                      <span className="carry-forward-tag">(Carried Forward)</span>
+                    )}
                   </li>
                 ))}
               </ul>
+
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
               <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
