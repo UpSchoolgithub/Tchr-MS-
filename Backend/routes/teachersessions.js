@@ -503,7 +503,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
-    // Fetch session and include all required associations
+    // Fetch session with required associations
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -512,38 +512,41 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
         { model: Section, attributes: ['sectionName'] },
         { model: ClassInfo, attributes: ['className'] },
         { model: School, attributes: ['name'] },
+        { model: Teacher, attributes: ['name'] }, // Include teacher name
       ],
     });
 
-    // Validate if session exists
     if (!session) {
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Handle null fields safely
+    // Debugging logs for missing fields
+    if (!session.SessionPlan) console.error('SessionPlan is null for session:', sessionId);
+    if (!session.Subject) console.error('Subject is null for session:', sessionId);
+    if (!session.School) console.error('School is null for session:', sessionId);
+
     const sessionsToComplete = JSON.stringify([...completedTopics || [], ...incompleteTopics || []]);
     const sessionsCompleted = JSON.stringify(completedTopics || []);
     const absentStudents = JSON.stringify(absentees || []);
 
-    // Save session details to the SessionReports table
+    // Save session details in the SessionReports table
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan?.id || null,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: teacher.name || 'Unknown Teacher', // Fetch and pass the actual teacher name
-      className: session.ClassInfo?.className || 'Unknown Class', // Fetch className
-      sectionName: session.Section?.sectionName || 'Unknown Section', // Fetch sectionName
-      subjectName: session.Subject?.subjectName || 'Unknown Subject', // Fetch subjectName
-      schoolName: session.School?.name || 'Unknown School', // Fetch schoolName
+      teacherName: session.Teacher?.name || 'Unknown Teacher', // Safe handling for teacher name
+      className: session.ClassInfo?.className || 'Unknown Class', // Safe handling for className
+      sectionName: session.Section?.sectionName || 'Unknown Section', // Safe handling for sectionName
+      subjectName: session.Subject?.subjectName || 'Unknown Subject', // Safe handling for subjectName
+      schoolName: session.School?.name || 'Unknown School', // Safe handling for schoolName
       absentStudents,
       sessionsToComplete,
       sessionsCompleted,
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
-    
 
     res.json({ message: 'Session ended and report saved successfully!' });
   } catch (error) {
@@ -551,6 +554,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     res.status(500).json({ error: 'Failed to save session details and report.' });
   }
 });
+
 
 
 
