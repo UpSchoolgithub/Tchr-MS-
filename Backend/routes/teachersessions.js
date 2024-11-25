@@ -12,6 +12,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
   try {
     // Fetch sessions indirectly linked to the teacher via timetable_entries
     const sessions = await Session.findAll({
+      attributes: ['id', 'sessionId', 'chapterName', 'priorityNumber', 'startTime', 'endTime'], // Include sessionId
       include: [
         {
           model: Subject,
