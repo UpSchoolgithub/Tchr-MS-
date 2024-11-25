@@ -175,10 +175,6 @@ const TeacherSessions = () => {
                 <td>{session.endTime}</td>
                 <td>
                   <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
-                  <button style={{ backgroundColor: 'lightgreen', color: 'black', marginLeft: '5px' }}>Notify</button>
-                </td>
-                <td>
-                  <button style={{ backgroundColor: 'green', color: 'white' }}>Update</button>
                   <button
                     style={{
                       backgroundColor: 'lightgreen',
