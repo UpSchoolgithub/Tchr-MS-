@@ -15,9 +15,10 @@ const Sidebar = () => {
       </div>
       <ul>
         <li>
-          <Link to="/dashboard">
+          <Link to="/dashboard">Dashboard
             <FaTachometerAlt className="icon" />
-            Dashboard
+            <li>
+        </li>
           </Link>
         </li>
         {/* New Teacher Sessions Link */}
