@@ -571,15 +571,21 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-ch
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
+    // Find the current chapter (lowest priority that is not completed)
     const currentChapter = await Chapter.findOne({
       where: { teacherId, sectionId, subjectId, completed: false },
-      order: [['priorityNumber', 'ASC']],
+      order: [['priorityNumber', 'ASC']], // Sort by priorityNumber to get the lowest
     });
 
+    if (!currentChapter) {
+      return res.status(404).json({ error: 'No current chapter found. All chapters may be completed.' });
+    }
+
+    // Find the next chapter with priorityNumber greater than the current chapter
     const nextChapter = await Chapter.findOne({
       where: {
         subjectId,
-        priorityNumber: currentChapter.priorityNumber + 1,
+        priorityNumber: currentChapter.priorityNumber + 1, // Next priority
       },
     });
 
@@ -587,16 +593,25 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-ch
       return res.status(404).json({ error: 'No next chapter available.' });
     }
 
+    // Fetch topics for the next chapter
     const topics = await Topic.findAll({
       where: { chapterId: nextChapter.id },
     });
 
-    res.json({ nextChapter, topics });
+    res.json({
+      nextChapter: {
+        id: nextChapter.id,
+        name: nextChapter.name,
+        priorityNumber: nextChapter.priorityNumber,
+      },
+      topics: topics.map(topic => topic.name),
+    });
   } catch (error) {
     console.error('Error fetching next chapter:', error);
     res.status(500).json({ error: 'Failed to fetch next chapter.' });
   }
 });
+
 
 
 

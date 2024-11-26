@@ -54,47 +54,51 @@ const SessionDetails = () => {
   // Fetch session details
   // Fetch session details
   useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+  const fetchSessionDetails = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+    );
+
+    if (response.data?.sessionDetails) {
+      const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
+      const currentTopics = response.data.sessionDetails.topics || [];
+      const currentPriority = response.data.sessionDetails.priority || 1;
+
+      // If no topics remain, fetch the next chapter by priority
+      if (previousIncompleteTopics.length === 0 && currentTopics.length === 0) {
+        const nextChapterResponse = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter?priority=${currentPriority + 1}`
         );
-  
-        if (response.data?.sessionDetails) {
-          const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
-          const currentTopics = response.data.sessionDetails.topics || [];
-  
-          // If no topics remain, fetch next chapter
-          if (previousIncompleteTopics.length === 0 && currentTopics.length === 0) {
-            const nextChapterResponse = await axiosInstance.get(
-              `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter`
-            );
-  
-            if (nextChapterResponse.data) {
-              const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
-              setSessionDetails({
-                ...response.data.sessionDetails,
-                chapterName: nextChapterResponse.data.nextChapter.name,
-                topics: nextChapterTopics,
-              });
-            } else {
-              alert('No more chapters available.');
-            }
-          } else {
-            setSessionDetails({
-              ...response.data.sessionDetails,
-              topics: [...previousIncompleteTopics, ...currentTopics],
-            });
-          }
+
+        if (nextChapterResponse.data) {
+          const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
+          setSessionDetails({
+            ...response.data.sessionDetails,
+            chapterName: nextChapterResponse.data.nextChapter.name,
+            topics: nextChapterTopics,
+            priority: nextChapterResponse.data.nextChapter.priority,
+          });
+        } else {
+          alert('No more chapters available.');
         }
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-        setError('Failed to fetch session details.');
+      } else {
+        setSessionDetails({
+          ...response.data.sessionDetails,
+          topics: [...previousIncompleteTopics, ...currentTopics],
+        });
       }
-    };
+    }
+  } catch (error) {
+    console.error('Error fetching session details:', error);
+    setError('Failed to fetch session details.');
+  }
+};
+
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
   
   
   
@@ -219,10 +223,10 @@ const SessionDetails = () => {
   
       alert(response.data.message || 'Session ended successfully!');
   
+      // Move to the next chapter by priority
       if (incompleteTopics.length === 0) {
-        // Mark the chapter as completed and move to the next chapter
         const nextChapterResponse = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter`
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter?priority=${sessionDetails.priority + 1}`
         );
   
         if (nextChapterResponse.data) {
@@ -230,6 +234,7 @@ const SessionDetails = () => {
           setSessionDetails({
             chapterName: nextChapterResponse.data.nextChapter.name,
             topics: nextChapterTopics,
+            priority: nextChapterResponse.data.nextChapter.priority,
           });
         } else {
           alert('No more chapters available.');
@@ -243,6 +248,8 @@ const SessionDetails = () => {
       alert('Failed to end the session.');
     }
   };
+  
+  
   
   
   
