@@ -347,3 +347,14 @@ textarea {
   align-items: center;
   gap: 0.5rem; /* Adjusts spacing between checkbox and label */
 }
+.view-lp-text {
+  font-size: 0.9rem; /* Make it small */
+  text-decoration: underline; /* Add underline */
+  color: #007bff; /* Make it look like a link */
+  cursor: pointer; /* Add pointer cursor */
+}
+
+.view-lp-text:hover {
+  text-decoration: none; /* Remove underline on hover */
+  color: #0056b3; /* Darker shade on hover */
+}
