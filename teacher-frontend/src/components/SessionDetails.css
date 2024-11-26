@@ -1,50 +1,65 @@
+/* Main Content Layout */
+.main-content {
+  margin-left: 200px; /* Matches the sidebar width */
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+}
+
 /* Session Details Container */
 .session-details-container {
   display: flex;
   flex-direction: column;
+  width: 100%;
   padding: 20px;
-  max-width: 100%; /* Use full width */
-  margin: 0 auto;
-  box-sizing: border-box; /* Include padding and border in width calculation */
-  background-color: #f9f9f9;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Attendance and Session Notes Sections */
+/* Attendance and Notes Sections */
 .attendance-and-notes {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  flex-wrap: wrap;
 }
 
 .attendance-section,
 .session-notes-section {
-  flex: 1; /* Allow equal width for both sections */
-  min-width: 45%; /* Minimum width for each section */
+  flex: 1;
+  min-width: 45%; /* Allow flexibility */
+  padding: 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 15px;
-  background-color: #ffffff; /* White background for better contrast */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Adjust for Smaller Screens */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* Remove margin for mobile view */
+    padding: 10px;
+  }
+
+  .attendance-and-notes {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .attendance-section,
+  .session-notes-section {
+    width: 100%; /* Full width on small screens */
+  }
 }
 
 /* Headings */
 h3, h4 {
   color: #333;
   margin-bottom: 10px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .attendance-and-notes {
-    flex-direction: column; /* Stack sections vertically on small screens */
-    gap: 15px;
-  }
-
-  .attendance-section,
-  .session-notes-section {
-    width: 100%; /* Take full width on small screens */
-  }
 }
 
 /* View LP Styling */
