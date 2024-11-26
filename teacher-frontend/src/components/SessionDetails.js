@@ -18,6 +18,7 @@ const SessionDetails = () => {
   } = location.state || {};
   
  
+  const [expandedTopic, setExpandedTopic] = useState(null);
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
