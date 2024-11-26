@@ -216,17 +216,21 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { date } = req.query; // Optional date filter for flexibility
 
   try {
+    // Run the query to fetch all sessions
     const sessions = await sequelize.query(
       `
       SELECT
-          sessions.id AS sessionId,
+          sessions.id AS sessionId, -- Include sessionId here
           schools.name AS School,
           classinfos.className AS Class,
           sections.sectionName AS Section,
           subjects.subjectName AS Subject,
           sessions.chapterName AS Chapter,
-          sp.id AS sessionPlanId,
+          sp.id AS sessionPlanId, -- Include sessionPlanId for completeness
           sp.sessionNumber AS SessionNumber,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2]')) AS Topic3,
           sessions.priorityNumber AS ChapterPriority,
           DATE_ADD(
               subjects.academicStartDate,
@@ -257,7 +261,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           AND timetable_entries.subjectId = :subjectId
           ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
       ORDER BY
-          ChapterPriority ASC, sp.sessionNumber ASC;
+          SessionDate ASC, StartTime ASC, ChapterPriority ASC, sp.sessionNumber ASC;
       `,
       {
         replacements: {
@@ -270,6 +274,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
+    // No sessions found
     if (!sessions.length) {
       return res.status(404).json({ error: 'No sessions found for the specified criteria.' });
     }
@@ -277,45 +282,49 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     // Get academic start date
     const academicStartDate = new Date(sessions[0].SessionDate);
 
-    // Today's date
+    // Calculate today's date
     const currentDate = date ? new Date(date) : new Date();
 
-    // Academic day calculation
+    // Academic day
     const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
 
-    // No session scheduled for today
+    // Academic session not started yet
+    if (academicDay <= 0) {
+      return res.status(400).json({ error: 'Academic session has not started yet.' });
+    }
+
+    // Find today's session
     const currentSession = sessions.find((session) => {
       const sessionDate = new Date(session.SessionDate);
       return sessionDate.toDateString() === currentDate.toDateString();
     });
 
+    // No session scheduled for today
     if (!currentSession) {
       return res.status(404).json({ error: 'No session is scheduled for today.' });
     }
 
-    // Respond with the session details
+    // Respond with the current session details
     res.json({
       sessionDetails: {
-        sessionId: currentSession.sessionId,
+        sessionId: currentSession.sessionId, // Add sessionId here
         sessionPlanId: currentSession.sessionPlanId,
         chapterName: currentSession.Chapter,
         sessionNumber: currentSession.SessionNumber,
-        topics: [
-          currentSession.Topic1,
-          currentSession.Topic2,
-          currentSession.Topic3,
-        ].filter(Boolean),
-        startTime: currentSession.StartTime,
+          topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
+            .concat(JSON.parse(currentSession.Topic2 || "[]"))
+            .concat(JSON.parse(currentSession.Topic3 || "[]")),
+            startTime: currentSession.StartTime,
         endTime: currentSession.EndTime,
         sessionDate: currentSession.SessionDate,
       },
     });
+
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
-
 
 
 
@@ -490,105 +499,71 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 });
 
 // Save session details
-router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-chapter', async (req, res) => {
-  const { sectionId, subjectId } = req.params;
+router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
+  const { teacherId, sessionId } = req.params;
+  const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
-      const currentChapter = await Session.findOne({
-          where: { sectionId, subjectId, completed: false },
-          order: [['priorityNumber', 'ASC']],
-      });
-
-      if (!currentChapter) {
-          return res.status(404).json({ error: 'No current chapter found. All chapters may be completed.' });
-      }
-
-      const nextChapter = await Session.findOne({
-          where: { sectionId, subjectId, priorityNumber: currentChapter.priorityNumber + 1, completed: false },
-      });
-
-      if (!nextChapter) {
-          return res.status(404).json({ error: 'No next chapter available.' });
-      }
-
-      // Fetch and update session dates for next chapter
-      const nextChapterSessions = await Session.findAll({
-          where: { id: nextChapter.id },
-      });
-
-      for (const session of nextChapterSessions) {
-          await updateSessionDates(session.id, 1); // Adjust session dates
-      }
-
-      const topics = await SessionPlan.findAll({
-          where: { sessionId: nextChapter.id },
-          attributes: ['planDetails'],
-      });
-
-      res.json({
-          nextChapter: {
-              id: nextChapter.id,
-              name: nextChapter.chapterName,
-              priorityNumber: nextChapter.priorityNumber,
-          },
-          topics: topics.map((plan) => JSON.parse(plan.planDetails || '[]')).flat(),
-      });
-  } catch (error) {
-      console.error('Error fetching next chapter:', error);
-      res.status(500).json({ error: 'Failed to fetch next chapter.' });
-  }
-});
-
-//dd
-
-
-
-
-
-
-
-
-// go to next chapter after priotity number 1
-router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-chapter', async (req, res) => {
-  const { teacherId, sectionId, subjectId } = req.params;
-
-  try {
-    // Check the current chapter
-    const currentChapter = await Chapter.findOne({
-      where: { teacherId, sectionId, subjectId, completed: true }, // Completed chapter
-      order: [['priorityNumber', 'DESC']], // Get the highest priority chapter completed
+    // Fetch the current session and session plan
+    const session = await Session.findOne({
+      where: { id: sessionId },
+      include: [
+        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
+        { model: Subject, attributes: ['id'] },
+      ],
     });
 
-    if (!currentChapter) {
-      return res.status(404).json({ error: 'No current chapter found. All chapters may be incomplete.' });
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Find the next chapter
-    const nextChapter = await Chapter.findOne({
-      where: {
-        sectionId,
-        subjectId,
-        priorityNumber: currentChapter.priorityNumber + 1,
-      },
+    // Add session report for the current session
+    await sequelize.models.SessionReports.create({
+      sessionPlanId: session.SessionPlan.id,
+      sessionId: session.id,
+      date: new Date().toISOString().split('T')[0],
+      day: new Date().toLocaleString('en-US', { weekday: 'long' }),
+      teacherId,
+      teacherName: session.Teacher?.name || 'Unknown Teacher',
+      className: session.ClassInfo?.className || 'Unknown Class',
+      sectionName: session.Section?.sectionName || 'Unknown Section',
+      subjectName: session.Subject?.subjectName || 'Unknown Subject',
+      schoolName: session.School?.name || 'Unknown School',
+      absentStudents: JSON.stringify(absentees || []),
+      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
+      sessionsCompleted: JSON.stringify(completedTopics || []),
+      assignmentDetails: assignmentDetails || null,
+      observationDetails: observations || '',
     });
 
-    if (!nextChapter) {
-      return res.status(404).json({ error: 'No next chapter available.' });
+    // Append incomplete topics to the next session
+    if (incompleteTopics.length > 0) {
+      const nextSession = await Session.findOne({
+        where: {
+          subjectId: session.subjectId,
+          sectionId: session.sectionId,
+          id: { [Op.gt]: sessionId }, // Fetch the next session
+        },
+        include: [{ model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] }],
+        order: [['id', 'ASC']], // Ensure the next session is picked
+      });
+
+      if (nextSession && nextSession.SessionPlan) {
+        const currentPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
+        const updatedPlanDetails = [...incompleteTopics, ...currentPlanDetails];
+
+        // Update the next session's plan details
+        await SessionPlan.update(
+          { planDetails: JSON.stringify(updatedPlanDetails) },
+          { where: { id: nextSession.SessionPlan.id } }
+        );
+      }
     }
 
-    const topics = await Topic.findAll({ where: { chapterId: nextChapter.id } });
-
-    res.json({
-      nextChapter: {
-        id: nextChapter.id,
-        name: nextChapter.name,
-        priorityNumber: nextChapter.priorityNumber,
-      },
-      topics: topics.map((topic) => topic.name),
-    });
+    res.json({ message: 'Session ended and next session updated successfully!' });
   } catch (error) {
-    console.error('Error fetching next chapter:', error);
-    res.status(500).json({ error: 'Failed to fetch next chapter.' });
+    console.error('Error ending session and updating next session:', error);
+    res.status(500).json({ error: 'Failed to save session details and update next session.' });
   }
 });
 

@@ -53,54 +53,23 @@ const SessionDetails = () => {
 
   // Fetch session details
   // Fetch session details
-  useEffect(() => {
+useEffect(() => {
   const fetchSessionDetails = async () => {
-  try {
-    const response = await axiosInstance.get(
-      `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-    );
-
-    if (response.data?.sessionDetails) {
-      const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
-      const currentTopics = response.data.sessionDetails.topics || [];
-      const currentPriority = response.data.sessionDetails.priority || 1;
-
-      // If no topics remain, fetch the next chapter by priority
-      if (previousIncompleteTopics.length === 0 && currentTopics.length === 0) {
-        const nextChapterResponse = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter?priority=${currentPriority + 1}`
-        );
-
-        if (nextChapterResponse.data) {
-          const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
-          setSessionDetails({
-            ...response.data.sessionDetails,
-            chapterName: nextChapterResponse.data.nextChapter.name,
-            topics: nextChapterTopics,
-            priority: nextChapterResponse.data.nextChapter.priority,
-          });
-        } else {
-          alert('No more chapters available.');
-        }
-      } else {
-        setSessionDetails({
-          ...response.data.sessionDetails,
-          topics: [...previousIncompleteTopics, ...currentTopics],
-        });
-      }
+    try {
+      const response = await axiosInstance.get(
+        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+      );
+      console.log('Fetched session details:', response.data);
+      setSessionDetails(response.data.sessionDetails || null);
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      setError('Failed to fetch session details.');
     }
-  } catch (error) {
-    console.error('Error fetching session details:', error);
-    setError('Failed to fetch session details.');
-  }
-};
+  };
 
-  
-    if (teacherId && sectionId && subjectId) fetchSessionDetails();
-  }, [teacherId, sectionId, subjectId]);
-  
-  
-  
+  if (teacherId && sectionId && subjectId) fetchSessionDetails();
+}, [teacherId, sectionId, subjectId]);
+
   
   
   // Fetch assignment details
@@ -190,48 +159,38 @@ const SessionDetails = () => {
 
   const handleEndSession = async () => {
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
-        alert('Session Plan ID is missing. Cannot end the session.');
-        return;
+      alert('Session Plan ID is missing. Cannot end the session.');
+      return;
     }
-
+  
     try {
-        const completedTopics = [];
-        const incompleteTopics = [];
-
-        // Mark topics as completed or incomplete based on checkboxes
-        sessionDetails.topics.forEach((topic, idx) => {
-            const isChecked = document.getElementById(`topic-${idx}`).checked;
-            if (isChecked) {
-                completedTopics.push(topic);
-            } else {
-                incompleteTopics.push(topic);
-            }
-        });
-
-        // Send the completed and incomplete topics to the backend
-        const response = await axiosInstance.post(
-            `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
-            {
-                completedTopics,
-                incompleteTopics,
-                observations,
-                absentees,
-            }
-        );
-
-        alert(response.data.message || 'Session ended successfully.');
-
-        // Fetch updated session details for the next session or chapter
-        fetchSessionDetails();
+      const payload = {
+        sessionPlanId: sessionDetails.sessionPlanId,
+        completedTopics: sessionDetails.topics.filter((_, idx) => 
+          document.getElementById(`topic-${idx}`).checked
+        ),
+        incompleteTopics: sessionDetails.topics.filter((_, idx) => 
+          !document.getElementById(`topic-${idx}`).checked
+        ),
+        observations,
+        absentees,
+        completed: true,
+      };
+  
+      const response = await axiosInstance.post(
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
+        payload
+      );
+  
+      alert(response.data.message || 'Session ended successfully!');
+  
+      // Redirect or refresh page
+      navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
-        console.error('Error ending session:', error);
-        alert('Failed to end the session.');
+      console.error('Error ending session:', error);
+      alert('Failed to end the session.');
     }
-};
-
-  
-  
-  
+  };
   
   
   
@@ -297,15 +256,14 @@ const SessionDetails = () => {
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
-<ul>
-  {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx}>
-      <input type="checkbox" id={`topic-${idx}`} />
-      <label htmlFor={`topic-${idx}`}>{topic}</label>
-    </li>
-  ))}
-</ul>
-
+              <ul>
+                {sessionDetails.topics.map((topic, idx) => (
+                  <li key={idx}>
+                    <input type="checkbox" id={`topic-${idx}`} />
+                    <label htmlFor={`topic-${idx}`}>{topic}</label>
+                  </li>
+                ))}
+              </ul>
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
               <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
