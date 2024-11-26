@@ -198,12 +198,13 @@ const SessionDetails = () => {
       const completedTopics = [];
       const incompleteTopics = [];
   
+      // Loop through topics and check if they are marked as completed
       sessionDetails.topics.forEach((topic, idx) => {
         const isChecked = document.getElementById(`topic-${idx}`).checked;
         if (isChecked) {
-          completedTopics.push(topic);
+          completedTopics.push(topic); // Mark as completed
         } else {
-          incompleteTopics.push(topic);
+          incompleteTopics.push(topic); // Mark as incomplete
         }
       });
   
@@ -213,7 +214,7 @@ const SessionDetails = () => {
         incompleteTopics,
         observations,
         absentees,
-        completed: true,
+        completed: incompleteTopics.length === 0, // Chapter is completed if no incomplete topics
       };
   
       const response = await axiosInstance.post(
@@ -223,13 +224,15 @@ const SessionDetails = () => {
   
       alert(response.data.message || 'Session ended successfully!');
   
-      // Move to the next chapter by priority
+      // Logic to handle the next session or chapter
       if (incompleteTopics.length === 0) {
+        // All topics are completed, fetch the next chapter
         const nextChapterResponse = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter?priority=${sessionDetails.priority + 1}`
         );
   
         if (nextChapterResponse.data) {
+          // Set session details for the next chapter
           const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
           setSessionDetails({
             chapterName: nextChapterResponse.data.nextChapter.name,
@@ -239,16 +242,30 @@ const SessionDetails = () => {
         } else {
           alert('No more chapters available.');
         }
+      } else {
+        // Topics are incomplete, carry them to the next session
+        const nextSessionResponse = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+  
+        if (nextSessionResponse.data) {
+          const nextSession = nextSessionResponse.data.sessionDetails;
+          setSessionDetails({
+            ...nextSession,
+            topics: [...incompleteTopics, ...nextSession.topics], // Carry over incomplete topics
+          });
+        } else {
+          alert('No next session available. Topics will be retained.');
+        }
       }
   
-      // Redirect or refresh page
+      // Redirect or refresh the page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
-  
   
   
   
