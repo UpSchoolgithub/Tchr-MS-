@@ -264,22 +264,25 @@ useEffect(() => {
         <p>
           {idx + 1}. {topic}
         </p>
-        <button
-          onClick={() =>
-            setExpandedTopic(expandedTopic === idx ? null : idx)
-          }
-          className="view-lp-button"
+        <span
+          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+          className="view-lp-text"
         >
           {expandedTopic === idx ? 'Hide LP' : 'View LP'}
-        </button>
+        </span>
       </div>
       {expandedTopic === idx && (
         <div className="lesson-plan-content">
           <h4>Objectives:</h4>
           <ul>
             <li>Understand the concept of resistors connected in parallel.</li>
-            <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-            <li>Understand how current flows in resistors connected in parallel.</li>
+            <li>
+              Learn about the equivalent resistance formula for resistors in
+              parallel.
+            </li>
+            <li>
+              Understand how current flows in resistors connected in parallel.
+            </li>
           </ul>
           <h4>Teaching Aids:</h4>
           <ul>
@@ -303,39 +306,52 @@ useEffect(() => {
               <ul>
                 <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
                 <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                <li>Example problems demonstrating the calculation of equivalent resistance.</li>
+                <li>
+                  Example problems demonstrating the calculation of equivalent resistance.
+                </li>
               </ul>
             </li>
             <li>
               Current flow in resistors in parallel:
               <ul>
-                <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
+                <li>
+                  Explanation of how current is distributed in resistors connected in parallel.
+                </li>
+                <li>
+                  Illustration using diagrams to show the flow of current in parallel resistors.
+                </li>
               </ul>
             </li>
           </ol>
           <h4>Activities:</h4>
           <ol>
-            <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
+            <li>
+              Solve example problems related to calculating equivalent resistance in parallel
+              circuits.
+            </li>
             <li>Draw diagrams showing the flow of current in parallel resistors.</li>
             <li>Discuss real-life examples of parallel circuits and their applications.</li>
           </ol>
           <h4>Summary:</h4>
           <p>
-            Recap the key points discussed during the session. Emphasize the differences between series and parallel
-            connections of resistors. Highlight the significance of understanding resistors in parallel in practical
-            applications.
+            Recap the key points discussed during the session. Emphasize the differences between
+            series and parallel connections of resistors. Highlight the significance of
+            understanding resistors in parallel in practical applications.
           </p>
           <h4>Homework:</h4>
           <ul>
             <li>Solve additional practice problems on resistors in parallel.</li>
-            <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
+            <li>
+              Research and list examples of everyday devices that use parallel resistor
+              configurations.
+            </li>
           </ul>
         </div>
       )}
     </li>
   ))}
 </ul>
+
 
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
