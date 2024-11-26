@@ -495,99 +495,67 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { completedTopics, incompleteTopics, observations, absentees } = req.body;
 
   try {
-    const session = await Session.findOne({
-      where: { id: sessionId },
-      include: [
-        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
-        { model: Subject, attributes: ['id'] },
-      ],
-    });
-
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found.' });
-    }
-
-    // Save session report
-    await sequelize.models.SessionReports.create({
-      sessionPlanId: session.SessionPlan.id,
-      sessionId: session.id,
-      date: new Date().toISOString().split('T')[0],
-      day: new Date().toLocaleString('en-US', { weekday: 'long' }),
-      teacherId,
-      absentStudents: JSON.stringify(absentees || []),
-      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
-      sessionsCompleted: JSON.stringify(completedTopics || []),
-      observationDetails: observations || '',
-    });
-
-    // Handle next session logic
-    if (incompleteTopics.length === 0) {
-      // If all topics are completed, move to the next chapter
-      const nextChapter = await Chapter.findOne({
-        where: {
-          subjectId: session.Subject.id,
-          priorityNumber: session.priorityNumber + 1,
-        },
+      // Fetch the session report or create a new one
+      let sessionReport = await sequelize.models.SessionReports.findOne({
+          where: { sessionId },
       });
 
-      if (nextChapter) {
-        const nextChapterTopics = await Topic.findAll({
-          where: { chapterId: nextChapter.id },
-        });
-
-        return res.json({
-          message: 'Session ended successfully. Transitioning to the next chapter.',
-          nextSession: {
-            chapterName: nextChapter.name,
-            topics: nextChapterTopics.map((topic) => topic.name),
-            priority: nextChapter.priorityNumber,
-            sessionDate: new Date().toISOString().split('T')[0],
-          },
-        });
+      if (!sessionReport) {
+          sessionReport = await sequelize.models.SessionReports.create({
+              sessionId,
+              teacherId,
+              date: new Date().toISOString().split('T')[0],
+          });
       }
 
-      return res.json({
-        message: 'Session ended successfully. No more chapters available.',
+      // Update session report with completed and incomplete topics
+      await sessionReport.update({
+          completedTopics: JSON.stringify(completedTopics),
+          sessionsToComplete: JSON.stringify(incompleteTopics), // Carry-over topics
+          observationDetails: observations || '',
+          absentStudents: JSON.stringify(absentees || []),
       });
-    }
 
-    // Carry over incomplete topics to the next session
-    const nextSession = await Session.findOne({
-      where: {
-        subjectId: session.Subject.id,
-        sectionId: session.sectionId,
-        id: { [Op.gt]: sessionId }, // Next session by ID
-      },
-      include: [{ model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] }],
-      order: [['id', 'ASC']],
-    });
+      // Transition logic: Handle next session or next chapter
+      if (incompleteTopics.length === 0) {
+          const nextChapter = await Chapter.findOne({
+              where: { subjectId: sessionReport.subjectId, priorityNumber: session.priorityNumber + 1 },
+          });
 
-    if (nextSession && nextSession.SessionPlan) {
-      const currentPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
-      const updatedPlanDetails = [...incompleteTopics, ...currentPlanDetails];
+          if (nextChapter) {
+              return res.json({
+                  message: 'Session ended successfully. Moving to next chapter.',
+                  nextChapter,
+              });
+          }
+          return res.json({
+              message: 'Session ended successfully. All chapters are complete.',
+          });
+      }
 
-      // Update next session's plan with incomplete topics
-      await SessionPlan.update(
-        { planDetails: JSON.stringify(updatedPlanDetails) },
-        { where: { id: nextSession.SessionPlan.id } }
-      );
-
-      return res.json({
-        message: 'Session ended successfully. Incomplete topics carried over to the next session.',
-        nextSession: {
-          chapterName: session.chapterName,
-          topics: updatedPlanDetails,
-          sessionDate: new Date().toISOString().split('T')[0],
-        },
+      // Carry-over logic: Incomplete topics for the next session
+      const nextSession = await Session.findOne({
+          where: { id: { [Op.gt]: sessionId }, sectionId: session.sectionId },
+          order: [['id', 'ASC']],
       });
-    }
 
-    res.json({ message: 'Session ended successfully. No further sessions scheduled.' });
+      if (nextSession) {
+          return res.json({
+              message: 'Session ended successfully. Carrying incomplete topics to the next session.',
+              nextSession: {
+                  id: nextSession.id,
+                  topics: [...incompleteTopics],
+              },
+          });
+      }
+
+      res.json({ message: 'Session ended successfully. No further sessions scheduled.' });
   } catch (error) {
-    console.error('Error ending session:', error);
-    res.status(500).json({ error: 'Failed to end session and update the next session.' });
+      console.error('Error ending session:', error);
+      res.status(500).json({ error: 'Failed to end session and update completed topics.' });
   }
 });
+
 
 
 

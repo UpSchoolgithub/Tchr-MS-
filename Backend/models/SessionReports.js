@@ -43,6 +43,11 @@ const SessionReports = sequelize.define('SessionReports', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  completedTopics: {
+    type: DataTypes.JSON,
+    allowNull: true, // Can be null initially
+},
+
 });
 
 module.exports = SessionReports;

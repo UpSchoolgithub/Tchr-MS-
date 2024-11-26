@@ -190,82 +190,45 @@ const SessionDetails = () => {
 
   const handleEndSession = async () => {
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
-      alert('Session Plan ID is missing. Cannot end the session.');
-      return;
+        alert('Session Plan ID is missing. Cannot end the session.');
+        return;
     }
-  
+
     try {
-      const completedTopics = [];
-      const incompleteTopics = [];
-  
-      // Loop through topics and check if they are marked as completed
-      sessionDetails.topics.forEach((topic, idx) => {
-        const isChecked = document.getElementById(`topic-${idx}`).checked;
-        if (isChecked) {
-          completedTopics.push(topic); // Mark as completed
-        } else {
-          incompleteTopics.push(topic); // Mark as incomplete
-        }
-      });
-  
-      const payload = {
-        sessionPlanId: sessionDetails.sessionPlanId,
-        completedTopics,
-        incompleteTopics,
-        observations,
-        absentees,
-        completed: incompleteTopics.length === 0, // Chapter is completed if no incomplete topics
-      };
-  
-      const response = await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
-        payload
-      );
-  
-      alert(response.data.message || 'Session ended successfully!');
-  
-      // Logic to handle the next session or chapter
-      if (incompleteTopics.length === 0) {
-        // All topics are completed, fetch the next chapter
-        const nextChapterResponse = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter?priority=${sessionDetails.priority + 1}`
+        const completedTopics = [];
+        const incompleteTopics = [];
+
+        // Mark topics as completed or incomplete based on checkboxes
+        sessionDetails.topics.forEach((topic, idx) => {
+            const isChecked = document.getElementById(`topic-${idx}`).checked;
+            if (isChecked) {
+                completedTopics.push(topic);
+            } else {
+                incompleteTopics.push(topic);
+            }
+        });
+
+        // Send the completed and incomplete topics to the backend
+        const response = await axiosInstance.post(
+            `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
+            {
+                completedTopics,
+                incompleteTopics,
+                observations,
+                absentees,
+            }
         );
-  
-        if (nextChapterResponse.data) {
-          // Set session details for the next chapter
-          const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
-          setSessionDetails({
-            chapterName: nextChapterResponse.data.nextChapter.name,
-            topics: nextChapterTopics,
-            priority: nextChapterResponse.data.nextChapter.priority,
-          });
-        } else {
-          alert('No more chapters available.');
-        }
-      } else {
-        // Topics are incomplete, carry them to the next session
-        const nextSessionResponse = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-  
-        if (nextSessionResponse.data) {
-          const nextSession = nextSessionResponse.data.sessionDetails;
-          setSessionDetails({
-            ...nextSession,
-            topics: [...incompleteTopics, ...nextSession.topics], // Carry over incomplete topics
-          });
-        } else {
-          alert('No next session available. Topics will be retained.');
-        }
-      }
-  
-      // Redirect or refresh the page
-      navigate(`/teacher-sessions/${teacherId}`);
+
+        alert(response.data.message || 'Session ended successfully.');
+
+        // Fetch updated session details for the next session or chapter
+        fetchSessionDetails();
     } catch (error) {
-      console.error('Error ending session:', error);
-      alert('Failed to end the session.');
+        console.error('Error ending session:', error);
+        alert('Failed to end the session.');
     }
-  };
+};
+
   
   
   
