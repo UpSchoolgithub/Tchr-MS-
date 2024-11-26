@@ -553,51 +553,45 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-ch
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-      // Fetch current chapter
-      const currentChapter = await Session.findOne({
-          where: { sectionId, subjectId, completed: false },
-          order: [['priorityNumber', 'ASC']],
-      });
+    // Check the current chapter
+    const currentChapter = await Chapter.findOne({
+      where: { teacherId, sectionId, subjectId, completed: true }, // Completed chapter
+      order: [['priorityNumber', 'DESC']], // Get the highest priority chapter completed
+    });
 
-      if (!currentChapter) {
-          return res.status(404).json({ error: 'No current chapter found. All chapters may be completed.' });
-      }
+    if (!currentChapter) {
+      return res.status(404).json({ error: 'No current chapter found. All chapters may be incomplete.' });
+    }
 
-      // Fetch the next chapter
-      const nextChapter = await Session.findOne({
-          where: {
-              sectionId,
-              subjectId,
-              priorityNumber: currentChapter.priorityNumber + 1,
-              completed: false,
-          },
-      });
+    // Find the next chapter
+    const nextChapter = await Chapter.findOne({
+      where: {
+        sectionId,
+        subjectId,
+        priorityNumber: currentChapter.priorityNumber + 1,
+      },
+    });
 
-      if (!nextChapter) {
-          return res.status(404).json({ error: 'No next chapter available.' });
-      }
+    if (!nextChapter) {
+      return res.status(404).json({ error: 'No next chapter available.' });
+    }
 
-      // Fetch session plans for the next chapter
-      const sessionPlans = await SessionPlan.findAll({
-          where: { sessionId: nextChapter.id },
-          attributes: ['sessionNumber', 'planDetails'],
-      });
+    const topics = await Topic.findAll({ where: { chapterId: nextChapter.id } });
 
-      const topics = sessionPlans.map(plan => JSON.parse(plan.planDetails || '[]'));
-
-      res.json({
-          nextChapter: {
-              id: nextChapter.id,
-              chapterName: nextChapter.chapterName,
-              priorityNumber: nextChapter.priorityNumber,
-          },
-          topics: topics.flat(), // Combine all topics into a single array
-      });
+    res.json({
+      nextChapter: {
+        id: nextChapter.id,
+        name: nextChapter.name,
+        priorityNumber: nextChapter.priorityNumber,
+      },
+      topics: topics.map((topic) => topic.name),
+    });
   } catch (error) {
-      console.error('Error fetching next chapter:', error);
-      res.status(500).json({ error: 'Failed to fetch next chapter.' });
+    console.error('Error fetching next chapter:', error);
+    res.status(500).json({ error: 'Failed to fetch next chapter.' });
   }
 });
+
 
 
 
