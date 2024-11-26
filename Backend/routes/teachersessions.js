@@ -495,7 +495,6 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { completedTopics, incompleteTopics, observations, absentees } = req.body;
 
   try {
-    // Fetch the current session and its session plan
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -521,8 +520,9 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       observationDetails: observations || '',
     });
 
-    // Transition logic: If all topics are completed, move to the next chapter
+    // Handle next session logic
     if (incompleteTopics.length === 0) {
+      // If all topics are completed, move to the next chapter
       const nextChapter = await Chapter.findOne({
         where: {
           subjectId: session.Subject.id,
@@ -536,19 +536,19 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
         });
 
         return res.json({
-          message: 'Session ended successfully. Transitioning to next chapter.',
+          message: 'Session ended successfully. Transitioning to the next chapter.',
           nextSession: {
             chapterName: nextChapter.name,
-            topics: nextChapterTopics.map(topic => topic.name),
+            topics: nextChapterTopics.map((topic) => topic.name),
             priority: nextChapter.priorityNumber,
             sessionDate: new Date().toISOString().split('T')[0],
           },
         });
-      } else {
-        return res.json({
-          message: 'Session ended successfully. No more chapters available.',
-        });
       }
+
+      return res.json({
+        message: 'Session ended successfully. No more chapters available.',
+      });
     }
 
     // Carry over incomplete topics to the next session
@@ -585,9 +585,10 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     res.json({ message: 'Session ended successfully. No further sessions scheduled.' });
   } catch (error) {
     console.error('Error ending session:', error);
-    res.status(500).json({ error: 'Failed to end session and update next session.' });
+    res.status(500).json({ error: 'Failed to end session and update the next session.' });
   }
 });
+
 
 
 
@@ -598,21 +599,19 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-ch
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-    // Find the current chapter (lowest priority that is not completed)
     const currentChapter = await Chapter.findOne({
       where: { teacherId, sectionId, subjectId, completed: false },
-      order: [['priorityNumber', 'ASC']], // Sort by priorityNumber to get the lowest
+      order: [['priorityNumber', 'ASC']],
     });
 
     if (!currentChapter) {
       return res.status(404).json({ error: 'No current chapter found. All chapters may be completed.' });
     }
 
-    // Find the next chapter with priorityNumber greater than the current chapter
     const nextChapter = await Chapter.findOne({
       where: {
         subjectId,
-        priorityNumber: currentChapter.priorityNumber + 1, // Next priority
+        priorityNumber: currentChapter.priorityNumber + 1,
       },
     });
 
@@ -620,7 +619,6 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-ch
       return res.status(404).json({ error: 'No next chapter available.' });
     }
 
-    // Fetch topics for the next chapter
     const topics = await Topic.findAll({
       where: { chapterId: nextChapter.id },
     });
@@ -631,13 +629,14 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-ch
         name: nextChapter.name,
         priorityNumber: nextChapter.priorityNumber,
       },
-      topics: topics.map(topic => topic.name),
+      topics: topics.map((topic) => topic.name),
     });
   } catch (error) {
     console.error('Error fetching next chapter:', error);
     res.status(500).json({ error: 'Failed to fetch next chapter.' });
   }
 });
+
 
 
 
