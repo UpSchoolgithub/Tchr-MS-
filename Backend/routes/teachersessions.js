@@ -566,6 +566,37 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
 
 
+// go to next chapter after priotity number 1
+router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/next-chapter', async (req, res) => {
+  const { teacherId, sectionId, subjectId } = req.params;
+
+  try {
+    const currentChapter = await Chapter.findOne({
+      where: { teacherId, sectionId, subjectId, completed: false },
+      order: [['priorityNumber', 'ASC']],
+    });
+
+    const nextChapter = await Chapter.findOne({
+      where: {
+        subjectId,
+        priorityNumber: currentChapter.priorityNumber + 1,
+      },
+    });
+
+    if (!nextChapter) {
+      return res.status(404).json({ error: 'No next chapter available.' });
+    }
+
+    const topics = await Topic.findAll({
+      where: { chapterId: nextChapter.id },
+    });
+
+    res.json({ nextChapter, topics });
+  } catch (error) {
+    console.error('Error fetching next chapter:', error);
+    res.status(500).json({ error: 'Failed to fetch next chapter.' });
+  }
+});
 
 
 

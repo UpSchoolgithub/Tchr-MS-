@@ -61,14 +61,31 @@ const SessionDetails = () => {
         );
   
         if (response.data?.sessionDetails) {
-          // Combine previous session's incomplete topics with current session's topics
           const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
           const currentTopics = response.data.sessionDetails.topics || [];
   
-          setSessionDetails({
-            ...response.data.sessionDetails,
-            topics: [...previousIncompleteTopics, ...currentTopics],
-          });
+          // If no topics remain, fetch next chapter
+          if (previousIncompleteTopics.length === 0 && currentTopics.length === 0) {
+            const nextChapterResponse = await axiosInstance.get(
+              `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter`
+            );
+  
+            if (nextChapterResponse.data) {
+              const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
+              setSessionDetails({
+                ...response.data.sessionDetails,
+                chapterName: nextChapterResponse.data.nextChapter.name,
+                topics: nextChapterTopics,
+              });
+            } else {
+              alert('No more chapters available.');
+            }
+          } else {
+            setSessionDetails({
+              ...response.data.sessionDetails,
+              topics: [...previousIncompleteTopics, ...currentTopics],
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching session details:', error);
@@ -78,6 +95,7 @@ const SessionDetails = () => {
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
   
   
   
@@ -173,7 +191,6 @@ const SessionDetails = () => {
     }
   
     try {
-      // Collect completed and incomplete topics based on checkbox states
       const completedTopics = [];
       const incompleteTopics = [];
   
@@ -189,7 +206,7 @@ const SessionDetails = () => {
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
-        incompleteTopics, // Send incomplete topics to backend
+        incompleteTopics,
         observations,
         absentees,
         completed: true,
@@ -202,6 +219,23 @@ const SessionDetails = () => {
   
       alert(response.data.message || 'Session ended successfully!');
   
+      if (incompleteTopics.length === 0) {
+        // Mark the chapter as completed and move to the next chapter
+        const nextChapterResponse = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter`
+        );
+  
+        if (nextChapterResponse.data) {
+          const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
+          setSessionDetails({
+            chapterName: nextChapterResponse.data.nextChapter.name,
+            topics: nextChapterTopics,
+          });
+        } else {
+          alert('No more chapters available.');
+        }
+      }
+  
       // Redirect or refresh page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
@@ -209,6 +243,7 @@ const SessionDetails = () => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
@@ -275,17 +310,14 @@ const SessionDetails = () => {
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
-              <ul>
-                {sessionDetails.topics.map((topic, idx) => (
-                  <li key={idx}>
-                    <input type="checkbox" id={`topic-${idx}`} />
-                    <label htmlFor={`topic-${idx}`}>{topic}</label>
-                    {sessionDetails.previousIncompleteTopics?.includes(topic) && (
-                      <span className="carry-forward-tag">(Carried Forward)</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+<ul>
+  {sessionDetails.topics.map((topic, idx) => (
+    <li key={idx}>
+      <input type="checkbox" id={`topic-${idx}`} />
+      <label htmlFor={`topic-${idx}`}>{topic}</label>
+    </li>
+  ))}
+</ul>
 
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
