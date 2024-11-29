@@ -1,159 +1,41 @@
-/* SessionDetails.css */
-
-.session-details-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start; /* Align sections to the top */
-    padding: 20px;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  /* Left partition for attendance */
-  .attendance-section {
-    flex: 1;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box;
-  }
-  
-  .attendance-section h3 {
-    font-size: 18px;
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .attendance-section .dropdown {
-    width: 100%;
-    padding: 8px;
-    font-size: 16px;
-    margin-bottom: 15px;
-  }
-  
-  .attendance-section .absentees-list {
-    margin-top: 10px;
-  }
-  
-  .attendance-section .absentee-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 14px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .attendance-section .mark-present-button {
-    color: green;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-  
-  .attendance-section .scroll-option {
-    font-size: 12px;
-    color: #d9534f;
-    margin-top: 10px;
-  }
-  
-  /* Right partition for session notes */
-  .session-notes-section {
-    flex: 2;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box;
-  }
-  
-  .session-notes-section h3 {
-    font-size: 18px;
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .session-notes-section .session-info {
-    font-size: 16px;
-    margin-bottom: 10px;
-  }
-  
-  .session-notes-section .topics-list {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .session-notes-section .topics-list li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  
-  .session-notes-section .topics-list input[type="checkbox"] {
-    margin-right: 8px;
-  }
-  
-  .session-notes-section .assignments-dropdown {
-    width: 100%;
-    padding: 8px;
-    font-size: 16px;
-    margin: 10px 0;
-  }
-  
-  .session-notes-section .observations-textarea {
-    width: 100%;
-    height: 80px;
-    padding: 8px;
-    font-size: 14px;
-    margin-top: 10px;
-  }
-  
-  .session-notes-section .end-session-button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #ffcc00;
-    color: black;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  /* Container for session details */
+/* Main container for session details */
 .session-details-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
   padding: 20px;
-  max-width: 600px;
+  max-width: 1000px;
   margin: 0 auto;
+  background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
 }
 
-.session-info p {
-  margin: 5px 0;
-  font-size: 16px;
-}
-
-/* Attendance Section */
+/* Left Section for Attendance */
 .attendance-section {
-  width: 100%;
-  margin-top: 20px;
+  flex: 1;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
 }
 
 .attendance-section h3 {
-  font-size: 20px;
+  font-size: 18px;
+  color: #333;
   margin-bottom: 10px;
 }
 
-/* Multi-select dropdown styling */
 .multi-select-dropdown {
   width: 100%;
   margin-bottom: 20px;
 }
 
-/* Custom styles for react-select */
+/* Custom styles for react-select dropdown */
 .multi-select-dropdown .react-select__control {
   border: 1px solid #ced4da;
   border-radius: 4px;
@@ -181,7 +63,6 @@
   cursor: pointer;
 }
 
-/* Absentees list styling */
 .absentees-list {
   margin-top: 20px;
 }
@@ -191,7 +72,6 @@
   margin-bottom: 10px;
 }
 
-/* Individual absentee tags */
 .absentee-tags {
   display: flex;
   flex-wrap: wrap;
@@ -220,15 +100,44 @@
   cursor: pointer;
 }
 
-/* Session Notes Section */
+/* Right Section for Session Notes */
 .session-notes-section {
-  width: 100%;
-  margin-top: 20px;
+  flex: 2;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
 }
 
 .session-notes-section h3 {
   font-size: 20px;
+  color: #333;
   margin-bottom: 10px;
+}
+
+.session-notes-section .session-info {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.session-notes-section ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.session-notes-section li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Adjust spacing between checkbox and label */
+}
+
+.session-notes-section .topics-list {
+  margin-bottom: 10px;
+}
+
+.session-notes-section .topics-list input[type="checkbox"] {
+  margin-right: 8px;
 }
 
 .observations-textarea {
@@ -239,6 +148,7 @@
   font-size: 16px;
   border: 1px solid #ced4da;
   border-radius: 4px;
+  margin-top: 10px;
 }
 
 .save-button,
@@ -262,99 +172,30 @@
   margin-left: 10px;
 }
 
-.session-details-container {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-}
-
-h2 {
-  background-color: #007BFF;
-  color: white;
-  padding: 10px;
-  text-align: center;
-}
-
-.attendance-and-notes {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.attendance-section,
-.session-notes-section {
-  width: 48%;
-  border: 1px solid #ccc;
-  padding: 15px;
-  border-radius: 5px;
-}
-
-h3, h4 {
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.multi-select-dropdown {
-  margin-bottom: 10px;
-}
-
-.absentees-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.absentees-list li {
-  margin-bottom: 5px;
-}
-
-.absentees-list span {
-  font-weight: bold;
-  color: red;
-}
-
-.assignment-input,
-.observations-textarea {
-  width: 100%;
-  margin-top: 10px;
-}
-
-textarea {
-  width: 100%;
-  height: 80px;
-  resize: none;
-}
-
-.end-session-button {
-  background-color: #FFD700;
-  color: black;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
 .end-session-button:hover {
   background-color: #FFC107;
 }
 
-.session-notes-section ul {
-  list-style-type: none; /* Removes the bullet points */
-  padding: 0; /* Removes the padding for the list */
-}
-
-.session-notes-section li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem; /* Adjusts spacing between checkbox and label */
-}
 .view-lp-text {
-  font-size: 0.9rem; /* Make it small */
-  text-decoration: underline; /* Add underline */
-  color: #007bff; /* Make it look like a link */
-  cursor: pointer; /* Add pointer cursor */
+  font-size: 0.9rem;
+  text-decoration: underline;
+  color: #007bff;
+  cursor: pointer;
 }
 
 .view-lp-text:hover {
-  text-decoration: none; /* Remove underline on hover */
-  color: #0056b3; /* Darker shade on hover */
+  text-decoration: none;
+  color: #0056b3;
+}
+
+/* Responsive Behavior */
+@media (max-width: 768px) {
+  .session-details-container {
+    flex-direction: column;
+  }
+
+  .attendance-section,
+  .session-notes-section {
+    width: 100%;
+  }
 }
