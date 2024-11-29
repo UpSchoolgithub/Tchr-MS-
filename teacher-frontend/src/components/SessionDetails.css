@@ -124,65 +124,34 @@
     width: 100%;
   }
 }
-/* General styles for topics, objectives, and other sections */
-.session-notes-section h3,
-.session-notes-section h4 {
-  font-size: 18px;
+.view-lp-button {
+  background-color: #ffcc00;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
   font-weight: bold;
-  color: #333;
-  text-transform: uppercase;
-  margin-bottom: 10px;
 }
 
-.section-box {
+.view-lp-button:hover {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.lesson-plan-content {
+  margin-top: 10px;
   padding: 10px;
-  margin-bottom: 15px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 4px;
   background-color: #f9f9f9;
 }
 
-/* List styling for content and activities */
-.section-box ul,
-.section-box ol {
-  padding-left: 20px;
-  margin: 10px 0;
-  font-size: 16px;
-}
-
-.section-box li {
-  margin-bottom: 8px;
-}
-
-/* Adjust the "View LP" link appearance */
-.view-lp-text {
-  font-size: 14px;
-  color: #007bff;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.view-lp-text:hover {
-  text-decoration: none;
-  color: #0056b3;
-}
-
-/* Add spacing for nested lists */
-.section-box ul li ul,
-.section-box ol li ul {
-  margin-top: 5px;
-}
-
-/* Headings for sections like Homework, Summary, Activities */
-.section-box h4 {
-  margin-bottom: 5px;
-  font-size: 16px;
-  color: #444;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .section-box {
-    margin-bottom: 20px;
-  }
+.section-box {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #ffffff;
 }
