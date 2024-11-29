@@ -261,93 +261,100 @@ useEffect(() => {
               <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-              <h4>Topics to Cover:</h4>
-<ul>
-  {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx} style={{ marginBottom: "20px" }}>
-      <div className="topic-container">
-        <p className="topic-name">
-          {idx + 1}. {topic}
-        </p>
-        <button
-          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-          className="view-lp-button"
-        >
-          {expandedTopic === idx ? 'HIDE LP' : 'VIEW LP'}
-        </button>
-      </div>
-      {expandedTopic === idx && (
-        <div className="lesson-plan-content">
-          <div className="section-box">
-            <h4>Objectives:</h4>
-            <ul>
-              <li>Understand the concept of resistors connected in parallel.</li>
-              <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-              <li>Understand how current flows in resistors connected in parallel.</li>
-            </ul>
-          </div>
-
-          <div className="section-box">
-            <h4>Teaching Aids:</h4>
-            <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-          </div>
-
-          <div className="section-box">
-            <h4>Content:</h4>
-            <ol>
-              <li>
-                <strong>Introduction to resistors in parallel:</strong>
-                <ul>
-                  <li>Definition and explanation of resistors connected in parallel.</li>
-                  <li>Differences between series and parallel connections of resistors.</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Equivalent resistance in parallel:</strong>
-                <ul>
-                  <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                  <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                  <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Current flow in resistors in parallel:</strong>
-                <ul>
-                  <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                  <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                </ul>
-              </li>
-            </ol>
-          </div>
-
-          <div className="section-box">
-            <h4>Activities:</h4>
-            <ol>
-              <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
-              <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-              <li>Discuss real-life examples of parallel circuits and their applications.</li>
-            </ol>
-          </div>
-
-          <div className="section-box">
-            <h4>Summary:</h4>
-            <p>
-              Recap the key points discussed during the session. Emphasize the differences between series and parallel connections of resistors. Highlight the significance of understanding resistors in parallel in practical applications.
-            </p>
-          </div>
-
-          <div className="section-box">
-            <h4>Homework:</h4>
-            <ul>
-              <li>Solve additional practice problems on resistors in parallel.</li>
-              <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-            </ul>
-          </div>
+              <div className="topics-container">
+  <h4>Topics to Cover:</h4>
+  <ul>
+    {sessionDetails.topics.map((topic, idx) => (
+      <li key={idx} style={{ marginBottom: "20px" }}>
+        <div className="topic-container">
+          <p className="topic-name">
+            {idx + 1}. {topic}
+          </p>
+          <button
+            onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+            className="view-lp-button"
+          >
+            {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+          </button>
         </div>
-      )}
-    </li>
-  ))}
-</ul>
+        {expandedTopic === idx && (
+          <div className="lesson-plan-container">
+            <div className="lesson-plan-content">
+              <div className="section-box">
+                <h4>Objectives:</h4>
+                <ul>
+                  <li>Understand the concept of resistors connected in parallel.</li>
+                  <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
+                  <li>Understand how current flows in resistors connected in parallel.</li>
+                </ul>
+              </div>
+
+              <div className="section-box">
+                <h4>Teaching Aids:</h4>
+                <p>Whiteboard, Markers, Visual aids (diagrams)</p>
+              </div>
+
+              <div className="section-box">
+                <h4>Content:</h4>
+                <ol>
+                  <li>
+                    <strong>Introduction to resistors in parallel:</strong>
+                    <ul>
+                      <li>Definition and explanation of resistors connected in parallel.</li>
+                      <li>Differences between series and parallel connections of resistors.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Equivalent resistance in parallel:</strong>
+                    <ul>
+                      <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
+                      <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
+                      <li>Example problems demonstrating the calculation of equivalent resistance.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Current flow in resistors in parallel:</strong>
+                    <ul>
+                      <li>Explanation of how current is distributed in resistors connected in parallel.</li>
+                      <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
+                    </ul>
+                  </li>
+                </ol>
+              </div>
+
+              <div className="section-box">
+                <h4>Activities:</h4>
+                <ol>
+                  <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
+                  <li>Draw diagrams showing the flow of current in parallel resistors.</li>
+                  <li>Discuss real-life examples of parallel circuits and their applications.</li>
+                </ol>
+              </div>
+
+              <div className="section-box">
+                <h4>Summary:</h4>
+                <p>
+                  Recap the key points discussed during the session. Emphasize the differences between series and
+                  parallel connections of resistors. Highlight the significance of understanding resistors in parallel
+                  in practical applications.
+                </p>
+              </div>
+
+              <div className="section-box">
+                <h4>Homework:</h4>
+                <ul>
+                  <li>Solve additional practice problems on resistors in parallel.</li>
+                  <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
+
 
 
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
