@@ -223,9 +223,9 @@ useEffect(() => {
       {/* Welcome Message */}
       <h2>Welcome, Teacher Name!</h2>
   
-      {/* Attendance and Session Notes Section */}
+      {/* Main Content: Attendance and Notes */}
       <div className="attendance-and-notes">
-        {/* Attendance Section */}
+        {/* Left Section: Attendance */}
         <div className="attendance-section">
           <h3>Mark Attendance</h3>
           {loading ? (
@@ -252,7 +252,7 @@ useEffect(() => {
           )}
         </div>
   
-        {/* Session Notes Section */}
+        {/* Right Section: Session Notes */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
           {sessionDetails ? (
@@ -282,26 +282,6 @@ useEffect(() => {
                           <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
                           <li>Understand how current flows in resistors connected in parallel.</li>
                         </ul>
-                        <h4>Teaching Aids:</h4>
-                        <ul>
-                          <li>Whiteboard</li>
-                          <li>Markers</li>
-                          <li>Visual aids (diagrams)</li>
-                        </ul>
-                        <h4>Prerequisites:</h4>
-                        <p>Understanding of basic concepts of resistance and Ohm's law.</p>
-                        <h4>Content:</h4>
-                        <ol>
-                          <li>Introduction to resistors in parallel:</li>
-                          <li>Equivalent resistance in parallel:</li>
-                          <li>Current flow in resistors in parallel:</li>
-                        </ol>
-                        <h4>Activities:</h4>
-                        <ul>
-                          <li>Solve example problems related to calculating equivalent resistance.</li>
-                          <li>Draw diagrams showing the flow of current.</li>
-                          <li>Discuss real-life examples.</li>
-                        </ul>
                       </div>
                     )}
                   </li>
@@ -314,9 +294,6 @@ useEffect(() => {
           ) : (
             <p>No session details available for today.</p>
           )}
-
-  
-
 
           <h4>Assignments:</h4>
           {assignmentDetails && (
