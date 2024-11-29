@@ -230,7 +230,8 @@ useEffect(() => {
   
       {/* Attendance Section */}
       <div className="attendance-section">
-        <h3>Mark Attendance</h3>
+        <h3>Mark Absentees</h3>
+        <p> <i>All other students will be marked present</i></p>
         {loading ? (
           <p>Loading students...</p>
         ) : error ? (
