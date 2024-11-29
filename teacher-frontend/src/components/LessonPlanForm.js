@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './LPForm.css';
 
 const LessonPlanForm = () => {
   const [board, setBoard] = useState('');
