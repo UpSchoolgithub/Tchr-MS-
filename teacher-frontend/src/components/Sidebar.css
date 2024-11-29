@@ -1,12 +1,12 @@
 /* Sidebar Styles */
 .sidebar {
-  width: 250px;
+  width: 200px;
   background-color: #ffffff;
   padding: 15px;
   height: 100vh;
   position: fixed;
   font-family: 'Rubik', sans-serif;
-  font-size: 14px;
+  font-size: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
