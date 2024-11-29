@@ -272,27 +272,31 @@ useEffect(() => {
           <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
           <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
           <div className="topics-container">
-            <h4>Topics to Cover:</h4>
-            <ul>
-              {sessionDetails.topics.map((topic, idx) => (
-                <li key={idx} style={{ marginBottom: "20px" }}>
-                  <div className="topic-container">
-                    <p className="topic-name">
-                      {idx + 1}. {topic}
-                    </p>
-                    <button
-                      onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-                      className="view-lp-button"
-                    >
-                      {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-                    </button>
-                  </div>
-                  {expandedTopic === idx && (
-                    <div className="lesson-plan-container">
-                      <div className="lesson-plan-content">
-                        {/* Section Details */}
-                        <div className="section-box">
-                          <h5><strong>Objectives:</strong></h5>
+          <h4>Topics to Cover:</h4>
+<ul>
+  {sessionDetails.topics.map((topic, idx) => (
+    <li key={idx} style={{ marginBottom: "20px" }}>
+      <div className="topic-container">
+        <input
+          type="checkbox"
+          id={`topic-${idx}`}
+          style={{ marginRight: "10px" }}
+        />
+        <label htmlFor={`topic-${idx}`} className="topic-name">
+          {idx + 1}. {topic}
+        </label>
+        <button
+          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+          className="view-lp-button"
+        >
+          {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+        </button>
+      </div>
+      {expandedTopic === idx && (
+        <div className="lesson-plan-container">
+          <div className="lesson-plan-content">
+            <div className="section-box">
+              <h5><strong>Objectives:</strong></h5>
                           <ul>
                             <li>Understand the concept of resistors connected in parallel.</li>
                             <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
