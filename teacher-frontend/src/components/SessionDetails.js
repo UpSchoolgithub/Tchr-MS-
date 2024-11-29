@@ -281,7 +281,7 @@ useEffect(() => {
           <div className="lesson-plan-container">
             <div className="lesson-plan-content">
               <div className="section-box">
-                <h4>Objectives:</h4>
+                <h2><strong>Objectives:</strong></h2>
                 <ul>
                   <li>Understand the concept of resistors connected in parallel.</li>
                   <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
@@ -290,12 +290,12 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-                <h4>Teaching Aids:</h4>
+              <h2><strong>Teaching Aids:</strong></h2>
                 <p>Whiteboard, Markers, Visual aids (diagrams)</p>
               </div>
 
               <div className="section-box">
-                <h4>Content:</h4>
+              <h2><strong>Content:</strong></h2>
                 <ol>
                   <li>
                     <strong>Introduction to resistors in parallel:</strong>
@@ -323,7 +323,7 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-                <h4>Activities:</h4>
+              <h2><strong>Activities:</strong></h2>
                 <ol>
                   <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
                   <li>Draw diagrams showing the flow of current in parallel resistors.</li>
@@ -332,7 +332,7 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-                <h4>Summary:</h4>
+              <h2><strong>Summary:</strong></h2>
                 <p>
                   Recap the key points discussed during the session. Emphasize the differences between series and
                   parallel connections of resistors. Highlight the significance of understanding resistors in parallel
@@ -341,7 +341,7 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-                <h4>Homework:</h4>
+              <h2><strong>Homework:</strong></h2>
                 <ul>
                   <li>Solve additional practice problems on resistors in parallel.</li>
                   <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
