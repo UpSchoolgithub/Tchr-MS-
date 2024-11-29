@@ -226,7 +226,7 @@ useEffect(() => {
     <div className="session-details-container">
  
       {/* Welcome Message */}
-      <h2>Welcome, Teacher Name!</h2>
+      <h2>Welcome, Vishal!</h2>
   
       {/* Attendance Section */}
       <div className="attendance-section">
