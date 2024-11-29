@@ -77,8 +77,9 @@
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border: 1px solid #ccc;
-  min-width: 500px;
+  min-width: 250px;
 }
+
 
 .session-notes-section h3 {
   font-size: 20px;
