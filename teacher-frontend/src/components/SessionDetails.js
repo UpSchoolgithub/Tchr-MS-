@@ -290,12 +290,12 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-              <h2><strong>Teaching Aids:</strong></h2>
+              <h5><strong>Teaching Aids:</strong></h5>
                 <p>Whiteboard, Markers, Visual aids (diagrams)</p>
               </div>
 
               <div className="section-box">
-              <h2><strong>Content:</strong></h2>
+              <h5><strong>Content:</strong></h5>
                 <ol>
                   <li>
                     <strong>Introduction to resistors in parallel:</strong>
@@ -323,7 +323,7 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-              <h2><strong>Activities:</strong></h2>
+              <h5><strong>Activities:</strong></h5>
                 <ol>
                   <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
                   <li>Draw diagrams showing the flow of current in parallel resistors.</li>
@@ -332,7 +332,7 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-              <h2><strong>Summary:</strong></h2>
+              <h5><strong>Summary:</strong></h5>
                 <p>
                   Recap the key points discussed during the session. Emphasize the differences between series and
                   parallel connections of resistors. Highlight the significance of understanding resistors in parallel
@@ -341,7 +341,7 @@ useEffect(() => {
               </div>
 
               <div className="section-box">
-              <h2><strong>Homework:</strong></h2>
+              <h5><strong>Homework:</strong></h5>
                 <ul>
                   <li>Solve additional practice problems on resistors in parallel.</li>
                   <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
