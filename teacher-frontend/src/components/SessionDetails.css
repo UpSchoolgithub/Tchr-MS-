@@ -247,10 +247,10 @@
 .recommended-topics-box {
   padding: 20px;
   margin-bottom: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid #de5555;
   border-radius: 8px;
-  background-color: #f8f8f8;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(232, 17, 17, 0.1);
 }
 
 .recommended-topics-box h3 {
