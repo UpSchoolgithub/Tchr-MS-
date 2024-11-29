@@ -172,24 +172,30 @@ const SessionDetails = () => {
       return;
     }
   
+    // Collect completed and incomplete topics based on checkbox states
+    const completedTopics = [];
+    const incompleteTopics = [];
+  
+    sessionDetails.topics.forEach((topic, idx) => {
+      const isChecked = document.getElementById(`topic-${idx}`).checked;
+      if (isChecked) {
+        completedTopics.push(topic);
+      } else {
+        incompleteTopics.push(topic);
+      }
+    });
+  
+    // Ensure at least one topic is completed
+    if (completedTopics.length === 0) {
+      alert('Please mark at least one topic as completed.');
+      return;
+    }
+  
     try {
-      // Collect completed and incomplete topics based on checkbox states
-      const completedTopics = [];
-      const incompleteTopics = [];
-  
-      sessionDetails.topics.forEach((topic, idx) => {
-        const isChecked = document.getElementById(`topic-${idx}`).checked;
-        if (isChecked) {
-          completedTopics.push(topic);
-        } else {
-          incompleteTopics.push(topic);
-        }
-      });
-  
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
-        incompleteTopics, // Send incomplete topics to backend
+        incompleteTopics,
         observations,
         absentees,
         completed: true,
@@ -201,14 +207,13 @@ const SessionDetails = () => {
       );
   
       alert(response.data.message || 'Session ended successfully!');
-  
-      // Redirect or refresh page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
