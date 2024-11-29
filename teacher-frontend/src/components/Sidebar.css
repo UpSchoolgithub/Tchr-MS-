@@ -1,6 +1,6 @@
 /* Sidebar Styles */
 .sidebar {
-  width: 200px;
+  width: 150px;
   background-color: #ffffff;
   padding: 15px;
   height: 100vh;
@@ -43,7 +43,7 @@
   align-items: center;
   text-decoration: none;
   color: #000000;
-  font-size: 16px;
+  font-size: 11px;
   padding: 10px;
   border-radius: 6px;
   transition: background-color 0.3s ease, color 0.3s ease;
