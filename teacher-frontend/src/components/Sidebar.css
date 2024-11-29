@@ -10,7 +10,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  z-index: 1000; /* Ensures it stays on top of content */
+  z-index: 1000;
   transition: width 0.3s ease;
 }
 
@@ -18,42 +18,20 @@
   width: 80px; /* Collapsed width */
 }
 
-.sidebar-toggle {
-  background-color: #007bff;
-  color: #ffffff;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  align-self: flex-end;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.sidebar-toggle:hover {
-  background-color: #0056b3;
-}
-
-/* Sidebar Logo */
-.sidebar-logo {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
 .sidebar-logo img {
   width: 100%;
-  margin-bottom: 20px;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, width 0.3s ease;
 }
 
-.sidebar.collapsed .sidebar-logo img {
-  opacity: 0;
+.sidebar-logo .collapsed-logo {
+  width: 40px; /* Small logo for collapsed view */
+  margin: 0 auto;
 }
 
-/* Sidebar Menu */
 .sidebar ul {
   list-style: none;
   padding: 0;
+  margin-top: 20px;
 }
 
 .sidebar ul li {
@@ -65,8 +43,8 @@
   align-items: center;
   text-decoration: none;
   color: #000000;
-  font-size: 14px;
-  padding: 10px 15px;
+  font-size: 16px;
+  padding: 10px;
   border-radius: 6px;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -76,23 +54,51 @@
   color: white;
 }
 
+.sidebar ul li a .icon {
+  font-size: 20px; /* Adjust icon size */
+  margin-right: 15px;
+}
+
+.sidebar.collapsed ul li a span {
+  display: none; /* Hide text in collapsed view */
+}
+
 .sidebar ul li a:hover {
   background-color: #007bff;
   color: white;
 }
 
-.sidebar ul li a .icon {
-  margin-right: 10px;
-  font-size: 18px;
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1100;
 }
 
-.sidebar.collapsed ul li a span {
-  display: none; /* Hide text in collapsed mode */
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 20px;
+  height: 15px;
+}
+
+.hamburger-icon div {
+  height: 3px;
+  background-color: white;
+  border-radius: 2px;
 }
 
 /* Logout Button */
 .sidebar-bottom {
-  margin-top: auto; /* Push the logout button to the bottom */
+  margin-top: auto;
 }
 
 .logout-button {
@@ -102,8 +108,8 @@
   background-color: transparent;
   border: none;
   color: #dc3545;
-  font-size: 14px;
-  padding: 10px 15px;
+  font-size: 16px;
+  padding: 10px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -112,9 +118,4 @@
 .logout-button:hover {
   background-color: #f8d7da;
   color: #b02a37;
-}
-
-.logout-button .icon {
-  margin-right: 10px;
-  font-size: 18px;
 }

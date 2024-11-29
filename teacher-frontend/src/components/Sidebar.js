@@ -12,9 +12,9 @@ import { useTeacherAuth } from '../context/TeacherAuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
-  const { teacherId, logout } = useTeacherAuth(); // Access logout and teacher ID from context
-  const location = useLocation(); // To check the current active route
-  const [isCollapsed, setIsCollapsed] = useState(false); // State for collapsible sidebar
+  const { teacherId, logout } = useTeacherAuth();
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -33,16 +33,23 @@ const Sidebar = () => {
         onClick={() => setIsCollapsed(!isCollapsed)}
         aria-label="Toggle Sidebar"
       >
-        {isCollapsed ? '▶' : '◀'}
+        <div className="hamburger-icon">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
       </button>
 
       {/* Sidebar Logo */}
       <div className="sidebar-logo">
-        <img src="/Upschool_2x.png" alt="UpSchool Logo" />
+        <img
+          src={isCollapsed ? '/Upschool_Icon_only.png' : '/Upschool_2x.png'}
+          alt="UpSchool Logo"
+          className={isCollapsed ? 'collapsed-logo' : 'full-logo'}
+        />
       </div>
 
       <ul>
-        {/* Dashboard */}
         <li className={location.pathname === '/dashboard' ? 'active' : ''}>
           <Link to="/dashboard">
             <FaTachometerAlt className="icon" />
@@ -50,7 +57,6 @@ const Sidebar = () => {
           </Link>
         </li>
 
-        {/* Teacher Sessions */}
         {teacherId && (
           <li
             className={
@@ -66,7 +72,6 @@ const Sidebar = () => {
           </li>
         )}
 
-        {/* School Calendar */}
         <li className={location.pathname === '/school-calendar' ? 'active' : ''}>
           <Link to="/school-calendar">
             <FaCalendarAlt className="icon" />
@@ -74,7 +79,6 @@ const Sidebar = () => {
           </Link>
         </li>
 
-        {/* Request */}
         <li className={location.pathname === '/request' ? 'active' : ''}>
           <Link to="/request">
             <FaEnvelope className="icon" />
@@ -82,7 +86,6 @@ const Sidebar = () => {
           </Link>
         </li>
 
-        {/* View Activities */}
         <li className={location.pathname === '/view-activities' ? 'active' : ''}>
           <Link to="/view-activities">
             <FaTasks className="icon" />
@@ -91,7 +94,6 @@ const Sidebar = () => {
         </li>
       </ul>
 
-      {/* Logout Button */}
       <div className="sidebar-bottom">
         <button className="logout-button" onClick={handleLogout}>
           <FaSignOutAlt className="icon" />
