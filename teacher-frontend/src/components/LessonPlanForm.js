@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './LPForm.css';
-import logo from './upschool logo.png';
 
 const LessonPlanForm = () => {
   const [board, setBoard] = useState('');
@@ -127,10 +126,6 @@ const LessonPlanForm = () => {
 
   return (
     <div>
-      <header className="header">
-        <img src={logo} alt="UpSchool Logo" className="logo" />
-        <h1>Lesson Plan Generator</h1>
-      </header>
 
       {!generatedPlan ? (
         <form onSubmit={handleGenerate}>
