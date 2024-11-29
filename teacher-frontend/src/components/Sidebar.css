@@ -1,6 +1,6 @@
-/* Sidebar Container */
+/* Sidebar Styles */
 .sidebar {
-  width: 200px;
+  width: 250px;
   background-color: #ffffff;
   padding: 15px;
   height: 100vh;
@@ -11,6 +11,27 @@
   display: flex;
   flex-direction: column;
   z-index: 1000; /* Ensures it stays on top of content */
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px; /* Collapsed width */
+}
+
+.sidebar-toggle {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.sidebar-toggle:hover {
+  background-color: #0056b3;
 }
 
 /* Sidebar Logo */
@@ -20,8 +41,13 @@
 }
 
 .sidebar-logo img {
-  width: 80%;
+  width: 100%;
   margin-bottom: 20px;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+  opacity: 0;
 }
 
 /* Sidebar Menu */
@@ -45,6 +71,11 @@
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.sidebar ul li.active a {
+  background-color: #007bff;
+  color: white;
+}
+
 .sidebar ul li a:hover {
   background-color: #007bff;
   color: white;
@@ -55,7 +86,11 @@
   font-size: 18px;
 }
 
-/* Logout Button at the Bottom */
+.sidebar.collapsed ul li a span {
+  display: none; /* Hide text in collapsed mode */
+}
+
+/* Logout Button */
 .sidebar-bottom {
   margin-top: auto; /* Push the logout button to the bottom */
 }
