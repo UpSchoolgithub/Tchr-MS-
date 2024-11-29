@@ -265,8 +265,8 @@ useEffect(() => {
 <ul>
   {sessionDetails.topics.map((topic, idx) => (
     <li key={idx} style={{ marginBottom: "20px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <p>
+      <div className="topic-container">
+        <p className="topic-name">
           {idx + 1}. {topic}
         </p>
         <button
