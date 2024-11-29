@@ -224,15 +224,7 @@ useEffect(() => {
 
   return (
     <div className="session-details-container">
-      {/* Header Section */}
-      <div className="session-details-header">
-        <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
-        <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
-        <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
-        <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
-        <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
-      </div>
-  
+ 
       {/* Welcome Message */}
       <h2>Welcome, Teacher Name!</h2>
   
@@ -267,8 +259,6 @@ useEffect(() => {
       <h3>Session Notes and Details:</h3>
       {sessionDetails ? (
         <div className="session-item">
-          <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-          <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
           <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
           <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
           <div className="topics-container">
