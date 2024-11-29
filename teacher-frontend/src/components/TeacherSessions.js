@@ -157,7 +157,6 @@ const TeacherSessions = () => {
         <td>{session.schoolName}</td>
         <td>{session.className}</td>
         <td>{session.sectionName}</td>
-        <td>{session.sectionId}</td>
         <td>{session.day}</td>
         <td>{session.period}</td>
         <td>{session.subjectName}</td>
