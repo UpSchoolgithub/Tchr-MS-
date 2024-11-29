@@ -48,6 +48,10 @@ function InnerApp() {
             <Route path="/teacherportal/:teacherId/sessions" element={<TeacherSessions />} />
             <Route path="/teacherportal/:teacherId/session-details" element={<SessionDetails />} />
             <Route path="/session-reports/:sessionId" element={<SessionReport />} />
+          
+          {/* New Lesson Plan Form Route */}
+          <Route path="/lesson-plan" element={<PrivateRoute><LessonPlanForm /></PrivateRoute>} />
+
           </Routes>
         </div>
       </Router>
