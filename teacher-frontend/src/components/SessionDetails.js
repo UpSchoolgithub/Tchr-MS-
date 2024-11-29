@@ -259,9 +259,9 @@ useEffect(() => {
   
         {/* Session Notes */}
         <div className="session-notes-section">
-        <h3 style={{ textAlign: 'center', textTransform: 'uppercase', textDecoration: 'underline' }}>
+        <strong><h2 style={{ textAlign: 'center', textTransform: 'uppercase', textDecoration: 'underline' }}>
     Session Notes and Details:
-</h3>
+</h2></strong>
       {sessionDetails ? (
         <div className="session-item">
           <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
