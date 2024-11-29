@@ -84,6 +84,8 @@ const teacherSessionsRoutes = require('./routes/teachersessions');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 app.use('/api', assignmentRoutes);
 
+const pythonServiceRoutes = require('./routes/pythonServiceRoutes');
+app.use('/api/python-service', pythonServiceRoutes);
 
 // Your existing route definitions
 app.get('/', (req, res) => {
