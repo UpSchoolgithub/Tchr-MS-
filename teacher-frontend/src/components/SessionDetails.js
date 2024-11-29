@@ -295,6 +295,8 @@ useEffect(() => {
             <p>No session details available for today.</p>
           )}
 
+
+
           <h4>Assignments:</h4>
           {assignmentDetails && (
             <div>
