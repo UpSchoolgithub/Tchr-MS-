@@ -211,6 +211,7 @@ useEffect(() => {
 
   return (
     <div className="session-details-container">
+      {/* Header Section */}
       <div className="session-details-header">
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
@@ -218,10 +219,13 @@ useEffect(() => {
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
-
+  
+      {/* Welcome Message */}
       <h2>Welcome, Teacher Name!</h2>
-
+  
+      {/* Attendance and Session Notes Section */}
       <div className="attendance-and-notes">
+        {/* Attendance Section */}
         <div className="attendance-section">
           <h3>Mark Attendance</h3>
           {loading ? (
@@ -247,7 +251,8 @@ useEffect(() => {
             </>
           )}
         </div>
-
+  
+        {/* Session Notes Section */}
         <div className="session-notes-section">
           <h3>Session Notes and Details:</h3>
           {sessionDetails ? (
@@ -257,102 +262,51 @@ useEffect(() => {
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
-<ul>
-  {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx}>
-      <div>
-        <p>
-          {idx + 1}. {topic}
-        </p>
-        <span
-          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-          className="view-lp-text"
-        >
-          {expandedTopic === idx ? 'Hide LP' : 'View LP'}
-        </span>
-      </div>
-      {expandedTopic === idx && (
-        <div className="lesson-plan-content">
-          <h4>Objectives:</h4>
-          <ul>
-            <li>Understand the concept of resistors connected in parallel.</li>
-            <li>
-              Learn about the equivalent resistance formula for resistors in
-              parallel.
-            </li>
-            <li>
-              Understand how current flows in resistors connected in parallel.
-            </li>
-          </ul>
-          <h4>Teaching Aids:</h4>
-          <ul>
-            <li>Whiteboard</li>
-            <li>Markers</li>
-            <li>Visual aids (diagrams)</li>
-          </ul>
-          <h4>Prerequisites:</h4>
-          <p>Understanding of basic concepts of resistance and Ohm's law.</p>
-          <h4>Content:</h4>
-          <ol>
-            <li>
-              Introduction to resistors in parallel:
               <ul>
-                <li>Definition and explanation of resistors connected in parallel.</li>
-                <li>Differences between series and parallel connections of resistors.</li>
+                {sessionDetails.topics.map((topic, idx) => (
+                  <li key={idx}>
+                    <div>
+                      <p>{idx + 1}. {topic}</p>
+                      <span
+                        onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+                        className="view-lp-text"
+                      >
+                        {expandedTopic === idx ? 'Hide LP' : 'View LP'}
+                      </span>
+                    </div>
+                    {expandedTopic === idx && (
+                      <div className="lesson-plan-content">
+                        <h4>Objectives:</h4>
+                        <ul>
+                          <li>Understand the concept of resistors connected in parallel.</li>
+                          <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
+                          <li>Understand how current flows in resistors connected in parallel.</li>
+                        </ul>
+                        <h4>Teaching Aids:</h4>
+                        <ul>
+                          <li>Whiteboard</li>
+                          <li>Markers</li>
+                          <li>Visual aids (diagrams)</li>
+                        </ul>
+                        <h4>Prerequisites:</h4>
+                        <p>Understanding of basic concepts of resistance and Ohm's law.</p>
+                        <h4>Content:</h4>
+                        <ol>
+                          <li>Introduction to resistors in parallel:</li>
+                          <li>Equivalent resistance in parallel:</li>
+                          <li>Current flow in resistors in parallel:</li>
+                        </ol>
+                        <h4>Activities:</h4>
+                        <ul>
+                          <li>Solve example problems related to calculating equivalent resistance.</li>
+                          <li>Draw diagrams showing the flow of current.</li>
+                          <li>Discuss real-life examples.</li>
+                        </ul>
+                      </div>
+                    )}
+                  </li>
+                ))}
               </ul>
-            </li>
-            <li>
-              Equivalent resistance in parallel:
-              <ul>
-                <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                <li>
-                  Example problems demonstrating the calculation of equivalent resistance.
-                </li>
-              </ul>
-            </li>
-            <li>
-              Current flow in resistors in parallel:
-              <ul>
-                <li>
-                  Explanation of how current is distributed in resistors connected in parallel.
-                </li>
-                <li>
-                  Illustration using diagrams to show the flow of current in parallel resistors.
-                </li>
-              </ul>
-            </li>
-          </ol>
-          <h4>Activities:</h4>
-          <ol>
-            <li>
-              Solve example problems related to calculating equivalent resistance in parallel
-              circuits.
-            </li>
-            <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-            <li>Discuss real-life examples of parallel circuits and their applications.</li>
-          </ol>
-          <h4>Summary:</h4>
-          <p>
-            Recap the key points discussed during the session. Emphasize the differences between
-            series and parallel connections of resistors. Highlight the significance of
-            understanding resistors in parallel in practical applications.
-          </p>
-          <h4>Homework:</h4>
-          <ul>
-            <li>Solve additional practice problems on resistors in parallel.</li>
-            <li>
-              Research and list examples of everyday devices that use parallel resistor
-              configurations.
-            </li>
-          </ul>
-        </div>
-      )}
-    </li>
-  ))}
-</ul>
-
-
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
               <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
@@ -360,6 +314,8 @@ useEffect(() => {
           ) : (
             <p>No session details available for today.</p>
           )}
+
+  
 
 
           <h4>Assignments:</h4>
