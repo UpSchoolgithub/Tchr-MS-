@@ -273,9 +273,9 @@ useEffect(() => {
           <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
           <div className="topics-container">
           <h4>Topics to Cover:</h4>
-<ul>
+<ul className="topics-list">
   {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx} style={{ marginBottom: "20px" }}>
+    <li key={idx} className="topic-item">
       <div className="topic-container">
         <input
           type="checkbox"
