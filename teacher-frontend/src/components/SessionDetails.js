@@ -281,7 +281,7 @@ useEffect(() => {
           <div className="lesson-plan-container">
             <div className="lesson-plan-content">
               <div className="section-box">
-                <h2><strong>Objectives:</strong></h2>
+                <h5><strong>Objectives:</strong></h5>
                 <ul>
                   <li>Understand the concept of resistors connected in parallel.</li>
                   <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
