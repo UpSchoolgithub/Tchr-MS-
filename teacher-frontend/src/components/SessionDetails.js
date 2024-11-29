@@ -263,6 +263,14 @@ useEffect(() => {
           <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
           <div className="topics-container">
           <h4>Topics to Cover:</h4>
+          {/* Recommended Topics Section */}
+  <div className="recommended-topics-box">
+    <h3>Recommended Topics to Cover from A&R:</h3>
+    <div className="recommended-topic-item">
+      <input type="checkbox" id="electric-current" />
+      <label htmlFor="electric-current">Electric Current</label>
+    </div>
+  </div>
 <ul className="topics-list">
   {sessionDetails.topics.map((topic, idx) => (
     <li key={idx} className="topic-item">
