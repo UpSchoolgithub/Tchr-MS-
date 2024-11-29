@@ -13,6 +13,7 @@ import { WebSocketProvider } from './WebSocketContext';
 import TeacherSessions from './components/TeacherSessions';
 import SessionDetails from './components/SessionDetails'; // Import the SessionDetails component
 import SessionReport from './components/SessionReport';
+import LessonPlanForm from './components/LessonPlanForm';
 
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
