@@ -232,7 +232,7 @@ useEffect(() => {
       <div className="attendance-section">
         <h3>Mark Absentees</h3>
         <p style={{ color: 'red', fontSize: 'small' }}>
-    <i>*All other students will be marked present</i>
+    <i>*Note: Mark only absentees. Rest of the students will be marked present automatically</i>
 </p>
         {loading ? (
           <p>Loading students...</p>
