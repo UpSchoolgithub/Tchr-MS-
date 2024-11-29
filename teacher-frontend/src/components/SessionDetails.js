@@ -262,13 +262,11 @@ useEffect(() => {
               <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
               <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
-<ul>
+              <ul>
   {sessionDetails.topics.map((topic, idx) => (
     <li key={idx} style={{ marginBottom: "20px" }}>
       <div>
-        <p>
-          {idx + 1}. {topic}
-        </p>
+        <h4>{idx + 1}. {topic}</h4>
         <span
           onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
           className="view-lp-text"
@@ -277,7 +275,8 @@ useEffect(() => {
         </span>
       </div>
       {expandedTopic === idx && (
-        <div className="lesson-plan-content">
+        <div>
+          {/* Objectives Section */}
           <div className="section-box">
             <h4>Objectives:</h4>
             <ul>
@@ -287,16 +286,19 @@ useEffect(() => {
             </ul>
           </div>
 
+          {/* Teaching Aids Section */}
           <div className="section-box">
             <h4>Teaching Aids:</h4>
             <p>Whiteboard, Markers, Visual aids (diagrams)</p>
           </div>
 
+          {/* Prerequisites Section */}
           <div className="section-box">
             <h4>Prerequisites:</h4>
             <p>Understanding of basic concepts of resistance and Ohm's law.</p>
           </div>
 
+          {/* Content Section */}
           <div className="section-box">
             <h4>Content:</h4>
             <ol>
@@ -325,6 +327,7 @@ useEffect(() => {
             </ol>
           </div>
 
+          {/* Activities Section */}
           <div className="section-box">
             <h4>Activities:</h4>
             <ol>
@@ -334,6 +337,7 @@ useEffect(() => {
             </ol>
           </div>
 
+          {/* Summary Section */}
           <div className="section-box">
             <h4>Summary:</h4>
             <p>
@@ -341,6 +345,7 @@ useEffect(() => {
             </p>
           </div>
 
+          {/* Homework Section */}
           <div className="section-box">
             <h4>Homework:</h4>
             <ul>
@@ -353,6 +358,7 @@ useEffect(() => {
     </li>
   ))}
 </ul>
+
 
 
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
