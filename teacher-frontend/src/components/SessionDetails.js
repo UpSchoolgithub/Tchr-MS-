@@ -31,98 +31,7 @@ const SessionDetails = () => {
   const [existingFile, setExistingFile] = useState(null);
   const [file, setFile] = useState(null); // File state
   const [successMessage, setSuccessMessage] = useState('');
-  const [allSessions, setAllSessions] = useState([]);
-  const [selectedSessionIndex, setSelectedSessionIndex] = useState(0);
-  
-//Auto-Load Current Period's Session: 
-  useEffect(() => {
-    const fetchCurrentPeriodSession = async () => {
-      try {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const currentTime = `${currentHour}:${currentMinute}`;
-  
-        // Optional: Map time ranges to periods (backend can handle this logic)
-        const currentPeriod = "9:00 AM - 9:45 AM"; // Example of mapped period
-  
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`,
-          {
-            params: { date: now.toISOString().split("T")[0], period: currentPeriod },
-          }
-        );
-        console.log("Current period session:", response.data);
-        setSessionDetails(response.data.sessionDetails || null);
-      } catch (error) {
-        console.error("Error fetching current period session:", error);
-        setError("Failed to fetch the session for the current period.");
-      }
-    };
-  
-    fetchCurrentPeriodSession();
-  }, [teacherId, sectionId, subjectId]);
-  
-  //Display All Assigned Sessions for the Day: 
-  useEffect(() => {
-    const fetchAllSessionsForDay = async () => {
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`,
-          { params: { date: today } }
-        );
-        setAllSessions(response.data.sessions || []);
-      } catch (error) {
-        console.error("Error fetching all sessions for the day:", error);
-        setError("Failed to fetch sessions for today.");
-      }
-    };
-  
-    fetchAllSessionsForDay();
-  }, [teacherId, sectionId, subjectId]);
-  
-  // Automatically Match Sessions to Periods: 
-  // Automatically Match and Display Sessions Sequentially
-useEffect(() => {
-  if (allSessions.length > 0) {
-    const now = new Date();
-    const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
 
-    // Find the first session that has not started yet or is currently active
-    const currentSessionIndex = allSessions.findIndex((session) => {
-      const [startHour, startMinute] = session.startTime.split(":").map(Number);
-      const [endHour, endMinute] = session.endTime.split(":").map(Number);
-
-      const startTimeMinutes = startHour * 60 + startMinute;
-      const endTimeMinutes = endHour * 60 + endMinute;
-
-      return currentTime >= startTimeMinutes && currentTime < endTimeMinutes;
-    });
-
-    // Set the current session based on the index
-    if (currentSessionIndex !== -1) {
-      setSessionDetails(allSessions[currentSessionIndex]);
-      setSelectedSessionIndex(currentSessionIndex);
-    } else {
-      // No active session; default to the next available session
-      const nextSessionIndex = allSessions.findIndex((session) => {
-        const [startHour, startMinute] = session.startTime.split(":").map(Number);
-        const startTimeMinutes = startHour * 60 + startMinute;
-        return currentTime < startTimeMinutes;
-      });
-
-      if (nextSessionIndex !== -1) {
-        setSessionDetails(allSessions[nextSessionIndex]);
-        setSelectedSessionIndex(nextSessionIndex);
-      } else {
-        setSessionDetails(null); // No upcoming sessions
-      }
-    }
-  }
-}, [allSessions]);
-
-  
   // Fetch students for attendance
   useEffect(() => {
     const fetchStudents = async () => {
@@ -144,23 +53,23 @@ useEffect(() => {
   }, [teacherId, sectionId]);
 
   // Fetch session details
-  useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-        console.log('Fetched session details:', response.data);
-        setAllSessions(response.data.sessions || []);
-        setSelectedSessionIndex(0); // Default to the first session
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-        setError('Failed to fetch session details.');
-      }
-    };
-  
-    if (teacherId && sectionId && subjectId) fetchSessionDetails();
-  }, [teacherId, sectionId, subjectId]);
+  // Fetch session details
+useEffect(() => {
+  const fetchSessionDetails = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+      );
+      console.log('Fetched session details:', response.data);
+      setSessionDetails(response.data.sessionDetails || null);
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      setError('Failed to fetch session details.');
+    }
+  };
+
+  if (teacherId && sectionId && subjectId) fetchSessionDetails();
+}, [teacherId, sectionId, subjectId]);
 
   
   
@@ -290,19 +199,10 @@ useEffect(() => {
       );
   
       alert(response.data.message || 'Session ended successfully!');
-  
-      // Move to the next session, if available
-      if (selectedSessionIndex + 1 < allSessions.length) {
-        const nextSession = allSessions[selectedSessionIndex + 1];
-        setSessionDetails(nextSession);
-        setSelectedSessionIndex(selectedSessionIndex + 1);
-      } else {
-        alert('All sessions for today are completed.');
-        navigate(`/teacher-sessions/${teacherId}`);
-      }
+      navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
-      alert('Failed to end the session. Please try again.');
+      alert('Failed to end the session.');
     }
   };
   
@@ -362,138 +262,121 @@ useEffect(() => {
           </>
         )}
   
-{/* Session Notes Section */}
-<div className="session-notes-section">
-  <h3>Session Notes and Details:</h3>
-  {sessionDetails ? (
-    <div className="session-item">
-      <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-      <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
-      <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-      <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-      <div className="topics-container">
-        <h4>Topics to Cover:</h4>
-        <ul className="topics-list">
-          {sessionDetails.topics?.map((topic, idx) => (
-            <li key={idx} className="topic-item">
-              <div className="topic-container">
-                <input
-                  type="checkbox"
-                  id={`topic-${idx}`}
-                  style={{ marginRight: "10px" }}
-                />
-                <label htmlFor={`topic-${idx}`} className="topic-name">
-                  {idx + 1}. {topic}
-                </label>
-                <button
-                  onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-                  className="view-lp-button"
-                >
-                  {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-                </button>
-              </div>
-              {expandedTopic === idx && (
-                <div className="lesson-plan-container">
-                  <div className="lesson-plan-content">
-                    <div className="section-box">
-                      <h5><strong>Objectives:</strong></h5>
-                      <ul>
-                        <li>Understand the concept of resistors connected in parallel.</li>
-                        <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-                        <li>Understand how current flows in resistors connected in parallel.</li>
-                      </ul>
-                    </div>
-                    <div className="section-box">
-                      <h5><strong>Teaching Aids:</strong></h5>
-                      <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-                    </div>
-                    <div className="section-box">
-                      <h5><strong>Content:</strong></h5>
-                      <ol>
-                        <li>
-                          <strong>Introduction to resistors in parallel:</strong>
-                          <ul>
-                            <li>Definition and explanation of resistors connected in parallel.</li>
-                            <li>Differences between series and parallel connections of resistors.</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <strong>Equivalent resistance in parallel:</strong>
-                          <ul>
-                            <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                            <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                            <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <strong>Current flow in resistors in parallel:</strong>
-                          <ul>
-                            <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                            <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                          </ul>
-                        </li>
-                      </ol>
-                    </div>
-                    <div className="section-box">
-                      <h5><strong>Activities:</strong></h5>
-                      <ol>
-                        <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
-                        <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-                        <li>Discuss real-life examples of parallel circuits and their applications.</li>
-                      </ol>
-                    </div>
-                    <div className="section-box">
-                      <h5><strong>Summary:</strong></h5>
-                      <p>
-                        Recap the key points discussed during the session. Emphasize the differences between series and
-                        parallel connections of resistors. Highlight the significance of understanding resistors in parallel
-                        in practical applications.
-                      </p>
-                    </div>
-                    <div className="section-box">
-                      <h5><strong>Homework:</strong></h5>
-                      <ul>
-                        <li>Solve additional practice problems on resistors in parallel.</li>
-                        <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+        {/* Session Notes */}
+        <div className="session-notes-section">
+      <h3>Session Notes and Details:</h3>
+      {sessionDetails ? (
+        <div className="session-item">
+          <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+          <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
+          <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+          <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+          <div className="topics-container">
+          <h4>Topics to Cover:</h4>
+<ul className="topics-list">
+  {sessionDetails.topics.map((topic, idx) => (
+    <li key={idx} className="topic-item">
+      <div className="topic-container">
+        <input
+          type="checkbox"
+          id={`topic-${idx}`}
+          style={{ marginRight: "10px" }}
+        />
+        <label htmlFor={`topic-${idx}`} className="topic-name">
+          {idx + 1}. {topic}
+        </label>
+        <button
+          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+          className="view-lp-button"
+        >
+          {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+        </button>
       </div>
+      {expandedTopic === idx && (
+        <div className="lesson-plan-container">
+          <div className="lesson-plan-content">
+            <div className="section-box">
+              <h5><strong>Objectives:</strong></h5>
+                          <ul>
+                            <li>Understand the concept of resistors connected in parallel.</li>
+                            <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
+                            <li>Understand how current flows in resistors connected in parallel.</li>
+                          </ul>
+                        </div>
+                        <div className="section-box">
+                          <h5><strong>Teaching Aids:</strong></h5>
+                          <p>Whiteboard, Markers, Visual aids (diagrams)</p>
+                        </div>
+                        <div className="section-box">
+              <h5><strong>Content:</strong></h5>
+                <ol>
+                  <li>
+                    <strong>Introduction to resistors in parallel:</strong>
+                    <ul>
+                      <li>Definition and explanation of resistors connected in parallel.</li>
+                      <li>Differences between series and parallel connections of resistors.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Equivalent resistance in parallel:</strong>
+                    <ul>
+                      <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
+                      <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
+                      <li>Example problems demonstrating the calculation of equivalent resistance.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Current flow in resistors in parallel:</strong>
+                    <ul>
+                      <li>Explanation of how current is distributed in resistors connected in parallel.</li>
+                      <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
+                    </ul>
+                  </li>
+                </ol>
+              </div>
 
-      <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
-      <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
-      <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
-    </div>
-  ) : (
-    <p>No session details available for today.</p>
-  )}
+              <div className="section-box">
+              <h5><strong>Activities:</strong></h5>
+                <ol>
+                  <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
+                  <li>Draw diagrams showing the flow of current in parallel resistors.</li>
+                  <li>Discuss real-life examples of parallel circuits and their applications.</li>
+                </ol>
+              </div>
+
+              <div className="section-box">
+              <h5><strong>Summary:</strong></h5>
+                <p>
+                  Recap the key points discussed during the session. Emphasize the differences between series and
+                  parallel connections of resistors. Highlight the significance of understanding resistors in parallel
+                  in practical applications.
+                </p>
+              </div>
+
+              <div className="section-box">
+              <h5><strong>Homework:</strong></h5>
+                <ul>
+                  <li>Solve additional practice problems on resistors in parallel.</li>
+                  <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
 </div>
 
-{/* All Sessions Section */}
-<div className="all-sessions-section">
-  <h3>All Sessions for Today</h3>
-  {allSessions.length > 0 ? (
-    <ul>
-      {allSessions.map((session, index) => (
-        <li
-          key={session.sessionId}
-          style={{
-            fontWeight: index === selectedSessionIndex ? 'bold' : 'normal',
-            color: index === selectedSessionIndex ? 'blue' : 'black',
-          }}
-        >
-          {session.startTime} - {session.endTime}: {session.chapterName} (Session {session.sessionNumber})
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p>No sessions available for today.</p>
-  )}
+
+
+              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
+              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
+              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
+            </div>
+          ) : (
+            <p>No session details available for today.</p>
+          )}
 
 
           <h4>Assignments:</h4>
