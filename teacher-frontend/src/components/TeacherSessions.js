@@ -104,13 +104,14 @@ const TeacherSessions = () => {
       alert('Session ID is missing. Cannot view session report.');
       return;
     }
-
+  
     navigate(`/teacherportal/${teacherId}/session-report`, {
       state: {
-        sessionId: session.sessionId,
+        sessionId: session.sessionId, // Pass session ID
       },
     });
   };
+  
 
   return (
     <div className="sessions-container">
