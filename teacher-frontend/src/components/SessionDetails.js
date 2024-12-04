@@ -84,9 +84,10 @@ useEffect(() => {
         }
       } catch (error) {
         console.error('Error fetching assignment details:', error);
+        setAssignmentDetails(null); // Set to null if assignment is missing
       }
     };
-
+    
     if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
   }, [sessionDetails?.sessionPlanId]);
 
