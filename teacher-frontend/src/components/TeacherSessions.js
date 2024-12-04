@@ -99,6 +99,19 @@ const TeacherSessions = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
+  const handleViewSessionReport = (session) => {
+    if (!session.sessionId) {
+      alert('Session ID is missing. Cannot view session report.');
+      return;
+    }
+
+    navigate(`/teacherportal/${teacherId}/session-report`, {
+      state: {
+        sessionId: session.sessionId,
+      },
+    });
+  };
+
   return (
     <div className="sessions-container">
       <h2>Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})</h2>
@@ -144,6 +157,8 @@ const TeacherSessions = () => {
         <th>Start Time</th>
         <th>End Time</th>
         <th>Assignments</th>
+        <th>Session Reports</th>
+
       </tr>
     </thead>
     <tbody>
@@ -195,6 +210,14 @@ const TeacherSessions = () => {
             Notify
           </button>
         </td>
+        <td>
+                  <button
+                    onClick={() => handleViewSessionReport(session)}
+                    style={{ backgroundColor: '#007bff', color: 'white' }}
+                  >
+                    View Report
+                  </button>
+                </td>
         </tr>
     );
   })}

@@ -1,68 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
+import './SessionReport.css';
 
 const SessionReport = () => {
-  const { sessionId } = useParams();
-  const [report, setReport] = useState(null);
+  const location = useLocation();
+  const { sessionId } = location.state || {};
+  const [sessionReport, setSessionReport] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!sessionId || sessionId === 'undefined') {
-      console.error('Invalid sessionId:', sessionId);
-      setError('Invalid session ID provided.');
-      return;
-    }
-
-    const fetchReport = async () => {
+    const fetchSessionReport = async () => {
       try {
-        const response = await axiosInstance.get(`/sessions/${sessionId}/details`);
-        setReport(response.data.sessionReport);
+        const response = await axiosInstance.get(`/api/session-reports/${sessionId}`);
+        setSessionReport(response.data);
       } catch (err) {
+        setError('Failed to load session report. Please try again later.');
         console.error('Error fetching session report:', err);
-        setError('Failed to load session report.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchReport();
+    if (sessionId) fetchSessionReport();
   }, [sessionId]);
 
+  if (loading) return <p>Loading session report...</p>;
   if (error) return <p>{error}</p>;
-  if (!report) return <p>Loading...</p>;
 
   return (
-    <div>
+    <div className="session-report-container">
       <h2>Session Report</h2>
-      <p><strong>School:</strong> {report.schoolName || 'N/A'}</p>
-      <p><strong>Class:</strong> {report.className || 'N/A'}</p>
-      <p><strong>Section:</strong> {report.sectionName || 'N/A'}</p>
-      <p><strong>Teacher:</strong> {report.teacherName || 'N/A'}</p>
-      <p><strong>Subject:</strong> {report.subjectName || 'N/A'}</p>
-      <p><strong>Chapter:</strong> {report.chapterName || 'N/A'}</p>
-      <p><strong>Date:</strong> {report.date || 'N/A'}</p>
-      <p><strong>Day:</strong> {report.day || 'N/A'}</p>
-
-      <h3>Topics</h3>
-      <p><strong>Completed:</strong></p>
-      <ul>
-        {report.sessionsCompleted && report.sessionsCompleted.length > 0 ? (
-          report.sessionsCompleted.map((topic, index) => <li key={index}>{topic}</li>)
-        ) : (
-          <p>No topics were completed in this session.</p>
-        )}
-      </ul>
-      <p><strong>Incomplete:</strong></p>
-      <ul>
-        {report.sessionsToComplete && report.sessionsToComplete.length > 0 ? (
-          report.sessionsToComplete.map((topic, index) => <li key={index}>{topic}</li>)
-        ) : (
-          <p>All topics were completed in this session.</p>
-        )}
-      </ul>
-
-      <p><strong>Absentees:</strong> {report.absentStudents.join(', ') || 'None'}</p>
-      <p><strong>Observations:</strong> {report.observationDetails || 'None'}</p>
-      <p><strong>Assignment:</strong> {report.assignmentDetails ? 'Assigned' : 'Not Assigned'}</p>
+      {sessionReport ? (
+        <div className="session-report-details">
+          <p><strong>Session ID:</strong> {sessionReport.sessionId}</p>
+          <p><strong>Date:</strong> {sessionReport.date}</p>
+          <p><strong>Day:</strong> {sessionReport.day}</p>
+          <p><strong>Teacher Name:</strong> {sessionReport.teacherName || 'N/A'}</p>
+          <p><strong>School:</strong> {sessionReport.schoolName || 'N/A'}</p>
+          <p><strong>Class:</strong> {sessionReport.className || 'N/A'}</p>
+          <p><strong>Section:</strong> {sessionReport.sectionName || 'N/A'}</p>
+          <p><strong>Subject:</strong> {sessionReport.subjectName || 'N/A'}</p>
+          <p><strong>Completed Topics:</strong> {sessionReport.sessionsCompleted || 'N/A'}</p>
+          <p><strong>Pending Topics:</strong> {sessionReport.sessionsToComplete || 'N/A'}</p>
+          <p><strong>Observations:</strong> {sessionReport.observationDetails || 'N/A'}</p>
+          <p><strong>Absentees:</strong> {sessionReport.absentStudents || 'None'}</p>
+        </div>
+      ) : (
+        <p>No report data found for this session.</p>
+      )}
     </div>
   );
 };
