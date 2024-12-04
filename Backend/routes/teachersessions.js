@@ -215,7 +215,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { date } = req.query; // Optional date filter for flexibility
 
   try {
-    // Step 1: Determine the current priority
+    // Step 1: Fetch all priorities in ascending order
     const priorities = await sequelize.query(
       `
       SELECT DISTINCT priorityNumber
@@ -232,6 +232,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
 
     let currentPriority = null;
 
+    // Step 2: Determine the current priority based on incomplete sessions
     for (const priority of priorities) {
       const totalSessions = await Session.count({
         where: { subjectId, sectionId, priorityNumber: priority.priorityNumber },
@@ -267,7 +268,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       return res.status(200).json({ message: 'All sessions are completed.' });
     }
 
-    // Step 2: Fetch sessions for the current priority
+    // Step 3: Fetch sessions for all priorities in ascending order
     const sessions = await sequelize.query(
       `
       SELECT
@@ -310,7 +311,12 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           timetable_entries.teacherId = :teacherId
           AND timetable_entries.sectionId = :sectionId
           AND timetable_entries.subjectId = :subjectId
-          AND sessions.priorityNumber = :currentPriority
+          AND sessions.priorityNumber IN (
+              SELECT DISTINCT priorityNumber
+              FROM sessions
+              WHERE subjectId = :subjectId
+                AND sectionId = :sectionId
+          )
           ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
       ORDER BY
           ChapterPriority ASC, sp.sessionNumber ASC, SessionDate ASC, StartTime ASC;
@@ -320,7 +326,6 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           teacherId,
           sectionId,
           subjectId,
-          currentPriority,
           date,
         },
         type: sequelize.QueryTypes.SELECT,
@@ -331,7 +336,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       return res.status(404).json({ error: 'No sessions found for the current priority.' });
     }
 
-    // Step 3: Process and respond with the sessions
+    // Step 4: Process and respond with the sessions
     const sessionDetails = sessions.map((session) => ({
       sessionId: session.sessionId,
       sessionPlanId: session.sessionPlanId,
@@ -350,6 +355,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 
 
