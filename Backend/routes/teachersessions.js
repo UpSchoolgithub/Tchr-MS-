@@ -128,7 +128,8 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
     const academicStartDate = new Date(session.Subject.academicStartDate);
     const currentDate = new Date();
     const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
-
+    const reportDate = currentDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const reportDay = currentDate.toLocaleString('en-US', { weekday: 'long' }); // Example: "Monday"
     res.json({
       message: 'Attendance marked successfully',
       sessionDetails: {
@@ -532,20 +533,21 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
-      date: reportDate, // Add date
-      day: reportDay, // Add day
+      date: reportDate, // Use calculated date
+      day: reportDay, // Use calculated day
       teacherId,
-      teacherName: session.Teacher?.name || 'Unknown Teacher',
-      className: session.ClassInfo?.className || 'Unknown Class',
-      sectionName: session.Section?.sectionName || 'Unknown Section',
-      subjectName: session.Subject?.subjectName || 'Unknown Subject',
-      schoolName: session.School?.name || 'Unknown School',
+      teacherName,
+      className,
+      sectionName,
+      subjectName,
+      schoolName,
       absentStudents: JSON.stringify(absentees || []),
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
       sessionsCompleted: JSON.stringify(completedTopics || []),
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
+    
     
 
     // Append incomplete topics to the next session
@@ -656,6 +658,7 @@ router.get('/reports/sessions', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session reports.' });
   }
 });
+
 
 
 module.exports = router;
