@@ -362,139 +362,140 @@ useEffect(() => {
           </>
         )}
   
-        {/* Session Notes */}
-        <div className="session-notes-section">
-      <h3>Session Notes and Details:</h3>
-      {sessionDetails ? (
-        <div className="session-item">
-          <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-          <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
-          <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-          <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-          <div className="topics-container">
-          <h4>Topics to Cover:</h4>
-<ul className="topics-list">
-  {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx} className="topic-item">
-      <div className="topic-container">
-        <input
-          type="checkbox"
-          id={`topic-${idx}`}
-          style={{ marginRight: "10px" }}
-        />
-        <label htmlFor={`topic-${idx}`} className="topic-name">
-          {idx + 1}. {topic}
-        </label>
-        <button
-          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-          className="view-lp-button"
-        >
-          {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-        </button>
-      </div>
-      {expandedTopic === idx && (
-        <div className="lesson-plan-container">
-          <div className="lesson-plan-content">
-            <div className="section-box">
-              <h5><strong>Objectives:</strong></h5>
+{/* Session Notes Section */}
+<div className="session-notes-section">
+  <h3>Session Notes and Details:</h3>
+  {sessionDetails ? (
+    <div className="session-item">
+      <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+      <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
+      <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+      <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+      <div className="topics-container">
+        <h4>Topics to Cover:</h4>
+        <ul className="topics-list">
+          {sessionDetails.topics?.map((topic, idx) => (
+            <li key={idx} className="topic-item">
+              <div className="topic-container">
+                <input
+                  type="checkbox"
+                  id={`topic-${idx}`}
+                  style={{ marginRight: "10px" }}
+                />
+                <label htmlFor={`topic-${idx}`} className="topic-name">
+                  {idx + 1}. {topic}
+                </label>
+                <button
+                  onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+                  className="view-lp-button"
+                >
+                  {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+                </button>
+              </div>
+              {expandedTopic === idx && (
+                <div className="lesson-plan-container">
+                  <div className="lesson-plan-content">
+                    <div className="section-box">
+                      <h5><strong>Objectives:</strong></h5>
+                      <ul>
+                        <li>Understand the concept of resistors connected in parallel.</li>
+                        <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
+                        <li>Understand how current flows in resistors connected in parallel.</li>
+                      </ul>
+                    </div>
+                    <div className="section-box">
+                      <h5><strong>Teaching Aids:</strong></h5>
+                      <p>Whiteboard, Markers, Visual aids (diagrams)</p>
+                    </div>
+                    <div className="section-box">
+                      <h5><strong>Content:</strong></h5>
+                      <ol>
+                        <li>
+                          <strong>Introduction to resistors in parallel:</strong>
                           <ul>
-                            <li>Understand the concept of resistors connected in parallel.</li>
-                            <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-                            <li>Understand how current flows in resistors connected in parallel.</li>
+                            <li>Definition and explanation of resistors connected in parallel.</li>
+                            <li>Differences between series and parallel connections of resistors.</li>
                           </ul>
-                        </div>
-                        <div className="section-box">
-                          <h5><strong>Teaching Aids:</strong></h5>
-                          <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-                        </div>
-                        <div className="section-box">
-              <h5><strong>Content:</strong></h5>
-                <ol>
-                  <li>
-                    <strong>Introduction to resistors in parallel:</strong>
-                    <ul>
-                      <li>Definition and explanation of resistors connected in parallel.</li>
-                      <li>Differences between series and parallel connections of resistors.</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>Equivalent resistance in parallel:</strong>
-                    <ul>
-                      <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                      <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                      <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>Current flow in resistors in parallel:</strong>
-                    <ul>
-                      <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                      <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                    </ul>
-                  </li>
-                </ol>
-              </div>
+                        </li>
+                        <li>
+                          <strong>Equivalent resistance in parallel:</strong>
+                          <ul>
+                            <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
+                            <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
+                            <li>Example problems demonstrating the calculation of equivalent resistance.</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <strong>Current flow in resistors in parallel:</strong>
+                          <ul>
+                            <li>Explanation of how current is distributed in resistors connected in parallel.</li>
+                            <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
+                          </ul>
+                        </li>
+                      </ol>
+                    </div>
+                    <div className="section-box">
+                      <h5><strong>Activities:</strong></h5>
+                      <ol>
+                        <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
+                        <li>Draw diagrams showing the flow of current in parallel resistors.</li>
+                        <li>Discuss real-life examples of parallel circuits and their applications.</li>
+                      </ol>
+                    </div>
+                    <div className="section-box">
+                      <h5><strong>Summary:</strong></h5>
+                      <p>
+                        Recap the key points discussed during the session. Emphasize the differences between series and
+                        parallel connections of resistors. Highlight the significance of understanding resistors in parallel
+                        in practical applications.
+                      </p>
+                    </div>
+                    <div className="section-box">
+                      <h5><strong>Homework:</strong></h5>
+                      <ul>
+                        <li>Solve additional practice problems on resistors in parallel.</li>
+                        <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
 
-              <div className="section-box">
-              <h5><strong>Activities:</strong></h5>
-                <ol>
-                  <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
-                  <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-                  <li>Discuss real-life examples of parallel circuits and their applications.</li>
-                </ol>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Summary:</strong></h5>
-                <p>
-                  Recap the key points discussed during the session. Emphasize the differences between series and
-                  parallel connections of resistors. Highlight the significance of understanding resistors in parallel
-                  in practical applications.
-                </p>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Homework:</strong></h5>
-                <ul>
-                  <li>Solve additional practice problems on resistors in parallel.</li>
-                  <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
+      <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
+      <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
+      <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
+    </div>
+  ) : (
+    <p>No session details available for today.</p>
+  )}
 </div>
-
-
-
-              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
-              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
-              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
-            </div>
-          ) : (
-            <p>No session details available for today.</p>
-          )}
 
 {/* All Sessions Section */}
 <div className="all-sessions-section">
   <h3>All Sessions for Today</h3>
-  <ul>
-    {allSessions.map((session, index) => (
-      <li
-        key={session.sessionId}
-        style={{
-          fontWeight: index === selectedSessionIndex ? 'bold' : 'normal',
-          color: index === selectedSessionIndex ? 'blue' : 'black',
-        }}
-      >
-        {session.startTime} - {session.endTime}: {session.chapterName} (Session {session.sessionNumber})
-      </li>
-    ))}
-  </ul>
-</div>
+  {allSessions.length > 0 ? (
+    <ul>
+      {allSessions.map((session, index) => (
+        <li
+          key={session.sessionId}
+          style={{
+            fontWeight: index === selectedSessionIndex ? 'bold' : 'normal',
+            color: index === selectedSessionIndex ? 'blue' : 'black',
+          }}
+        >
+          {session.startTime} - {session.endTime}: {session.chapterName} (Session {session.sessionNumber})
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>No sessions available for today.</p>
+  )}
+
+
           <h4>Assignments:</h4>
           {assignmentDetails && (
             <div>
