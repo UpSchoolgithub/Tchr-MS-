@@ -144,7 +144,6 @@ const TeacherSessions = () => {
         <th>Start Time</th>
         <th>End Time</th>
         <th>Assignments</th>
-        <th>Session Report</th>
       </tr>
     </thead>
     <tbody>
@@ -196,16 +195,7 @@ const TeacherSessions = () => {
             Notify
           </button>
         </td>
-        <td>
-  <button
-    style={{ backgroundColor: 'white' }}
-    onClick={() => navigate(`/session-reports/${session.sessionId}`)}
-  >
-    Session Report
-  </button>
-</td>
-
-      </tr>
+        </tr>
     );
   })}
 </tbody>
