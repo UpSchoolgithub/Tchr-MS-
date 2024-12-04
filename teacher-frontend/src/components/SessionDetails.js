@@ -84,9 +84,10 @@ useEffect(() => {
         }
       } catch (error) {
         console.error('Error fetching assignment details:', error);
+        setAssignmentDetails(null); // Set to null if assignment is missing
       }
     };
-
+    
     if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
   }, [sessionDetails?.sessionPlanId]);
 
@@ -177,7 +178,6 @@ useEffect(() => {
       }
     });
   
-    // Ensure at least one topic is completed
     if (completedTopics.length === 0) {
       alert('Please mark at least one topic as completed.');
       return;
@@ -186,7 +186,12 @@ useEffect(() => {
     try {
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
-        teacherId, // Add teacherId to the payload
+        sessionId: sessionDetails.sessionId, // Include sessionId
+        teacherId, // Include teacherId in the payload
+        classId, // Include classId
+        sectionId, // Include sectionId
+        subjectId, // Include subjectId
+        schoolId, // Include schoolId
         completedTopics,
         incompleteTopics,
         observations,
@@ -206,6 +211,7 @@ useEffect(() => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
