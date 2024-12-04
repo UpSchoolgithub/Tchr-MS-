@@ -83,28 +83,45 @@ const SessionDetails = () => {
   }, [teacherId, sectionId, subjectId]);
   
   // Automatically Match Sessions to Periods: 
-  useEffect(() => {
-    if (allSessions.length > 0) {
-      const now = new Date();
-      const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
-  
-      const currentSession = allSessions.find((session) => {
+  // Automatically Match and Display Sessions Sequentially
+useEffect(() => {
+  if (allSessions.length > 0) {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
+
+    // Find the first session that has not started yet or is currently active
+    const currentSessionIndex = allSessions.findIndex((session) => {
+      const [startHour, startMinute] = session.startTime.split(":").map(Number);
+      const [endHour, endMinute] = session.endTime.split(":").map(Number);
+
+      const startTimeMinutes = startHour * 60 + startMinute;
+      const endTimeMinutes = endHour * 60 + endMinute;
+
+      return currentTime >= startTimeMinutes && currentTime < endTimeMinutes;
+    });
+
+    // Set the current session based on the index
+    if (currentSessionIndex !== -1) {
+      setSessionDetails(allSessions[currentSessionIndex]);
+      setSelectedSessionIndex(currentSessionIndex);
+    } else {
+      // No active session; default to the next available session
+      const nextSessionIndex = allSessions.findIndex((session) => {
         const [startHour, startMinute] = session.startTime.split(":").map(Number);
-        const [endHour, endMinute] = session.endTime.split(":").map(Number);
-  
         const startTimeMinutes = startHour * 60 + startMinute;
-        const endTimeMinutes = endHour * 60 + endMinute;
-  
-        return currentTime >= startTimeMinutes && currentTime < endTimeMinutes;
+        return currentTime < startTimeMinutes;
       });
-  
-      if (currentSession) {
-        setSessionDetails(currentSession);
+
+      if (nextSessionIndex !== -1) {
+        setSessionDetails(allSessions[nextSessionIndex]);
+        setSelectedSessionIndex(nextSessionIndex);
       } else {
-        setSessionDetails(null); // No active session for the current period
+        setSessionDetails(null); // No upcoming sessions
       }
     }
-  }, [allSessions]);
+  }
+}, [allSessions]);
+
   
   // Fetch students for attendance
   useEffect(() => {
@@ -273,10 +290,19 @@ const SessionDetails = () => {
       );
   
       alert(response.data.message || 'Session ended successfully!');
-      navigate(`/teacher-sessions/${teacherId}`);
+  
+      // Move to the next session, if available
+      if (selectedSessionIndex + 1 < allSessions.length) {
+        const nextSession = allSessions[selectedSessionIndex + 1];
+        setSessionDetails(nextSession);
+        setSelectedSessionIndex(selectedSessionIndex + 1);
+      } else {
+        alert('All sessions for today are completed.');
+        navigate(`/teacher-sessions/${teacherId}`);
+      }
     } catch (error) {
       console.error('Error ending session:', error);
-      alert('Failed to end the session.');
+      alert('Failed to end the session. Please try again.');
     }
   };
   
@@ -452,7 +478,23 @@ const SessionDetails = () => {
             <p>No session details available for today.</p>
           )}
 
-
+{/* All Sessions Section */}
+<div className="all-sessions-section">
+  <h3>All Sessions for Today</h3>
+  <ul>
+    {allSessions.map((session, index) => (
+      <li
+        key={session.sessionId}
+        style={{
+          fontWeight: index === selectedSessionIndex ? 'bold' : 'normal',
+          color: index === selectedSessionIndex ? 'blue' : 'black',
+        }}
+      >
+        {session.startTime} - {session.endTime}: {session.chapterName} (Session {session.sessionNumber})
+      </li>
+    ))}
+  </ul>
+</div>
           <h4>Assignments:</h4>
           {assignmentDetails && (
             <div>
