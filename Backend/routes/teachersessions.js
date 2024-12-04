@@ -510,7 +510,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       include: [
         { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
         { model: Subject, attributes: ['id'] },
-        { model: Teacher, attributes: ['name'] }, // Include Teacher model
+        { model: Teacher, as: 'Teacher', attributes: ['name'] }, // Correct alias
         { model: ClassInfo, attributes: ['className'] },
         { model: Section, attributes: ['sectionName'] },
         { model: School, attributes: ['name'] },
