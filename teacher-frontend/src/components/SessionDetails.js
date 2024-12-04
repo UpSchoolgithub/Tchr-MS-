@@ -18,7 +18,6 @@ const SessionDetails = () => {
   } = location.state || {};
   
  
-  const [expandedTopic, setExpandedTopic] = useState(null);
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
@@ -60,42 +59,27 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
-        console.log('Fetched session details:', response.data);
   
-        // Process and sort sessions
-        const sessions = response.data.sessionDetails || [];
-        const sortedSessions = sessions.sort((a, b) => {
-          const dateA = new Date(a.sessionDate);
-          const dateB = new Date(b.sessionDate);
+        if (response.data?.sessionDetails) {
+          // Combine previous session's incomplete topics with current session's topics
+          const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
+          const currentTopics = response.data.sessionDetails.topics || [];
   
-          if (dateA.getTime() === dateB.getTime()) {
-            if (a.priorityNumber === b.priorityNumber) {
-              return a.sessionNumber - b.sessionNumber;
-            }
-            return a.priorityNumber - b.priorityNumber;
-          }
-          return dateA - dateB;
-        });
-  
-        setSessionDetails(sortedSessions);
+          setSessionDetails({
+            ...response.data.sessionDetails,
+            topics: [...previousIncompleteTopics, ...currentTopics],
+          });
+        }
       } catch (error) {
         console.error('Error fetching session details:', error);
         setError('Failed to fetch session details.');
-      } finally {
-        setLoading(false);
       }
     };
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
-
-  const toggleExpandedTopic = (sessionIndex, topicIndex) => {
-    setExpandedTopic((prev) =>
-      prev?.sessionIndex === sessionIndex && prev?.topicIndex === topicIndex
-        ? null
-        : { sessionIndex, topicIndex }
-    );
-  };
+  
+  
   
   // Fetch assignment details
   useEffect(() => {
@@ -188,30 +172,24 @@ const SessionDetails = () => {
       return;
     }
   
-    // Collect completed and incomplete topics based on checkbox states
-    const completedTopics = [];
-    const incompleteTopics = [];
-  
-    sessionDetails.topics.forEach((topic, idx) => {
-      const isChecked = document.getElementById(`topic-${idx}`).checked;
-      if (isChecked) {
-        completedTopics.push(topic);
-      } else {
-        incompleteTopics.push(topic);
-      }
-    });
-  
-    // Ensure at least one topic is completed
-    if (completedTopics.length === 0) {
-      alert('Please mark at least one topic as completed.');
-      return;
-    }
-  
     try {
+      // Collect completed and incomplete topics based on checkbox states
+      const completedTopics = [];
+      const incompleteTopics = [];
+  
+      sessionDetails.topics.forEach((topic, idx) => {
+        const isChecked = document.getElementById(`topic-${idx}`).checked;
+        if (isChecked) {
+          completedTopics.push(topic);
+        } else {
+          incompleteTopics.push(topic);
+        }
+      });
+  
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
-        incompleteTopics,
+        incompleteTopics, // Send incomplete topics to backend
         observations,
         absentees,
         completed: true,
@@ -223,12 +201,15 @@ const SessionDetails = () => {
       );
   
       alert(response.data.message || 'Session ended successfully!');
+  
+      // Redirect or refresh page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   
@@ -248,160 +229,72 @@ const SessionDetails = () => {
 
   return (
     <div className="session-details-container">
- 
-      {/* Welcome Message */}
-      <h2>Welcome, Vishal!</h2>
-  
-      {/* Attendance Section */}
-      <div className="attendance-section">
-        <h3>Mark Absentees</h3>
-        <p style={{ color: 'red', fontSize: 'small' }}>
-    <i>*Note: Mark only absentees. Rest of the students will be marked present automatically</i>
-</p>
-        {loading ? (
-          <p>Loading students...</p>
-        ) : error ? (
-          <p className="error-message">{error}</p>
-        ) : students.length === 0 ? (
-          <p>No students found for this section.</p>
-        ) : (
-          <>
-            <Select
-              isMulti
-              options={studentOptions}
-              onChange={handleAbsenteeChange}
-              placeholder="Choose Absentees"
-              value={studentOptions.filter((option) => absentees.includes(option.value))}
-              className="multi-select-dropdown"
-              closeMenuOnSelect={false}
-            />
-            <button onClick={handleSaveAttendance} className="save-attendance-button">
-              Save Attendance
-            </button>
-          </>
-        )}
-  
-        {/* Session Notes */}
+      <div className="session-details-header">
+        <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
+        <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
+        <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
+        <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
+        <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
+      </div>
+
+      <h2>Welcome, Teacher Name!</h2>
+
+      <div className="attendance-and-notes">
+        <div className="attendance-section">
+          <h3>Mark Attendance</h3>
+          {loading ? (
+            <p>Loading students...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : students.length === 0 ? (
+            <p>No students found for this section.</p>
+          ) : (
+            <>
+              <Select
+                isMulti
+                options={studentOptions}
+                onChange={handleAbsenteeChange}
+                placeholder="Choose Absentees"
+                value={studentOptions.filter((option) => absentees.includes(option.value))}
+                className="multi-select-dropdown"
+                closeMenuOnSelect={false}
+              />
+              <button onClick={handleSaveAttendance} className="save-attendance-button">
+                Save Attendance
+              </button>
+            </>
+          )}
+        </div>
+
         <div className="session-notes-section">
-      <strong>
-        <h3 style={{ textAlign: 'center', textTransform: 'uppercase', textDecoration: 'underline', fontWeight: 'bold' }}>
-          Session Notes and Details:
-        </h3>
-      </strong>
-
-      {sessionDetails && sessionDetails.length > 0 ? (
-        sessionDetails.map((session, sessionIndex) => (
-          <div key={sessionIndex} className="session-item">
-            <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-            <p><strong>Session Number:</strong> {session.sessionNumber || 'N/A'}</p>
-            <p><strong>Session Date:</strong> {session.sessionDate || 'N/A'}</p>
-            <p><strong>Start Time:</strong> {session.startTime || 'N/A'}</p>
-            <p><strong>End Time:</strong> {session.endTime || 'N/A'}</p>
-            <p><strong>Priority:</strong> {session.priorityNumber || 'N/A'}</p>
-
-            {/* Topics Section */}
-            <div className="topics-container">
+          <h3>Session Notes and Details:</h3>
+          {sessionDetails ? (
+            <div className="session-item">
+              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+              <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
+              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+              <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
               <h4>Topics to Cover:</h4>
-              <ul className="topics-list">
-                {session.topics.map((topic, topicIndex) => (
-                  <li key={topicIndex} className="topic-item">
-                    <div className="topic-container">
-                      <input
-                        type="checkbox"
-                        id={`topic-${sessionIndex}-${topicIndex}`}
-                        style={{ marginRight: "10px" }}
-                      />
-                      <label htmlFor={`topic-${sessionIndex}-${topicIndex}`} className="topic-name">
-                        {topicIndex + 1}. {topic}
-                      </label>
-                      <button
-                        onClick={() => toggleExpandedTopic(sessionIndex, topicIndex)}
-                        className="view-lp-button"
-                      >
-                        {expandedTopic?.sessionIndex === sessionIndex && expandedTopic?.topicIndex === topicIndex
-                          ? "HIDE LP"
-                          : "VIEW LP"}
-                      </button>
-                    </div>
-
-                    {/* Lesson Plan Details */}
-                    {expandedTopic?.sessionIndex === sessionIndex && expandedTopic?.topicIndex === topicIndex && (
-                      <div className="lesson-plan-container">
-                        <div className="lesson-plan-content">
-                          <div className="section-box">
-                            <h5><strong>Objectives:</strong></h5>
-                            <ul>
-                              <li>Understand the concept of resistors connected in parallel.</li>
-                              <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-                              <li>Understand how current flows in resistors connected in parallel.</li>
-                            </ul>
-                          </div>
-                          <div className="section-box">
-                            <h5><strong>Teaching Aids:</strong></h5>
-                            <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-                          </div>
-                          <div className="section-box">
-                            <h5><strong>Content:</strong></h5>
-                            <ol>
-                              <li>
-                                <strong>Introduction to resistors in parallel:</strong>
-                                <ul>
-                                  <li>Definition and explanation of resistors connected in parallel.</li>
-                                  <li>Differences between series and parallel connections of resistors.</li>
-                                </ul>
-                              </li>
-                              <li>
-                                <strong>Equivalent resistance in parallel:</strong>
-                                <ul>
-                                  <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                                  <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                                  <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                                </ul>
-                              </li>
-                              <li>
-                                <strong>Current flow in resistors in parallel:</strong>
-                                <ul>
-                                  <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                                  <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                                </ul>
-                              </li>
-                            </ol>
-                          </div>
-                          <div className="section-box">
-                            <h5><strong>Activities:</strong></h5>
-                            <ol>
-                              <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
-                              <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-                              <li>Discuss real-life examples of parallel circuits and their applications.</li>
-                            </ol>
-                          </div>
-                          <div className="section-box">
-                            <h5><strong>Summary:</strong></h5>
-                            <p>
-                              Recap the key points discussed during the session. Emphasize the differences between series and
-                              parallel connections of resistors. Highlight the significance of understanding resistors in
-                              parallel in practical applications.
-                            </p>
-                          </div>
-                          <div className="section-box">
-                            <h5><strong>Homework:</strong></h5>
-                            <ul>
-                              <li>Solve additional practice problems on resistors in parallel.</li>
-                              <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
+              <ul>
+                {sessionDetails.topics.map((topic, idx) => (
+                  <li key={idx}>
+                    <input type="checkbox" id={`topic-${idx}`} />
+                    <label htmlFor={`topic-${idx}`}>{topic}</label>
+                    {sessionDetails.previousIncompleteTopics?.includes(topic) && (
+                      <span className="carry-forward-tag">(Carried Forward)</span>
                     )}
                   </li>
                 ))}
               </ul>
+
+              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
+              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
+              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
             </div>
-          </div>
-        ))
-      ) : (
-        <p>No session details available.</p>
-      )}
+          ) : (
+            <p>No session details available for today.</p>
+          )}
+
 
           <h4>Assignments:</h4>
           {assignmentDetails && (
@@ -453,7 +346,6 @@ const SessionDetails = () => {
             </button>
           </div>
 
-                   
         </div>
       </div>
     </div>
