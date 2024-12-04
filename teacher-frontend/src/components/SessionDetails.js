@@ -186,6 +186,7 @@ useEffect(() => {
     try {
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
+        teacherId, // Add teacherId to the payload
         completedTopics,
         incompleteTopics,
         observations,
