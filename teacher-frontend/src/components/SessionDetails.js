@@ -54,22 +54,29 @@ const SessionDetails = () => {
 
   // Fetch session details
   // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
-
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+        console.log('Fetched session details:', response.data);
+  
+        // Deduplicate session details
+        const uniqueSessions = response.data.sessionDetails.filter(
+          (value, index, self) =>
+            index === self.findIndex((t) => t.sessionId === value.sessionId)
+        );
+        setSessionDetails(uniqueSessions || []);
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
+      }
+    };
+  
+    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+  }, [teacherId, sectionId, subjectId]);
+  
 
   
   
