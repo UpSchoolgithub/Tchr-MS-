@@ -215,7 +215,12 @@ const SessionDetails = () => {
   };
   
   
-  
+  useEffect(() => {
+    if (!sessionDetails) {
+      alert('Session details are missing. Redirecting...');
+      navigate('/teacher-sessions'); // Redirect to Teacher Sessions page
+    }
+  }, [sessionDetails, navigate]);
   
   
   
