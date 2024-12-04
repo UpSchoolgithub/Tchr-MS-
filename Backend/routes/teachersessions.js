@@ -510,31 +510,38 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       include: [
         { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
         { model: Subject, attributes: ['id'] },
+        { model: Teacher, attributes: ['name'] }, // Include Teacher model
+        { model: ClassInfo, attributes: ['className'] },
+        { model: Section, attributes: ['sectionName'] },
+        { model: School, attributes: ['name'] },
       ],
     });
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found.' });
     }
-
-    // Add session report for the current session
+    const teacherName = session.Teacher?.name || 'Unknown Teacher';
+    const className = session.ClassInfo?.className || 'Unknown Class';
+    const sectionName = session.Section?.sectionName || 'Unknown Section';
+    const subjectName = session.Subject?.subjectName || 'Unknown Subject';
+    const schoolName = session.School?.name || 'Unknown School';
+    
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
-      date: new Date().toISOString().split('T')[0],
-      day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: session.Teacher?.name || 'Unknown Teacher',
-      className: session.ClassInfo?.className || 'Unknown Class',
-      sectionName: session.Section?.sectionName || 'Unknown Section',
-      subjectName: session.Subject?.subjectName || 'Unknown Subject',
-      schoolName: session.School?.name || 'Unknown School',
+      teacherName,
+      className,
+      sectionName,
+      subjectName,
+      schoolName,
       absentStudents: JSON.stringify(absentees || []),
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
       sessionsCompleted: JSON.stringify(completedTopics || []),
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
+    
 
     // Append incomplete topics to the next session
     if (incompleteTopics.length > 0) {
