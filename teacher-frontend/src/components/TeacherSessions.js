@@ -197,20 +197,18 @@ const TeacherSessions = () => {
           </button>
         </td>
         <td>
-  <button
-    style={{ backgroundColor: 'white' }}
-    onClick={() => {
-      if (!session.sessionId) {
-        console.error('Session ID is undefined:', session);
-        alert('Session ID is missing. Cannot navigate to report.');
-        return;
-      }
-      navigate(`/session-reports/${session.sessionId}`);
-    }}
-  >
-    Session Report
-  </button>
+  {session.sessionId ? (
+    <button
+      style={{ backgroundColor: 'white' }}
+      onClick={() => navigate(`/session-reports/${session.sessionId}`)}
+    >
+      Session Report
+    </button>
+  ) : (
+    <span style={{ color: 'red' }}>Session ID missing</span>
+  )}
 </td>
+
 
 
       </tr>
