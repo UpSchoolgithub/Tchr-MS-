@@ -207,15 +207,6 @@ useEffect(() => {
   };
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
     label: student.studentName,
@@ -224,255 +215,210 @@ useEffect(() => {
 
   return (
     <div className="session-details-container">
- 
-      {/* Welcome Message */}
-      <h2>Welcome, Vishal!</h2>
+      <strong>
+        <h3
+          style={{
+            textAlign: "center",
+            textTransform: "uppercase",
+            textDecoration: "underline",
+            fontWeight: "bold",
+          }}
+        >
+          Session Notes and Details:
+        </h3>
+      </strong>
+      {loading ? (
+        <p>Loading session details...</p>
+      ) : error ? (
+        <p className="error-message">{error}</p>
+      ) : sessionDetails && Array.isArray(sessionDetails) && sessionDetails.length > 0 ? (
+        <div>
+          {sessionDetails.map((session, idx) => (
+            <div key={idx} className="session-item">
+              <p>
+                <strong>Chapter Name:</strong> {session.chapterName || "N/A"}
+              </p>
+              <p>
+                <strong>Session Number:</strong> {session.sessionNumber || "N/A"}
+              </p>
+              <div className="topics-container">
+                <h4>Topics to Cover:</h4>
   
-      {/* Attendance Section */}
-      <div className="attendance-section">
-        <h3>Mark Absentees</h3>
-        <p style={{ color: 'red', fontSize: 'small' }}>
-    <i>*Note: Mark only absentees. Rest of the students will be marked present automatically</i>
-</p>
-        {loading ? (
-          <p>Loading students...</p>
-        ) : error ? (
-          <p className="error-message">{error}</p>
-        ) : students.length === 0 ? (
-          <p>No students found for this section.</p>
-        ) : (
-          <>
-            <Select
-              isMulti
-              options={studentOptions}
-              onChange={handleAbsenteeChange}
-              placeholder="Choose Absentees"
-              value={studentOptions.filter((option) => absentees.includes(option.value))}
-              className="multi-select-dropdown"
-              closeMenuOnSelect={false}
-            />
-            <button onClick={handleSaveAttendance} className="save-attendance-button">
-              Save Attendance
-            </button>
-          </>
-        )}
-  
-        {/* Session Notes */}
-        <div className="session-notes-section">
-  <strong>
-    <h3
-      style={{
-        textAlign: "center",
-        textTransform: "uppercase",
-        textDecoration: "underline",
-        fontWeight: "bold",
-      }}
-    >
-      Session Notes and Details:
-    </h3>
-  </strong>
-  {loading ? (
-    <p>Loading session details...</p>
-  ) : error ? (
-    <p className="error-message">{error}</p>
-  ) : sessionDetails && Array.isArray(sessionDetails.topics) && sessionDetails.topics.length > 0 ? (
-    <div className="session-item">
-      <p>
-        <strong>Chapter Name:</strong> {sessionDetails.chapterName || "N/A"}
-      </p>
-      <p>
-        <strong>Session Number:</strong> {sessionDetails.sessionNumber || "N/A"}
-      </p>
-      <div className="topics-container">
-        <h4>Topics to Cover:</h4>
-
-        {/* Recommended Topics Section */}
-        <div className="recommended-topics-box">
-          <h3>Recommended Topics to Cover from A&R:</h3>
-          <div className="recommended-topic-item">
-            <input type="checkbox" id="electric-current" />
-            <label htmlFor="electric-current">Electric Current</label>
-          </div>
-        </div>
-
-        {/* Topics List */}
-        <ul className="topics-list">
-          {sessionDetails.topics.map((topic, idx) => (
-            <li key={idx} className="topic-item">
-              <div className="topic-container">
-                <input
-                  type="checkbox"
-                  id={`topic-${idx}`}
-                  style={{ marginRight: "10px" }}
-                />
-                <label htmlFor={`topic-${idx}`} className="topic-name">
-                  {idx + 1}. {topic}
-                </label>
-                <button
-                  onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-                  className="view-lp-button"
-                >
-                  {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-                </button>
-              </div>
-              {expandedTopic === idx && (
-                <div className="lesson-plan-container">
-                  <div className="lesson-plan-content">
-                    <div className="section-box">
-                      <h5>
-                        <strong>Objectives:</strong>
-                      </h5>
-                      <ul>
-                        <li>Understand the concept of resistors connected in parallel.</li>
-                        <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-                        <li>Understand how current flows in resistors connected in parallel.</li>
-                      </ul>
-                    </div>
-                    <div className="section-box">
-                      <h5>
-                        <strong>Teaching Aids:</strong>
-                      </h5>
-                      <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-                    </div>
-                    <div className="section-box">
-                      <h5>
-                        <strong>Content:</strong>
-                      </h5>
-                      <ol>
-                        <li>
-                          <strong>Introduction to resistors in parallel:</strong>
-                          <ul>
-                            <li>Definition and explanation of resistors connected in parallel.</li>
-                            <li>Differences between series and parallel connections of resistors.</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <strong>Equivalent resistance in parallel:</strong>
-                          <ul>
-                            <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                            <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                            <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <strong>Current flow in resistors in parallel:</strong>
-                          <ul>
-                            <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                            <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                          </ul>
-                        </li>
-                      </ol>
-                    </div>
-                    <div className="section-box">
-                      <h5>
-                        <strong>Activities:</strong>
-                      </h5>
-                      <ol>
-                        <li>
-                          Solve example problems related to calculating equivalent resistance in parallel circuits.
-                        </li>
-                        <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-                        <li>Discuss real-life examples of parallel circuits and their applications.</li>
-                      </ol>
-                    </div>
-                    <div className="section-box">
-                      <h5>
-                        <strong>Summary:</strong>
-                      </h5>
-                      <p>
-                        Recap the key points discussed during the session. Emphasize the differences between series and
-                        parallel connections of resistors. Highlight the significance of understanding resistors in
-                        parallel in practical applications.
-                      </p>
-                    </div>
-                    <div className="section-box">
-                      <h5>
-                        <strong>Homework:</strong>
-                      </h5>
-                      <ul>
-                        <li>Solve additional practice problems on resistors in parallel.</li>
-                        <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-                      </ul>
-                    </div>
+                {/* Recommended Topics Section */}
+                <div className="recommended-topics-box">
+                  <h3>Recommended Topics to Cover from A&R:</h3>
+                  <div className="recommended-topic-item">
+                    <input type="checkbox" id={`electric-current-${idx}`} />
+                    <label htmlFor={`electric-current-${idx}`}>Electric Current</label>
                   </div>
                 </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <p>
-        <strong>Start Time:</strong> {sessionDetails.startTime || "N/A"}
-      </p>
-      <p>
-        <strong>End Time:</strong> {sessionDetails.endTime || "N/A"}
-      </p>
-      <p>
-        <strong>Session Date:</strong> {sessionDetails.sessionDate || "N/A"}
-      </p>
-    </div>
-  ) : (
-    <p>No session details available for today.</p>
-  )}
-
-
-
-
-          <h4>Assignments:</h4>
-          {assignmentDetails && (
-            <div>
-              <p>Existing Assignment: {assignmentDetails}</p>
-              {existingFile && (
-                <p>
-                  <a href={existingFile} target="_blank" rel="noopener noreferrer">
-                    View Uploaded File
-                  </a>
-                </p>
-              )}
+  
+                {/* Topics List */}
+                <ul className="topics-list">
+                  {session.topics && Array.isArray(session.topics) && session.topics.length > 0 ? (
+                    session.topics.map((topic, topicIdx) => (
+                      <li key={`${idx}-${topicIdx}`} className="topic-item">
+                        <div className="topic-container">
+                          <input
+                            type="checkbox"
+                            id={`topic-${idx}-${topicIdx}`}
+                            style={{ marginRight: "10px" }}
+                          />
+                          <label htmlFor={`topic-${idx}-${topicIdx}`} className="topic-name">
+                            {topicIdx + 1}. {topic}
+                          </label>
+                          <button
+                            onClick={() =>
+                              setExpandedTopic(expandedTopic === topicIdx ? null : topicIdx)
+                            }
+                            className="view-lp-button"
+                          >
+                            {expandedTopic === topicIdx ? "HIDE LP" : "VIEW LP"}
+                          </button>
+                        </div>
+                        {expandedTopic === topicIdx && (
+                          <div className="lesson-plan-container">
+                            {/* Lesson Plan Content */}
+                            <div className="lesson-plan-content">
+                              <div className="section-box">
+                                <h5>
+                                  <strong>Objectives:</strong>
+                                </h5>
+                                <ul>
+                                  <li>Understand the concept of resistors connected in parallel.</li>
+                                  <li>
+                                    Learn about the equivalent resistance formula for resistors in
+                                    parallel.
+                                  </li>
+                                  <li>
+                                    Understand how current flows in resistors connected in parallel.
+                                  </li>
+                                </ul>
+                              </div>
+                              <div className="section-box">
+                                <h5>
+                                  <strong>Teaching Aids:</strong>
+                                </h5>
+                                <p>Whiteboard, Markers, Visual aids (diagrams)</p>
+                              </div>
+                              <div className="section-box">
+                                <h5>
+                                  <strong>Content:</strong>
+                                </h5>
+                                <ol>
+                                  <li>
+                                    <strong>Introduction to resistors in parallel:</strong>
+                                    <ul>
+                                      <li>
+                                        Definition and explanation of resistors connected in parallel.
+                                      </li>
+                                      <li>
+                                        Differences between series and parallel connections of
+                                        resistors.
+                                      </li>
+                                    </ul>
+                                  </li>
+                                  <li>
+                                    <strong>Equivalent resistance in parallel:</strong>
+                                    <ul>
+                                      <li>
+                                        Explanation of how to calculate the total resistance in a
+                                        parallel circuit.
+                                      </li>
+                                      <li>
+                                        Formula for calculating equivalent resistance in a parallel
+                                        circuit.
+                                      </li>
+                                      <li>
+                                        Example problems demonstrating the calculation of equivalent
+                                        resistance.
+                                      </li>
+                                    </ul>
+                                  </li>
+                                </ol>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))
+                  ) : (
+                    <li>No topics available for this session.</li>
+                  )}
+                </ul>
+              </div>
+              <p>
+                <strong>Start Time:</strong> {session.startTime || "N/A"}
+              </p>
+              <p>
+                <strong>End Time:</strong> {session.endTime || "N/A"}
+              </p>
+              <p>
+                <strong>Session Date:</strong> {session.sessionDate || "N/A"}
+              </p>
             </div>
-          )}
-          <select onChange={handleAssignmentChange}>
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-          {assignmentsEnabled && (
-            <div className="assignment-input">
-            <textarea
-              value={assignmentDetails}
-              onChange={(e) => setAssignmentDetails(e.target.value)}
-              placeholder="Enter assignment details here..."
-            ></textarea>
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files[0])}
-              accept=".pdf,.doc,.docx,.jpg,.png" // Optional: Restrict file types
-            />
-            <button onClick={handleSaveAssignment}>Save</button>
-          </div>
-          
-          )}
-
-          <h4>Observations:</h4>
-          <textarea
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-            className="observations-textarea"
-            placeholder="Add observations of the class here..."
-          ></textarea>
-          <button onClick={handleSaveObservations} className="save-observations-button">
-            Save Observations
-          </button>
-          <div className="end-session">
-            <button onClick={handleEndSession} className="end-session-button">
-              End Session
-            </button>
-          </div>
-
-                   
+          ))}
         </div>
+      ) : (
+        <p>No session details available for today.</p>
+      )}
+  
+      {/* Assignments Section */}
+      <h4>Assignments:</h4>
+      {assignmentDetails && (
+        <div>
+          <p>Existing Assignment: {assignmentDetails}</p>
+          {existingFile && (
+            <p>
+              <a href={existingFile} target="_blank" rel="noopener noreferrer">
+                View Uploaded File
+              </a>
+            </p>
+          )}
+        </div>
+      )}
+      <select onChange={handleAssignmentChange}>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+      {assignmentsEnabled && (
+        <div className="assignment-input">
+          <textarea
+            value={assignmentDetails}
+            onChange={(e) => setAssignmentDetails(e.target.value)}
+            placeholder="Enter assignment details here..."
+          ></textarea>
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            accept=".pdf,.doc,.docx,.jpg,.png" // Optional: Restrict file types
+          />
+          <button onClick={handleSaveAssignment}>Save</button>
+        </div>
+      )}
+  
+      {/* Observations Section */}
+      <h4>Observations:</h4>
+      <textarea
+        value={observations}
+        onChange={(e) => setObservations(e.target.value)}
+        className="observations-textarea"
+        placeholder="Add observations of the class here..."
+      ></textarea>
+      <button onClick={handleSaveObservations} className="save-observations-button">
+        Save Observations
+      </button>
+  
+      {/* End Session Section */}
+      <div className="end-session">
+        <button onClick={handleEndSession} className="end-session-button">
+          End Session
+        </button>
       </div>
-    </div>
-  );
+
+</div>
+);
 };
 
 export default SessionDetails;
+  
