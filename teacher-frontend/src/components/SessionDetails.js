@@ -54,22 +54,22 @@ const SessionDetails = () => {
 
   // Fetch session details
   // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
-
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
+//useEffect(() => {
+ //const fetchSessionDetails = async () => {
+  //  try {
+   //   const response = await axiosInstance.get(
+   //     `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+   //   );
+   //   console.log('Fetched session details:', response.data);
+   //   setSessionDetails(response.data.sessionDetails || null);
+   // } catch (error) {
+  //    console.error('Error fetching session details:', error);
+  //    setError('Failed to fetch session details.');
+  //  }
+ // };
+//
+ // if (teacherId && sectionId && subjectId) fetchSessionDetails();
+//}, [teacherId, sectionId, subjectId]);
 
   
   
@@ -182,22 +182,25 @@ useEffect(() => {
       return;
     }
   
-    try {
-      const payload = {
-        sessionPlanId: sessionDetails.sessionPlanId,
-        sessionId: sessionDetails.sessionId, // Include sessionId
-        teacherId, // Include teacherId in the payload
-        classId, // Include classId
-        sectionId, // Include sectionId
-        subjectId, // Include subjectId
-        schoolId, // Include schoolId
-        completedTopics,
-        incompleteTopics,
-        observations,
-        absentees,
-        completed: true,
-      };
+    // Payload being sent
+    const payload = {
+      sessionPlanId: sessionDetails.sessionPlanId,
+      sessionId: sessionDetails.sessionId, // Include sessionId
+      teacherId, // Include teacherId in the payload
+      classId, // Include classId
+      sectionId, // Include sectionId
+      subjectId, // Include subjectId
+      schoolId, // Include schoolId
+      completedTopics,
+      incompleteTopics,
+      observations,
+      absentees,
+      completed: true,
+    };
   
+    console.log('Payload being sent to /end:', payload); // Log the payload
+  
+    try {
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
@@ -222,6 +225,7 @@ useEffect(() => {
   
   
   
+  
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
     label: student.studentName,
@@ -232,6 +236,7 @@ useEffect(() => {
     <div className="session-details-container">
       {/* Header Section */}
       <div className="session-details-header">
+      <p>Session ID: {sessionDetails.sessionId}</p>
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
         <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>

@@ -99,19 +99,31 @@ const TeacherSessions = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
-  const handleViewSessionReport = (session) => {
+  const handleViewSessionReport = async (session) => {
     if (!session.sessionId) {
       alert('Session ID is missing. Cannot view session report.');
       return;
     }
   
-    navigate(`/teacherportal/${teacherId}/session-report`, {
-      state: {
-        sessionId: session.sessionId,
-        sessionDetails: session, // Pass session details
-      },
-    });
+    try {
+      // Fetch additional session details
+      const response = await axiosInstance.get(`/sessions/${session.sessionId}/details`);
+      const detailedSession = response.data.sessionDetails;
+  
+      // Navigate with complete session details
+      navigate(`/teacherportal/${teacherId}/session-report`, {
+        state: {
+          sessionId: session.sessionId,
+          sessionDetails: { ...session, ...detailedSession }, // Merge existing and detailed session data
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      alert('Failed to fetch session details.');
+    }
   };
+  
+  
   
   
   
