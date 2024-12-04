@@ -100,18 +100,22 @@ const TeacherSessions = () => {
   if (error) return <p>{error}</p>;
 
   const handleViewSessionReport = (session) => {
-    if (!session.sessionId) {
-      alert('Session ID is missing. Cannot view session report.');
-      return;
-    }
-  
-    navigate(`/teacherportal/${teacherId}/session-report`, {
-      state: {
-        sessionId: session.sessionId,
-        sessionDetails: session, // Pass session details
-      },
-    });
-  };
+  if (!session.sessionId) {
+    alert('Session ID is missing. Cannot view session report.');
+    return;
+  }
+
+  // Log session details being passed
+  console.log('Navigating to session report with details:', session);
+
+  navigate(`/teacherportal/${teacherId}/session-report`, {
+    state: {
+      sessionId: session.sessionId,
+      sessionDetails: session, // Pass session details
+    },
+  });
+};
+
   
   
   

@@ -24,7 +24,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState(null);
+  const [sessionDetails, setSessionDetails] = useState(initialSessionDetails || null);
   const [observations, setObservations] = useState('');
   const [assignmentsEnabled, setAssignmentsEnabled] = useState(false);
   const [assignmentDetails, setAssignmentDetails] = useState('');
@@ -54,22 +54,22 @@ const SessionDetails = () => {
 
   // Fetch session details
   // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
-
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
+//useEffect(() => {
+ //const fetchSessionDetails = async () => {
+  //  try {
+   //   const response = await axiosInstance.get(
+   //     `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+   //   );
+   //   console.log('Fetched session details:', response.data);
+   //   setSessionDetails(response.data.sessionDetails || null);
+   // } catch (error) {
+  //    console.error('Error fetching session details:', error);
+  //    setError('Failed to fetch session details.');
+  //  }
+ // };
+//
+ // if (teacherId && sectionId && subjectId) fetchSessionDetails();
+//}, [teacherId, sectionId, subjectId]);
 
   
   
@@ -77,16 +77,16 @@ useEffect(() => {
   useEffect(() => {
     const fetchAssignmentDetails = async () => {
       try {
-        if (sessionDetails?.sessionPlanId) {
-          const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionPlanId}`);
-          setAssignmentDetails(response.data.assignmentDetails || '');
-          setExistingFile(response.data.assignmentFileUrl || null);
-        }
+        const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionPlanId}`);
+        setAssignmentDetails(response.data.assignmentDetails || '');
+        setExistingFile(response.data.assignmentFileUrl || null);
       } catch (error) {
         console.error('Error fetching assignment details:', error);
+        setAssignmentDetails(null); // Fallback
       }
     };
-
+    
+    
     if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
   }, [sessionDetails?.sessionPlanId]);
 
@@ -177,22 +177,30 @@ useEffect(() => {
       }
     });
   
-    // Ensure at least one topic is completed
     if (completedTopics.length === 0) {
       alert('Please mark at least one topic as completed.');
       return;
     }
   
-    try {
-      const payload = {
-        sessionPlanId: sessionDetails.sessionPlanId,
-        completedTopics,
-        incompleteTopics,
-        observations,
-        absentees,
-        completed: true,
-      };
+    // Payload being sent
+    const payload = {
+      sessionPlanId: sessionDetails.sessionPlanId,
+      sessionId: sessionDetails.sessionId, // Include sessionId
+      teacherId, // Include teacherId in the payload
+      classId, // Include classId
+      sectionId, // Include sectionId
+      subjectId, // Include subjectId
+      schoolId, // Include schoolId
+      completedTopics,
+      incompleteTopics,
+      observations,
+      absentees,
+      completed: true,
+    };
   
+    console.log('Payload being sent to /end:', payload); // Log the payload
+  
+    try {
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
@@ -206,6 +214,13 @@ useEffect(() => {
     }
   };
   
+  
+  useEffect(() => {
+    if (!sessionDetails) {
+      alert('Session details are missing. Redirecting...');
+      navigate('/teacher-sessions'); // Redirect to Teacher Sessions page
+    }
+  }, [sessionDetails, navigate]);
   
   
   
@@ -231,6 +246,10 @@ useEffect(() => {
         <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
+        <p><strong>Session ID:</strong> {sessionDetails?.sessionId || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {sessionDetails?.sessionPlanId || 'N/A'}</p>
+        <p><strong>Chapter Name:</strong> {sessionDetails?.chapterName || 'N/A'}</p>
+
       </div>
   
       {/* Welcome Message */}
