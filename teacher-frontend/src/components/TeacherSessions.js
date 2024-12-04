@@ -197,15 +197,14 @@ const TeacherSessions = () => {
           </button>
         </td>
         <td>
-          <button
-            style={{ backgroundColor: 'white'}}
-            onClick={() => {
-              navigate(`/session-reports/${session.sessionId}`);
-            }}
-          >
-            Session Report
-          </button>
-        </td>
+  <button
+    style={{ backgroundColor: 'white' }}
+    onClick={() => navigate(`/session-reports/${session.sessionId}`)}
+  >
+    Session Report
+  </button>
+</td>
+
       </tr>
     );
   })}

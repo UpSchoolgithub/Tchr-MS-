@@ -33,16 +33,36 @@ const SessionReport = () => {
   return (
     <div>
       <h2>Session Report</h2>
-      <p><strong>School:</strong> {report.schoolName}</p>
-      <p><strong>Class:</strong> {report.className}</p>
-      <p><strong>Teacher:</strong> {report.teacherName}</p>
-      <p><strong>Subject:</strong> {report.subjectName}</p>
-      <p><strong>Section:</strong> {report.sectionName}</p>
-      <p><strong>Chapter:</strong> {report.chapterName}</p>
-      <p><strong>Topics Covered:</strong> {report.sessionsCompleted.join(', ')}</p>
-      <p><strong>Absentees:</strong> {report.absentStudents.join(', ')}</p>
-      <p><strong>Observations:</strong> {report.observationDetails}</p>
-      <p><strong>Assignment Status:</strong> {report.assignmentDetails ? 'Assigned' : 'Not Assigned'}</p>
+      <p><strong>School:</strong> {report.schoolName || 'N/A'}</p>
+      <p><strong>Class:</strong> {report.className || 'N/A'}</p>
+      <p><strong>Section:</strong> {report.sectionName || 'N/A'}</p>
+      <p><strong>Teacher:</strong> {report.teacherName || 'N/A'}</p>
+      <p><strong>Subject:</strong> {report.subjectName || 'N/A'}</p>
+      <p><strong>Chapter:</strong> {report.chapterName || 'N/A'}</p>
+      <p><strong>Date:</strong> {report.date || 'N/A'}</p>
+      <p><strong>Day:</strong> {report.day || 'N/A'}</p>
+
+      <h3>Topics</h3>
+      <p><strong>Completed:</strong></p>
+      <ul>
+        {report.sessionsCompleted && report.sessionsCompleted.length > 0 ? (
+          report.sessionsCompleted.map((topic, index) => <li key={index}>{topic}</li>)
+        ) : (
+          <p>No topics were completed in this session.</p>
+        )}
+      </ul>
+      <p><strong>Incomplete:</strong></p>
+      <ul>
+        {report.sessionsToComplete && report.sessionsToComplete.length > 0 ? (
+          report.sessionsToComplete.map((topic, index) => <li key={index}>{topic}</li>)
+        ) : (
+          <p>All topics were completed in this session.</p>
+        )}
+      </ul>
+
+      <p><strong>Absentees:</strong> {report.absentStudents.join(', ') || 'None'}</p>
+      <p><strong>Observations:</strong> {report.observationDetails || 'None'}</p>
+      <p><strong>Assignment:</strong> {report.assignmentDetails ? 'Assigned' : 'Not Assigned'}</p>
     </div>
   );
 };
