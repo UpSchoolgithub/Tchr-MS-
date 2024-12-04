@@ -77,16 +77,15 @@ useEffect(() => {
   useEffect(() => {
     const fetchAssignmentDetails = async () => {
       try {
-        if (sessionDetails?.sessionPlanId) {
-          const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionPlanId}`);
-          setAssignmentDetails(response.data.assignmentDetails || '');
-          setExistingFile(response.data.assignmentFileUrl || null);
-        }
+        const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionPlanId}`);
+        setAssignmentDetails(response.data.assignmentDetails || '');
+        setExistingFile(response.data.assignmentFileUrl || null);
       } catch (error) {
         console.error('Error fetching assignment details:', error);
-        setAssignmentDetails(null); // Set to null if assignment is missing
+        setAssignmentDetails(null); // Fallback
       }
     };
+    
     
     if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
   }, [sessionDetails?.sessionPlanId]);

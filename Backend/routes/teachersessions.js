@@ -525,16 +525,21 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     const sectionName = session.Section?.sectionName || 'Unknown Section';
     const subjectName = session.Subject?.subjectName || 'Unknown Subject';
     const schoolName = session.School?.name || 'Unknown School';
-    
+    const currentDate = new Date();
+    const reportDate = currentDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const reportDay = currentDate.toLocaleString('en-US', { weekday: 'long' }); // Get day name (e.g., "Monday")
+
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
+      date: reportDate, // Add date
+      day: reportDay, // Add day
       teacherId,
-      teacherName,
-      className,
-      sectionName,
-      subjectName,
-      schoolName,
+      teacherName: session.Teacher?.name || 'Unknown Teacher',
+      className: session.ClassInfo?.className || 'Unknown Class',
+      sectionName: session.Section?.sectionName || 'Unknown Section',
+      subjectName: session.Subject?.subjectName || 'Unknown Subject',
+      schoolName: session.School?.name || 'Unknown School',
       absentStudents: JSON.stringify(absentees || []),
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
       sessionsCompleted: JSON.stringify(completedTopics || []),
