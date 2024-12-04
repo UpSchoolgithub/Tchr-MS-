@@ -128,8 +128,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
     const academicStartDate = new Date(session.Subject.academicStartDate);
     const currentDate = new Date();
     const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
-    const reportDate = currentDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    const reportDay = currentDate.toLocaleString('en-US', { weekday: 'long' }); // Example: "Monday"
+
     res.json({
       message: 'Attendance marked successfully',
       sessionDetails: {
@@ -212,91 +211,165 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
-// Fetch sessions for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
   const { date } = req.query; // Optional date filter for flexibility
 
   try {
+    // Run the query to fetch all sessions
     const sessions = await sequelize.query(
       `
       SELECT
-        sessions.id AS sessionId,
-        schools.name AS School,
-        classinfos.className AS Class,
-        sections.sectionName AS Section,
-        subjects.subjectName AS Subject,
-        sessions.chapterName AS Chapter,
-        sp.id AS sessionPlanId,
-        sp.sessionNumber AS SessionNumber,
-        JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
-        JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
-        JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2]')) AS Topic3,
-        sessions.priorityNumber AS ChapterPriority,
-        DATE_ADD(
-          subjects.academicStartDate,
-          INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
-        ) AS SessionDate,
-        timetable_entries.startTime AS StartTime,
-        timetable_entries.endTime AS EndTime
+          sessions.id AS sessionId, -- Include sessionId here
+          schools.name AS School,
+          classinfos.className AS Class,
+          sections.sectionName AS Section,
+          subjects.subjectName AS Subject,
+          sessions.chapterName AS Chapter,
+          sp.id AS sessionPlanId, -- Include sessionPlanId for completeness
+          sp.sessionNumber AS SessionNumber,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2]')) AS Topic3,
+          sessions.priorityNumber AS ChapterPriority,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS SessionDate,
+          timetable_entries.startTime AS StartTime,
+          timetable_entries.endTime AS EndTime
       FROM
-        timetable_entries
+          timetable_entries
       JOIN
-        subjects ON timetable_entries.subjectId = subjects.id
+          subjects ON timetable_entries.subjectId = subjects.id
       JOIN
-        sessions ON (
-          sessions.subjectId = timetable_entries.subjectId AND
-          sessions.sectionId = timetable_entries.sectionId
-        )
+          sessions ON (
+              sessions.subjectId = timetable_entries.subjectId AND
+              sessions.sectionId = timetable_entries.sectionId
+          )
       JOIN
-        \`SessionPlans\` sp ON sp.sessionId = sessions.id
+          \`SessionPlans\` sp ON sp.sessionId = sessions.id
       JOIN
-        schools ON timetable_entries.schoolId = schools.id
+          schools ON timetable_entries.schoolId = schools.id
       JOIN
-        classinfos ON timetable_entries.classId = classinfos.id
+          classinfos ON timetable_entries.classId = classinfos.id
       JOIN
-        sections ON timetable_entries.sectionId = sections.id
+          sections ON timetable_entries.sectionId = sections.id
       WHERE
-        timetable_entries.teacherId = :teacherId
-        AND timetable_entries.sectionId = :sectionId
-        AND timetable_entries.subjectId = :subjectId
-        ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
+          timetable_entries.teacherId = :teacherId
+          AND timetable_entries.sectionId = :sectionId
+          AND timetable_entries.subjectId = :subjectId
+          ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
       ORDER BY
-        SessionDate ASC, StartTime ASC, ChapterPriority ASC, sp.sessionNumber ASC;
+          SessionDate ASC, StartTime ASC, ChapterPriority ASC, sp.sessionNumber ASC;
       `,
       {
-        replacements: { teacherId, sectionId, subjectId, date },
+        replacements: {
+          teacherId,
+          sectionId,
+          subjectId,
+          date, // Optional date filter
+        },
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
+    // No sessions found
     if (!sessions.length) {
       return res.status(404).json({ error: 'No sessions found for the specified criteria.' });
     }
 
+    // Get academic start date
+    const academicStartDate = new Date(sessions[0].SessionDate);
+
+    // Calculate today's date
+    const currentDate = date ? new Date(date) : new Date();
+
+    // Academic day
+    const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Academic session not started yet
+    if (academicDay <= 0) {
+      return res.status(400).json({ error: 'Academic session has not started yet.' });
+    }
+
+   // Determine the current session based on session times or session numbers
+const currentSession = sessions.find((session) => {
+  const sessionDate = new Date(session.SessionDate).toDateString();
+  const now = new Date();
+  const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes since midnight
+
+  // Ensure it's for today
+  if (sessionDate !== now.toDateString()) {
+    return false;
+  }
+
+  // Check if the session falls within the current time range
+  const [startHour, startMinute] = session.StartTime.split(':').map(Number);
+  const [endHour, endMinute] = session.EndTime.split(':').map(Number);
+
+  const sessionStartTime = startHour * 60 + startMinute; // Session start time in minutes
+  const sessionEndTime = endHour * 60 + endMinute; // Session end time in minutes
+
+  return currentTime >= sessionStartTime && currentTime <= sessionEndTime;
+});
+
+// Filter sessions for today
+const todaySessions = sessions.filter((session) => {
+  const sessionDate = new Date(session.SessionDate).toDateString();
+  return sessionDate === new Date().toDateString(); // Match today's sessions
+});
+
+// Sort sessions by start time to ensure correct order
+todaySessions.sort((a, b) => {
+  const [aStartHour, aStartMinute] = a.StartTime.split(':').map(Number);
+  const [bStartHour, bStartMinute] = b.StartTime.split(':').map(Number);
+
+  const aStartTime = aStartHour * 60 + aStartMinute;
+  const bStartTime = bStartHour * 60 + bStartMinute;
+
+  return aStartTime - bStartTime; // Sort by start time
+});
+
+// Show the next session (e.g., based on user interaction or automatically)
+let currentIndex = 0; // Keep track of the current session index
+
+function showNextSession() {
+  if (currentIndex < todaySessions.length) {
+    const nextSession = todaySessions[currentIndex];
+    console.log('Showing session:', nextSession);
+    currentIndex++;
+  } else {
+    console.log('No more sessions for today.');
+  }
+}
+
+    // No session scheduled for today
+    if (!currentSession) {
+      return res.status(404).json({ error: 'No session is scheduled for today.' });
+    }
+
+    // Respond with the current session details
     res.json({
-      sessionDetails: sessions.map((session) => ({
-        sessionId: session.sessionId,
-        sessionPlanId: session.sessionPlanId,
-        chapterName: session.Chapter,
-        sessionNumber: session.SessionNumber,
-        topics: [
-          session.Topic1,
-          session.Topic2,
-          session.Topic3,
-        ].filter((topic) => topic),
-        startTime: session.StartTime,
-        endTime: session.EndTime,
-        sessionDate: session.SessionDate,
-      })),
+      sessionDetails: {
+        sessionId: currentSession.sessionId, // Add sessionId here
+        sessionPlanId: currentSession.sessionPlanId,
+        chapterName: currentSession.Chapter,
+        sessionNumber: currentSession.SessionNumber,
+          topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
+            .concat(JSON.parse(currentSession.Topic2 || "[]"))
+            .concat(JSON.parse(currentSession.Topic3 || "[]")),
+            startTime: currentSession.StartTime,
+        endTime: currentSession.EndTime,
+        sessionDate: currentSession.SessionDate,
+      },
     });
 
   } catch (error) {
     console.error('Error fetching sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions' });
+    res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
-
 
 
 
@@ -482,44 +555,31 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       include: [
         { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
         { model: Subject, attributes: ['id'] },
-        { model: Teacher, as: 'Teacher', attributes: ['name'] }, // Correct alias
-        { model: ClassInfo, attributes: ['className'] },
-        { model: Section, attributes: ['sectionName'] },
-        { model: School, attributes: ['name'] },
       ],
     });
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found.' });
     }
-    const teacherName = session.Teacher?.name || 'Unknown Teacher';
-    const className = session.ClassInfo?.className || 'Unknown Class';
-    const sectionName = session.Section?.sectionName || 'Unknown Section';
-    const subjectName = session.Subject?.subjectName || 'Unknown Subject';
-    const schoolName = session.School?.name || 'Unknown School';
-    const currentDate = new Date();
-    const reportDate = currentDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-    const reportDay = currentDate.toLocaleString('en-US', { weekday: 'long' }); // Get day name (e.g., "Monday")
 
+    // Add session report for the current session
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
-      date: reportDate, // Use calculated date
-      day: reportDay, // Use calculated day
+      date: new Date().toISOString().split('T')[0],
+      day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName,
-      className,
-      sectionName,
-      subjectName,
-      schoolName,
+      teacherName: session.Teacher?.name || 'Unknown Teacher',
+      className: session.ClassInfo?.className || 'Unknown Class',
+      sectionName: session.Section?.sectionName || 'Unknown Section',
+      subjectName: session.Subject?.subjectName || 'Unknown Subject',
+      schoolName: session.School?.name || 'Unknown School',
       absentStudents: JSON.stringify(absentees || []),
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
       sessionsCompleted: JSON.stringify(completedTopics || []),
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
-    
-    
 
     // Append incomplete topics to the next session
     if (incompleteTopics.length > 0) {
@@ -629,7 +689,6 @@ router.get('/reports/sessions', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session reports.' });
   }
 });
-
 
 
 module.exports = router;
