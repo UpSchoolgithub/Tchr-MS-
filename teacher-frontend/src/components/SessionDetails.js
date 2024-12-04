@@ -24,7 +24,7 @@ const SessionDetails = () => {
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState(null);
+  const [sessionDetails, setSessionDetails] = useState(initialSessionDetails || null);
   const [observations, setObservations] = useState('');
   const [assignmentsEnabled, setAssignmentsEnabled] = useState(false);
   const [assignmentDetails, setAssignmentDetails] = useState('');
@@ -236,12 +236,15 @@ const SessionDetails = () => {
     <div className="session-details-container">
       {/* Header Section */}
       <div className="session-details-header">
-      <p>Session ID: {sessionDetails.sessionId}</p>
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
         <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
+        <p><strong>Session ID:</strong> {sessionDetails?.sessionId || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {sessionDetails?.sessionPlanId || 'N/A'}</p>
+        <p><strong>Chapter Name:</strong> {sessionDetails?.chapterName || 'N/A'}</p>
+
       </div>
   
       {/* Welcome Message */}
