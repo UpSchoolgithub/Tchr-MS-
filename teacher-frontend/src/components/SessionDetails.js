@@ -62,11 +62,17 @@ const SessionDetails = () => {
         );
         console.log('Fetched session details:', response.data);
   
-        // Deduplicate session details
-        const uniqueSessions = response.data.sessionDetails.filter(
+        // Sort sessions by priorityNumber (or any similar property)
+        const sortedSessions = response.data.sessionDetails.sort(
+          (a, b) => a.priorityNumber - b.priorityNumber
+        );
+  
+        // Deduplicate session details by sessionId if needed
+        const uniqueSessions = sortedSessions.filter(
           (value, index, self) =>
             index === self.findIndex((t) => t.sessionId === value.sessionId)
         );
+  
         setSessionDetails(uniqueSessions || []);
       } catch (error) {
         console.error('Error fetching session details:', error);
@@ -76,6 +82,7 @@ const SessionDetails = () => {
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
   
 
   
