@@ -197,19 +197,13 @@ const TeacherSessions = () => {
           </button>
         </td>
         <td>
-  {session.sessionId ? (
-    <button
-      style={{ backgroundColor: 'white' }}
-      onClick={() => navigate(`/session-reports/${session.sessionId}`)}
-    >
-      Session Report
-    </button>
-  ) : (
-    <span style={{ color: 'red' }}>Session ID missing</span>
-  )}
+  <button
+    style={{ backgroundColor: 'white' }}
+    onClick={() => navigate(`/session-reports/${session.sessionId}`)}
+  >
+    Session Report
+  </button>
 </td>
-
-
 
       </tr>
     );
