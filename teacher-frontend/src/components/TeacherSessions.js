@@ -106,11 +106,10 @@ const TeacherSessions = () => {
     }
   
     navigate(`/teacherportal/${teacherId}/session-report`, {
-      state: {
-        sessionId: session.sessionId, // Pass session ID
-      },
+      state: { sessionId: session.sessionId },
     });
   };
+  
   
 
   return (

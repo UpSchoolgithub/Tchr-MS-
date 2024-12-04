@@ -1,53 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionReport.css';
 
 const SessionReport = () => {
   const location = useLocation();
-  const { sessionId } = location.state || {};
-  const [report, setReport] = useState(null);
+  const navigate = useNavigate();
+  const { sessionId } = location.state || {}; // Get session ID from navigation state
+
+  const [sessionReport, setSessionReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch the session report
   useEffect(() => {
     const fetchSessionReport = async () => {
-      if (!sessionId) {
-        setError('Session ID is missing.');
-        setLoading(false);
-        return;
-      }
-
+      setLoading(true);
       try {
-        const response = await axiosInstance.get(`/sessions/${sessionId}/report`);
-        setReport(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching session report:', err);
-        setError('Failed to load session report.');
+        const response = await axiosInstance.get(`/api/session-reports/${sessionId}`);
+        setSessionReport(response.data);
+      } catch (error) {
+        setError('Failed to fetch session report. Please try again later.');
+        console.error('Error fetching session report:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSessionReport();
+    if (sessionId) {
+      fetchSessionReport();
+    } else {
+      setError('Session ID is missing. Cannot fetch session report.');
+    }
   }, [sessionId]);
-
-  if (loading) return <p>Loading session report...</p>;
-  if (error) return <p>{error}</p>;
 
   return (
     <div className="session-report-container">
       <h2>Session Report</h2>
-      <p><strong>Session ID:</strong> {report.sessionId}</p>
-      <p><strong>Session Plan ID:</strong> {report.sessionPlanId}</p>
-      <p><strong>Chapter Name:</strong> {report.chapterName}</p>
-      <p><strong>Session Date:</strong> {report.sessionDate}</p>
-      <p><strong>Completed Topics:</strong> {report.completedTopics.join(', ')}</p>
-      <p><strong>Incomplete Topics:</strong> {report.incompleteTopics.join(', ')}</p>
-      <p><strong>Observations:</strong> {report.observationDetails}</p>
-      <p><strong>Absent Students:</strong> {report.absentStudents.join(', ')}</p>
-      <p><strong>Assignment Details:</strong> {report.assignmentDetails || 'N/A'}</p>
+
+      {loading ? (
+        <p>Loading session report...</p>
+      ) : error ? (
+        <p className="error-message">{error}</p>
+      ) : sessionReport ? (
+        <div>
+          <p><strong>Topics Completed:</strong> {sessionReport.completedTopics.join(', ') || 'None'}</p>
+          <p><strong>Topics Remaining:</strong> {sessionReport.incompleteTopics.join(', ') || 'None'}</p>
+          <p><strong>Observations:</strong> {sessionReport.observations || 'No observations available'}</p>
+          <p><strong>Absentees:</strong> {sessionReport.absentStudents.join(', ') || 'None'}</p>
+          <p><strong>Assignments:</strong> {sessionReport.assignmentDetails || 'No assignments given'}</p>
+        </div>
+      ) : (
+        <p>No session report available for this session.</p>
+      )}
+
+      <button onClick={() => navigate(-1)} className="back-button">
+        Back
+      </button>
     </div>
   );
 };
