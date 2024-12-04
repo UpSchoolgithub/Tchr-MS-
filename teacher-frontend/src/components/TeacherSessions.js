@@ -106,9 +106,13 @@ const TeacherSessions = () => {
     }
   
     navigate(`/teacherportal/${teacherId}/session-report`, {
-      state: { sessionId: session.sessionId },
+      state: {
+        sessionId: session.sessionId,
+        sessionDetails: session, // Pass session details
+      },
     });
   };
+  
   
   
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionReport.css';
@@ -6,57 +6,50 @@ import './SessionReport.css';
 const SessionReport = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { sessionId } = location.state || {}; // Get session ID from navigation state
+  const { sessionId, sessionDetails: initialSessionDetails } = location.state || {};
 
-  const [sessionReport, setSessionReport] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionDetails, setSessionDetails] = useState(initialSessionDetails || null);
+  const [loading, setLoading] = useState(!initialSessionDetails);
   const [error, setError] = useState(null);
 
-  // Fetch the session report
+  // Fetch session details if not passed
   useEffect(() => {
-    const fetchSessionReport = async () => {
-      setLoading(true);
-      try {
-        const response = await axiosInstance.get(`/api/session-reports/${sessionId}`);
-        setSessionReport(response.data);
-      } catch (error) {
-        setError('Failed to fetch session report. Please try again later.');
-        console.error('Error fetching session report:', error);
-      } finally {
-        setLoading(false);
+    const fetchSessionDetails = async () => {
+      if (!sessionDetails && sessionId) {
+        setLoading(true);
+        try {
+          const response = await axiosInstance.get(`/teachers/sessions/${sessionId}`);
+          setSessionDetails(response.data);
+        } catch (err) {
+          setError('Failed to fetch session details. Please try again later.');
+          console.error('Error fetching session details:', err);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
-    if (sessionId) {
-      fetchSessionReport();
-    } else {
-      setError('Session ID is missing. Cannot fetch session report.');
-    }
-  }, [sessionId]);
+    fetchSessionDetails();
+  }, [sessionId, sessionDetails]);
+
+  if (loading) return <p>Loading session report...</p>;
+  if (error) return <p className="error-message">{error}</p>;
 
   return (
     <div className="session-report-container">
       <h2>Session Report</h2>
-
-      {loading ? (
-        <p>Loading session report...</p>
-      ) : error ? (
-        <p className="error-message">{error}</p>
-      ) : sessionReport ? (
-        <div>
-          <p><strong>Topics Completed:</strong> {sessionReport.completedTopics.join(', ') || 'None'}</p>
-          <p><strong>Topics Remaining:</strong> {sessionReport.incompleteTopics.join(', ') || 'None'}</p>
-          <p><strong>Observations:</strong> {sessionReport.observations || 'No observations available'}</p>
-          <p><strong>Absentees:</strong> {sessionReport.absentStudents.join(', ') || 'None'}</p>
-          <p><strong>Assignments:</strong> {sessionReport.assignmentDetails || 'No assignments given'}</p>
-        </div>
-      ) : (
-        <p>No session report available for this session.</p>
-      )}
-
-      <button onClick={() => navigate(-1)} className="back-button">
-        Back
-      </button>
+      <div className="session-report-details">
+        <p><strong>Session ID:</strong> {sessionDetails.sessionId}</p>
+        <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId}</p>
+        <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+        <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+        <p><strong>Topics Completed:</strong> {sessionDetails.completedTopics?.join(', ') || 'None'}</p>
+        <p><strong>Topics Remaining:</strong> {sessionDetails.incompleteTopics?.join(', ') || 'None'}</p>
+        <p><strong>Observations:</strong> {sessionDetails.observations || 'None'}</p>
+        <p><strong>Absentees:</strong> {sessionDetails.absentStudents?.join(', ') || 'None'}</p>
+        <p><strong>Assignments:</strong> {sessionDetails.assignmentDetails || 'No assignments given'}</p>
+      </div>
+      <button className="back-button" onClick={() => navigate(-1)}>Back</button>
     </div>
   );
 };
