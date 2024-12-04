@@ -148,6 +148,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
 
 // Get session details for a specific teacher and session
 // Get session details for a specific teacher and session, with academic day
+// Get session details for a specific teacher and session, with academic day
 router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
   const { teacherId, sessionId } = req.params;
 
@@ -584,13 +585,6 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
   try {
     const sessionReport = await sequelize.models.SessionReports.findOne({
       where: { sessionId },
-      include: [
-        { model: Teacher, attributes: ['name'], as: 'Teacher' },
-        { model: School, attributes: ['name'], as: 'School' },
-        { model: ClassInfo, attributes: ['className'], as: 'Class' },
-        { model: Section, attributes: ['sectionName'], as: 'Section' },
-        { model: Subject, attributes: ['subjectName'], as: 'Subject' },
-      ],
     });
 
     if (!sessionReport) {
@@ -604,11 +598,6 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
         absentStudents: JSON.parse(sessionReport.absentStudents || '[]'),
         assignmentDetails: sessionReport.assignmentDetails || null,
         observationDetails: sessionReport.observationDetails || null,
-        teacherName: sessionReport.Teacher?.name || 'N/A',
-        schoolName: sessionReport.School?.name || 'N/A',
-        className: sessionReport.Class?.className || 'N/A',
-        sectionName: sessionReport.Section?.sectionName || 'N/A',
-        subjectName: sessionReport.Subject?.subjectName || 'N/A',
       },
     });
   } catch (error) {
@@ -616,7 +605,6 @@ router.get('/sessions/:sessionId/details', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch session report.' });
   }
 });
-
 
 
 
