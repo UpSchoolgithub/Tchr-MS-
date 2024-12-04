@@ -31,7 +31,81 @@ const SessionDetails = () => {
   const [existingFile, setExistingFile] = useState(null);
   const [file, setFile] = useState(null); // File state
   const [successMessage, setSuccessMessage] = useState('');
-
+  const [allSessions, setAllSessions] = useState([]);
+  const [selectedSessionIndex, setSelectedSessionIndex] = useState(0);
+  
+//Auto-Load Current Period's Session: 
+  useEffect(() => {
+    const fetchCurrentPeriodSession = async () => {
+      try {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTime = `${currentHour}:${currentMinute}`;
+  
+        // Optional: Map time ranges to periods (backend can handle this logic)
+        const currentPeriod = "9:00 AM - 9:45 AM"; // Example of mapped period
+  
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`,
+          {
+            params: { date: now.toISOString().split("T")[0], period: currentPeriod },
+          }
+        );
+        console.log("Current period session:", response.data);
+        setSessionDetails(response.data.sessionDetails || null);
+      } catch (error) {
+        console.error("Error fetching current period session:", error);
+        setError("Failed to fetch the session for the current period.");
+      }
+    };
+  
+    fetchCurrentPeriodSession();
+  }, [teacherId, sectionId, subjectId]);
+  
+  //Display All Assigned Sessions for the Day: 
+  useEffect(() => {
+    const fetchAllSessionsForDay = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`,
+          { params: { date: today } }
+        );
+        setAllSessions(response.data.sessions || []);
+      } catch (error) {
+        console.error("Error fetching all sessions for the day:", error);
+        setError("Failed to fetch sessions for today.");
+      }
+    };
+  
+    fetchAllSessionsForDay();
+  }, [teacherId, sectionId, subjectId]);
+  
+  // Automatically Match Sessions to Periods: 
+  useEffect(() => {
+    if (allSessions.length > 0) {
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
+  
+      const currentSession = allSessions.find((session) => {
+        const [startHour, startMinute] = session.startTime.split(":").map(Number);
+        const [endHour, endMinute] = session.endTime.split(":").map(Number);
+  
+        const startTimeMinutes = startHour * 60 + startMinute;
+        const endTimeMinutes = endHour * 60 + endMinute;
+  
+        return currentTime >= startTimeMinutes && currentTime < endTimeMinutes;
+      });
+  
+      if (currentSession) {
+        setSessionDetails(currentSession);
+      } else {
+        setSessionDetails(null); // No active session for the current period
+      }
+    }
+  }, [allSessions]);
+  
   // Fetch students for attendance
   useEffect(() => {
     const fetchStudents = async () => {
@@ -53,23 +127,23 @@ const SessionDetails = () => {
   }, [teacherId, sectionId]);
 
   // Fetch session details
-  // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
-
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+        console.log('Fetched session details:', response.data);
+        setAllSessions(response.data.sessions || []);
+        setSelectedSessionIndex(0); // Default to the first session
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
+      }
+    };
+  
+    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+  }, [teacherId, sectionId, subjectId]);
 
   
   
