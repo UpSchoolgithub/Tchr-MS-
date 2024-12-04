@@ -210,75 +210,23 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 
 
+// Fetch sessions and associated session plans for a specific teacher, section, and subject
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
   const { date } = req.query; // Optional date filter for flexibility
 
   try {
-    // Step 1: Fetch all priorities in ascending order
-    const priorities = await sequelize.query(
-      `
-      SELECT DISTINCT priorityNumber
-      FROM sessions
-      WHERE subjectId = :subjectId
-        AND sectionId = :sectionId
-      ORDER BY priorityNumber ASC;
-      `,
-      {
-        replacements: { subjectId, sectionId },
-        type: sequelize.QueryTypes.SELECT,
-      }
-    );
-
-    let currentPriority = null;
-
-    // Step 2: Determine the current priority based on incomplete sessions
-    for (const priority of priorities) {
-      const totalSessions = await Session.count({
-        where: { subjectId, sectionId, priorityNumber: priority.priorityNumber },
-      });
-
-      const completedSessionsCountResult = await sequelize.query(
-        `
-        SELECT COUNT(DISTINCT sessionId) as count
-        FROM SessionReports
-        WHERE sessionId IN (
-          SELECT id
-          FROM sessions
-          WHERE subjectId = :subjectId
-            AND sectionId = :sectionId
-            AND priorityNumber = :priorityNumber
-        );
-        `,
-        {
-          replacements: { subjectId, sectionId, priorityNumber: priority.priorityNumber },
-          type: sequelize.QueryTypes.SELECT,
-        }
-      );
-
-      const completedSessionsCount = completedSessionsCountResult[0]?.count || 0;
-
-      if (completedSessionsCount < totalSessions) {
-        currentPriority = priority.priorityNumber;
-        break;
-      }
-    }
-
-    if (currentPriority === null) {
-      return res.status(200).json({ message: 'All sessions are completed.' });
-    }
-
-    // Step 3: Fetch sessions for all priorities in ascending order
+    // Run the query to fetch all sessions
     const sessions = await sequelize.query(
       `
       SELECT
-          sessions.id AS sessionId,
+          sessions.id AS sessionId, -- Include sessionId here
           schools.name AS School,
           classinfos.className AS Class,
           sections.sectionName AS Section,
           subjects.subjectName AS Subject,
           sessions.chapterName AS Chapter,
-          sp.id AS sessionPlanId,
+          sp.id AS sessionPlanId, -- Include sessionPlanId for completeness
           sp.sessionNumber AS SessionNumber,
           JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0]')) AS Topic1,
           JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1]')) AS Topic2,
@@ -311,52 +259,72 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           timetable_entries.teacherId = :teacherId
           AND timetable_entries.sectionId = :sectionId
           AND timetable_entries.subjectId = :subjectId
-          AND sessions.priorityNumber IN (
-              SELECT DISTINCT priorityNumber
-              FROM sessions
-              WHERE subjectId = :subjectId
-                AND sectionId = :sectionId
-          )
           ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
       ORDER BY
-          ChapterPriority ASC, sp.sessionNumber ASC, SessionDate ASC, StartTime ASC;
+          SessionDate ASC, StartTime ASC, ChapterPriority ASC, sp.sessionNumber ASC;
       `,
       {
         replacements: {
           teacherId,
           sectionId,
           subjectId,
-          date,
+          date, // Optional date filter
         },
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
+    // No sessions found
     if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found for the current priority.' });
+      return res.status(404).json({ error: 'No sessions found for the specified criteria.' });
     }
 
-    // Step 4: Process and respond with the sessions
-    const sessionDetails = sessions.map((session) => ({
-      sessionId: session.sessionId,
-      sessionPlanId: session.sessionPlanId,
-      chapterName: session.Chapter,
-      sessionNumber: session.SessionNumber,
-      topics: [session.Topic1, session.Topic2, session.Topic3].filter(Boolean),
-      startTime: session.StartTime,
-      endTime: session.EndTime,
-      sessionDate: session.SessionDate,
-      priorityNumber: session.ChapterPriority,
-    }));
+    // Get academic start date
+    const academicStartDate = new Date(sessions[0].SessionDate);
 
-    res.json({ sessionDetails });
+    // Calculate today's date
+    const currentDate = date ? new Date(date) : new Date();
+
+    // Academic day
+    const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Academic session not started yet
+    if (academicDay <= 0) {
+      return res.status(400).json({ error: 'Academic session has not started yet.' });
+    }
+
+    // Find today's session
+    const currentSession = sessions.find((session) => {
+      const sessionDate = new Date(session.SessionDate);
+      return sessionDate.toDateString() === currentDate.toDateString();
+    });
+
+    // No session scheduled for today
+    if (!currentSession) {
+      return res.status(404).json({ error: 'No session is scheduled for today.' });
+    }
+
+    // Respond with the current session details
+    res.json({
+      sessionDetails: {
+        sessionId: currentSession.sessionId, // Add sessionId here
+        sessionPlanId: currentSession.sessionPlanId,
+        chapterName: currentSession.Chapter,
+        sessionNumber: currentSession.SessionNumber,
+          topics: JSON.parse(currentSession.Topic1 || "[]") // Parse topics JSON string
+            .concat(JSON.parse(currentSession.Topic2 || "[]"))
+            .concat(JSON.parse(currentSession.Topic3 || "[]")),
+            startTime: currentSession.StartTime,
+        endTime: currentSession.EndTime,
+        sessionDate: currentSession.SessionDate,
+      },
+    });
+
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
-
-
 
 
 
