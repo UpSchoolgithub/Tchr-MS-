@@ -199,11 +199,19 @@ const TeacherSessions = () => {
         <td>
   <button
     style={{ backgroundColor: 'white' }}
-    onClick={() => navigate(`/session-reports/${session.sessionId}`)}
+    onClick={() => {
+      if (!session.sessionId) {
+        console.error('Session ID is undefined:', session);
+        alert('Session ID is missing. Cannot navigate to report.');
+        return;
+      }
+      navigate(`/session-reports/${session.sessionId}`);
+    }}
   >
     Session Report
   </button>
 </td>
+
 
       </tr>
     );
