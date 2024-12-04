@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
-import './SessionReport.css';
+import { useLocation } from 'react-router-dom';
 
 const SessionReport = () => {
   const location = useLocation();
@@ -16,40 +15,46 @@ const SessionReport = () => {
         const response = await axiosInstance.get(`/api/session-reports/${sessionId}`);
         setSessionReport(response.data);
       } catch (err) {
-        setError('Failed to load session report. Please try again later.');
-        console.error('Error fetching session report:', err);
+        setError('Failed to load session report. Please try again.');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (sessionId) fetchSessionReport();
+    if (sessionId) {
+      fetchSessionReport();
+    }
   }, [sessionId]);
 
   if (loading) return <p>Loading session report...</p>;
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="session-report-container">
+    <div>
       <h2>Session Report</h2>
-      {sessionReport ? (
-        <div className="session-report-details">
-          <p><strong>Session ID:</strong> {sessionReport.sessionId}</p>
-          <p><strong>Date:</strong> {sessionReport.date}</p>
-          <p><strong>Day:</strong> {sessionReport.day}</p>
-          <p><strong>Teacher Name:</strong> {sessionReport.teacherName || 'N/A'}</p>
-          <p><strong>School:</strong> {sessionReport.schoolName || 'N/A'}</p>
-          <p><strong>Class:</strong> {sessionReport.className || 'N/A'}</p>
-          <p><strong>Section:</strong> {sessionReport.sectionName || 'N/A'}</p>
-          <p><strong>Subject:</strong> {sessionReport.subjectName || 'N/A'}</p>
-          <p><strong>Completed Topics:</strong> {sessionReport.sessionsCompleted || 'N/A'}</p>
-          <p><strong>Pending Topics:</strong> {sessionReport.sessionsToComplete || 'N/A'}</p>
-          <p><strong>Observations:</strong> {sessionReport.observationDetails || 'N/A'}</p>
-          <p><strong>Absentees:</strong> {sessionReport.absentStudents || 'None'}</p>
-        </div>
-      ) : (
-        <p>No report data found for this session.</p>
-      )}
+      <p><strong>Session ID:</strong> {sessionReport.sessionId}</p>
+      <p><strong>Date:</strong> {sessionReport.date}</p>
+      <p><strong>Day:</strong> {sessionReport.day}</p>
+      <p><strong>Teacher Name:</strong> {sessionReport.teacherName || 'N/A'}</p>
+      <p><strong>School:</strong> {sessionReport.schoolName || 'N/A'}</p>
+      <p><strong>Class:</strong> {sessionReport.className || 'N/A'}</p>
+      <p><strong>Section:</strong> {sessionReport.sectionName || 'N/A'}</p>
+      <p><strong>Subject:</strong> {sessionReport.subjectName || 'N/A'}</p>
+      <p><strong>Topics to Complete:</strong></p>
+      <ul>
+        {JSON.parse(sessionReport.sessionsToComplete).map((topic, idx) => (
+          <li key={idx}>{topic}</li>
+        ))}
+      </ul>
+      <p><strong>Topics Completed:</strong></p>
+      <ul>
+        {JSON.parse(sessionReport.sessionsCompleted).map((topic, idx) => (
+          <li key={idx}>{topic}</li>
+        ))}
+      </ul>
+      <p><strong>Absentees:</strong> {JSON.parse(sessionReport.absentStudents).join(', ') || 'None'}</p>
+      <p><strong>Observations:</strong> {sessionReport.observationDetails || 'N/A'}</p>
     </div>
   );
 };
