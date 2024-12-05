@@ -35,6 +35,7 @@ const SessionPlans = () => {
           acc[plan.sessionNumber] = plan.planDetails?.map((topic) => ({
             name: topic.name || "",
             concepts: topic.concepts || [],
+            lessonPlan: topic.lessonPlan || "",
           })) || [];
           return acc;
         }, {});
@@ -56,54 +57,19 @@ const SessionPlans = () => {
   const handleAddTopic = (sessionNumber) => {
     setTopicsWithConcepts((prev) => ({
       ...prev,
-      [sessionNumber]: [...(prev[sessionNumber] || []), { name: "", concepts: [] }],
+      [sessionNumber]: [
+        ...(prev[sessionNumber] || []),
+        { name: "", concepts: [], lessonPlan: "" },
+      ],
     }));
   };
 
-  // Add a new concept to a specific topic
-  const handleAddConcept = (sessionNumber, topicIndex) => {
-    setTopicsWithConcepts((prev) => {
-      const updatedTopics = prev[sessionNumber].map((topic, index) => {
-        if (index === topicIndex) {
-          return {
-            ...topic,
-            concepts: [...topic.concepts, ""],
-          };
-        }
-        return topic;
-      });
-      return {
-        ...prev,
-        [sessionNumber]: updatedTopics,
-      };
-    });
-  };
-
-  // Handle topic name change
-  const handleChangeTopic = (sessionNumber, topicIndex, value) => {
+  // Handle lesson plan change
+  const handleChangeLessonPlan = (sessionNumber, topicIndex, value) => {
     setTopicsWithConcepts((prev) => {
       const updatedTopics = prev[sessionNumber].map((topic, index) =>
-        index === topicIndex ? { ...topic, name: value } : topic
+        index === topicIndex ? { ...topic, lessonPlan: value } : topic
       );
-      return {
-        ...prev,
-        [sessionNumber]: updatedTopics,
-      };
-    });
-  };
-
-  // Handle concept name change
-  const handleChangeConcept = (sessionNumber, topicIndex, conceptIndex, value) => {
-    setTopicsWithConcepts((prev) => {
-      const updatedTopics = prev[sessionNumber].map((topic, index) => {
-        if (index === topicIndex) {
-          const updatedConcepts = topic.concepts.map((concept, cIndex) =>
-            cIndex === conceptIndex ? value : concept
-          );
-          return { ...topic, concepts: updatedConcepts };
-        }
-        return topic;
-      });
       return {
         ...prev,
         [sessionNumber]: updatedTopics,
@@ -118,6 +84,7 @@ const SessionPlans = () => {
       const planDetails = topicsWithConcepts[sessionNumber].map((topic) => ({
         name: topic.name,
         concepts: topic.concepts,
+        lessonPlan: topic.lessonPlan,
       }));
 
       await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, {
@@ -133,12 +100,7 @@ const SessionPlans = () => {
     }
   };
 
-  // Handle file change
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  // Upload session plans via Excel
+  // Handle file upload
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) {
@@ -170,24 +132,37 @@ const SessionPlans = () => {
     }
   };
 
+  // Generate lesson plan (placeholder functionality)
+  const handleGenerateLessonPlan = () => {
+    alert("Lesson Plan Generation triggered!");
+  };
+
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
       {board && <p>Board: {board}</p>}
       {error && <div className="error">{error}</div>}
 
-      <form onSubmit={handleFileUpload} className="form-group">
-        <label>Upload Session Plans via Excel:</label>
-        <input
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={handleFileChange}
-          disabled={uploadDisabled}
-        />
-        <button type="submit" disabled={uploadDisabled}>
-          Upload
+      <div className="top-controls">
+        <form onSubmit={handleFileUpload} className="form-group">
+          <label>Upload Session Plans via Excel:</label>
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={(e) => setFile(e.target.files[0])}
+            disabled={uploadDisabled}
+          />
+          <button type="submit" disabled={uploadDisabled}>
+            Upload
+          </button>
+        </form>
+        <button
+          className="lesson-plan-btn"
+          onClick={handleGenerateLessonPlan}
+        >
+          Generate Lesson Plan
         </button>
-      </form>
+      </div>
 
       <div className="table-container">
         <table>
@@ -196,6 +171,7 @@ const SessionPlans = () => {
               <th>Session Number</th>
               <th>Topic Names</th>
               <th>Related Concepts</th>
+              <th>Lesson Plan</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -233,6 +209,15 @@ const SessionPlans = () => {
                         />
                       ))}
                     </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={topic.lessonPlan}
+                        onChange={(e) =>
+                          handleChangeLessonPlan(plan.sessionNumber, tIndex, e.target.value)
+                        }
+                      />
+                    </td>
                     {tIndex === 0 && (
                       <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
                         <button
@@ -248,7 +233,7 @@ const SessionPlans = () => {
                   </tr>
                 ))}
                 <tr>
-                  <td colSpan="4">
+                  <td colSpan="5">
                     <button onClick={() => handleAddTopic(plan.sessionNumber)}>
                       + Add Topic
                     </button>
