@@ -14,12 +14,14 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
 
+  // Fetch board from query params
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const boardParam = queryParams.get("board");
     setBoard(boardParam || "");
   }, [location]);
 
+  // Fetch session plans
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
@@ -28,10 +30,11 @@ const SessionPlans = () => {
         );
         setSessionPlans(response.data);
 
+        // Initialize topics and concepts
         const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((topic) => ({
-            name: topic,
-            concepts: [],
+            name: topic.name,
+            concepts: topic.concepts || [],
           })) || [];
           return acc;
         }, {});
@@ -49,6 +52,7 @@ const SessionPlans = () => {
     fetchSessionPlans();
   }, [sessionId]);
 
+  // Add a new topic to a session
   const handleAddTopic = (sessionNumber) => {
     setTopicsWithConcepts((prev) => ({
       ...prev,
@@ -56,6 +60,7 @@ const SessionPlans = () => {
     }));
   };
 
+  // Add a new concept to a specific topic
   const handleAddConcept = (sessionNumber, topicIndex) => {
     setTopicsWithConcepts((prev) => {
       const updatedTopics = prev[sessionNumber].map((topic, index) => {
@@ -74,6 +79,7 @@ const SessionPlans = () => {
     });
   };
 
+  // Handle topic name change
   const handleChangeTopic = (sessionNumber, topicIndex, value) => {
     setTopicsWithConcepts((prev) => {
       const updatedTopics = prev[sessionNumber].map((topic, index) =>
@@ -86,6 +92,7 @@ const SessionPlans = () => {
     });
   };
 
+  // Handle concept name change
   const handleChangeConcept = (sessionNumber, topicIndex, conceptIndex, value) => {
     setTopicsWithConcepts((prev) => {
       const updatedTopics = prev[sessionNumber].map((topic, index) => {
@@ -104,6 +111,7 @@ const SessionPlans = () => {
     });
   };
 
+  // Save session plan
   const handleSaveSessionPlan = async (sessionPlanId, sessionNumber) => {
     try {
       const planDetails = topicsWithConcepts[sessionNumber].map((topic) => ({
@@ -122,10 +130,12 @@ const SessionPlans = () => {
     }
   };
 
+  // Handle file change
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
+  // Upload session plans via Excel
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) {
@@ -234,6 +244,13 @@ const SessionPlans = () => {
                     )}
                   </tr>
                 ))}
+                <tr>
+                  <td colSpan="4">
+                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                      + Add Topic
+                    </button>
+                  </td>
+                </tr>
               </React.Fragment>
             ))}
           </tbody>
