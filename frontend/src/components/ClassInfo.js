@@ -33,15 +33,13 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      const filteredClasses = response.data.filter((cls) => cls.board === selectedBoard);
-      console.log('Filtered Class Infos:', filteredClasses); // Debugging
-      setClassInfos(filteredClasses);
+      console.log('Class Infos with Sections:', response.data); // Debugging line
+      setClassInfos(response.data);
     } catch (error) {
       console.error('Error fetching class data:', error);
       setError('Error fetching class data');
     }
   };
-  
 
   const fetchSections = async (classId) => {
     try {
@@ -50,14 +48,13 @@ const ClassInfo = () => {
         id: section.id,
         sectionName: section.sectionName,
       }));
-      console.log('Fetched Sections:', updatedSections); // Debugging
+      console.log('Fetched Sections:', updatedSections); // Debugging line
       setSections(updatedSections);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
     }
   };
-  
 
   useEffect(() => {
     fetchClassInfos();
@@ -68,15 +65,12 @@ const ClassInfo = () => {
       setError('Please provide a class name and select a board.');
       return;
     }
-  
+
     try {
-      const payload = {
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className: newClassName,
-        board: selectedBoard, // Include selected board
-      };
-      console.log('Submitting Class:', payload); // Debugging
-  
-      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, payload);
+        board: selectedBoard, // Include board in the payload
+      });
       setNewClassName('');
       setSelectedBoard(''); // Reset board selection
       fetchClassInfos();
@@ -85,7 +79,6 @@ const ClassInfo = () => {
       setError('Failed to add class. Please try again.');
     }
   };
-  
 
   const handleSectionSubmit = async () => {
     const selectedClass = classInfos.find((cls) => cls.className === className);
@@ -109,16 +102,13 @@ const ClassInfo = () => {
 
   const handleClassChange = (selectedClassName) => {
     setClassName(selectedClassName);
-    const selectedClass = classInfos.find(
-      (cls) => cls.className === selectedClassName && cls.board === selectedBoard
-    );
+    const selectedClass = classInfos.find((cls) => cls.className === selectedClassName);
     if (selectedClass) {
       fetchSections(selectedClass.id);
     } else {
       setSections([]);
     }
   };
-  
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
@@ -236,15 +226,12 @@ const ClassInfo = () => {
         <span> Or Select Existing Class:</span>
         <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
           <option value="">Select Class</option>
-          {classInfos
-            .filter((cls) => cls.board === selectedBoard)
-            .map((info) => (
-              <option key={info.id} value={info.className}>
-                {info.className}
-              </option>
-            ))}
+          {classInfos.map((info) => (
+            <option key={info.id} value={info.className}>
+              {info.className}
+            </option>
+          ))}
         </select>
-
       </div>
   
       {/* Section Input */}
@@ -461,6 +448,6 @@ const ClassInfo = () => {
       </div>
     </div>
   );
-};
+  };
 
 export default ClassInfo;
