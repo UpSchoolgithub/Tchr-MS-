@@ -33,13 +33,15 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      console.log('Class Infos with Sections:', response.data); // Debugging line
-      setClassInfos(response.data);
+      const filteredClasses = response.data.filter((cls) => cls.board === selectedBoard);
+      console.log('Filtered Class Infos:', filteredClasses); // Debugging
+      setClassInfos(filteredClasses);
     } catch (error) {
       console.error('Error fetching class data:', error);
       setError('Error fetching class data');
     }
   };
+  
 
   const fetchSections = async (classId) => {
     try {
@@ -48,13 +50,14 @@ const ClassInfo = () => {
         id: section.id,
         sectionName: section.sectionName,
       }));
-      console.log('Fetched Sections:', updatedSections); // Debugging line
+      console.log('Fetched Sections:', updatedSections); // Debugging
       setSections(updatedSections);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
     }
   };
+  
 
   useEffect(() => {
     fetchClassInfos();
@@ -106,13 +109,16 @@ const ClassInfo = () => {
 
   const handleClassChange = (selectedClassName) => {
     setClassName(selectedClassName);
-    const selectedClass = classInfos.find((cls) => cls.className === selectedClassName);
+    const selectedClass = classInfos.find(
+      (cls) => cls.className === selectedClassName && cls.board === selectedBoard
+    );
     if (selectedClass) {
       fetchSections(selectedClass.id);
     } else {
       setSections([]);
     }
   };
+  
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
@@ -230,12 +236,15 @@ const ClassInfo = () => {
         <span> Or Select Existing Class:</span>
         <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
           <option value="">Select Class</option>
-          {classInfos.map((info) => (
-            <option key={info.id} value={info.className}>
-              {info.className}
-            </option>
-          ))}
+          {classInfos
+            .filter((cls) => cls.board === selectedBoard)
+            .map((info) => (
+              <option key={info.id} value={info.className}>
+                {info.className}
+              </option>
+            ))}
         </select>
+
       </div>
   
       {/* Section Input */}
