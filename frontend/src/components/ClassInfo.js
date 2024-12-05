@@ -21,6 +21,7 @@ const ClassInfo = () => {
   const [editingSubject, setEditingSubject] = useState(null);
   const [tempDates, setTempDates] = useState({});
   const [error, setError] = useState('');
+  const [selectedBoardForSubject, setSelectedBoardForSubject] = useState('');
 
   const boardOptions = ['ICSE', 'CBSE', 'STATE']; // Board options
 
