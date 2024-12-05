@@ -9,10 +9,10 @@ const SessionPlans = () => {
   const [board, setBoard] = useState("");
   const [sessionPlans, setSessionPlans] = useState([]);
   const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
-//  const [editing, setEditing] = useState({});
   const [error, setError] = useState("");
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Fetch board from query params
   useEffect(() => {
@@ -114,6 +114,7 @@ const SessionPlans = () => {
   // Save session plan
   const handleSaveSessionPlan = async (sessionPlanId, sessionNumber) => {
     try {
+      setSaving(true);
       const planDetails = topicsWithConcepts[sessionNumber].map((topic) => ({
         name: topic.name,
         concepts: topic.concepts,
@@ -123,10 +124,12 @@ const SessionPlans = () => {
         planDetails: JSON.stringify(planDetails),
       });
 
-      setEditing((prev) => ({ ...prev, [sessionNumber]: false }));
+      setSaving(false);
+      setError("");
     } catch (error) {
       console.error("Error saving session plan:", error);
       setError("Failed to save session plan. Please try again.");
+      setSaving(false);
     }
   };
 
@@ -160,11 +163,10 @@ const SessionPlans = () => {
       );
       setSessionPlans(response.data);
       setUploadDisabled(true);
+      setError("");
     } catch (error) {
       console.error("Error uploading file:", error);
-      if (error.response && error.response.data) {
-        setError(error.response.data.message);
-      }
+      setError("Failed to upload session plan. Please try again.");
     }
   };
 
@@ -237,8 +239,9 @@ const SessionPlans = () => {
                           onClick={() =>
                             handleSaveSessionPlan(plan.id, plan.sessionNumber)
                           }
+                          disabled={saving}
                         >
-                          Save
+                          {saving ? "Saving..." : "Save"}
                         </button>
                       </td>
                     )}
