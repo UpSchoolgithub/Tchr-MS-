@@ -53,11 +53,12 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
       return {
         id: classInfo.id,
         className: classInfo.className,
-        board: classInfo.board,
+        board: classInfo.board, // Use board from ClassInfo
         schoolId: classInfo.schoolId,
         sections,
       };
     });
+    
 
     res.status(200).json(formattedClasses);
   } catch (error) {
@@ -71,8 +72,8 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
   const { className, board, sections } = req.body;
 
-  if (!board) {
-    return res.status(400).json({ message: 'Board is required for class creation.' });
+  if (!board || !['ICSE', 'CBSE', 'STATE'].includes(board)) {
+    return res.status(400).json({ message: 'Invalid or missing board type.' });
   }
 
   const transaction = await sequelize.transaction();
@@ -92,10 +93,9 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
             await Subject.create(
               {
-                sectionId: section.id,
-                classInfoId: classId,
+                sectionId: newSection.id,
+                classInfoId: newClass.id,
                 schoolId,
-                board: subject.board, // Add board here
                 subjectName: subject.subjectName,
                 academicStartDate: subject.academicStartDate,
                 academicEndDate: subject.academicEndDate,
@@ -104,7 +104,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
               },
               { transaction }
             );
-            
           }
         }
       }
@@ -118,6 +117,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Error creating class with sections and subjects', error: error.message });
   }
 });
+
 
 // Route to add sections and subjects to an existing class
 // Route to add sections and subjects to an existing class
@@ -171,6 +171,7 @@ router.post('/classes/:classId/sections', async (req, res) => {
               },
               { transaction }
             );
+            
           }
         }
       }

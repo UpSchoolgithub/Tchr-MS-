@@ -21,7 +21,6 @@ const ClassInfo = () => {
   const [editingSubject, setEditingSubject] = useState(null);
   const [tempDates, setTempDates] = useState({});
   const [error, setError] = useState('');
-  const [selectedBoardForSubject, setSelectedBoardForSubject] = useState('');
 
   const boardOptions = ['ICSE', 'CBSE', 'STATE']; // Board options
 
@@ -34,28 +33,32 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      console.log('Class Infos with Sections:', response.data); // Debugging line
-      setClassInfos(response.data);
+      const formattedClasses = response.data.map((cls) => ({
+        ...cls,
+        displayName: `${cls.board} - ${cls.className}`, // Format class name with board
+      }));
+      setClassInfos(formattedClasses);
     } catch (error) {
       console.error('Error fetching class data:', error);
       setError('Error fetching class data');
     }
   };
+  
 
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
       const updatedSections = response.data.map((section) => ({
-        id: section.id,
-        sectionName: section.sectionName,
+        ...section,
+        displayName: `${selectedBoard} - ${section.sectionName}`, // Format section name with board
       }));
-      console.log('Fetched Sections:', updatedSections); // Debugging line
       setSections(updatedSections);
     } catch (error) {
       console.error('Error fetching sections:', error);
       setError('Error fetching sections');
     }
   };
+  
 
   useEffect(() => {
     fetchClassInfos();
@@ -103,13 +106,17 @@ const ClassInfo = () => {
 
   const handleClassChange = (selectedClassName) => {
     setClassName(selectedClassName);
+  
     const selectedClass = classInfos.find((cls) => cls.className === selectedClassName);
     if (selectedClass) {
-      fetchSections(selectedClass.id);
+      setSelectedBoard(selectedClass.board); // Automatically set the board
+      fetchSections(selectedClass.id); // Fetch sections for the selected class
     } else {
-      setSections([]);
+      setSelectedBoard(''); // Clear board if no class is selected
+      setSections([]); // Clear sections if no class is selected
     }
   };
+  
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
@@ -134,7 +141,6 @@ const ClassInfo = () => {
   
       const newSubject = {
         subjectName: subject,
-        board: selectedBoardForSubject, // Include board in the payload
         academicStartDate,
         academicEndDate,
         revisionStartDate,
@@ -153,6 +159,8 @@ const ClassInfo = () => {
       setError('Failed to add subject. Please try again.');
     }
   };
+  
+  
   
 
   const handleEditClick = (subjectId, academicStart, academicEnd, revisionStart, revisionEnd) => {
@@ -203,7 +211,7 @@ const ClassInfo = () => {
   return (
     <div>
       {error && <div className="error">{error}</div>}
-  
+
       {/* Board Selection */}
       <div>
         <label>Select Board:</label>
@@ -216,7 +224,7 @@ const ClassInfo = () => {
           ))}
         </select>
       </div>
-  
+
       {/* Class Input and Selection */}
       <div>
         <input
@@ -231,12 +239,12 @@ const ClassInfo = () => {
           <option value="">Select Class</option>
           {classInfos.map((info) => (
             <option key={info.id} value={info.className}>
-              {info.className}
+              {info.displayName}
             </option>
           ))}
         </select>
       </div>
-  
+
       {/* Section Input */}
       <div>
         <input
@@ -247,86 +255,70 @@ const ClassInfo = () => {
         />
         <button onClick={handleSectionSubmit}>Add New Section</button>
       </div>
-  
+
       {/* Subject Form */}
       <form onSubmit={handleSectionSubjectSubmit}>
-  <div>
-    <label>Section:</label>
-    <select value={section} onChange={(e) => setSection(e.target.value)} required>
-      <option value="">Select Section</option>
-      {sections.map((sec) => (
-        <option key={sec.id} value={sec.sectionName}>
-          {sec.sectionName}
-        </option>
-      ))}
-    </select>
-  </div>
-  <div>
-    <label>Subject:</label>
-    <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
-      <option value="">Select Subject</option>
-      {getSubjects(className).map((subj) => (
-        <option key={subj} value={subj}>
-          {subj}
-        </option>
-      ))}
-    </select>
-  </div>
-  <div>
-    <label>Board:</label>
-    <select
-      value={selectedBoardForSubject}
-      onChange={(e) => setSelectedBoardForSubject(e.target.value)}
-      required
-    >
-      <option value="">Select Board</option>
-      {boardOptions.map((board) => (
-        <option key={board} value={board}>
-          {board}
-        </option>
-      ))}
-    </select>
-  </div>
-  <div>
-    <label>Academic Start Date:</label>
-    <input
-      type="date"
-      value={academicStartDate}
-      onChange={(e) => setAcademicStartDate(e.target.value)}
-      required
-    />
-  </div>
-  <div>
-    <label>Academic End Date:</label>
-    <input
-      type="date"
-      value={academicEndDate}
-      onChange={(e) => setAcademicEndDate(e.target.value)}
-      required
-    />
-  </div>
-  <div>
-    <label>Revision Start Date:</label>
-    <input
-      type="date"
-      value={revisionStartDate}
-      onChange={(e) => setRevisionStartDate(e.target.value)}
-      required
-    />
-  </div>
-  <div>
-    <label>Revision End Date:</label>
-    <input
-      type="date"
-      value={revisionEndDate}
-      onChange={(e) => setRevisionEndDate(e.target.value)}
-      required
-    />
-  </div>
-  <button type="submit">Add Section and Subject</button>
-</form>
+        <div>
+          <label>Section:</label>
+          <select value={section} onChange={(e) => setSection(e.target.value)} required>
+            <option value="">Select Section</option>
+            {sections.map((sec) => (
+              <option key={sec.id} value={sec.sectionName}>
+                {sec.displayName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Subject:</label>
+          <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
+            <option value="">Select Subject</option>
+            {getSubjects(className).map((subj) => (
+              <option key={subj} value={subj}>
+                {subj}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Academic Start Date:</label>
+          <input
+            type="date"
+            value={academicStartDate}
+            onChange={(e) => setAcademicStartDate(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Academic End Date:</label>
+          <input
+            type="date"
+            value={academicEndDate}
+            onChange={(e) => setAcademicEndDate(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Revision Start Date:</label>
+          <input
+            type="date"
+            value={revisionStartDate}
+            onChange={(e) => setRevisionStartDate(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Revision End Date:</label>
+          <input
+            type="date"
+            value={revisionEndDate}
+            onChange={(e) => setRevisionEndDate(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit">Add Section and Subject</button>
+      </form>
 
-  
       {/* Class, Section, and Subject Details */}
       <div>
         <h2>Class, Section, and Subject Details:</h2>
@@ -349,114 +341,16 @@ const ClassInfo = () => {
               Object.keys(info.sections || {}).map((sec) =>
                 info.sections[sec].subjects.map((subject) => (
                   <tr key={subject.id}>
-                    <td>{info.className}</td>
+                    <td>{info.displayName}</td>
                     <td>{info.board}</td>
                     <td>{sec}</td>
                     <td>{subject.subjectName}</td>
+                    <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
                     <td>
-                      {editingSubject === subject.id ? (
-                        <input
-                          type="date"
-                          value={tempDates.academicStartDate}
-                          onChange={(e) =>
-                            setTempDates({
-                              ...tempDates,
-                              academicStartDate: e.target.value,
-                            })
-                          }
-                        />
-                      ) : (
-                        new Date(subject.academicStartDate).toLocaleDateString()
-                      )}
-                    </td>
-                    <td>
-                      {editingSubject === subject.id ? (
-                        <input
-                          type="date"
-                          value={tempDates.academicEndDate}
-                          onChange={(e) =>
-                            setTempDates({
-                              ...tempDates,
-                              academicEndDate: e.target.value,
-                            })
-                          }
-                        />
-                      ) : (
-                        new Date(subject.academicEndDate).toLocaleDateString()
-                      )}
-                    </td>
-                    <td>
-                      {editingSubject === subject.id ? (
-                        <input
-                          type="date"
-                          value={tempDates.revisionStartDate}
-                          onChange={(e) =>
-                            setTempDates({
-                              ...tempDates,
-                              revisionStartDate: e.target.value,
-                            })
-                          }
-                        />
-                      ) : (
-                        new Date(subject.revisionStartDate).toLocaleDateString()
-                      )}
-                    </td>
-                    <td>
-                      {editingSubject === subject.id ? (
-                        <input
-                          type="date"
-                          value={tempDates.revisionEndDate}
-                          onChange={(e) =>
-                            setTempDates({
-                              ...tempDates,
-                              revisionEndDate: e.target.value,
-                            })
-                          }
-                        />
-                      ) : (
-                        new Date(subject.revisionEndDate).toLocaleDateString()
-                      )}
-                    </td>
-                    <td>
-                      {editingSubject === subject.id ? (
-                        <button onClick={() => handleSaveClick(info.id, sec, subject.id)}>
-                          Save
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            handleEditClick(
-                              subject.id,
-                              subject.academicStartDate,
-                              subject.academicEndDate,
-                              subject.revisionStartDate,
-                              subject.revisionEndDate
-                            )
-                          }
-                        >
-                          Edit
-                        </button>
-                      )}
-                      <button onClick={() => handleDeleteClick(info.id, sec, subject.id)}>
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => {
-                          const selectedClass = info;
-                          const sectionData = info.sections[sec];
-  
-                          if (sectionData && sectionData.id) {
-                            navigate(
-                              `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`
-                            );
-                          } else {
-                            console.error('Section ID not found for section name:', sec);
-                            setError(`Section ID not found for section name: ${sec}`);
-                          }
-                        }}
-                      >
-                        Manage Sessions
-                      </button>
+                      <button onClick={() => navigate(`/manage/${info.id}/${sec}`)}>Manage Sessions</button>
                     </td>
                   </tr>
                 ))
@@ -467,6 +361,6 @@ const ClassInfo = () => {
       </div>
     </div>
   );
-  };
+};
 
 export default ClassInfo;
