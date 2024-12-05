@@ -64,19 +64,6 @@ const SessionPlans = () => {
     }));
   };
 
-  // Handle lesson plan change
-  const handleChangeLessonPlan = (sessionNumber, topicIndex, value) => {
-    setTopicsWithConcepts((prev) => {
-      const updatedTopics = prev[sessionNumber].map((topic, index) =>
-        index === topicIndex ? { ...topic, lessonPlan: value } : topic
-      );
-      return {
-        ...prev,
-        [sessionNumber]: updatedTopics,
-      };
-    });
-  };
-
   // Save session plan
   const handleSaveSessionPlan = async (sessionPlanId, sessionNumber) => {
     try {
@@ -132,9 +119,10 @@ const SessionPlans = () => {
     }
   };
 
-  // Generate lesson plan (placeholder functionality)
-  const handleGenerateLessonPlan = () => {
-    alert("Lesson Plan Generation triggered!");
+  // View lesson plan
+  const handleViewLessonPlan = (lessonPlan) => {
+    alert(`Viewing Lesson Plan: ${lessonPlan}`);
+    // Replace with actual view logic, e.g., modal or new page
   };
 
   return (
@@ -158,7 +146,7 @@ const SessionPlans = () => {
         </form>
         <button
           className="lesson-plan-btn"
-          onClick={handleGenerateLessonPlan}
+          onClick={() => alert("Lesson Plan Generation triggered!")}
         >
           Generate Lesson Plan
         </button>
@@ -185,38 +173,19 @@ const SessionPlans = () => {
                         {plan.sessionNumber}
                       </td>
                     )}
-                    <td>
-                      <input
-                        type="text"
-                        value={topic.name}
-                        onChange={(e) =>
-                          handleChangeTopic(plan.sessionNumber, tIndex, e.target.value)
-                        }
-                      />
-                      <button onClick={() => handleAddConcept(plan.sessionNumber, tIndex)}>
-                        + Add Concept
-                      </button>
-                    </td>
+                    <td>{topic.name}</td>
                     <td>
                       {topic.concepts.map((concept, cIndex) => (
-                        <input
-                          key={cIndex}
-                          type="text"
-                          value={concept}
-                          onChange={(e) =>
-                            handleChangeConcept(plan.sessionNumber, tIndex, cIndex, e.target.value)
-                          }
-                        />
+                        <div key={cIndex}>{concept}</div>
                       ))}
                     </td>
                     <td>
-                      <input
-                        type="text"
-                        value={topic.lessonPlan}
-                        onChange={(e) =>
-                          handleChangeLessonPlan(plan.sessionNumber, tIndex, e.target.value)
-                        }
-                      />
+                      <button
+                        className="view-button"
+                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                      >
+                        View
+                      </button>
                     </td>
                     {tIndex === 0 && (
                       <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
