@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, useLocation } from 'react-router-dom'; // Added useLocation to capture query parameters
+import { useParams, useLocation } from 'react-router-dom';
 import '../styles.css';
 
 const SessionPlans = () => {
@@ -14,11 +14,10 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
 
-  // Extract board from query params
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const boardParam = queryParams.get('board');
-    setBoard(boardParam || ''); // Set board if available, else keep it empty
+    setBoard(boardParam || '');
   }, [location]);
 
   useEffect(() => {
@@ -44,6 +43,11 @@ const SessionPlans = () => {
 
     fetchSessionPlans();
   }, [sessionId]);
+
+  const handleGenerateLessonPlan = () => {
+    console.log('Generate Lesson Plan functionality triggered');
+    // Add logic for generating lesson plan here
+  };
 
   const handleInputChange = (sessionNumber, index, value) => {
     setTopics((prevState) => ({
@@ -96,19 +100,6 @@ const SessionPlans = () => {
     }
   };
 
-  const handleDeleteAllSessionPlans = async () => {
-    if (window.confirm('Are you sure you want to delete all session plans?')) {
-      try {
-        await axios.delete(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
-        setSessionPlans([]);
-        setTopics({});
-        setUploadDisabled(false);
-      } catch (error) {
-        console.error('Error deleting all session plans:', error);
-      }
-    }
-  };
-
   const startEditing = (sessionNumber) => {
     setEditing((prevEditing) => ({ ...prevEditing, [sessionNumber]: true }));
   };
@@ -150,22 +141,28 @@ const SessionPlans = () => {
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
-      {board && <p>Board: {board}</p>} {/* Display the board */}
+      {board && <p>Board: {board}</p>}
       {error && <div className="error">{error}</div>}
+
+      <button className="generate-button" onClick={handleGenerateLessonPlan}>
+        Generate Lesson Plan
+      </button>
+
       <form onSubmit={handleFileUpload} className="form-group">
         <label>Upload Session Plans via Excel:</label>
         <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} disabled={uploadDisabled} />
-        <button type="submit" disabled={uploadDisabled}>Upload</button>
+        <button type="submit" disabled={uploadDisabled}>
+          Upload
+        </button>
       </form>
-      <div className="buttons">
-        <button onClick={handleDeleteAllSessionPlans}>Delete All</button>
-      </div>
+
       <div className="table-container">
         <table>
           <thead>
             <tr>
               <th>Session Number</th>
               <th>Topic Names</th>
+              <th>Lesson Plan</th> {/* Added Lesson Plan column */}
               <th>Actions</th>
             </tr>
           </thead>
@@ -190,6 +187,11 @@ const SessionPlans = () => {
                     ))}
                   </td>
                   <td>
+                    <button onClick={() => console.log(`View Lesson Plan for session ${plan.sessionNumber}`)}>
+                      View
+                    </button>
+                  </td>
+                  <td>
                     {editing[plan.sessionNumber] ? (
                       <>
                         <button onClick={() => handleSaveTopic(plan.id, plan.sessionNumber)}>Save</button>
@@ -201,7 +203,7 @@ const SessionPlans = () => {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="3">
+                  <td colSpan="4">
                     <button onClick={() => handleAddTopic(plan.sessionNumber)}>+</button>
                   </td>
                 </tr>
