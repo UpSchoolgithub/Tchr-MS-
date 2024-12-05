@@ -33,7 +33,7 @@ const SessionPlans = () => {
         // Initialize topics and concepts
         const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((topic) => ({
-            name: topic.name,
+            name: topic.name || "",
             concepts: topic.concepts || [],
           })) || [];
           return acc;
