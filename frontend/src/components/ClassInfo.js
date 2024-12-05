@@ -237,17 +237,65 @@ const ClassInfo = () => {
     <div>
       {error && <div className="error">{error}</div>}
   
-      {/* Board Selection */}
+      {/* Filters */}
       <div>
-        <label>Select Board:</label>
-        <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)}>
-          <option value="">Select Board</option>
-          {boardOptions.map((board) => (
-            <option key={board} value={board}>
-              {board}
-            </option>
-          ))}
-        </select>
+        <h3>Filters</h3>
+        <div>
+          <label>Filter by Board:</label>
+          <select
+            value={selectedBoard}
+            onChange={(e) => setSelectedBoard(e.target.value)}
+          >
+            <option value="">All Boards</option>
+            {boardOptions.map((board) => (
+              <option key={board} value={board}>
+                {board}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Filter by Class:</label>
+          <select
+            value={className}
+            onChange={(e) => setClassName(e.target.value)}
+          >
+            <option value="">All Classes</option>
+            {classInfos.map((info) => (
+              <option key={info.id} value={info.className}>
+                {info.className}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Filter by Section:</label>
+          <select
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+          >
+            <option value="">All Sections</option>
+            {sections.map((sec) => (
+              <option key={sec.id} value={sec.sectionName}>
+                {sec.sectionName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Filter by Subject:</label>
+          <select
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          >
+            <option value="">All Subjects</option>
+            {getSubjects(className || "1").map((subj) => (
+              <option key={subj} value={subj}>
+                {subj}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
   
       {/* Class Input and Selection */}
@@ -289,13 +337,11 @@ const ClassInfo = () => {
           <label>Section:</label>
           <select value={section} onChange={(e) => setSection(e.target.value)} required>
             <option value="">Select Section</option>
-            {sections
-              .filter((sec) => sec.board === selectedBoard) // Filter by selected board
-              .map((sec) => (
-                <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
-                  {sec.sectionName}
-                </option>
-              ))}
+            {sections.map((sec) => (
+              <option key={sec.id} value={sec.sectionName}>
+                {sec.sectionName}
+              </option>
+            ))}
           </select>
         </div>
   
@@ -369,7 +415,14 @@ const ClassInfo = () => {
           </thead>
           <tbody>
             {classInfos
-              .filter((info) => !selectedBoard || info.board === selectedBoard) // Filter by board
+              .filter(
+                (info) =>
+                  (!selectedBoard || info.board === selectedBoard) &&
+                  (!className || info.className === className) &&
+                  (!section ||
+                    info.sections[section]?.sectionName === section) &&
+                  (!subject || info.sections[section]?.subjects?.some((sub) => sub.subjectName === subject))
+              )
               .map((info) =>
                 Object.keys(info.sections || {}).map((sec) =>
                   info.sections[sec].subjects.map((subject) => (
@@ -383,9 +436,7 @@ const ClassInfo = () => {
                       <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
                       <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
                       <td>
-                        <button onClick={() => navigate(`/manage/${info.id}/${sec}`)}>
-                          Manage Sessions
-                        </button>
+                        <button onClick={() => navigate(`/manage/${info.id}/${sec}`)}>Manage Sessions</button>
                       </td>
                     </tr>
                   ))
