@@ -8,7 +8,7 @@ const SessionPlans = () => {
   const location = useLocation();
   const [board, setBoard] = useState('');
   const [sessionPlans, setSessionPlans] = useState([]);
-  const [topics, setTopics] = useState({});
+  const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
   const [editing, setEditing] = useState({});
   const [error, setError] = useState('');
   const [file, setFile] = useState(null);
@@ -23,14 +23,17 @@ const SessionPlans = () => {
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
-        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
+        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans?board=${board}`);
         setSessionPlans(response.data);
 
         const initialTopics = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.planDetails || [];
+          acc[plan.sessionNumber] = plan.planDetails.map((detail) => ({
+            topic: detail.topic,
+            concepts: detail.concepts || [],
+          }));
           return acc;
         }, {});
-        setTopics(initialTopics);
+        setTopicsWithConcepts(initialTopics);
 
         if (response.data.length > 0) {
           setUploadDisabled(true);
@@ -42,46 +45,31 @@ const SessionPlans = () => {
     };
 
     fetchSessionPlans();
-  }, [sessionId]);
+  }, [sessionId, board]);
 
-  const handleGenerateLessonPlan = () => {
-    console.log('Generate Lesson Plan functionality triggered');
-    // Add logic for generating lesson plan here
-  };
-
-  const handleInputChange = (sessionNumber, index, value) => {
-    setTopics((prevState) => ({
-      ...prevState,
-      [sessionNumber]: prevState[sessionNumber].map((topic, i) =>
-        i === index ? value : topic
-      ),
-    }));
-  };
-
-  const handleAddTopic = (sessionNumber) => {
-    setTopics((prevState) => {
-      const updatedTopics = [...(prevState[sessionNumber] || []), ''];
-      return {
-        ...prevState,
-        [sessionNumber]: updatedTopics,
-      };
+  const handleAddConcept = (sessionNumber, topicIndex) => {
+    setTopicsWithConcepts((prevState) => {
+      const updatedConcepts = [...prevState[sessionNumber][topicIndex].concepts, ''];
+      prevState[sessionNumber][topicIndex].concepts = updatedConcepts;
+      return { ...prevState };
     });
-    setEditing((prevEditing) => ({
-      ...prevEditing,
-      [sessionNumber]: true,
-    }));
   };
 
-  const handleDeleteTopic = (sessionNumber, index) => {
-    setTopics((prevState) => ({
-      ...prevState,
-      [sessionNumber]: prevState[sessionNumber].filter((_, i) => i !== index),
-    }));
+  const handleConceptChange = (sessionNumber, topicIndex, conceptIndex, value) => {
+    setTopicsWithConcepts((prevState) => {
+      prevState[sessionNumber][topicIndex].concepts[conceptIndex] = value;
+      return { ...prevState };
+    });
   };
 
   const handleSaveTopic = async (sessionPlanId, sessionNumber) => {
     try {
-      const planDetails = JSON.stringify(topics[sessionNumber]);
+      const planDetails = JSON.stringify(
+        topicsWithConcepts[sessionNumber].map((item) => ({
+          topic: item.topic,
+          concepts: item.concepts,
+        }))
+      );
       await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
 
       setSessionPlans((prevState) =>
@@ -100,18 +88,6 @@ const SessionPlans = () => {
     }
   };
 
-  const startEditing = (sessionNumber) => {
-    setEditing((prevEditing) => ({ ...prevEditing, [sessionNumber]: true }));
-  };
-
-  const cancelEditing = (sessionNumber) => {
-    setEditing((prevEditing) => ({ ...prevEditing, [sessionNumber]: false }));
-  };
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) {
@@ -121,13 +97,13 @@ const SessionPlans = () => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await axios.post(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload`, formData, {
+      await axios.post(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload?board=${board}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       setFile(null);
-      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
+      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans?board=${board}`);
       setSessionPlans(response.data);
       setUploadDisabled(true);
     } catch (error) {
@@ -144,13 +120,9 @@ const SessionPlans = () => {
       {board && <p>Board: {board}</p>}
       {error && <div className="error">{error}</div>}
 
-      <button className="generate-button" onClick={handleGenerateLessonPlan}>
-        Generate Lesson Plan
-      </button>
-
       <form onSubmit={handleFileUpload} className="form-group">
         <label>Upload Session Plans via Excel:</label>
-        <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} disabled={uploadDisabled} />
+        <input type="file" accept=".xlsx, .xls" onChange={(e) => setFile(e.target.files[0])} disabled={uploadDisabled} />
         <button type="submit" disabled={uploadDisabled}>
           Upload
         </button>
@@ -162,7 +134,7 @@ const SessionPlans = () => {
             <tr>
               <th>Session Number</th>
               <th>Topic Names</th>
-              <th>Lesson Plan</th> {/* Added Lesson Plan column */}
+              <th>Related Concepts</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -172,39 +144,31 @@ const SessionPlans = () => {
                 <tr>
                   <td>{plan.sessionNumber}</td>
                   <td>
-                    {topics[plan.sessionNumber]?.map((topic, i) => (
-                      <div key={i} className="topic-input">
-                        <input
-                          type="text"
-                          value={topic}
-                          onChange={(e) => handleInputChange(plan.sessionNumber, i, e.target.value)}
-                          disabled={!editing[plan.sessionNumber]}
-                        />
-                        {editing[plan.sessionNumber] && (
-                          <button onClick={() => handleDeleteTopic(plan.sessionNumber, i)}>-</button>
-                        )}
+                    {topicsWithConcepts[plan.sessionNumber]?.map((item, topicIndex) => (
+                      <div key={topicIndex}>
+                        <strong>{item.topic}</strong>
+                        {item.concepts.map((concept, conceptIndex) => (
+                          <div key={conceptIndex}>
+                            <input
+                              type="text"
+                              value={concept}
+                              onChange={(e) =>
+                                handleConceptChange(plan.sessionNumber, topicIndex, conceptIndex, e.target.value)
+                              }
+                            />
+                          </div>
+                        ))}
+                        <button onClick={() => handleAddConcept(plan.sessionNumber, topicIndex)}>+ Add Concept</button>
                       </div>
                     ))}
                   </td>
                   <td>
                     <button onClick={() => console.log(`View Lesson Plan for session ${plan.sessionNumber}`)}>
-                      View
+                      View Lesson Plan
                     </button>
                   </td>
                   <td>
-                    {editing[plan.sessionNumber] ? (
-                      <>
-                        <button onClick={() => handleSaveTopic(plan.id, plan.sessionNumber)}>Save</button>
-                        <button onClick={() => cancelEditing(plan.sessionNumber)}>Cancel</button>
-                      </>
-                    ) : (
-                      <button onClick={() => startEditing(plan.sessionNumber)}>Edit</button>
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan="4">
-                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>+</button>
+                    <button onClick={() => handleSaveTopic(plan.id, plan.sessionNumber)}>Save</button>
                   </td>
                 </tr>
               </React.Fragment>
