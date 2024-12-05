@@ -1,11 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
-
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
-  const [searchParams] = useSearchParams();
-  const board = searchParams.get("board"); // Retrieve board from query params
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
@@ -18,7 +12,7 @@ const SessionManagement = () => {
     setIsLoading(true);
     setError('');
     try {
-      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions?board=${board}`;
+      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
       console.log("Fetching sessions from URL:", url);
       const response = await axios.get(url);
       console.log("Sessions response:", response.data);
@@ -33,7 +27,7 @@ const SessionManagement = () => {
 
   useEffect(() => {
     fetchSessions();
-  }, [schoolId, classId, sectionId, subjectId, board]);
+  }, [schoolId, classId, sectionId, subjectId]);
 
   const startEditing = (session) => {
     setEditingSessionId(session.id);
@@ -78,12 +72,14 @@ const SessionManagement = () => {
 
     setIsLoading(true);
     setError('');
+
     try {
-      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload?board=${board}`;
+      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       console.log("Uploading to URL:", uploadUrl);
+      console.log("File:", file);
 
       const response = await axios.post(uploadUrl, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       console.log('Upload response:', response.data);
@@ -110,6 +106,7 @@ const SessionManagement = () => {
       <table>
         <thead>
           <tr>
+            <th>Unit Name</th>
             <th>Chapter</th>
             <th>Number of Sessions</th>
             <th>Priority Number</th>
@@ -117,9 +114,10 @@ const SessionManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {sessions.map(session => (
+          {sessions.map((session) => (
             <tr key={session.id}>
-              <td>{session.chapterName || 'N/A'}</td>
+              <td>{session.unitName || 'N/A'}</td> {/* Display Unit Name */}
+              <td>{session.chapterName || 'N/A'}</td> {/* Ensure Chapter Name is displayed */}
               <td>
                 {editingSessionId === session.id ? (
                   <input
@@ -152,7 +150,7 @@ const SessionManagement = () => {
                   <>
                     <button onClick={() => startEditing(session)}>Edit</button>
                     <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-                    <Link to={`/sessions/${session.id}/sessionPlans?board=${board}`}>
+                    <Link to={`/sessions/${session.id}/sessionPlans`}>
                       <button>Session Plan</button>
                     </Link>
                   </>
