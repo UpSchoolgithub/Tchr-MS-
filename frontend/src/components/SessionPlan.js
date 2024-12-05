@@ -1,113 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams, useLocation } from 'react-router-dom';
-import '../styles.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams, useLocation } from "react-router-dom";
+import "../styles.css";
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
   const location = useLocation();
-  const [board, setBoard] = useState('');
+  const [board, setBoard] = useState("");
   const [sessionPlans, setSessionPlans] = useState([]);
   const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
   const [editing, setEditing] = useState({});
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const boardParam = queryParams.get('board');
-    setBoard(boardParam || '');
+    const boardParam = queryParams.get("board");
+    setBoard(boardParam || "");
   }, [location]);
 
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
-        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans?board=${board}`);
+        const response = await axios.get(
+          `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
+        );
         setSessionPlans(response.data);
 
-        const initialTopics = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.planDetails.map((detail) => ({
-            topic: detail.topic,
-            concepts: detail.concepts || [],
-          }));
+        const initialData = response.data.reduce((acc, plan) => {
+          acc[plan.sessionNumber] = plan.planDetails?.map((topic) => ({
+            name: topic,
+            concepts: [],
+          })) || [];
           return acc;
         }, {});
-        setTopicsWithConcepts(initialTopics);
+        setTopicsWithConcepts(initialData);
 
         if (response.data.length > 0) {
           setUploadDisabled(true);
         }
       } catch (error) {
-        console.error('Error fetching session plans:', error);
-        setError('Failed to fetch session plans.');
+        console.error("Error fetching session plans:", error);
+        setError("Failed to fetch session plans.");
       }
     };
 
     fetchSessionPlans();
-  }, [sessionId, board]);
+  }, [sessionId]);
+
+  const handleAddTopic = (sessionNumber) => {
+    setTopicsWithConcepts((prev) => ({
+      ...prev,
+      [sessionNumber]: [...(prev[sessionNumber] || []), { name: "", concepts: [] }],
+    }));
+  };
 
   const handleAddConcept = (sessionNumber, topicIndex) => {
-    setTopicsWithConcepts((prevState) => {
-      const updatedConcepts = [...prevState[sessionNumber][topicIndex].concepts, ''];
-      prevState[sessionNumber][topicIndex].concepts = updatedConcepts;
-      return { ...prevState };
+    setTopicsWithConcepts((prev) => {
+      const updatedTopics = prev[sessionNumber].map((topic, index) => {
+        if (index === topicIndex) {
+          return {
+            ...topic,
+            concepts: [...topic.concepts, ""],
+          };
+        }
+        return topic;
+      });
+      return {
+        ...prev,
+        [sessionNumber]: updatedTopics,
+      };
     });
   };
 
-  const handleConceptChange = (sessionNumber, topicIndex, conceptIndex, value) => {
-    setTopicsWithConcepts((prevState) => {
-      prevState[sessionNumber][topicIndex].concepts[conceptIndex] = value;
-      return { ...prevState };
+  const handleChangeTopic = (sessionNumber, topicIndex, value) => {
+    setTopicsWithConcepts((prev) => {
+      const updatedTopics = prev[sessionNumber].map((topic, index) =>
+        index === topicIndex ? { ...topic, name: value } : topic
+      );
+      return {
+        ...prev,
+        [sessionNumber]: updatedTopics,
+      };
     });
   };
 
-  const handleSaveTopic = async (sessionPlanId, sessionNumber) => {
+  const handleChangeConcept = (sessionNumber, topicIndex, conceptIndex, value) => {
+    setTopicsWithConcepts((prev) => {
+      const updatedTopics = prev[sessionNumber].map((topic, index) => {
+        if (index === topicIndex) {
+          const updatedConcepts = topic.concepts.map((concept, cIndex) =>
+            cIndex === conceptIndex ? value : concept
+          );
+          return { ...topic, concepts: updatedConcepts };
+        }
+        return topic;
+      });
+      return {
+        ...prev,
+        [sessionNumber]: updatedTopics,
+      };
+    });
+  };
+
+  const handleSaveSessionPlan = async (sessionPlanId, sessionNumber) => {
     try {
-      const planDetails = JSON.stringify(
-        topicsWithConcepts[sessionNumber].map((item) => ({
-          topic: item.topic,
-          concepts: item.concepts,
-        }))
-      );
-      await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
+      const planDetails = topicsWithConcepts[sessionNumber].map((topic) => ({
+        name: topic.name,
+        concepts: topic.concepts,
+      }));
 
-      setSessionPlans((prevState) =>
-        prevState.map((plan) => {
-          if (plan.id === sessionPlanId) {
-            return { ...plan, planDetails: JSON.parse(planDetails) };
-          }
-          return plan;
-        })
-      );
+      await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, {
+        planDetails: JSON.stringify(planDetails),
+      });
 
-      setEditing((prevEditing) => ({ ...prevEditing, [sessionNumber]: false }));
+      setEditing((prev) => ({ ...prev, [sessionNumber]: false }));
     } catch (error) {
-      console.error('Error saving topic:', error);
-      setError('Failed to save topic. Please try again.');
+      console.error("Error saving session plan:", error);
+      setError("Failed to save session plan. Please try again.");
     }
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) {
-      setError('Please select a file to upload.');
+      setError("Please select a file to upload.");
       return;
     }
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
     try {
-      await axios.post(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload?board=${board}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       setFile(null);
-      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans?board=${board}`);
+      const response = await axios.get(
+        `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
+      );
       setSessionPlans(response.data);
       setUploadDisabled(true);
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       if (error.response && error.response.data) {
         setError(error.response.data.message);
       }
@@ -122,7 +166,12 @@ const SessionPlans = () => {
 
       <form onSubmit={handleFileUpload} className="form-group">
         <label>Upload Session Plans via Excel:</label>
-        <input type="file" accept=".xlsx, .xls" onChange={(e) => setFile(e.target.files[0])} disabled={uploadDisabled} />
+        <input
+          type="file"
+          accept=".xlsx, .xls"
+          onChange={handleFileChange}
+          disabled={uploadDisabled}
+        />
         <button type="submit" disabled={uploadDisabled}>
           Upload
         </button>
@@ -141,36 +190,50 @@ const SessionPlans = () => {
           <tbody>
             {sessionPlans.map((plan) => (
               <React.Fragment key={plan.id}>
-                <tr>
-                  <td>{plan.sessionNumber}</td>
-                  <td>
-                    {topicsWithConcepts[plan.sessionNumber]?.map((item, topicIndex) => (
-                      <div key={topicIndex}>
-                        <strong>{item.topic}</strong>
-                        {item.concepts.map((concept, conceptIndex) => (
-                          <div key={conceptIndex}>
-                            <input
-                              type="text"
-                              value={concept}
-                              onChange={(e) =>
-                                handleConceptChange(plan.sessionNumber, topicIndex, conceptIndex, e.target.value)
-                              }
-                            />
-                          </div>
-                        ))}
-                        <button onClick={() => handleAddConcept(plan.sessionNumber, topicIndex)}>+ Add Concept</button>
-                      </div>
-                    ))}
-                  </td>
-                  <td>
-                    <button onClick={() => console.log(`View Lesson Plan for session ${plan.sessionNumber}`)}>
-                      View Lesson Plan
-                    </button>
-                  </td>
-                  <td>
-                    <button onClick={() => handleSaveTopic(plan.id, plan.sessionNumber)}>Save</button>
-                  </td>
-                </tr>
+                {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
+                  <tr key={`${plan.sessionNumber}-${tIndex}`}>
+                    {tIndex === 0 && (
+                      <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                        {plan.sessionNumber}
+                      </td>
+                    )}
+                    <td>
+                      <input
+                        type="text"
+                        value={topic.name}
+                        onChange={(e) =>
+                          handleChangeTopic(plan.sessionNumber, tIndex, e.target.value)
+                        }
+                      />
+                      <button onClick={() => handleAddConcept(plan.sessionNumber, tIndex)}>
+                        + Add Concept
+                      </button>
+                    </td>
+                    <td>
+                      {topic.concepts.map((concept, cIndex) => (
+                        <input
+                          key={cIndex}
+                          type="text"
+                          value={concept}
+                          onChange={(e) =>
+                            handleChangeConcept(plan.sessionNumber, tIndex, cIndex, e.target.value)
+                          }
+                        />
+                      ))}
+                    </td>
+                    {tIndex === 0 && (
+                      <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                        <button
+                          onClick={() =>
+                            handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                          }
+                        >
+                          Save
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
               </React.Fragment>
             ))}
           </tbody>
