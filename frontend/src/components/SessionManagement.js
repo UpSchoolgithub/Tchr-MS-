@@ -69,7 +69,7 @@ const SessionManagement = () => {
       setError('Please select at least one session to delete.');
       return;
     }
-
+  
     try {
       await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`, {
         sessionIds: selectedSessionIds,
@@ -81,6 +81,7 @@ const SessionManagement = () => {
       setError('Failed to delete sessions. Please try again later.');
     }
   };
+  
 
   const toggleSelection = (sessionId) => {
     setSelectedSessionIds((prev) =>
