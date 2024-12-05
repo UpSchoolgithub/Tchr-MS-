@@ -87,6 +87,9 @@ app.use('/api', assignmentRoutes);
 const pythonServiceRoutes = require('./routes/pythonServiceRoutes');
 app.use('/api/python-service', pythonServiceRoutes);
 
+const dynamicLP = require('./routes/dynamicLP');
+app.use('/api', dynamicLP);
+
 // Your existing route definitions
 app.get('/', (req, res) => {
   res.send('Hello World!');
