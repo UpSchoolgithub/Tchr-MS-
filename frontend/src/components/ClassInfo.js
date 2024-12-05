@@ -436,21 +436,25 @@ const ClassInfo = () => {
                       <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
                       <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
                       <td>
-                      <button 
-                        onClick={() => {
-                          const selectedClass = info; // 'info' is the current class in the table row
-                          const sectionData = info.sections[sec]; // Access section data directly from 'info.sections' using 'sec' as the key
+                      <button
+  onClick={() => {
+    const selectedClass = info; // 'info' is the current class in the table row
+    const sectionData = info.sections[sec]; // Access section data directly from 'info.sections' using 'sec' as the key
 
-                          if (sectionData && sectionData.id) {
-                            navigate(`/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`);
-                          } else {
-                            console.error("Section ID not found for section name:", sec);
-                            setError(`Section ID not found for section name: ${sec}`);
-                          }
-                        }}
-                      >
-                        Manage Sessions
-                      </button>
+    if (sectionData && sectionData.id) {
+      // Pass the board information as part of the URL
+      navigate(
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
+      );
+    } else {
+      console.error("Section ID not found for section name:", sec);
+      setError(`Section ID not found for section name: ${sec}`);
+    }
+  }}
+>
+  Manage Sessions
+</button>
+
                       </td>
                     </tr>
                   ))

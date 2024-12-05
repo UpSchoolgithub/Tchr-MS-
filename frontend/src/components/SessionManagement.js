@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
+  const [searchParams] = useSearchParams();
+  const board = searchParams.get("board"); // Retrieve board from query params
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
@@ -16,10 +18,10 @@ const SessionManagement = () => {
     setIsLoading(true);
     setError('');
     try {
-      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
+      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions?board=${board}`;
       console.log("Fetching sessions from URL:", url);
       const response = await axios.get(url);
-      console.log("Sessions response:", response.data); // Check if 'chapterName' is included
+      console.log("Sessions response:", response.data);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -28,10 +30,10 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchSessions();
-  }, [schoolId, classId, sectionId, subjectId]);
+  }, [schoolId, classId, sectionId, subjectId, board]);
 
   const startEditing = (session) => {
     setEditingSessionId(session.id);
@@ -70,22 +72,20 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     setIsLoading(true);
-    setError(''); // Clear any previous errors
-    
+    setError('');
     try {
-      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload?board=${board}`;
       console.log("Uploading to URL:", uploadUrl);
-      console.log("File:", file);
-  
+
       const response = await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-  
+
       console.log('Upload response:', response.data);
       fetchSessions(); // Refresh session data after successful upload
     } catch (error) {
@@ -119,7 +119,7 @@ const SessionManagement = () => {
         <tbody>
           {sessions.map(session => (
             <tr key={session.id}>
-              <td>{session.chapterName || 'N/A'}</td> {/* Ensure chapterName is displayed here */}
+              <td>{session.chapterName || 'N/A'}</td>
               <td>
                 {editingSessionId === session.id ? (
                   <input
@@ -152,7 +152,7 @@ const SessionManagement = () => {
                   <>
                     <button onClick={() => startEditing(session)}>Edit</button>
                     <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-                    <Link to={`/sessions/${session.id}/sessionPlans`}>
+                    <Link to={`/sessions/${session.id}/sessionPlans?board=${board}`}>
                       <button>Session Plan</button>
                     </Link>
                   </>
