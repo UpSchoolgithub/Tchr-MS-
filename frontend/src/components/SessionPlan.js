@@ -9,7 +9,7 @@ const SessionPlans = () => {
   const [board, setBoard] = useState("");
   const [sessionPlans, setSessionPlans] = useState([]);
   const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
-  const [editing, setEditing] = useState({});
+//  const [editing, setEditing] = useState({});
   const [error, setError] = useState("");
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
