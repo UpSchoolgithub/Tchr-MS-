@@ -142,4 +142,21 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
   }
 });
 
+//handle bulk delete requests
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/bulk-delete', async (req, res) => {
+  try {
+    const { sessionIds } = req.body;
+
+    if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
+      return res.status(400).json({ error: 'Invalid session IDs provided.' });
+    }
+
+    await Session.destroy({ where: { id: sessionIds } });
+    res.status(200).json({ message: 'Sessions deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting sessions:', error);
+    res.status(500).json({ error: 'Failed to delete sessions' });
+  }
+});
+
 module.exports = router;

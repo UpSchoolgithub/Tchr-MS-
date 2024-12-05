@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, Link } from 'react-router-dom'; // Add useParams
+import { useParams, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
@@ -8,6 +8,7 @@ const SessionManagement = () => {
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
   const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
+  const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -63,6 +64,32 @@ const SessionManagement = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedSessionIds.length === 0) {
+      setError('Please select at least one session to delete.');
+      return;
+    }
+
+    try {
+      await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`, {
+        sessionIds: selectedSessionIds,
+      });
+      setSelectedSessionIds([]); // Clear selection after successful deletion
+      fetchSessions();
+    } catch (error) {
+      console.error('Error deleting sessions:', error);
+      setError('Failed to delete sessions. Please try again later.');
+    }
+  };
+
+  const toggleSelection = (sessionId) => {
+    setSelectedSessionIds((prev) =>
+      prev.includes(sessionId) ? prev.filter((id) => id !== sessionId) : [...prev, sessionId]
+    );
+  };
+
+  const isSelected = (sessionId) => selectedSessionIds.includes(sessionId);
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
@@ -107,9 +134,24 @@ const SessionManagement = () => {
         <button type="submit">Upload</button>
       </form>
 
+      <button onClick={handleBulkDelete} disabled={selectedSessionIds.length === 0}>
+        Bulk Delete
+      </button>
+
       <table>
         <thead>
           <tr>
+            <th>
+              <input
+                type="checkbox"
+                onChange={(e) =>
+                  setSelectedSessionIds(
+                    e.target.checked ? sessions.map((session) => session.id) : []
+                  )
+                }
+                checked={selectedSessionIds.length === sessions.length && sessions.length > 0}
+              />
+            </th>
             <th>Unit Name</th>
             <th>Chapter</th>
             <th>Number of Sessions</th>
@@ -120,8 +162,15 @@ const SessionManagement = () => {
         <tbody>
           {sessions.map((session) => (
             <tr key={session.id}>
-              <td>{session.unitName || 'N/A'}</td> {/* Display Unit Name */}
-              <td>{session.chapterName || 'N/A'}</td> {/* Ensure Chapter Name is displayed */}
+              <td>
+                <input
+                  type="checkbox"
+                  checked={isSelected(session.id)}
+                  onChange={() => toggleSelection(session.id)}
+                />
+              </td>
+              <td>{session.unitName || 'N/A'}</td>
+              <td>{session.chapterName || 'N/A'}</td>
               <td>
                 {editingSessionId === session.id ? (
                   <input
