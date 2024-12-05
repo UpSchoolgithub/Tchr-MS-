@@ -60,6 +60,7 @@ const ClassInfo = () => {
     }
   };
   
+  
 
   useEffect(() => {
     fetchClassInfos();
@@ -131,24 +132,35 @@ const ClassInfo = () => {
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
   
+    // Validate date order
     if (
       new Date(academicStartDate) >= new Date(academicEndDate) ||
       new Date(academicEndDate) >= new Date(revisionStartDate) ||
       new Date(revisionStartDate) >= new Date(revisionEndDate)
     ) {
-      alert('Please ensure dates are in the correct order.');
+      setError('Please ensure dates are in the correct order.');
       return;
     }
   
+    // Find selected class
+    const selectedClass = classInfos.find(
+      (cls) => `${cls.board} - ${cls.className}` === className
+    );
+  
+    // Find selected section
+    const selectedSection = sections.find(
+      (sec) => `${selectedBoard} - ${sec.sectionName}` === section
+    );
+  
+    if (!selectedClass || !selectedSection) {
+      console.error('Debug Info:', { selectedClass, selectedSection, className, section });
+      setError('Please select a valid class and section.');
+      return;
+    }
+    
+  
     try {
-      const selectedClass = classInfos.find((cls) => cls.className === className);
-      const selectedSection = sections.find((sec) => sec.sectionName === section);
-  
-      if (!selectedClass || !selectedSection) {
-        setError('Please select a valid class and section.');
-        return;
-      }
-  
+      // Prepare subject data
       const newSubject = {
         subjectName: subject,
         academicStartDate,
@@ -157,18 +169,21 @@ const ClassInfo = () => {
         revisionEndDate,
       };
   
+      // API call to add subject to the section
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
-        sections: { [section.toUpperCase()]: { subjects: [newSubject] } },
+        sections: { [selectedSection.sectionName.toUpperCase()]: { subjects: [newSubject] } },
         schoolId,
       });
   
-      fetchClassInfos();
-      resetForm();
+      fetchClassInfos(); // Refresh data
+      resetForm(); // Reset form fields
+      setError('');
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
     }
   };
+  
   
   
   
@@ -268,17 +283,18 @@ const ClassInfo = () => {
 
       {/* Subject Form */}
       <form onSubmit={handleSectionSubjectSubmit}>
-        <div>
-          <label>Section:</label>
-          <select value={section} onChange={(e) => setSection(e.target.value)} required>
-            <option value="">Select Section</option>
-            {sections.map((sec) => (
-              <option key={sec.id} value={sec.sectionName}>
-                {sec.displayName}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div>
+  <label>Section:</label>
+  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+    <option value="">Select Section</option>
+    {sections.map((sec) => (
+      <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
+        {`${selectedBoard} - ${sec.sectionName}`} {/* Display formatted section */}
+      </option>
+    ))}
+  </select>
+</div>
+
         <div>
           <label>Subject:</label>
           <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
