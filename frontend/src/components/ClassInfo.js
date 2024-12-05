@@ -86,12 +86,15 @@ const ClassInfo = () => {
   };
 
   const handleSectionSubmit = async () => {
-    const selectedClass = classInfos.find((cls) => cls.className === className);
+    const selectedClass = classInfos.find(
+      (cls) => `${cls.board} - ${cls.className}` === className
+    );
+  
     if (!selectedClass) {
       setError('Please select a valid class to add a section.');
       return;
     }
-
+  
     try {
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
         sections: { [newSectionName.toUpperCase()]: { subjects: [] } },
@@ -104,6 +107,7 @@ const ClassInfo = () => {
       setError('Failed to add section. Please try again.');
     }
   };
+  
 
   const handleClassChange = (selectedClassName) => {
     setClassName(selectedClassName);
