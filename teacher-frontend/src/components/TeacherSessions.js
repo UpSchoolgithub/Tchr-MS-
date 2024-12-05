@@ -99,23 +99,6 @@ const TeacherSessions = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
-  const handleViewSessionReport = (session) => {
-    if (!session.sessionId) {
-      alert('Session ID is missing. Cannot view session report.');
-      return;
-    }
-  
-    navigate(`/teacherportal/${teacherId}/session-report`, {
-      state: {
-        sessionId: session.sessionId,
-        sessionDetails: session, // Pass session details
-      },
-    });
-  };
-  
-  
-  
-
   return (
     <div className="sessions-container">
       <h2>Teacher Sessions - {getDayName(selectedDate)}'s Sessions ({selectedDate.toDateString()})</h2>
@@ -161,8 +144,7 @@ const TeacherSessions = () => {
         <th>Start Time</th>
         <th>End Time</th>
         <th>Assignments</th>
-        <th>Session Reports</th>
-
+        <th>Session Report</th>
       </tr>
     </thead>
     <tbody>
@@ -175,6 +157,7 @@ const TeacherSessions = () => {
         <td>{session.schoolName}</td>
         <td>{session.className}</td>
         <td>{session.sectionName}</td>
+        <td>{session.sectionId}</td>
         <td>{session.day}</td>
         <td>{session.period}</td>
         <td>{session.subjectName}</td>
@@ -215,14 +198,16 @@ const TeacherSessions = () => {
           </button>
         </td>
         <td>
-                  <button
-                    onClick={() => handleViewSessionReport(session)}
-                    style={{ backgroundColor: '#007bff', color: 'white' }}
-                  >
-                    View Report
-                  </button>
-                </td>
-        </tr>
+          <button
+            style={{ backgroundColor: 'white'}}
+            onClick={() => {
+              navigate(`/session-reports/${session.sessionId}`);
+            }}
+          >
+            Session Report
+          </button>
+        </td>
+      </tr>
     );
   })}
 </tbody>
