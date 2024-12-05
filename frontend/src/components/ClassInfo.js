@@ -65,12 +65,15 @@ const ClassInfo = () => {
       setError('Please provide a class name and select a board.');
       return;
     }
-
+  
     try {
-      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
+      const payload = {
         className: newClassName,
-        board: selectedBoard, // Include board in the payload
-      });
+        board: selectedBoard, // Include selected board
+      };
+      console.log('Submitting Class:', payload); // Debugging
+  
+      await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, payload);
       setNewClassName('');
       setSelectedBoard(''); // Reset board selection
       fetchClassInfos();
@@ -79,6 +82,7 @@ const ClassInfo = () => {
       setError('Failed to add class. Please try again.');
     }
   };
+  
 
   const handleSectionSubmit = async () => {
     const selectedClass = classInfos.find((cls) => cls.className === className);
