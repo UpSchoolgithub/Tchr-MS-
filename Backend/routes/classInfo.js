@@ -92,9 +92,10 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
             await Subject.create(
               {
-                sectionId: newSection.id,
-                classInfoId: newClass.id,
+                sectionId: section.id,
+                classInfoId: classId,
                 schoolId,
+                board: subject.board, // Add board here
                 subjectName: subject.subjectName,
                 academicStartDate: subject.academicStartDate,
                 academicEndDate: subject.academicEndDate,
@@ -103,6 +104,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
               },
               { transaction }
             );
+            
           }
         }
       }

@@ -112,7 +112,7 @@ const ClassInfo = () => {
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (
       new Date(academicStartDate) >= new Date(academicEndDate) ||
       new Date(academicEndDate) >= new Date(revisionStartDate) ||
@@ -121,29 +121,30 @@ const ClassInfo = () => {
       alert('Please ensure dates are in the correct order.');
       return;
     }
-
+  
     try {
       const selectedClass = classInfos.find((cls) => cls.className === className);
       const selectedSection = sections.find((sec) => sec.sectionName === section);
-
+  
       if (!selectedClass || !selectedSection) {
         setError('Please select a valid class and section.');
         return;
       }
-
+  
       const newSubject = {
         subjectName: subject,
+        board: selectedBoardForSubject, // Include board in the payload
         academicStartDate,
         academicEndDate,
         revisionStartDate,
         revisionEndDate,
       };
-
+  
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
         sections: { [section.toUpperCase()]: { subjects: [newSubject] } },
         schoolId,
       });
-
+  
       fetchClassInfos();
       resetForm();
     } catch (error) {
@@ -151,6 +152,7 @@ const ClassInfo = () => {
       setError('Failed to add subject. Please try again.');
     }
   };
+  
 
   const handleEditClick = (subjectId, academicStart, academicEnd, revisionStart, revisionEnd) => {
     setEditingSubject(subjectId);
@@ -247,66 +249,82 @@ const ClassInfo = () => {
   
       {/* Subject Form */}
       <form onSubmit={handleSectionSubjectSubmit}>
-        <div>
-          <label>Section:</label>
-          <select value={section} onChange={(e) => setSection(e.target.value)} required>
-            <option value="">Select Section</option>
-            {sections.map((sec) => (
-              <option key={sec.id} value={sec.sectionName}>
-                {sec.sectionName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Subject:</label>
-          <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
-            <option value="">Select Subject</option>
-            {getSubjects(className).map((subj) => (
-              <option key={subj} value={subj}>
-                {subj}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Academic Start Date:</label>
-          <input
-            type="date"
-            value={academicStartDate}
-            onChange={(e) => setAcademicStartDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Academic End Date:</label>
-          <input
-            type="date"
-            value={academicEndDate}
-            onChange={(e) => setAcademicEndDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Revision Start Date:</label>
-          <input
-            type="date"
-            value={revisionStartDate}
-            onChange={(e) => setRevisionStartDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Revision End Date:</label>
-          <input
-            type="date"
-            value={revisionEndDate}
-            onChange={(e) => setRevisionEndDate(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Add Section and Subject</button>
-      </form>
+  <div>
+    <label>Section:</label>
+    <select value={section} onChange={(e) => setSection(e.target.value)} required>
+      <option value="">Select Section</option>
+      {sections.map((sec) => (
+        <option key={sec.id} value={sec.sectionName}>
+          {sec.sectionName}
+        </option>
+      ))}
+    </select>
+  </div>
+  <div>
+    <label>Subject:</label>
+    <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
+      <option value="">Select Subject</option>
+      {getSubjects(className).map((subj) => (
+        <option key={subj} value={subj}>
+          {subj}
+        </option>
+      ))}
+    </select>
+  </div>
+  <div>
+    <label>Board:</label>
+    <select
+      value={selectedBoardForSubject}
+      onChange={(e) => setSelectedBoardForSubject(e.target.value)}
+      required
+    >
+      <option value="">Select Board</option>
+      {boardOptions.map((board) => (
+        <option key={board} value={board}>
+          {board}
+        </option>
+      ))}
+    </select>
+  </div>
+  <div>
+    <label>Academic Start Date:</label>
+    <input
+      type="date"
+      value={academicStartDate}
+      onChange={(e) => setAcademicStartDate(e.target.value)}
+      required
+    />
+  </div>
+  <div>
+    <label>Academic End Date:</label>
+    <input
+      type="date"
+      value={academicEndDate}
+      onChange={(e) => setAcademicEndDate(e.target.value)}
+      required
+    />
+  </div>
+  <div>
+    <label>Revision Start Date:</label>
+    <input
+      type="date"
+      value={revisionStartDate}
+      onChange={(e) => setRevisionStartDate(e.target.value)}
+      required
+    />
+  </div>
+  <div>
+    <label>Revision End Date:</label>
+    <input
+      type="date"
+      value={revisionEndDate}
+      onChange={(e) => setRevisionEndDate(e.target.value)}
+      required
+    />
+  </div>
+  <button type="submit">Add Section and Subject</button>
+</form>
+
   
       {/* Class, Section, and Subject Details */}
       <div>
