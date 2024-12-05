@@ -25,20 +25,19 @@ class Session extends Model {
     });
     this.belongsTo(models.TimetableEntry, {
       foreignKey: 'timetableEntryId',
-      as: 'TimetableEntry', // Alias for association
+      as: 'TimetableEntry',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
     this.belongsTo(models.Teacher, {
       foreignKey: 'teacherId',
-      as: 'Teacher', // Alias for association
+      as: 'Teacher',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
-    
     this.hasOne(models.SessionPlan, {
       foreignKey: 'sessionId',
-      as: 'SessionPlan', // Alias for association
+      as: 'SessionPlan',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
@@ -51,6 +50,10 @@ Session.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    unitName: { // New field for Unit Name
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     chapterName: {
       type: DataTypes.STRING,
