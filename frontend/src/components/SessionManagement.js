@@ -11,7 +11,9 @@ const SessionManagement = () => {
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const [selectedLessonPlan, setSelectedLessonPlan] = useState('');
+  const [showLessonPlanModal, setShowLessonPlanModal] = useState(false);
+  
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     setIsLoading(true);
@@ -126,29 +128,28 @@ const SessionManagement = () => {
 
   // View LP
 
-  const handleViewLessonPlan = async (sessionId, topic) => {
+  const handleViewLessonPlan = async (session) => {
     try {
-      // Prepare the payload for the API request
+      // Prepare the payload for the API request dynamically
       const payload = {
-        board: "CBSE", // Replace with the actual value
-        grade: "10", // Replace with the actual value
-        subject: "Math", // Replace with the actual value
-        subSubject: "Algebra", // Replace with the actual value
-        unit: "Linear Equations", // Replace with the actual value
-        chapter: topic.topic, // Topic name
-        topics: [
-          {
-            topic: topic.topic,
-            concepts: topic.concepts, // Concepts for the topic
-          },
-        ],
-        sessionType: "Theory", // Hardcoded for now
-        noOfSession: 1, // For single topic
-        duration: 45, // Set a default duration
+        board: session.board, // Fetch dynamically if available
+        grade: session.grade, // Fetch dynamically
+        subject: session.subject, // Fetch dynamically
+        subSubject: session.subSubject || "N/A", // Optional
+        unit: session.unit || "N/A", // Unit name for the session
+        chapter: session.chapterName, // Use chapter name dynamically
+        topics: session.topics.map((topic) => ({
+          topic: topic.name,
+          concepts: topic.concepts,
+        })), // Map topics dynamically
+        sessionType: session.sessionType || "Theory", // Set default or use from session
+        noOfSession: 1, // This is for single session
+        duration: 45, // Default or dynamically from session
       };
   
       console.log("Fetching Lesson Plan with payload:", payload);
   
+      // Make API call to fetch the lesson plan
       const response = await axios.post(
         `https://tms.up.school/api/dynamicLP`,
         payload
@@ -158,19 +159,21 @@ const SessionManagement = () => {
       const lessonPlan = response.data.lesson_plan;
       console.log("Lesson Plan:", lessonPlan);
   
-      // Update state to display the lesson plan
+      // Update the session with the fetched lesson plan
       setSessions((prevSessions) =>
-        prevSessions.map((session) =>
-          session.id === sessionId
-            ? { ...session, lessonPlan } // Add the fetched lesson plan to the session
-            : session
+        prevSessions.map((s) =>
+          s.id === session.id ? { ...s, lessonPlan } : s
         )
       );
+  
+      // Optionally, display the fetched lesson plan (e.g., modal or alert)
+      alert(`Lesson Plan for ${session.chapterName}: \n\n${lessonPlan}`);
     } catch (error) {
       console.error("Error generating lesson plan:", error);
       setError("Failed to fetch the lesson plan. Please try again.");
     }
   };
+  
   
   return (
     <div>
