@@ -436,7 +436,14 @@ const ClassInfo = () => {
                       <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
                       <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
                       <td>
-                        <button onClick={() => navigate(`/manage/${info.id}/${sec}`)}>Manage Sessions</button>
+                      <button
+  onClick={() => {
+    console.log('Navigating to Manage Sessions:', { classId: info.id, section: sec });
+    navigate(`/manage/${info.id}/${sec}`);
+  }}
+>
+  Manage Sessions
+</button>
                       </td>
                     </tr>
                   ))
