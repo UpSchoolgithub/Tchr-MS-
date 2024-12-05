@@ -23,34 +23,39 @@ const validateDateOrder = (dates) => {
 // Fetch all class infos with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
+    const { board } = req.query; // Filter classes by board if provided
+    const whereClause = { schoolId: req.params.schoolId };
+    if (board) whereClause.board = board;
+
     const classInfos = await ClassInfo.findAll({
-      where: { schoolId: req.params.schoolId },
-      include: [{ model: Section, include: [Subject] }]
+      where: whereClause,
+      include: [{ model: Section, include: [Subject] }],
     });
 
-    const formattedClasses = classInfos.map(classInfo => {
+    const formattedClasses = classInfos.map((classInfo) => {
       const sections = {};
-      classInfo.Sections.forEach(section => {
+      classInfo.Sections.forEach((section) => {
         sections[section.sectionName] = {
           id: section.id,
           schoolId: section.schoolId,
           createdAt: section.createdAt,
           updatedAt: section.updatedAt,
-          subjects: section.Subjects.map(subject => ({
+          subjects: section.Subjects.map((subject) => ({
             id: subject.id,
             subjectName: subject.subjectName,
             academicStartDate: subject.academicStartDate,
             academicEndDate: subject.academicEndDate,
             revisionStartDate: subject.revisionStartDate,
             revisionEndDate: subject.revisionEndDate,
-          }))
+          })),
         };
       });
       return {
         id: classInfo.id,
         className: classInfo.className,
+        board: classInfo.board,
         schoolId: classInfo.schoolId,
-        sections
+        sections,
       };
     });
 
@@ -64,11 +69,15 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
 // Route to create a new class with sections and subjects
 router.post('/schools/:schoolId/classes', async (req, res) => {
   const { schoolId } = req.params;
-  const { className, sections } = req.body;
+  const { className, board, sections } = req.body;
+
+  if (!board) {
+    return res.status(400).json({ message: 'Board is required for class creation.' });
+  }
 
   const transaction = await sequelize.transaction();
   try {
-    const newClass = await ClassInfo.create({ className, schoolId }, { transaction });
+    const newClass = await ClassInfo.create({ className, board, schoolId }, { transaction });
 
     if (sections) {
       for (const [sectionName, sectionData] of Object.entries(sections)) {
@@ -79,33 +88,21 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
 
         if (sectionData.subjects) {
           for (const subject of sectionData.subjects) {
-            const existingSubject = await Subject.findOne({
-              where: {
-                classInfoId: newClass.id,
-                sectionId: newSection.id,
-                subjectName: subject.subjectName
-              }
-            });
-
-            if (existingSubject) {
-              await transaction.rollback();
-              return res.status(400).json({ 
-                message: `The subject ${subject.subjectName} already exists for class ${className} and section ${sectionName}.` 
-              });
-            }
-
             validateDateOrder(subject);
 
-            await Subject.create({
-              sectionId: newSection.id,
-              classInfoId: newClass.id,
-              schoolId,
-              subjectName: subject.subjectName,
-              academicStartDate: subject.academicStartDate,
-              academicEndDate: subject.academicEndDate,
-              revisionStartDate: subject.revisionStartDate,
-              revisionEndDate: subject.revisionEndDate
-            }, { transaction });
+            await Subject.create(
+              {
+                sectionId: newSection.id,
+                classInfoId: newClass.id,
+                schoolId,
+                subjectName: subject.subjectName,
+                academicStartDate: subject.academicStartDate,
+                academicEndDate: subject.academicEndDate,
+                revisionStartDate: subject.revisionStartDate,
+                revisionEndDate: subject.revisionEndDate,
+              },
+              { transaction }
+            );
           }
         }
       }
@@ -129,22 +126,22 @@ router.post('/classes/:classId/sections', async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     for (const [sectionName, sectionData] of Object.entries(sections)) {
-      // Check if the section already exists with the given classId, sectionName, and schoolId
       let section = await Section.findOne({
         where: { sectionName, classInfoId: classId, schoolId },
-        transaction
+        transaction,
       });
 
-      // If section doesn't exist, create a new one
       if (!section) {
-        section = await Section.create({
-          sectionName,
-          classInfoId: classId,
-          schoolId,
-        }, { transaction });
+        section = await Section.create(
+          {
+            sectionName,
+            classInfoId: classId,
+            schoolId,
+          },
+          { transaction }
+        );
       }
 
-      // Check and add subjects to the existing section
       if (sectionData.subjects) {
         for (const subject of sectionData.subjects) {
           const existingSubject = await Subject.findOne({
@@ -153,23 +150,25 @@ router.post('/classes/:classId/sections', async (req, res) => {
               classInfoId: classId,
               subjectName: subject.subjectName,
             },
-            transaction
+            transaction,
           });
 
-          // Only create a new subject if it doesn't already exist
           if (!existingSubject) {
             validateDateOrder(subject);
 
-            await Subject.create({
-              sectionId: section.id,
-              classInfoId: classId,
-              schoolId,
-              subjectName: subject.subjectName,
-              academicStartDate: subject.academicStartDate,
-              academicEndDate: subject.academicEndDate,
-              revisionStartDate: subject.revisionStartDate,
-              revisionEndDate: subject.revisionEndDate
-            }, { transaction });
+            await Subject.create(
+              {
+                sectionId: section.id,
+                classInfoId: classId,
+                schoolId,
+                subjectName: subject.subjectName,
+                academicStartDate: subject.academicStartDate,
+                academicEndDate: subject.academicEndDate,
+                revisionStartDate: subject.revisionStartDate,
+                revisionEndDate: subject.revisionEndDate,
+              },
+              { transaction }
+            );
           }
         }
       }
