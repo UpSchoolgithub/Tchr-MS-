@@ -293,56 +293,11 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       return res.status(400).json({ error: 'Academic session has not started yet.' });
     }
 
-   // Determine the current session based on session times or session numbers
-const currentSession = sessions.find((session) => {
-  const sessionDate = new Date(session.SessionDate).toDateString();
-  const now = new Date();
-  const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes since midnight
-
-  // Ensure it's for today
-  if (sessionDate !== now.toDateString()) {
-    return false;
-  }
-
-  // Check if the session falls within the current time range
-  const [startHour, startMinute] = session.StartTime.split(':').map(Number);
-  const [endHour, endMinute] = session.EndTime.split(':').map(Number);
-
-  const sessionStartTime = startHour * 60 + startMinute; // Session start time in minutes
-  const sessionEndTime = endHour * 60 + endMinute; // Session end time in minutes
-
-  return currentTime >= sessionStartTime && currentTime <= sessionEndTime;
-});
-
-// Filter sessions for today
-const todaySessions = sessions.filter((session) => {
-  const sessionDate = new Date(session.SessionDate).toDateString();
-  return sessionDate === new Date().toDateString(); // Match today's sessions
-});
-
-// Sort sessions by start time to ensure correct order
-todaySessions.sort((a, b) => {
-  const [aStartHour, aStartMinute] = a.StartTime.split(':').map(Number);
-  const [bStartHour, bStartMinute] = b.StartTime.split(':').map(Number);
-
-  const aStartTime = aStartHour * 60 + aStartMinute;
-  const bStartTime = bStartHour * 60 + bStartMinute;
-
-  return aStartTime - bStartTime; // Sort by start time
-});
-
-// Show the next session (e.g., based on user interaction or automatically)
-let currentIndex = 0; // Keep track of the current session index
-
-function showNextSession() {
-  if (currentIndex < todaySessions.length) {
-    const nextSession = todaySessions[currentIndex];
-    console.log('Showing session:', nextSession);
-    currentIndex++;
-  } else {
-    console.log('No more sessions for today.');
-  }
-}
+    // Find today's session
+    const currentSession = sessions.find((session) => {
+      const sessionDate = new Date(session.SessionDate);
+      return sessionDate.toDateString() === currentDate.toDateString();
+    });
 
     // No session scheduled for today
     if (!currentSession) {
@@ -549,7 +504,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
 
   try {
-    // Fetch the current session and session plan
+    // Fetch the current session and its session plan
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -562,18 +517,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Add session report for the current session
+    // Log session report for the current session
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId: session.id,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      teacherName: session.Teacher?.name || 'Unknown Teacher',
-      className: session.ClassInfo?.className || 'Unknown Class',
-      sectionName: session.Section?.sectionName || 'Unknown Section',
-      subjectName: session.Subject?.subjectName || 'Unknown Subject',
-      schoolName: session.School?.name || 'Unknown School',
       absentStudents: JSON.stringify(absentees || []),
       sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
       sessionsCompleted: JSON.stringify(completedTopics || []),
@@ -581,13 +531,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       observationDetails: observations || '',
     });
 
-    // Append incomplete topics to the next session
-    if (incompleteTopics.length > 0) {
+    // Update the next session with incomplete topics
+    if (incompleteTopics && incompleteTopics.length > 0) {
       const nextSession = await Session.findOne({
         where: {
-          subjectId: session.subjectId,
+          subjectId: session.Subject.id,
           sectionId: session.sectionId,
-          id: { [Op.gt]: sessionId }, // Fetch the next session
+          id: { [Op.gt]: sessionId }, // Get the next session by ID
         },
         include: [{ model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] }],
         order: [['id', 'ASC']], // Ensure the next session is picked
@@ -597,7 +547,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
         const currentPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
         const updatedPlanDetails = [...incompleteTopics, ...currentPlanDetails];
 
-        // Update the next session's plan details
+        // Update the next session's plan with new topics
         await SessionPlan.update(
           { planDetails: JSON.stringify(updatedPlanDetails) },
           { where: { id: nextSession.SessionPlan.id } }
@@ -611,6 +561,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     res.status(500).json({ error: 'Failed to save session details and update next session.' });
   }
 });
+
 
 
 
