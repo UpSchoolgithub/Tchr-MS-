@@ -123,14 +123,8 @@ router.post('/classes/:classId/sections', async (req, res) => {
   const { classId } = req.params;
   const { sections, schoolId } = req.body;
 
-  if (!sections || typeof sections !== 'object') {
-    return res.status(400).json({ message: 'Invalid or missing sections data.' });
-  }
-
   const transaction = await sequelize.transaction();
   try {
-    const createdSections = [];
-
     for (const [sectionName, sectionData] of Object.entries(sections)) {
       let section = await Section.findOne({
         where: { sectionName, classInfoId: classId, schoolId },
@@ -146,10 +140,9 @@ router.post('/classes/:classId/sections', async (req, res) => {
           },
           { transaction }
         );
-        createdSections.push({ sectionName, sectionId: section.id });
       }
 
-      if (sectionData.subjects && Array.isArray(sectionData.subjects)) {
+      if (sectionData.subjects) {
         for (const subject of sectionData.subjects) {
           const existingSubject = await Subject.findOne({
             where: {
@@ -163,7 +156,7 @@ router.post('/classes/:classId/sections', async (req, res) => {
           if (!existingSubject) {
             validateDateOrder(subject);
 
-            const newSubject = await Subject.create(
+            await Subject.create(
               {
                 sectionId: section.id,
                 classInfoId: classId,
@@ -176,25 +169,19 @@ router.post('/classes/:classId/sections', async (req, res) => {
               },
               { transaction }
             );
-
-            createdSections.find((sec) => sec.sectionId === section.id).subjects = [
-              ...(createdSections.find((sec) => sec.sectionId === section.id).subjects || []),
-              { subjectName: newSubject.subjectName, subjectId: newSubject.id },
-            ];
           }
         }
       }
     }
 
     await transaction.commit();
-    res.status(201).json({ message: 'Sections and subjects added successfully', data: createdSections });
+    res.status(201).json({ message: 'Sections and subjects added successfully' });
   } catch (error) {
     await transaction.rollback();
     console.error('Error adding sections and subjects:', error);
     res.status(500).json({ message: 'Error adding sections and subjects', error: error.message });
   }
 });
-
 
 
 
