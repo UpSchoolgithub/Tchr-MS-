@@ -17,24 +17,34 @@ const SessionManagement = () => {
   // Fetch metadata (e.g., board, class name, section name, subject name)
   const fetchClassDetails = async () => {
     try {
-        setIsLoading(true);
-        const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
-        const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
-        const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
-        
-        setClassDetails({
-            className: classResponse.data.className || "N/A",
-            sectionName: sectionResponse.data.sectionName || "N/A",
-            subjectName: subjectResponse.data.subjectName || "N/A",
-            board: new URLSearchParams(window.location.search).get("board") || "N/A",
-        });
+      setIsLoading(true);
+  
+      // Fetch Class Name
+      const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
+      const className = classResponse?.data?.className || 'N/A';
+  
+      // Fetch Section Name
+      const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
+      const sectionName = sectionResponse?.data?.sectionName || 'N/A';
+  
+      // Fetch Subject Name
+      const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
+      const subjectName = subjectResponse?.data?.subjectName || 'N/A';
+  
+      // Update the state with fetched data
+      setClassDetails({
+        className,
+        sectionName,
+        subjectName,
+      });
     } catch (error) {
-        console.error("Error fetching class details:", error);
-        setError("Failed to fetch class, section, or subject details. Please try again later.");
+      console.error('Error fetching class details:', error);
+      setError('Failed to fetch class, section, or subject details. Please try again later.');
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
+  
 
   
   
@@ -209,14 +219,15 @@ const SessionManagement = () => {
 
 {/* Display metadata at the top */}
 <div className="metadata">
-  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get("board") || 'N/A'}</p>
-  <p><strong>Class Name:</strong> {classDetails.className || 'N/A'}</p>
+  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get('board') || 'N/A'}</p>
+  <p><strong>Class Name:</strong> {classDetails.className}</p>
   <p><strong>Class ID:</strong> {classId}</p>
-  <p><strong>Section Name:</strong> {classDetails.sectionName || 'N/A'}</p>
+  <p><strong>Section Name:</strong> {classDetails.sectionName}</p>
   <p><strong>Section ID:</strong> {sectionId}</p>
-  <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
+  <p><strong>Subject Name:</strong> {classDetails.subjectName}</p>
   <p><strong>Subject ID:</strong> {subjectId}</p>
 </div>
+
 
 
       <form onSubmit={handleFileUpload}>
