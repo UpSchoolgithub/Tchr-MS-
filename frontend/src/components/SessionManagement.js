@@ -47,12 +47,11 @@ const SessionManagement = () => {
 
   useEffect(() => {
     if (!location.state) {
-      fetchDetails(); // Fetch details if not passed via Link state
+      fetchDetails();
     }
-  
-    fetchSessions(); // Always fetch sessions
-  }, [schoolId, classId, sectionId, subjectId]);
-  
+    fetchSessions();
+    }, [schoolId, classId, sectionId, subjectId]);
+
   const startEditing = (session) => {
     setEditingSessionId(session.id);
     setEditingNumberOfSessions(session.numberOfSessions);
@@ -140,8 +139,7 @@ const SessionManagement = () => {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`;
       const response = await axios.get(url);
   
-      console.log('Fetched Details:', response.data); // Log fetched details
-  
+      // Fallback to update state variables if missing
       setStateValues({
         schoolName: response.data.schoolName || 'School Name Not Available',
         className: response.data.className || 'Class Name Not Available',
@@ -149,12 +147,11 @@ const SessionManagement = () => {
         subjectName: response.data.subjectName || 'Subject Name Not Available',
         board: response.data.board || 'Board Not Available',
       });
+      
     } catch (error) {
       console.error('Error fetching details:', error);
-      setError('Failed to fetch class, section, or subject details.');
     }
   };
-  
   const [stateValues, setStateValues] = useState({
     schoolName: 'School Name Not Available',
     className: 'Class Name Not Available',
@@ -213,87 +210,64 @@ const SessionManagement = () => {
           </tr>
         </thead>
         <tbody>
-  {Array.isArray(sessions) && sessions.length > 0 ? (
-    sessions.map((session) => (
-      <tr key={session.id}>
-        {/* Checkbox for selecting a session */}
-        <td>
-          <input
-            type="checkbox"
-            checked={selectedSessionIds.includes(session.id)}
-            onChange={() => toggleSelection(session.id)}
-          />
-        </td>
-
-        {/* Unit Name */}
-        <td>{session.unitName || 'N/A'}</td>
-
-        {/* Chapter Name */}
-        <td>{session.chapterName || 'N/A'}</td>
-
-        {/* Editable Number of Sessions */}
-        <td>
-          {editingSessionId === session.id ? (
-            <input
-              type="number"
-              value={editingNumberOfSessions}
-              onChange={(e) => setEditingNumberOfSessions(e.target.value)}
-              placeholder="Number of Sessions"
-            />
+          {Array.isArray(sessions) && sessions.length > 0 ? (
+            sessions.map((session) => (
+              <tr key={session.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedSessionIds.includes(session.id)}
+                    onChange={() => toggleSelection(session.id)}
+                  />
+                </td>
+                <td>{session.unitName || 'N/A'}</td>
+                <td>{session.chapterName || 'N/A'}</td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="number"
+                      value={editingNumberOfSessions}
+                      onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                    />
+                  ) : (
+                    session.numberOfSessions
+                  )}
+                </td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="number"
+                      value={editingPriorityNumber}
+                      onChange={(e) => setEditingPriorityNumber(e.target.value)}
+                    />
+                  ) : (
+                    session.priorityNumber
+                  )}
+                </td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <>
+                      <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
+                      <button onClick={() => setEditingSessionId(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEditing(session)}>Edit</button>
+                      <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
+                      <Link to={`/sessions/${session.id}/sessionPlans`}>
+                        <button>Session Plan</button>
+                      </Link>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))
           ) : (
-            session.numberOfSessions
+            <tr>
+              <td colSpan="6">No sessions available.</td>
+            </tr>
           )}
-        </td>
-
-        {/* Editable Priority Number */}
-        <td>
-          {editingSessionId === session.id ? (
-            <input
-              type="number"
-              value={editingPriorityNumber}
-              onChange={(e) => setEditingPriorityNumber(e.target.value)}
-              placeholder="Priority Number"
-            />
-          ) : (
-            session.priorityNumber
-          )}
-        </td>
-
-        {/* Actions */}
-        <td>
-          {editingSessionId === session.id ? (
-            <>
-              {/* Save and Cancel Buttons for Editing */}
-              <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
-              <button onClick={() => setEditingSessionId(null)}>Cancel</button>
-            </>
-          ) : (
-            <>
-              {/* Edit Button */}
-              <button onClick={() => startEditing(session)}>Edit</button>
-
-              {/* Delete Button */}
-              <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-
-              {/* Link to Session Plan */}
-              <Link to={`/sessions/${session.id}/sessionPlans`}>
-                <button>Session Plan</button>
-              </Link>
-            </>
-          )}
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      {/* Message when no sessions are available */}
-      <td colSpan="6" style={{ textAlign: 'center', color: 'gray' }}>
-        No sessions available.
-      </td>
-    </tr>
-  )}
-</tbody>
-
+        </tbody>
       </table>
     </div>
   );

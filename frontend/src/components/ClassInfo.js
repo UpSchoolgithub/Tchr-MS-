@@ -371,12 +371,12 @@ const ClassInfo = () => {
           </thead>
           <tbody>
   {classInfos.map((info) =>
-    Object.keys(info.sections || {}).map((sec) =>
-      info.sections[sec].subjects.map((subject) => (
+    info.sections.map((section) =>
+      section.subjects.map((subject) => (
         <tr key={subject.id}>
           <td>{info.className || 'Class name not available'}</td>
           <td>{info.board || 'Board not available'}</td>
-          <td>{sec || 'Section not available'}</td>
+          <td>{section.sectionName || 'Section name not available'}</td>
           <td>{subject.subjectName || 'Subject name not available'}</td>
           <td>{new Date(subject.academicStartDate).toLocaleDateString() || 'N/A'}</td>
           <td>{new Date(subject.academicEndDate).toLocaleDateString() || 'N/A'}</td>
@@ -384,11 +384,11 @@ const ClassInfo = () => {
           <td>{new Date(subject.revisionEndDate).toLocaleDateString() || 'N/A'}</td>
           <td>
             <button
-              onClick={() => {
+              onClick={() =>
                 navigate(
-                  `/schools/${schoolId}/classes/${info.id}/sections/${sec}/subjects/${subject.id}/sessions`
-                );
-              }}
+                  `/schools/${schoolId}/classes/${info.id}/sections/${section.id}/subjects/${subject.id}/sessions`
+                )
+              }
             >
               Manage Sessions
             </button>
