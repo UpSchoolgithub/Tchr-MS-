@@ -71,7 +71,17 @@ const ClassInfo = () => {
       setError('Please provide a class name and select a board.');
       return;
     }
-
+  
+    const existingClass = classInfos.find(
+      (cls) =>
+        cls.className === newClassName && cls.board === selectedBoard
+    );
+  
+    if (existingClass) {
+      setError('Class with this name and board already exists.');
+      return;
+    }
+  
     try {
       await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className: newClassName,
@@ -85,6 +95,7 @@ const ClassInfo = () => {
       setError('Failed to add class. Please try again.');
     }
   };
+  
 
   const handleSectionSubmit = async () => {
     const selectedClass = classInfos.find(
@@ -121,11 +132,14 @@ const ClassInfo = () => {
     if (selectedClass) {
       setSelectedBoard(selectedClass.board); // Set the correct board
       fetchSections(selectedClass.id); // Fetch sections for the selected class
+      setError(''); // Clear any previous errors
     } else {
       setSelectedBoard(''); // Clear board if no class is selected
       setSections([]); // Clear sections if no class is selected
+      setError('Class not found. Please add the class first.');
     }
   };
+  
   
   
 
@@ -262,15 +276,16 @@ const ClassInfo = () => {
         <button onClick={handleClassSubmit}>Add New Class</button>
         <span> Or Select Existing Class:</span>
         <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
-          <option value="">Select Class</option>
-          {classInfos
-            .filter((info) => !selectedBoard || info.board === selectedBoard) // Filter by selected board
-            .map((info) => (
-              <option key={info.id} value={`${info.board} - ${info.className}`}>
-                {info.className}
-              </option>
-            ))}
-        </select>
+  <option value="">Select Class</option>
+  {classInfos
+    .filter((info) => !selectedBoard || info.board === selectedBoard) // Filter by selected board
+    .map((info) => (
+      <option key={info.id} value={`${info.board} - ${info.className}`}>
+        {info.className}
+      </option>
+    ))}
+</select>
+
       </div>
   
       {/* Section Input */}
