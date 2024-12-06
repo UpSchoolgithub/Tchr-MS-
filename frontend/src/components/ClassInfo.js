@@ -49,9 +49,10 @@ const ClassInfo = () => {
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
+      const selectedClass = classInfos.find((cls) => cls.id === classId); // Find the class name
       const updatedSections = response.data.map((section) => ({
         ...section,
-        displayName: `${selectedBoard} - ${section.sectionName}`, // Format section name with board
+        displayName: `${selectedClass.className} - ${selectedBoard} - ${section.sectionName}`, // Format with class name
       }));
       setSections(updatedSections);
     } catch (error) {
@@ -284,17 +285,18 @@ const ClassInfo = () => {
       {/* Subject Form */}
       <form onSubmit={handleSectionSubjectSubmit}>
       <div>
-      <div>
   <label>Section:</label>
   <select value={section} onChange={(e) => setSection(e.target.value)} required>
     <option value="">Select Section</option>
     {sections.map((sec) => (
       <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
-        {`${className} - ${selectedBoard} - ${sec.sectionName}`} {/* Updated display */}
+        {sec.displayName} {/* Updated display */}
       </option>
     ))}
   </select>
 </div>
+
+//same
 
 
         <div>
