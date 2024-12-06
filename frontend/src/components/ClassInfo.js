@@ -296,8 +296,6 @@ const ClassInfo = () => {
   </select>
 </div>
 
-//same
-
 
         <div>
           <label>Subject:</label>
