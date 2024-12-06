@@ -13,8 +13,6 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [modalLessonPlan, setModalLessonPlan] = useState("");
-  const [modalTopicDetails, setModalTopicDetails] = useState(null);
 
   // Fetch board from query params
   useEffect(() => {
@@ -158,7 +156,6 @@ const SessionPlans = () => {
       }));
 
       setError("");
-      return lessonPlan; // Return lesson plan for immediate display
     } catch (error) {
       console.error("Error generating lesson plan:", error);
       setError("Failed to generate lesson plan. Please try again.");
@@ -166,29 +163,9 @@ const SessionPlans = () => {
   };
 
   // View lesson plan
-  const handleViewLessonPlan = async (sessionNumber, topicIndex) => {
-    const topic = topicsWithConcepts[sessionNumber][topicIndex];
-    if (!topic.lessonPlan) {
-      const generatedPlan = await handleGenerateLessonPlan(
-        sessionNumber,
-        topicIndex
-      );
-      setModalLessonPlan(generatedPlan || "Failed to generate lesson plan.");
-    } else {
-      setModalLessonPlan(topic.lessonPlan);
-    }
-    setModalTopicDetails({ sessionNumber, topicIndex });
-  };
-
-  const handleRegenerateLessonPlan = async () => {
-    if (modalTopicDetails) {
-      const { sessionNumber, topicIndex } = modalTopicDetails;
-      const regeneratedPlan = await handleGenerateLessonPlan(
-        sessionNumber,
-        topicIndex
-      );
-      setModalLessonPlan(regeneratedPlan || "Failed to regenerate lesson plan.");
-    }
+  const handleViewLessonPlan = (lessonPlan) => {
+    alert(`Viewing Lesson Plan: ${lessonPlan}`);
+    // Replace with actual view logic, e.g., modal or new page
   };
 
   return (
@@ -197,19 +174,20 @@ const SessionPlans = () => {
       {board && <p>Board: {board}</p>}
       {error && <div className="error">{error}</div>}
 
-      {/* Lesson Plan Modal */}
-      {modalLessonPlan && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Lesson Plan</h3>
-            <pre>{modalLessonPlan}</pre>
-            <div className="modal-actions">
-              <button onClick={handleRegenerateLessonPlan}>Regenerate</button>
-              <button onClick={() => setModalLessonPlan("")}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="top-controls">
+        <form onSubmit={handleFileUpload} className="form-group">
+          <label>Upload Session Plans via Excel:</label>
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={(e) => setFile(e.target.files[0])}
+            disabled={uploadDisabled}
+          />
+          <button type="submit" disabled={uploadDisabled}>
+            Upload
+          </button>
+        </form>
+      </div>
 
       <div className="table-container">
         <table>
@@ -239,14 +217,23 @@ const SessionPlans = () => {
                       ))}
                     </td>
                     <td>
-                      <button
-                        className="view-button"
-                        onClick={() =>
-                          handleViewLessonPlan(plan.sessionNumber, tIndex)
-                        }
-                      >
-                        View
-                      </button>
+                      {topic.lessonPlan ? (
+                        <button
+                          className="view-button"
+                          onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                        >
+                          View
+                        </button>
+                      ) : (
+                        <button
+                          className="generate-button"
+                          onClick={() =>
+                            handleGenerateLessonPlan(plan.sessionNumber, tIndex)
+                          }
+                        >
+                          Generate
+                        </button>
+                      )}
                     </td>
                     {tIndex === 0 && (
                       <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
