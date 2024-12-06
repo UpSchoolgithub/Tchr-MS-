@@ -11,6 +11,7 @@ const SessionManagement = () => {
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [classDetails, setClassDetails] = useState({}); // Initialize with an empty object
 
 
   // Fetch metadata (e.g., board, class name, section name, subject name)
@@ -206,7 +207,7 @@ const SessionManagement = () => {
         <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
         <p><strong>Subject ID:</strong> {classDetails.subjectId || subjectId}</p>
       </div>
-      
+
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
         <button type="submit">Upload</button>
