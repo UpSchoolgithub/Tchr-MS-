@@ -49,20 +49,18 @@ const ClassInfo = () => {
 
   const fetchSections = async (classId) => {
     try {
-        const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
-        console.log('Sections API Response:', response.data);
-        const selectedClass = classInfos.find((cls) => cls.id === classId);
-        const updatedSections = response.data.map((section) => ({
-            ...section,
-            displayName: `${selectedClass.className} - ${selectedBoard} - ${section.sectionName}`,
-        }));
-        setSections(updatedSections);
+      const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
+      const selectedClass = classInfos.find((cls) => cls.id === classId); // Find the class name
+      const updatedSections = response.data.map((section) => ({
+        ...section,
+        displayName: `${selectedClass.className} - ${selectedBoard} - ${section.sectionName}`, // Format with class name
+      }));
+      setSections(updatedSections);
     } catch (error) {
-        console.error('Error fetching sections:', error);
-        setError('Error fetching sections');
+      console.error('Error fetching sections:', error);
+      setError('Error fetching sections');
     }
-};
-
+  };
   
   
 
@@ -292,12 +290,11 @@ const ClassInfo = () => {
   <select value={section} onChange={(e) => setSection(e.target.value)} required>
     <option value="">Select Section</option>
     {sections.map((sec) => (
-        <option key={sec.id} value={sec.id}> {/* Use sec.id for better binding */}
-            {sec.displayName}
-        </option>
+      <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
+        {sec.displayName} {/* Updated display */}
+      </option>
     ))}
-</select>
-
+  </select>
 </div>
 
 
