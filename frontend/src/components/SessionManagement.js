@@ -14,6 +14,9 @@ const SessionManagement = () => {
   const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [newTopic, setNewTopic] = useState("");
+  const [newConcepts, setNewConcepts] = useState("");
+
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     setIsLoading(true);
@@ -57,77 +60,27 @@ const SessionManagement = () => {
     }
   };
 
-  const handleSessionDelete = async (sessionId) => {
-    try {
-      await axios.delete(
-        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`
-      );
-      fetchSessions();
-    } catch (error) {
-      console.error("Error deleting session:", error);
-      setError("Failed to delete session. Please try again later.");
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedSessionIds.length === 0) {
-      setError("Please select at least one session to delete.");
+  const handleAddTopic = async (sessionId) => {
+    if (!newTopic.trim()) {
+      setError("Topic name cannot be empty.");
       return;
     }
+    const conceptsArray = newConcepts.split(",").map((concept) => concept.trim());
 
     try {
       await axios.post(
-        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`,
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}/addTopic`,
         {
-          sessionIds: selectedSessionIds,
+          topic: newTopic,
+          concepts: conceptsArray,
         }
       );
-      setSelectedSessionIds([]); // Clear selection after successful deletion
+      setNewTopic("");
+      setNewConcepts("");
       fetchSessions();
     } catch (error) {
-      console.error("Error deleting sessions:", error);
-      setError("Failed to delete sessions. Please try again later.");
-    }
-  };
-
-  const toggleSelection = (sessionId) => {
-    setSelectedSessionIds((prev) =>
-      prev.includes(sessionId)
-        ? prev.filter((id) => id !== sessionId)
-        : [...prev, sessionId]
-    );
-  };
-
-  const isSelected = (sessionId) => selectedSessionIds.includes(sessionId);
-
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
-    const file = e.target.elements.file.files[0];
-    if (!file) {
-      setError("Please select a file to upload.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      await axios.post(uploadUrl, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      fetchSessions(); // Refresh session data after successful upload
-    } catch (error) {
-      console.error(
-        "Error uploading file:",
-        error.response ? error.response.data : error.message
-      );
-      setError(error.response?.data?.message || "Failed to upload file. Please try again.");
-    } finally {
-      setIsLoading(false);
+      console.error("Error adding topic:", error);
+      setError("Failed to add the topic. Please try again.");
     }
   };
 
@@ -270,6 +223,23 @@ const SessionManagement = () => {
                     <Link to={`/sessions/${session.id}/sessionPlans`}>
                       <button>Session Plan</button>
                     </Link>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Add Topic"
+                        value={newTopic}
+                        onChange={(e) => setNewTopic(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Add Concepts (comma-separated)"
+                        value={newConcepts}
+                        onChange={(e) => setNewConcepts(e.target.value)}
+                      />
+                      <button onClick={() => handleAddTopic(session.id)}>
+                        Add Topic
+                      </button>
+                    </div>
                   </>
                 )}
               </td>
