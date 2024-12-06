@@ -381,20 +381,35 @@ const ClassInfo = () => {
           <td>
           <button
   onClick={() => {
-    const selectedClass = info;
-    const sectionData = info.sections[sec];
-    if (sectionData && sectionData.id) {
+    const selectedClass = info; // Assume info contains the class data
+    const sectionData = info.sections[sec]; // Access section data by key or index
+    const subjectData = subject; // Assume subject contains the subject data
+
+    if (sectionData && sectionData.id && subjectData && subjectData.id) {
       navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions?board=${selectedClass.board}`,
+        {
+          state: {
+            schoolName: schoolName || 'School Name Not Available',
+            className: selectedClass.className || 'Class Name Not Available',
+            sectionName: sectionData.sectionName || 'Section Name Not Available',
+            subjectName: subjectData.subjectName || 'Subject Name Not Available',
+            board: selectedClass.board || 'Board Not Available',
+          },
+        }
       );
     } else {
-      console.error("Section ID not found for section name:", sec);
-      setError(`Section ID not found for section name: ${sec}`);
+      console.error("Section ID or Subject ID not found:", {
+        section: sectionData,
+        subject: subjectData,
+      });
+      setError(`Section ID or Subject ID not found.`);
     }
   }}
 >
   Manage Sessions
 </button>
+
 
           </td>
         </tr>
