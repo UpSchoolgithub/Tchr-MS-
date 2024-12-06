@@ -47,18 +47,16 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
       include: [
         {
           model: School,
-          attributes: ['schoolName'],
+          attributes: ['name'], // Use 'name' instead of 'schoolName'
+          where: { id: schoolId },
         },
       ],
     });
-
-    if (!classInfo) {
-      return res.status(404).json({ error: 'Class not found' });
-    }
-
+    
+    // Respond with the correct data
     res.json({
       schoolId,
-      schoolName: classInfo.School.schoolName,
+      schoolName: classInfo.School.name, // Use 'name' instead of 'schoolName'
       classId,
       className: classInfo.className,
       board: classInfo.board,
