@@ -177,16 +177,16 @@ const SessionManagement = () => {
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
       {isLoading && <p>Loading...</p>}
-  
+
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
         <button type="submit">Upload</button>
       </form>
-  
+
       <button onClick={handleBulkDelete} disabled={selectedSessionIds.length === 0}>
         Bulk Delete
       </button>
-  
+
       <table>
         <thead>
           <tr>
@@ -205,7 +205,6 @@ const SessionManagement = () => {
             <th>Chapter</th>
             <th>Number of Sessions</th>
             <th>Priority Number</th>
-            <th>Lesson Plan</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -244,24 +243,6 @@ const SessionManagement = () => {
                 )}
               </td>
               <td>
-                {session.lessonPlan ? (
-                  <div>
-                    <p>{session.lessonPlan}</p> {/* Display the fetched lesson plan */}
-                  </div>
-                ) : (
-                  <button
-                    onClick={() =>
-                      handleViewLessonPlan(session.id, {
-                        topic: session.chapterName,
-                        concepts: session.concepts || [],
-                      })
-                    }
-                  >
-                    View
-                  </button>
-                )}
-              </td>
-              <td>
                 {editingSessionId === session.id ? (
                   <>
                     <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
@@ -283,5 +264,6 @@ const SessionManagement = () => {
       </table>
     </div>
   );
-};  
+};
+
 export default SessionManagement;
