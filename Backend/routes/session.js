@@ -29,7 +29,6 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
       where: { sectionId, subjectId },
       attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber', 'topic'],
     });
-
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
