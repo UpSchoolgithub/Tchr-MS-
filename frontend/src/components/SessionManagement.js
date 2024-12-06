@@ -11,34 +11,6 @@ const SessionManagement = () => {
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [classDetails, setClassDetails] = useState({}); // Initialize with an empty object
-
-
-  // Fetch metadata (e.g., board, class name, section name, subject name)
-  const fetchClassDetails = async () => {
-    try {
-        setIsLoading(true);
-        const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
-        const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
-        const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
-        
-        setClassDetails({
-            className: classResponse.data.className || "N/A",
-            sectionName: sectionResponse.data.sectionName || "N/A",
-            subjectName: subjectResponse.data.subjectName || "N/A",
-            board: new URLSearchParams(window.location.search).get("board") || "N/A",
-        });
-    } catch (error) {
-        console.error("Error fetching class details:", error);
-        setError("Failed to fetch class, section, or subject details. Please try again later.");
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-  
-  
-  
 
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
@@ -59,7 +31,6 @@ const SessionManagement = () => {
   };
 
   useEffect(() => {
-    fetchClassDetails(); // Fetch class, section, and subject names
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
 
@@ -206,18 +177,6 @@ const SessionManagement = () => {
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
       {isLoading && <p>Loading...</p>}
-
-{/* Display metadata at the top */}
-<div className="metadata">
-  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get("board") || 'N/A'}</p>
-  <p><strong>Class Name:</strong> {classDetails.className || 'N/A'}</p>
-  <p><strong>Class ID:</strong> {classId}</p>
-  <p><strong>Section Name:</strong> {classDetails.sectionName || 'N/A'}</p>
-  <p><strong>Section ID:</strong> {sectionId}</p>
-  <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
-  <p><strong>Subject ID:</strong> {subjectId}</p>
-</div>
-
 
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
