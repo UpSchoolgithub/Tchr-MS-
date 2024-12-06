@@ -131,12 +131,12 @@ const SessionPlans = () => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
       const payload = {
-        board, 
-        grade, 
-        subject, 
-        subSubject: unit, 
-        unit, 
-        chapter: topic.name, 
+        board,
+        grade,
+        subject,
+        subSubject: unit,
+        unit,
+        chapter: topic.name,
         topics: [
           {
             topic: topic.name,
