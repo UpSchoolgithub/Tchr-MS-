@@ -17,33 +17,29 @@ const SessionManagement = () => {
   // Fetch metadata (e.g., board, class name, section name, subject name)
   const fetchClassDetails = async () => {
     try {
-      setIsLoading(true);
-  
       // Fetch Class Name
       const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
-      const className = classResponse?.data?.className || 'N/A';
+      const className = classResponse.data.className;
   
       // Fetch Section Name
       const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
-      const sectionName = sectionResponse?.data?.sectionName || 'N/A';
+      const sectionName = sectionResponse.data.sectionName;
   
       // Fetch Subject Name
       const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
-      const subjectName = subjectResponse?.data?.subjectName || 'N/A';
+      const subjectName = subjectResponse.data.subjectName;
   
-      // Update the state with fetched data
       setClassDetails({
         className,
         sectionName,
         subjectName,
       });
     } catch (error) {
-      console.error('Error fetching class details:', error);
-      setError('Failed to fetch class, section, or subject details. Please try again later.');
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching class details:", error);
+      setError("Failed to fetch class, section, or subject details.");
     }
   };
+  
   
 
   
