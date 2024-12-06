@@ -69,20 +69,18 @@ const ClassInfo = () => {
   }, [schoolId]);
 
   const handleClassSubmit = async () => {
-    clearError(); // Clear previous errors
-    const trimmedClassName = newClassName.trim();
-  
-    if (!trimmedClassName || !selectedBoard) {
-      setError('Class name and board are required.');
+    if (!newClassName || !selectedBoard) {
+      setError('Please provide a class name and select a board.');
       return;
     }
-  
+
     try {
       await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
-        className: trimmedClassName,
-        board: selectedBoard,
+        className: newClassName,
+        board: selectedBoard, // Include board in the payload
       });
-      resetForm();
+      setNewClassName('');
+      setSelectedBoard(''); // Reset board selection
       fetchClassInfos();
     } catch (error) {
       console.error('Error adding class:', error);
@@ -135,45 +133,53 @@ const ClassInfo = () => {
 
   const handleSectionSubjectSubmit = async (e) => {
     e.preventDefault();
-    clearError();
   
+    // Validate date order
     if (
-      !isBefore(new Date(academicStartDate), new Date(academicEndDate)) ||
-      !isBefore(new Date(academicEndDate), new Date(revisionStartDate)) ||
-      !isBefore(new Date(revisionStartDate), new Date(revisionEndDate))
+      new Date(academicStartDate) >= new Date(academicEndDate) ||
+      new Date(academicEndDate) >= new Date(revisionStartDate) ||
+      new Date(revisionStartDate) >= new Date(revisionEndDate)
     ) {
       setError('Please ensure dates are in the correct order.');
       return;
     }
   
+    // Find selected class
     const selectedClass = classInfos.find(
       (cls) => `${cls.board} - ${cls.className}` === className
     );
+  
+    // Find selected section
     const selectedSection = sections.find(
       (sec) => `${selectedBoard} - ${sec.sectionName}` === section
     );
   
     if (!selectedClass || !selectedSection) {
+      console.error('Debug Info:', { selectedClass, selectedSection, className, section });
       setError('Please select a valid class and section.');
       return;
     }
+    
   
     try {
+      // Prepare subject data
       const newSubject = {
-        subjectName: subject.trim(),
+        subjectName: subject,
         academicStartDate,
         academicEndDate,
         revisionStartDate,
         revisionEndDate,
       };
   
+      // API call to add subject to the section
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
         sections: { [selectedSection.sectionName.toUpperCase()]: { subjects: [newSubject] } },
         schoolId,
       });
   
-      fetchClassInfos();
-      resetForm();
+      fetchClassInfos(); // Refresh data
+      resetForm(); // Reset form fields
+      setError('');
     } catch (error) {
       console.error('Error adding subject:', error);
       setError('Failed to add subject. Please try again.');
