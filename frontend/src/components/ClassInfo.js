@@ -379,22 +379,23 @@ const ClassInfo = () => {
           <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
           <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
           <td>
-            <button
-              onClick={() => {
-                const selectedClass = info;
-                const sectionData = info.sections[sec];
-                if (sectionData && sectionData.id) {
-                  navigate(
-                    `/schools/${schoolId}/classes/${info.id}/sections/${sec.id}/subjects/${subject.id}/sessions?board=${info.board}&boardId=${info.boardId}&class=${info.className}&classId=${info.id}&section=${sec.sectionName}&sectionId=${sec.id}&subject=${subject.subjectName}&subjectId=${subject.id}`
-                  );
-                } else {
-                  console.error("Section ID not found for section name:", sec);
-                  setError(`Section ID not found for section name: ${sec}`);
-                }
-              }}
-            >
-              Manage Sessions
-            </button>
+          <button
+  onClick={() => {
+    const selectedClass = info;
+    const sectionData = info.sections[sec];
+    if (sectionData && sectionData.id) {
+      navigate(
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
+      );
+    } else {
+      console.error("Section ID not found for section name:", sec);
+      setError(`Section ID not found for section name: ${sec}`);
+    }
+  }}
+>
+  Manage Sessions
+</button>
+
           </td>
         </tr>
       ))
