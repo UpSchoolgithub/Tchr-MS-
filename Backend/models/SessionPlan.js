@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db'); // Your Sequelize instance
-const Session = require('./Session'); // Import the related Session model
 
 const SessionPlan = sequelize.define('SessionPlan', {
   sessionId: {
@@ -23,7 +22,11 @@ const SessionPlan = sequelize.define('SessionPlan', {
       return value ? JSON.parse(value) : []; // Parse stored JSON string
     },
     set(value) {
-      this.setDataValue('planDetails', JSON.stringify(value)); // Convert to JSON string
+      if (Array.isArray(value)) {
+        this.setDataValue('planDetails', JSON.stringify(value)); // Convert to JSON string
+      } else {
+        throw new Error('planDetails must be an array of objects.');
+      }
     },
   },
 });
@@ -31,11 +34,19 @@ const SessionPlan = sequelize.define('SessionPlan', {
 // Define associations
 SessionPlan.associate = (models) => {
   // Associate SessionPlan with Session
-  SessionPlan.belongsTo(models.Session, { 
-    foreignKey: 'sessionId', 
-    onDelete: 'CASCADE', 
+  SessionPlan.belongsTo(models.Session, {
+    foreignKey: 'sessionId',
+    onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   });
+
+  // Optional: If there are additional models such as `Topic` associated with `SessionPlan`
+  // Uncomment the following lines if needed:
+  // SessionPlan.hasMany(models.Topic, {
+  //   foreignKey: 'sessionPlanId',
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE',
+  // });
 };
 
 module.exports = SessionPlan;
