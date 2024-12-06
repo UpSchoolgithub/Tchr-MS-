@@ -236,68 +236,20 @@ const ClassInfo = () => {
   return (
     <div>
       {error && <div className="error">{error}</div>}
-  
-      {/* Filters */}
+
+      {/* Board Selection */}
       <div>
-        <h3>Filters</h3>
-        <div>
-          <label>Filter by Board:</label>
-          <select
-            value={selectedBoard}
-            onChange={(e) => setSelectedBoard(e.target.value)}
-          >
-            <option value="">All Boards</option>
-            {boardOptions.map((board) => (
-              <option key={board} value={board}>
-                {board}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Filter by Class:</label>
-          <select
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-          >
-            <option value="">All Classes</option>
-            {classInfos.map((info) => (
-              <option key={info.id} value={info.className}>
-                {info.className}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Filter by Section:</label>
-          <select
-            value={section}
-            onChange={(e) => setSection(e.target.value)}
-          >
-            <option value="">All Sections</option>
-            {sections.map((sec) => (
-              <option key={sec.id} value={sec.sectionName}>
-                {sec.sectionName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Filter by Subject:</label>
-          <select
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          >
-            <option value="">All Subjects</option>
-            {getSubjects(className || "1").map((subj) => (
-              <option key={subj} value={subj}>
-                {subj}
-              </option>
-            ))}
-          </select>
-        </div>
+        <label>Select Board:</label>
+        <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)}>
+          <option value="">Select Board</option>
+          {boardOptions.map((board) => (
+            <option key={board} value={board}>
+              {board}
+            </option>
+          ))}
+        </select>
       </div>
-  
+
       {/* Class Input and Selection */}
       <div>
         <input
@@ -309,17 +261,15 @@ const ClassInfo = () => {
         <button onClick={handleClassSubmit}>Add New Class</button>
         <span> Or Select Existing Class:</span>
         <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
-          <option value="">Select Class</option>
-          {classInfos
-            .filter((info) => !selectedBoard || info.board === selectedBoard) // Filter by selected board
-            .map((info) => (
-              <option key={info.id} value={`${info.board} - ${info.className}`}>
-                {info.className}
-              </option>
-            ))}
+    <option value="">Select Class</option>
+    {classInfos.map((info) => (
+      <option key={info.id} value={`${info.board} - ${info.className}`}>
+        {info.displayName}
+      </option>
+          ))}
         </select>
       </div>
-  
+
       {/* Section Input */}
       <div>
         <input
@@ -330,21 +280,21 @@ const ClassInfo = () => {
         />
         <button onClick={handleSectionSubmit}>Add New Section</button>
       </div>
-  
+
       {/* Subject Form */}
       <form onSubmit={handleSectionSubjectSubmit}>
-        <div>
-          <label>Section:</label>
-          <select value={section} onChange={(e) => setSection(e.target.value)} required>
-            <option value="">Select Section</option>
-            {sections.map((sec) => (
-              <option key={sec.id} value={sec.sectionName}>
-                {sec.sectionName}
-              </option>
-            ))}
-          </select>
-        </div>
-  
+      <div>
+  <label>Section:</label>
+  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+    <option value="">Select Section</option>
+    {sections.map((sec) => (
+      <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
+        {`${selectedBoard} - ${sec.sectionName}`} {/* Display formatted section */}
+      </option>
+    ))}
+  </select>
+</div>
+
         <div>
           <label>Subject:</label>
           <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
@@ -356,7 +306,6 @@ const ClassInfo = () => {
             ))}
           </select>
         </div>
-  
         <div>
           <label>Academic Start Date:</label>
           <input
@@ -395,7 +344,7 @@ const ClassInfo = () => {
         </div>
         <button type="submit">Add Section and Subject</button>
       </form>
-  
+
       {/* Class, Section, and Subject Details */}
       <div>
         <h2>Class, Section, and Subject Details:</h2>
@@ -414,29 +363,19 @@ const ClassInfo = () => {
             </tr>
           </thead>
           <tbody>
-            {classInfos
-              .filter(
-                (info) =>
-                  (!selectedBoard || info.board === selectedBoard) &&
-                  (!className || info.className === className) &&
-                  (!section ||
-                    info.sections[section]?.sectionName === section) &&
-                  (!subject || info.sections[section]?.subjects?.some((sub) => sub.subjectName === subject))
-              )
-              .map((info) =>
-                Object.keys(info.sections || {}).map((sec) =>
-                  info.sections[sec].subjects.map((subject) => (
-                    <tr key={subject.id}>
-                      <td>{info.className}</td>
-                      <td>{info.board}</td>
-                      <td>{sec}</td>
-                      <td>{subject.subjectName}</td>
-                      <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
-                      <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
-                      <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
-                      <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
-                      <td>
-                      <button
+            {classInfos.map((info) =>
+              Object.keys(info.sections || {}).map((sec) =>
+                info.sections[sec].subjects.map((subject) => (
+                  <tr key={subject.id}>
+                    <td>{info.displayName}</td>
+                    <td>{info.board}</td>
+                    <td>{sec}</td>
+                    <td>{subject.subjectName}</td>
+                    <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
+                    <button
   onClick={() => {
     const selectedClass = info; // 'info' is the current class in the table row
     const sectionData = info.sections[sec]; // Access section data directly from 'info.sections' using 'sec' as the key
@@ -454,18 +393,15 @@ const ClassInfo = () => {
 >
   Manage Sessions
 </button>
-
-                      </td>
-                    </tr>
-                  ))
-                )
-              )}
+                  </tr>
+                ))
+              )
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
-  
 };
 
 export default ClassInfo;
