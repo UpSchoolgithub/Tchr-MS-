@@ -17,35 +17,24 @@ const SessionManagement = () => {
   // Fetch metadata (e.g., board, class name, section name, subject name)
   const fetchClassDetails = async () => {
     try {
-      const response = await axios.get(
-        `https://tms.up.school/api/schools/${schoolId}/classes`,
-        {
-          params: {
-            classId,
-            sectionId,
-            subjectId,
-          },
-        }
-      );
-  
-      const classData = response.data[0]; // Assuming it returns an array
-      const className = classData?.className || 'N/A';
-      const sectionName = Object.keys(classData?.sections || {})[0] || 'N/A'; // First section
-      const subjectName =
-        classData?.sections?.[sectionName]?.subjects?.[0]?.subjectName || 'N/A';
-  
-      setClassDetails({
-        className,
-        sectionName,
-        subjectName,
-      });
+        setIsLoading(true);
+        const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
+        const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
+        const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
+        
+        setClassDetails({
+            className: classResponse.data.className || "N/A",
+            sectionName: sectionResponse.data.sectionName || "N/A",
+            subjectName: subjectResponse.data.subjectName || "N/A",
+            board: new URLSearchParams(window.location.search).get("board") || "N/A",
+        });
     } catch (error) {
-      console.error('Error fetching class details:', error);
-      setError('Failed to fetch class, section, or subject details. Please try again later.');
+        console.error("Error fetching class details:", error);
+        setError("Failed to fetch class, section, or subject details. Please try again later.");
+    } finally {
+        setIsLoading(false);
     }
-  };
-  
-  
+};
 
   
   
@@ -220,17 +209,14 @@ const SessionManagement = () => {
 
 {/* Display metadata at the top */}
 <div className="metadata">
-  <p><strong>Board:</strong> {classDetails.board || 'N/A'}</p>
-  <p><strong>Class Name:</strong> {classDetails.className || 'Class not found'}</p>
+  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get("board") || 'N/A'}</p>
+  <p><strong>Class Name:</strong> {classDetails.className || 'N/A'}</p>
   <p><strong>Class ID:</strong> {classId}</p>
-  <p><strong>Section Name:</strong> {classDetails.sectionName || 'Section not found'}</p>
+  <p><strong>Section Name:</strong> {classDetails.sectionName || 'N/A'}</p>
   <p><strong>Section ID:</strong> {sectionId}</p>
-  <p><strong>Subject Name:</strong> {classDetails.subjectName || 'Subject not found'}</p>
+  <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
   <p><strong>Subject ID:</strong> {subjectId}</p>
 </div>
-
-
-
 
 
       <form onSubmit={handleFileUpload}>
