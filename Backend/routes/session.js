@@ -23,19 +23,68 @@ const upload = multer({ storage: storage });
 // Fetch sessions for a specific subject within a section and class
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   try {
-    const { sectionId, subjectId } = req.params;
+    const { schoolId, classId, sectionId, subjectId } = req.params;
 
+    // Include names for school, class, section, and subject
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Add 'unitName' here
+      attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber'],
+      include: [
+        {
+          model: Section,
+          attributes: ['sectionName'],
+          where: { id: sectionId },
+        },
+        {
+          model: Subject,
+          attributes: ['subjectName'],
+          where: { id: subjectId },
+        },
+      ],
     });
 
-    res.json(sessions);
+    // Fetch additional names like schoolName, className, and board using their respective models
+    const section = await Section.findByPk(sectionId, {
+      include: [
+        {
+          model: ClassInfo,
+          attributes: ['className', 'board'],
+          where: { id: classId },
+          include: [
+            {
+              model: School,
+              attributes: ['schoolName'],
+              where: { id: schoolId },
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!section) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    const response = {
+      schoolId,
+      schoolName: section.ClassInfo.School.schoolName,
+      classId,
+      className: section.ClassInfo.className,
+      board: section.ClassInfo.board,
+      sectionId,
+      sectionName: section.sectionName,
+      subjectId,
+      subjectName: section.Subject?.subjectName || 'Subject not found',
+      sessions,
+    };
+
+    res.json(response);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
   }
 });
+
 
 
 // Create a new session
