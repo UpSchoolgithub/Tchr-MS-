@@ -23,14 +23,32 @@ const validateDateOrder = (dates) => {
 // Fetch all class infos with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
-    const { board } = req.query; // Filter classes by board if provided
+    const { board, classId, sectionId, subjectId } = req.query; // Add query parameters for filtering
     const whereClause = { schoolId: req.params.schoolId };
     if (board) whereClause.board = board;
+    if (classId) whereClause.id = classId; // Filter by classId if provided
 
     const classInfos = await ClassInfo.findAll({
       where: whereClause,
-      include: [{ model: Section, include: [Subject] }],
+      include: [
+        {
+          model: Section,
+          required: sectionId ? true : false,
+          where: sectionId ? { id: sectionId } : {}, // Filter by sectionId if provided
+          include: [
+            {
+              model: Subject,
+              required: subjectId ? true : false,
+              where: subjectId ? { id: subjectId } : {}, // Filter by subjectId if provided
+            },
+          ],
+        },
+      ],
     });
+
+    if (!classInfos.length) {
+      return res.status(404).json({ message: 'No matching class, section, or subject found' });
+    }
 
     const formattedClasses = classInfos.map((classInfo) => {
       const sections = {};
@@ -53,12 +71,11 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
       return {
         id: classInfo.id,
         className: classInfo.className,
-        board: classInfo.board, // Use board from ClassInfo
+        board: classInfo.board,
         schoolId: classInfo.schoolId,
         sections,
       };
     });
-    
 
     res.status(200).json(formattedClasses);
   } catch (error) {
@@ -66,6 +83,7 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Error fetching class infos', error: error.message });
   }
 });
+
 
 // Route to create a new class with sections and subjects
 router.post('/schools/:schoolId/classes', async (req, res) => {
@@ -118,18 +136,7 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-router.get('/api/classes/:classId', async (req, res) => {
-  try {
-    const classInfo = await ClassInfo.findByPk(req.params.classId); // Fetch class by ID
-    if (!classInfo) {
-      return res.status(404).json({ message: 'Class not found' });
-    }
-    res.status(200).json(classInfo); // Return class info including className
-  } catch (error) {
-    console.error('Error fetching class:', error);
-    res.status(500).json({ message: 'Error fetching class', error: error.message });
-  }
-});
+
 
 // Route to add sections and subjects to an existing class
 // Route to add sections and subjects to an existing class
