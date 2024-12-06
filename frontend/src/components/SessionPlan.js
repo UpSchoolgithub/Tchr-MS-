@@ -119,6 +119,49 @@ const SessionPlans = () => {
     }
   };
 
+  // Generate lesson plan for a specific topic
+  const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
+    try {
+      const topic = topicsWithConcepts[sessionNumber][topicIndex];
+      const payload = {
+        board: board || "CBSE", // Replace with actual value
+        grade: "10", // Replace with actual value
+        subject: "Math", // Replace with actual value
+        subSubject: "Algebra", // Replace with actual value
+        unit: "Linear Equations", // Replace with actual value
+        chapter: topic.name, // Topic name
+        topics: [
+          {
+            topic: topic.name,
+            concepts: topic.concepts,
+          },
+        ],
+        sessionType: "Theory", // Hardcoded for now
+        noOfSession: 1, // For single topic
+        duration: 45, // Set a default duration
+      };
+
+      const response = await axios.post(
+        "https://tms.up.school/api/dynamicLP",
+        payload
+      );
+      const lessonPlan = response.data.lesson_plan;
+
+      // Update the topic with the fetched lesson plan
+      setTopicsWithConcepts((prev) => ({
+        ...prev,
+        [sessionNumber]: prev[sessionNumber].map((t, index) =>
+          index === topicIndex ? { ...t, lessonPlan } : t
+        ),
+      }));
+
+      setError("");
+    } catch (error) {
+      console.error("Error generating lesson plan:", error);
+      setError("Failed to generate lesson plan. Please try again.");
+    }
+  };
+
   // View lesson plan
   const handleViewLessonPlan = (lessonPlan) => {
     alert(`Viewing Lesson Plan: ${lessonPlan}`);
@@ -144,12 +187,6 @@ const SessionPlans = () => {
             Upload
           </button>
         </form>
-        <button
-          className="lesson-plan-btn"
-          onClick={() => alert("Lesson Plan Generation triggered!")}
-        >
-          Generate Lesson Plan
-        </button>
       </div>
 
       <div className="table-container">
@@ -180,12 +217,23 @@ const SessionPlans = () => {
                       ))}
                     </td>
                     <td>
-                      <button
-                        className="view-button"
-                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                      >
-                        View
-                      </button>
+                      {topic.lessonPlan ? (
+                        <button
+                          className="view-button"
+                          onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                        >
+                          View
+                        </button>
+                      ) : (
+                        <button
+                          className="generate-button"
+                          onClick={() =>
+                            handleGenerateLessonPlan(plan.sessionNumber, tIndex)
+                          }
+                        >
+                          Generate
+                        </button>
+                      )}
                     </td>
                     {tIndex === 0 && (
                       <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
