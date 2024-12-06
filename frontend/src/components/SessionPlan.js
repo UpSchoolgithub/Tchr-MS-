@@ -6,7 +6,12 @@ import "../styles.css";
 const SessionPlans = () => {
   const { sessionId } = useParams();
   const location = useLocation();
+
+  // State to hold dynamic values and data
   const [board, setBoard] = useState("");
+  const [grade, setGrade] = useState("");
+  const [subject, setSubject] = useState("");
+  const [unit, setUnit] = useState("");
   const [sessionPlans, setSessionPlans] = useState([]);
   const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
   const [error, setError] = useState("");
@@ -14,11 +19,13 @@ const SessionPlans = () => {
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch board from query params
+  // Fetch session details (board, grade, subject, unit) from query params or API
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const boardParam = queryParams.get("board");
-    setBoard(boardParam || "");
+    setBoard(queryParams.get("board") || "CBSE");
+    setGrade(queryParams.get("grade") || "10");
+    setSubject(queryParams.get("subject") || "Math");
+    setUnit(queryParams.get("unit") || "Algebra");
   }, [location]);
 
   // Fetch session plans
@@ -120,25 +127,25 @@ const SessionPlans = () => {
   };
 
   // Generate lesson plan for a specific topic
-  const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
+  const handleGenerateLessonPlan = async (sessionNumber, topicIndex, sessionPlanId) => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
       const payload = {
-        board: board || "CBSE", // Replace with actual value
-        grade: "10", // Replace with actual value
-        subject: "Math", // Replace with actual value
-        subSubject: "Algebra", // Replace with actual value
-        unit: "Linear Equations", // Replace with actual value
-        chapter: topic.name, // Topic name
+        board, 
+        grade, 
+        subject, 
+        subSubject: unit, 
+        unit, 
+        chapter: topic.name, 
         topics: [
           {
             topic: topic.name,
             concepts: topic.concepts,
           },
         ],
-        sessionType: "Theory", // Hardcoded for now
-        noOfSession: 1, // For single topic
-        duration: 45, // Set a default duration
+        sessionType: "Theory",
+        noOfSession: 1,
+        duration: 45,
       };
 
       const response = await axios.post(
@@ -155,17 +162,27 @@ const SessionPlans = () => {
         ),
       }));
 
+      // Save the lesson plan to the database
+      const updatedPlanDetails = topicsWithConcepts[sessionNumber].map((t) => ({
+        name: t.name,
+        concepts: t.concepts,
+        lessonPlan: t.lessonPlan || (t === topic ? lessonPlan : ""),
+      }));
+
+      await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, {
+        planDetails: JSON.stringify(updatedPlanDetails),
+      });
+
       setError("");
     } catch (error) {
-      console.error("Error generating lesson plan:", error);
-      setError("Failed to generate lesson plan. Please try again.");
+      console.error("Error generating or saving lesson plan:", error);
+      setError("Failed to generate or save the lesson plan. Please try again.");
     }
   };
 
   // View lesson plan
   const handleViewLessonPlan = (lessonPlan) => {
-    alert(`Viewing Lesson Plan: ${lessonPlan}`);
-    // Replace with actual view logic, e.g., modal or new page
+    alert(`Viewing Lesson Plan:\n\n${lessonPlan}`);
   };
 
   return (
@@ -228,7 +245,7 @@ const SessionPlans = () => {
                         <button
                           className="generate-button"
                           onClick={() =>
-                            handleGenerateLessonPlan(plan.sessionNumber, tIndex)
+                            handleGenerateLessonPlan(plan.sessionNumber, tIndex, plan.id)
                           }
                         >
                           Generate
