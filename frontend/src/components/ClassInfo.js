@@ -35,7 +35,7 @@ const ClassInfo = () => {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
-        displayName: cls.className, // Use only the class name
+        displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
       }));
       setClassInfos(formattedClasses);
     } catch (error) {
