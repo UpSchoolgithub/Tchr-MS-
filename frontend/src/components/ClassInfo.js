@@ -35,7 +35,7 @@ const ClassInfo = () => {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
-        displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
+        displayName: cls.className, // Use only the class name
       }));
       setClassInfos(formattedClasses);
     } catch (error) {
@@ -43,6 +43,7 @@ const ClassInfo = () => {
       setError('Error fetching class data');
     }
   };
+  
   
   
 
@@ -369,7 +370,7 @@ const ClassInfo = () => {
               Object.keys(info.sections || {}).map((sec) =>
                 info.sections[sec].subjects.map((subject) => (
                   <tr key={subject.id}>
-                    <td>{info.displayName}</td>
+                    <td>{info.className}</td>
                     <td>{info.board}</td>
                     <td>{sec}</td>
                     <td>{subject.subjectName}</td>
