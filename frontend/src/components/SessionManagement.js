@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useParams, Link } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useParams, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
-  const [editingNumberOfSessions, setEditingNumberOfSessions] = useState("");
-  const [editingPriorityNumber, setEditingPriorityNumber] = useState("");
+  const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
+  const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [newTopic, setNewTopic] = useState("");
-  const [newConcepts, setNewConcepts] = useState("");
-
+  const [selectedLessonPlan, setSelectedLessonPlan] = useState('');
+  const [showLessonPlanModal, setShowLessonPlanModal] = useState(false);
+  
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     setIsLoading(true);
-    setError("");
+    setError('');
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
+      console.log("Fetching sessions from URL:", url);
       const response = await axios.get(url);
+      console.log("Sessions response:", response.data);
       setSessions(response.data);
     } catch (error) {
-      console.error("Error fetching sessions:", error);
-      setError("Failed to fetch sessions. Please try again later.");
+      console.error('Error fetching sessions:', error);
+      setError('Failed to fetch sessions. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -45,104 +44,165 @@ const SessionManagement = () => {
 
   const handleSessionUpdate = async (sessionId) => {
     try {
-      await axios.put(
-        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`,
-        {
-          numberOfSessions: editingNumberOfSessions,
-          priorityNumber: editingPriorityNumber,
-        }
-      );
+      await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
+        numberOfSessions: editingNumberOfSessions,
+        priorityNumber: editingPriorityNumber,
+      });
       setEditingSessionId(null);
       fetchSessions();
     } catch (error) {
-      console.error("Error updating session:", error);
-      setError("Failed to update session. Please check your input and try again.");
+      console.error('Error updating session:', error);
+      setError('Failed to update session. Please check your input and try again.');
     }
   };
 
-  const handleAddTopic = async (sessionId) => {
-    if (!newTopic.trim()) {
-      setError("Topic name cannot be empty.");
-      return;
-    }
-    const conceptsArray = newConcepts.split(",").map((concept) => concept.trim());
-
+  const handleSessionDelete = async (sessionId) => {
     try {
-      await axios.post(
-        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}/addTopic`,
-        {
-          topic: newTopic,
-          concepts: conceptsArray,
-        }
-      );
-      setNewTopic("");
-      setNewConcepts("");
+      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
       fetchSessions();
     } catch (error) {
-      console.error("Error adding topic:", error);
-      setError("Failed to add the topic. Please try again.");
+      console.error('Error deleting session:', error);
+      setError('Failed to delete session. Please try again later.');
     }
   };
+
+  const handleBulkDelete = async () => {
+    if (selectedSessionIds.length === 0) {
+      setError('Please select at least one session to delete.');
+      return;
+    }
+  
+    try {
+      await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`, {
+        sessionIds: selectedSessionIds,
+      });
+      setSelectedSessionIds([]); // Clear selection after successful deletion
+      fetchSessions();
+    } catch (error) {
+      console.error('Error deleting sessions:', error);
+      setError('Failed to delete sessions. Please try again later.');
+    }
+  };
+  
+
+  const toggleSelection = (sessionId) => {
+    setSelectedSessionIds((prev) =>
+      prev.includes(sessionId) ? prev.filter((id) => id !== sessionId) : [...prev, sessionId]
+    );
+  };
+
+  const isSelected = (sessionId) => selectedSessionIds.includes(sessionId);
+
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    const file = e.target.elements.file.files[0];
+    if (!file) {
+      setError('Please select a file to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      console.log("Uploading to URL:", uploadUrl);
+      console.log("File:", file);
+
+      const response = await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      console.log('Upload response:', response.data);
+      fetchSessions(); // Refresh session data after successful upload
+    } catch (error) {
+      console.error('Error uploading file:', error.response ? error.response.data : error.message);
+      setError(error.response?.data?.message || 'Failed to upload file. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // View LP
 
   const handleViewLessonPlan = async (session) => {
     try {
+      // Prepare the payload for the API request dynamically
       const payload = {
-        board: session.board,
-        grade: session.grade,
-        subject: session.subject,
-        subSubject: session.subSubject || "N/A",
-        unit: session.unit || "N/A",
-        chapter: session.chapterName,
+        board: session.board, // Fetch dynamically if available
+        grade: session.grade, // Fetch dynamically
+        subject: session.subject, // Fetch dynamically
+        subSubject: session.subSubject || "N/A", // Optional
+        unit: session.unit || "N/A", // Unit name for the session
+        chapter: session.chapterName, // Use chapter name dynamically
         topics: session.topics.map((topic) => ({
           topic: topic.name,
           concepts: topic.concepts,
-        })),
-        sessionType: session.sessionType || "Theory",
-        noOfSession: 1,
-        duration: 45,
+        })), // Map topics dynamically
+        sessionType: session.sessionType || "Theory", // Set default or use from session
+        noOfSession: 1, // This is for single session
+        duration: 45, // Default or dynamically from session
       };
-
+  
+      console.log("Fetching Lesson Plan with payload:", payload);
+  
+      // Make API call to fetch the lesson plan
       const response = await axios.post(
         `https://tms.up.school/api/dynamicLP`,
         payload
       );
-
+  
+      // Handle response
       const lessonPlan = response.data.lesson_plan;
-
+      console.log("Lesson Plan:", lessonPlan);
+  
+      // Update the session with the fetched lesson plan
       setSessions((prevSessions) =>
         prevSessions.map((s) =>
           s.id === session.id ? { ...s, lessonPlan } : s
         )
       );
-
-      setSelectedLessonPlan(lessonPlan);
-      setIsModalOpen(true);
+  
+      // Optionally, display the fetched lesson plan (e.g., modal or alert)
+      alert(`Lesson Plan for ${session.chapterName}: \n\n${lessonPlan}`);
     } catch (error) {
       console.error("Error generating lesson plan:", error);
       setError("Failed to fetch the lesson plan. Please try again.");
     }
   };
-
-  const closeLessonPlanModal = () => {
+  
+  const handleOpenModal = (lessonPlan) => {
+    setSelectedLessonPlan(lessonPlan);
+    setIsModalOpen(true);
+  };
+  
+  const handleCloseModal = () => {
     setSelectedLessonPlan("");
     setIsModalOpen(false);
   };
 
+  if (lessonPlan) {
+    handleOpenModal(lessonPlan);
+  }
+  
   return (
     <div>
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
       {isLoading && <p>Loading...</p>}
-
+  
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
         <button type="submit">Upload</button>
       </form>
-
+  
       <button onClick={handleBulkDelete} disabled={selectedSessionIds.length === 0}>
         Bulk Delete
       </button>
-
+  
       <table>
         <thead>
           <tr>
@@ -154,9 +214,7 @@ const SessionManagement = () => {
                     e.target.checked ? sessions.map((session) => session.id) : []
                   )
                 }
-                checked={
-                  selectedSessionIds.length === sessions.length && sessions.length > 0
-                }
+                checked={selectedSessionIds.length === sessions.length && sessions.length > 0}
               />
             </th>
             <th>Unit Name</th>
@@ -177,8 +235,8 @@ const SessionManagement = () => {
                   onChange={() => toggleSelection(session.id)}
                 />
               </td>
-              <td>{session.unitName || "N/A"}</td>
-              <td>{session.chapterName || "N/A"}</td>
+              <td>{session.unitName || 'N/A'}</td>
+              <td>{session.chapterName || 'N/A'}</td>
               <td>
                 {editingSessionId === session.id ? (
                   <input
@@ -203,11 +261,20 @@ const SessionManagement = () => {
               </td>
               <td>
                 {session.lessonPlan ? (
-                  <button onClick={() => setSelectedLessonPlan(session.lessonPlan)}>
+                  <div>
+                    <p>{session.lessonPlan}</p> {/* Display the fetched lesson plan */}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() =>
+                      handleViewLessonPlan(session.id, {
+                        topic: session.chapterName,
+                        concepts: session.concepts || [],
+                      })
+                    }
+                  >
                     View
                   </button>
-                ) : (
-                  <button onClick={() => handleViewLessonPlan(session)}>Generate</button>
                 )}
               </td>
               <td>
@@ -223,23 +290,6 @@ const SessionManagement = () => {
                     <Link to={`/sessions/${session.id}/sessionPlans`}>
                       <button>Session Plan</button>
                     </Link>
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Add Topic"
-                        value={newTopic}
-                        onChange={(e) => setNewTopic(e.target.value)}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Add Concepts (comma-separated)"
-                        value={newConcepts}
-                        onChange={(e) => setNewConcepts(e.target.value)}
-                      />
-                      <button onClick={() => handleAddTopic(session.id)}>
-                        Add Topic
-                      </button>
-                    </div>
                   </>
                 )}
               </td>
@@ -247,18 +297,7 @@ const SessionManagement = () => {
           ))}
         </tbody>
       </table>
-
-      {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Lesson Plan</h3>
-            <pre>{selectedLessonPlan}</pre>
-            <button onClick={closeLessonPlanModal}>Close</button>
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
+};  
 export default SessionManagement;
