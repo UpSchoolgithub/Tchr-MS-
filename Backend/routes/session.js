@@ -3,11 +3,11 @@ const multer = require('multer');
 const path = require('path');
 const XLSX = require('xlsx');
 const { Sequelize } = require('sequelize');
-const Session = require('../models/Session');
+const School = require('../models/School');
+const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
-const ClassInfo = require('../models/ClassInfo');
-const School = require('../models/School');
+const Session = require('../models/Session');
 
 const router = express.Router();
 
@@ -24,54 +24,42 @@ const upload = multer({ storage: storage });
 
 // Fetch sessions for a specific subject within a section and class
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
-  try {
-    const { schoolId, classId, sectionId, subjectId } = req.params;
+  const { schoolId, classId, sectionId, subjectId } = req.params;
 
+  try {
+    // Fetch names for IDs
+    const school = await School.findByPk(schoolId, { attributes: ['name'] });
+    const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
+    const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
+    const subject = await Subject.findByPk(subjectId, { attributes: ['subjectName'] });
+
+    if (!school || !classInfo || !section || !subject) {
+      return res.status(404).json({ message: 'One or more entities not found.' });
+    }
+
+    // Fetch sessions for the subject in the section
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
       attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber'],
-      include: [
-        {
-          model: Section,
-          attributes: ['sectionName'],
-        },
-        {
-          model: Subject,
-          attributes: ['subjectName'],
-        },
-      ],
     });
 
-    const classInfo = await ClassInfo.findByPk(classId, {
-      attributes: ['className', 'board'],
-      include: [
-        {
-          model: School,
-          attributes: ['name'], // Use 'name' instead of 'schoolName'
-          where: { id: schoolId },
-        },
-      ],
-    });
-    
-    // Respond with the correct data
     res.json({
       schoolId,
-      schoolName: classInfo.School.name, // Use 'name' instead of 'schoolName'
+      schoolName: school.name,
       classId,
       className: classInfo.className,
       board: classInfo.board,
       sectionId,
-      sectionName: sessions[0]?.Section.sectionName || 'N/A',
+      sectionName: section.sectionName,
       subjectId,
-      subjectName: sessions[0]?.Subject.subjectName || 'N/A',
+      subjectName: subject.subjectName,
       sessions,
     });
   } catch (error) {
-    console.error('Error fetching sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
+    console.error('Error fetching session details:', error);
+    res.status(500).json({ message: 'Error fetching session details', error: error.message });
   }
 });
-
 
 
 
