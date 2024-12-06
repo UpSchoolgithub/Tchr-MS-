@@ -17,36 +17,25 @@ const SessionManagement = () => {
   // Fetch metadata (e.g., board, class name, section name, subject name)
   const fetchClassDetails = async () => {
     try {
-      setIsLoading(true);
-  
-      // Fetch Class Name
-      const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
-      console.log("Class Response:", classResponse.data);
-      const className = classResponse.data.className;
-  
-      // Fetch Section Name
-      const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
-      console.log("Section Response:", sectionResponse.data);
-      const sectionName = sectionResponse.data.sectionName;
-  
-      // Fetch Subject Name
-      const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
-      console.log("Subject Response:", subjectResponse.data);
-      const subjectName = subjectResponse.data.subjectName;
-  
-      // Update classDetails state
-      setClassDetails({
-        className,
-        sectionName,
-        subjectName,
-      });
+        setIsLoading(true);
+        const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
+        const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
+        const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
+        
+        setClassDetails({
+            className: classResponse.data.className || "N/A",
+            sectionName: sectionResponse.data.sectionName || "N/A",
+            subjectName: subjectResponse.data.subjectName || "N/A",
+            board: new URLSearchParams(window.location.search).get("board") || "N/A",
+        });
     } catch (error) {
-      console.error("Error fetching class details:", error);
-      setError("Failed to fetch class, section, or subject details. Please try again later.");
+        console.error("Error fetching class details:", error);
+        setError("Failed to fetch class, section, or subject details. Please try again later.");
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
+
   
   
   
