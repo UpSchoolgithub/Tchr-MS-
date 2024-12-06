@@ -284,16 +284,18 @@ const ClassInfo = () => {
       {/* Subject Form */}
       <form onSubmit={handleSectionSubjectSubmit}>
       <div>
+      <div>
   <label>Section:</label>
   <select value={section} onChange={(e) => setSection(e.target.value)} required>
     <option value="">Select Section</option>
     {sections.map((sec) => (
       <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
-        {`${selectedBoard} - ${sec.sectionName}`} {/* Display formatted section */}
+        {`${className} - ${selectedBoard} - ${sec.sectionName}`} {/* Updated display */}
       </option>
     ))}
   </select>
 </div>
+
 
         <div>
           <label>Subject:</label>
