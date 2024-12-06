@@ -7,6 +7,7 @@ const Session = require('../models/Session');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 const ClassInfo = require('../models/ClassInfo');
+const School = require('../models/School');
 
 const router = express.Router();
 
