@@ -6,6 +6,7 @@ const { Sequelize } = require('sequelize');
 const Session = require('../models/Session');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
+const ClassInfo = require('../models/ClassInfo');
 
 const router = express.Router();
 
@@ -25,7 +26,6 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
   try {
     const { schoolId, classId, sectionId, subjectId } = req.params;
 
-    // Include names for school, class, section, and subject
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
       attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber'],
@@ -33,57 +33,46 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
         {
           model: Section,
           attributes: ['sectionName'],
-          where: { id: sectionId },
         },
         {
           model: Subject,
           attributes: ['subjectName'],
-          where: { id: subjectId },
         },
       ],
     });
 
-    // Fetch additional names like schoolName, className, and board using their respective models
-    const section = await Section.findByPk(sectionId, {
+    const classInfo = await ClassInfo.findByPk(classId, {
+      attributes: ['className', 'board'],
       include: [
         {
-          model: ClassInfo,
-          attributes: ['className', 'board'],
-          where: { id: classId },
-          include: [
-            {
-              model: School,
-              attributes: ['schoolName'],
-              where: { id: schoolId },
-            },
-          ],
+          model: School,
+          attributes: ['schoolName'],
         },
       ],
     });
 
-    if (!section) {
-      return res.status(404).json({ error: 'Section not found' });
+    if (!classInfo) {
+      return res.status(404).json({ error: 'Class not found' });
     }
 
-    const response = {
+    res.json({
       schoolId,
-      schoolName: section.ClassInfo.School.schoolName,
+      schoolName: classInfo.School.schoolName,
       classId,
-      className: section.ClassInfo.className,
-      board: section.ClassInfo.board,
+      className: classInfo.className,
+      board: classInfo.board,
       sectionId,
-      sectionName: section.sectionName,
+      sectionName: sessions[0]?.Section.sectionName || 'N/A',
       subjectId,
-      subjectName: section.Subject?.subjectName || 'Subject not found',
+      subjectName: sessions[0]?.Subject.subjectName || 'N/A',
       sessions,
-    };
-
-    res.json(response);
+    });
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
   }
 });
+
 
 
 
