@@ -119,18 +119,22 @@ const ClassInfo = () => {
     }
   
     try {
-      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
+      const payload = {
         sectionName: newSectionName.toUpperCase(),
         schoolId,
-      });
+      };
+      console.log('Payload:', payload); // Log the payload for debugging
+  
+      await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, payload);
       setNewSectionName('');
       setError('');
       fetchSections(selectedClass.id); // Refresh sections
     } catch (error) {
-      console.error('Error adding section:', error);
+      console.error('Error adding section:', error.response?.data || error.message);
       setError('Failed to add section. Please try again.');
     }
   };
+  
   
   
 
@@ -143,7 +147,8 @@ const ClassInfo = () => {
   
     if (selectedClass) {
       setSelectedBoard(selectedClass.board);
-      fetchSections(selectedClass.id); // Fetch sections for the selected class
+      fetchSections(selectedClass.id);
+      setError(''); // Clear previous errors
     } else {
       setSections([]);
       setError('Class not found. Please select or add a class.');
