@@ -21,14 +21,17 @@ const SessionManagement = () => {
   
       // Fetch Class Name
       const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
+      console.log("Class Response:", classResponse.data);
       const className = classResponse.data.className;
   
       // Fetch Section Name
       const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
+      console.log("Section Response:", sectionResponse.data);
       const sectionName = sectionResponse.data.sectionName;
   
       // Fetch Subject Name
       const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
+      console.log("Subject Response:", subjectResponse.data);
       const subjectName = subjectResponse.data.subjectName;
   
       // Update classDetails state
@@ -44,6 +47,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
   
   
 
