@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
+  const location = useLocation();
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
@@ -12,15 +13,22 @@ const SessionManagement = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Extract additional data passed via Link state or props
+  const {
+    className = 'Class Name Not Available',
+    schoolName = 'School Name Not Available',
+    subjectName = 'Subject Name Not Available',
+    sectionName = 'Section Name Not Available',
+    board = 'Board Not Available',
+  } = location.state || {};
+
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     setIsLoading(true);
     setError('');
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
-      console.log("Fetching sessions from URL:", url);
       const response = await axios.get(url);
-      console.log("Sessions response:", response.data);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -69,27 +77,24 @@ const SessionManagement = () => {
       setError('Please select at least one session to delete.');
       return;
     }
-  
+
     try {
       await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`, {
         sessionIds: selectedSessionIds,
       });
-      setSelectedSessionIds([]); // Clear selection after successful deletion
+      setSelectedSessionIds([]);
       fetchSessions();
     } catch (error) {
       console.error('Error deleting sessions:', error);
       setError('Failed to delete sessions. Please try again later.');
     }
   };
-  
 
   const toggleSelection = (sessionId) => {
     setSelectedSessionIds((prev) =>
       prev.includes(sessionId) ? prev.filter((id) => id !== sessionId) : [...prev, sessionId]
     );
   };
-
-  const isSelected = (sessionId) => selectedSessionIds.includes(sessionId);
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
@@ -107,86 +112,45 @@ const SessionManagement = () => {
 
     try {
       const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      console.log("Uploading to URL:", uploadUrl);
-      console.log("File:", file);
-
-      const response = await axios.post(uploadUrl, formData, {
+      await axios.post(uploadUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
-      console.log('Upload response:', response.data);
-      fetchSessions(); // Refresh session data after successful upload
+      fetchSessions();
     } catch (error) {
-      console.error('Error uploading file:', error.response ? error.response.data : error.message);
-      setError(error.response?.data?.message || 'Failed to upload file. Please try again.');
+      console.error('Error uploading file:', error);
+      setError('Failed to upload file. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // View LP
-
-  const handleViewLessonPlan = async (sessionId, topic) => {
-    try {
-      // Prepare the payload for the API request
-      const payload = {
-        board: "CBSE", // Replace with the actual value
-        grade: "10", // Replace with the actual value
-        subject: "Math", // Replace with the actual value
-        subSubject: "Algebra", // Replace with the actual value
-        unit: "Linear Equations", // Replace with the actual value
-        chapter: topic.topic, // Topic name
-        topics: [
-          {
-            topic: topic.topic,
-            concepts: topic.concepts, // Concepts for the topic
-          },
-        ],
-        sessionType: "Theory", // Hardcoded for now
-        noOfSession: 1, // For single topic
-        duration: 45, // Set a default duration
-      };
-  
-      console.log("Fetching Lesson Plan with payload:", payload);
-  
-      const response = await axios.post(
-        `https://tms.up.school/api/dynamicLP`,
-        payload
-      );
-  
-      // Handle response
-      const lessonPlan = response.data.lesson_plan;
-      console.log("Lesson Plan:", lessonPlan);
-  
-      // Update state to display the lesson plan
-      setSessions((prevSessions) =>
-        prevSessions.map((session) =>
-          session.id === sessionId
-            ? { ...session, lessonPlan } // Add the fetched lesson plan to the session
-            : session
-        )
-      );
-    } catch (error) {
-      console.error("Error generating lesson plan:", error);
-      setError("Failed to fetch the lesson plan. Please try again.");
-    }
-  };
-  
   return (
     <div>
       <h2>Session Management</h2>
       {error && <div className="error">{error}</div>}
       {isLoading && <p>Loading...</p>}
 
+      {/* Information Banner */}
+      <div className="info-banner">
+        <p><strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}</p>
+        <p><strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}</p>
+        <p><strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}</p>
+        <p><strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}</p>
+        <p><strong>Board:</strong> {board}</p>
+      </div>
+
+      {/* File Upload */}
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
         <button type="submit">Upload</button>
       </form>
 
+      {/* Bulk Delete */}
       <button onClick={handleBulkDelete} disabled={selectedSessionIds.length === 0}>
         Bulk Delete
       </button>
 
+      {/* Session Table */}
       <table>
         <thead>
           <tr>
@@ -214,7 +178,7 @@ const SessionManagement = () => {
               <td>
                 <input
                   type="checkbox"
-                  checked={isSelected(session.id)}
+                  checked={selectedSessionIds.includes(session.id)}
                   onChange={() => toggleSelection(session.id)}
                 />
               </td>
