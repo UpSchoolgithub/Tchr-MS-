@@ -31,7 +31,6 @@ router.post('/sessions/:sessionId/sessionPlans/upload', upload.single('file'), a
 
       sheet.forEach(row => {
           const sessionNumber = parseInt(row.SessionNumber, 10);
-
           if (isNaN(sessionNumber)) {
               throw new Error(`Invalid session number: ${row.SessionNumber}`);
           }
@@ -52,18 +51,25 @@ router.post('/sessions/:sessionId/sessionPlans/upload', upload.single('file'), a
           sessionPlans.push({
               sessionId,
               sessionNumber: parseInt(sessionNumber, 10),
-              planDetails: JSON.stringify(topicsMap[sessionNumber]),
+              planDetails: topicsMap[sessionNumber], // Pass array directly
           });
       }
 
       const createdSessionPlans = await SessionPlan.bulkCreate(sessionPlans);
 
-      res.status(201).json({ message: 'Session plans uploaded successfully', createdSessionPlans });
+      res.status(201).json({
+          message: "Session plans uploaded successfully",
+          createdSessionPlans,
+      });
   } catch (error) {
-      console.error('Error uploading session plans:', error.message);
-      res.status(500).json({ message: 'Internal server error', error: error.message });
+      console.error("Error uploading session plans:", error.message);
+      res.status(500).json({
+          message: "Internal server error",
+          error: error.message,
+      });
   }
 });
+
 
 
 // Fetch Session Plans
