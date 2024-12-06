@@ -1,35 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams, Link } from "react-router-dom";
 
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
   const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
-  const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
-  const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
+  const [editingNumberOfSessions, setEditingNumberOfSessions] = useState("");
+  const [editingPriorityNumber, setEditingPriorityNumber] = useState("");
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedLessonPlan, setSelectedLessonPlan] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
-      console.log("Fetching sessions from URL:", url);
       const response = await axios.get(url);
-      console.log("Sessions API response:", response.data);
       setSessions(response.data);
     } catch (error) {
-      console.error('Error fetching sessions:', error);
-      setError('Failed to fetch sessions. Please try again later.');
+      console.error("Error fetching sessions:", error);
+      setError("Failed to fetch sessions. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchSessions();
@@ -43,50 +42,59 @@ const SessionManagement = () => {
 
   const handleSessionUpdate = async (sessionId) => {
     try {
-      await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
-        numberOfSessions: editingNumberOfSessions,
-        priorityNumber: editingPriorityNumber,
-      });
+      await axios.put(
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`,
+        {
+          numberOfSessions: editingNumberOfSessions,
+          priorityNumber: editingPriorityNumber,
+        }
+      );
       setEditingSessionId(null);
       fetchSessions();
     } catch (error) {
-      console.error('Error updating session:', error);
-      setError('Failed to update session. Please check your input and try again.');
+      console.error("Error updating session:", error);
+      setError("Failed to update session. Please check your input and try again.");
     }
   };
 
   const handleSessionDelete = async (sessionId) => {
     try {
-      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+      await axios.delete(
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`
+      );
       fetchSessions();
     } catch (error) {
-      console.error('Error deleting session:', error);
-      setError('Failed to delete session. Please try again later.');
+      console.error("Error deleting session:", error);
+      setError("Failed to delete session. Please try again later.");
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedSessionIds.length === 0) {
-      setError('Please select at least one session to delete.');
+      setError("Please select at least one session to delete.");
       return;
     }
-  
+
     try {
-      await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`, {
-        sessionIds: selectedSessionIds,
-      });
+      await axios.post(
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`,
+        {
+          sessionIds: selectedSessionIds,
+        }
+      );
       setSelectedSessionIds([]); // Clear selection after successful deletion
       fetchSessions();
     } catch (error) {
-      console.error('Error deleting sessions:', error);
-      setError('Failed to delete sessions. Please try again later.');
+      console.error("Error deleting sessions:", error);
+      setError("Failed to delete sessions. Please try again later.");
     }
   };
-  
 
   const toggleSelection = (sessionId) => {
     setSelectedSessionIds((prev) =>
-      prev.includes(sessionId) ? prev.filter((id) => id !== sessionId) : [...prev, sessionId]
+      prev.includes(sessionId)
+        ? prev.filter((id) => id !== sessionId)
+        : [...prev, sessionId]
     );
   };
 
@@ -96,83 +104,77 @@ const SessionManagement = () => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
     if (!file) {
-      setError('Please select a file to upload.');
+      setError("Please select a file to upload.");
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
-      console.log("Uploading to URL:", uploadUrl);
-      console.log("File:", file);
-
-      const response = await axios.post(uploadUrl, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      await axios.post(uploadUrl, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
-      console.log('Upload response:', response.data);
       fetchSessions(); // Refresh session data after successful upload
     } catch (error) {
-      console.error('Error uploading file:', error.response ? error.response.data : error.message);
-      setError(error.response?.data?.message || 'Failed to upload file. Please try again.');
+      console.error(
+        "Error uploading file:",
+        error.response ? error.response.data : error.message
+      );
+      setError(error.response?.data?.message || "Failed to upload file. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // View LP
-
-  const handleViewLessonPlan = async (sessionId, topic) => {
+  const handleViewLessonPlan = async (session) => {
     try {
-      // Prepare the payload for the API request
       const payload = {
-        board: "CBSE", // Replace with the actual value
-        grade: "10", // Replace with the actual value
-        subject: "Math", // Replace with the actual value
-        subSubject: "Algebra", // Replace with the actual value
-        unit: "Linear Equations", // Replace with the actual value
-        chapter: topic.topic, // Topic name
-        topics: [
-          {
-            topic: topic.topic,
-            concepts: topic.concepts, // Concepts for the topic
-          },
-        ],
-        sessionType: "Theory", // Hardcoded for now
-        noOfSession: 1, // For single topic
-        duration: 45, // Set a default duration
+        board: session.board,
+        grade: session.grade,
+        subject: session.subject,
+        subSubject: session.subSubject || "N/A",
+        unit: session.unit || "N/A",
+        chapter: session.chapterName,
+        topics: session.topics.map((topic) => ({
+          topic: topic.name,
+          concepts: topic.concepts,
+        })),
+        sessionType: session.sessionType || "Theory",
+        noOfSession: 1,
+        duration: 45,
       };
-  
-      console.log("Fetching Lesson Plan with payload:", payload);
-  
+
       const response = await axios.post(
         `https://tms.up.school/api/dynamicLP`,
         payload
       );
-  
-      // Handle response
+
       const lessonPlan = response.data.lesson_plan;
-      console.log("Lesson Plan:", lessonPlan);
-  
-      // Update state to display the lesson plan
+
       setSessions((prevSessions) =>
-        prevSessions.map((session) =>
-          session.id === sessionId
-            ? { ...session, lessonPlan } // Add the fetched lesson plan to the session
-            : session
+        prevSessions.map((s) =>
+          s.id === session.id ? { ...s, lessonPlan } : s
         )
       );
+
+      setSelectedLessonPlan(lessonPlan);
+      setIsModalOpen(true);
     } catch (error) {
       console.error("Error generating lesson plan:", error);
       setError("Failed to fetch the lesson plan. Please try again.");
     }
   };
-  
+
+  const closeLessonPlanModal = () => {
+    setSelectedLessonPlan("");
+    setIsModalOpen(false);
+  };
+
   return (
     <div>
       <h2>Session Management</h2>
@@ -199,13 +201,16 @@ const SessionManagement = () => {
                     e.target.checked ? sessions.map((session) => session.id) : []
                   )
                 }
-                checked={selectedSessionIds.length === sessions.length && sessions.length > 0}
+                checked={
+                  selectedSessionIds.length === sessions.length && sessions.length > 0
+                }
               />
             </th>
             <th>Unit Name</th>
             <th>Chapter</th>
             <th>Number of Sessions</th>
             <th>Priority Number</th>
+            <th>Lesson Plan</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -219,8 +224,8 @@ const SessionManagement = () => {
                   onChange={() => toggleSelection(session.id)}
                 />
               </td>
-              <td>{session.unitName || session.unit_name || 'N/A'}</td>
-              <td>{session.chapterName || 'N/A'}</td>
+              <td>{session.unitName || "N/A"}</td>
+              <td>{session.chapterName || "N/A"}</td>
               <td>
                 {editingSessionId === session.id ? (
                   <input
@@ -244,6 +249,15 @@ const SessionManagement = () => {
                 )}
               </td>
               <td>
+                {session.lessonPlan ? (
+                  <button onClick={() => setSelectedLessonPlan(session.lessonPlan)}>
+                    View
+                  </button>
+                ) : (
+                  <button onClick={() => handleViewLessonPlan(session)}>Generate</button>
+                )}
+              </td>
+              <td>
                 {editingSessionId === session.id ? (
                   <>
                     <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
@@ -263,6 +277,16 @@ const SessionManagement = () => {
           ))}
         </tbody>
       </table>
+
+      {isModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Lesson Plan</h3>
+            <pre>{selectedLessonPlan}</pre>
+            <button onClick={closeLessonPlanModal}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

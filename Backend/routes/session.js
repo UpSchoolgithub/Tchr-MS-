@@ -27,18 +27,10 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: [
-        'id',
-        ['unit_name', 'unitName'], // Map `unit_name` to `unitName`
-        'chapterName',
-        'numberOfSessions',
-        'priorityNumber',
-        'topic',
-      ],
+      attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Add 'unitName' here
     });
-    
+
     res.json(sessions);
-    
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
@@ -50,14 +42,14 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   try {
     const { schoolId, classId, sectionId, subjectId } = req.params;
-    const { chapterName, numberOfSessions, priorityNumber } = req.body;
+    const { unitName, chapterName, numberOfSessions, priorityNumber } = req.body;
 
-    if (!chapterName || !numberOfSessions || !priorityNumber) {
+    if (!unitName || !chapterName || !numberOfSessions || !priorityNumber) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
     const newSession = await Session.create({
-      schoolId, classId, sectionId, subjectId, chapterName, numberOfSessions, priorityNumber
+      schoolId, classId, sectionId, subjectId, unitName, chapterName, numberOfSessions, priorityNumber
     });
 
     res.status(201).json(newSession);
@@ -66,6 +58,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     res.status(500).json({ error: 'Failed to create session' });
   }
 });
+
 
 // Upload sessions in bulk from an Excel file
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
@@ -76,12 +69,6 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
       return res.status(400).json({ error: 'File is required' });
     }
 
-    const section = await Section.findByPk(sectionId); // Lookup by sectionId
-
-    if (!section) {
-      return res.status(404).json({ error: `Section with ID '${sectionId}' not found` });
-    }
-
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -90,25 +77,23 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     console.log("Parsed JSON Data:", jsonData);
 
     const sessions = jsonData
-  .filter(row => {
-    if (!row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
-      console.warn("Skipping row due to missing fields:", row);
-      return false;
-    }
-    return true;
-  })
-  .map(row => ({
-    schoolId,
-    classId,
-    sectionId,
-    subjectId,
-    unitName: row.UnitName, // Match this with the Excel file
-    chapterName: row.ChapterName,
-    numberOfSessions: row.NumberOfSessions,
-    priorityNumber: row.PriorityNumber,
-  }));
-  
-
+      .filter(row => {
+        if (!row.UnitName || !row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
+          console.warn("Skipping row due to missing fields:", row);
+          return false;
+        }
+        return true;
+      })
+      .map(row => ({
+        schoolId,
+        classId,
+        sectionId,
+        subjectId,
+        unitName: row.UnitName, // Extract unitName
+        chapterName: row.ChapterName,
+        numberOfSessions: row.NumberOfSessions,
+        priorityNumber: row.PriorityNumber,
+      }));
 
     console.log("Sessions Ready for Bulk Insert:", sessions);
 
@@ -124,16 +109,17 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
   }
 });
 
+
 // Update a session by ID
 router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { numberOfSessions, priorityNumber } = req.body;
+    const { unitName, numberOfSessions, priorityNumber } = req.body;
 
     const session = await Session.findByPk(sessionId);
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
-    await session.update({ numberOfSessions, priorityNumber });
+    await session.update({ unitName, numberOfSessions, priorityNumber });
     res.json(session);
   } catch (error) {
     console.error('Error updating session:', error);
@@ -153,6 +139,23 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
   } catch (error) {
     console.error('Error deleting session:', error);
     res.status(500).json({ error: 'Failed to delete session' });
+  }
+});
+
+//handle bulk delete requests
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/bulk-delete', async (req, res) => {
+  try {
+    const { sessionIds } = req.body;
+
+    if (!sessionIds || !Array.isArray(sessionIds) || sessionIds.length === 0) {
+      return res.status(400).json({ error: 'Invalid session IDs provided.' });
+    }
+
+    await Session.destroy({ where: { id: sessionIds } });
+    res.status(200).json({ message: 'Sessions deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting sessions:', error);
+    res.status(500).json({ error: 'Failed to delete sessions' });
   }
 });
 
