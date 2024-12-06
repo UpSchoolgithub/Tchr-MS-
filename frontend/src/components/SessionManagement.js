@@ -20,7 +20,7 @@ const SessionManagement = () => {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
       console.log("Fetching sessions from URL:", url);
       const response = await axios.get(url);
-      console.log("Sessions response:", response.data);
+      console.log("Sessions API response:", response.data);
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -29,6 +29,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchSessions();
@@ -218,7 +219,7 @@ const SessionManagement = () => {
                   onChange={() => toggleSelection(session.id)}
                 />
               </td>
-              <td>{session.unitName || 'N/A'}</td>
+              <td>{session.unitName || session.unit_name || 'N/A'}</td>
               <td>{session.chapterName || 'N/A'}</td>
               <td>
                 {editingSessionId === session.id ? (

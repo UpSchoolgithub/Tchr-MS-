@@ -29,13 +29,14 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
       where: { sectionId, subjectId },
       attributes: [
         'id',
-        'unitName', // Explicitly include unitName
+        ['unit_name', 'unitName'], // Map `unit_name` to `unitName`
         'chapterName',
         'numberOfSessions',
         'priorityNumber',
         'topic',
       ],
     });
+    
     res.json(sessions);
     
   } catch (error) {
@@ -101,10 +102,12 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     classId,
     sectionId,
     subjectId,
+    unitName: row.UnitName, // Match this with the Excel file
     chapterName: row.ChapterName,
     numberOfSessions: row.NumberOfSessions,
     priorityNumber: row.PriorityNumber,
   }));
+  
 
 
     console.log("Sessions Ready for Bulk Insert:", sessions);
