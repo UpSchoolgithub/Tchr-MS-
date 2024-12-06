@@ -35,7 +35,7 @@ const ClassInfo = () => {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
-        displayName: cls.className, // Only include class name
+        displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
       }));
       setClassInfos(formattedClasses);
     } catch (error) {
@@ -43,7 +43,6 @@ const ClassInfo = () => {
       setError('Error fetching class data');
     }
   };
-  
   
   
 
@@ -366,41 +365,41 @@ const ClassInfo = () => {
             </tr>
           </thead>
           <tbody>
-  {classInfos.map((info) =>
-    Object.keys(info.sections || {}).map((sec) =>
-      info.sections[sec].subjects.map((subject) => (
-        <tr key={subject.id}>
-          <td>{info.className}</td> {/* Use className directly */}
-          <td>{sec}</td>
-          <td>{subject.subjectName}</td>
-          <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
-          <td>
-            <button
-              onClick={() => {
-                const selectedClass = info;
-                const sectionData = info.sections[sec];
-                if (sectionData && sectionData.id) {
-                  navigate(
-                    `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`
-                  );
-                } else {
-                  console.error("Section ID not found for section name:", sec);
-                  setError(`Section ID not found for section name: ${sec}`);
-                }
-              }}
-            >
-              Manage Sessions
-            </button>
-          </td>
-        </tr>
-      ))
-    )
-  )}
-</tbody>
+            {classInfos.map((info) =>
+              Object.keys(info.sections || {}).map((sec) =>
+                info.sections[sec].subjects.map((subject) => (
+                  <tr key={subject.id}>
+                    <td>{info.displayName}</td>
+                    <td>{info.board}</td>
+                    <td>{sec}</td>
+                    <td>{subject.subjectName}</td>
+                    <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
+                    <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
+                    <button
+  onClick={() => {
+    const selectedClass = info; // 'info' is the current class in the table row
+    const sectionData = info.sections[sec]; // Access section data directly from 'info.sections' using 'sec' as the key
 
+    if (sectionData && sectionData.id) {
+      // Pass the board information as part of the URL
+      navigate(
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
+      );
+    } else {
+      console.error("Section ID not found for section name:", sec);
+      setError(`Section ID not found for section name: ${sec}`);
+    }
+  }}
+>
+  Manage Sessions
+</button>
+                  </tr>
+                ))
+              )
+            )}
+          </tbody>
         </table>
       </div>
     </div>
