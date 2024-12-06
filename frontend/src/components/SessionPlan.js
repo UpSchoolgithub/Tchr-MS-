@@ -101,10 +101,12 @@ const SessionPlans = () => {
       setError("Please select a file to upload.");
       return;
     }
+  
     const formData = new FormData();
     formData.append("file", file);
+  
     try {
-      await axios.post(
+      const response = await axios.post(
         `https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload`,
         formData,
         {
@@ -113,18 +115,20 @@ const SessionPlans = () => {
           },
         }
       );
-      setFile(null);
-      const response = await axios.get(
+  
+      // Refetch session plans to update the UI
+      const sessionPlansResponse = await axios.get(
         `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
       );
-      setSessionPlans(response.data);
+      setSessionPlans(sessionPlansResponse.data);
       setUploadDisabled(true);
       setError("");
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error uploading session plans:", error);
       setError("Failed to upload session plan. Please try again.");
     }
   };
+  
 
   // Generate lesson plan for a specific topic
   const handleGenerateLessonPlan = async (sessionNumber, topicIndex, sessionPlanId) => {

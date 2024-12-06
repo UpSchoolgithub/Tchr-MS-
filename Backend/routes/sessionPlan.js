@@ -1,67 +1,67 @@
 const express = require('express');
 const multer = require('multer');
 const XLSX = require('xlsx');
+const { Op } = require('sequelize');
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic');
 
 const router = express.Router();
 
+// Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: './uploads/',
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
-
 const upload = multer({ storage });
 
-// Upload Session Plans
 // Upload Session Plans
 router.post('/sessions/:sessionId/sessionPlans/upload', upload.single('file'), async (req, res) => {
   const { sessionId } = req.params;
   const file = req.file;
 
   try {
-      const workbook = XLSX.readFile(file.path);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const workbook = XLSX.readFile(file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-      const sessionPlans = [];
-      const topicsMap = {};
+    const sessionPlans = [];
 
-      sheet.forEach(row => {
-          const sessionNumber = parseInt(row.SessionNumber, 10);
-
-          if (isNaN(sessionNumber)) {
-              throw new Error(`Invalid session number: ${row.SessionNumber}`);
-          }
-
-          const topicName = row.TopicName?.trim();
-          const concepts = row.Concepts
-              ? row.Concepts.split(';').map(concept => concept.trim())
-              : [];
-
-          if (!topicsMap[sessionNumber]) {
-              topicsMap[sessionNumber] = [];
-          }
-
-          topicsMap[sessionNumber].push({ name: topicName, concepts });
-      });
-
-      for (const sessionNumber in topicsMap) {
-          sessionPlans.push({
-              sessionId,
-              sessionNumber: parseInt(sessionNumber, 10),
-              planDetails: JSON.stringify(topicsMap[sessionNumber]),
-          });
+    sheet.forEach((row) => {
+      const sessionNumber = parseInt(row.SessionNumber, 10);
+      if (isNaN(sessionNumber)) {
+        throw new Error(`Invalid session number: ${row.SessionNumber}`);
       }
 
-      const createdSessionPlans = await SessionPlan.bulkCreate(sessionPlans);
+      const topicName = row.TopicName?.trim();
+      const concepts = row.Concepts
+        ? row.Concepts.split(';').map((concept) => concept.trim())
+        : [];
 
-      res.status(201).json({ message: 'Session plans uploaded successfully', createdSessionPlans });
+      const planDetails = [
+        {
+          name: topicName,
+          concepts: concepts,
+        },
+      ];
+
+      sessionPlans.push({
+        sessionId,
+        sessionNumber,
+        planDetails: JSON.stringify(planDetails), // Save as JSON string in the DB
+      });
+    });
+
+    await SessionPlan.bulkCreate(sessionPlans);
+
+    res.status(201).json({
+      message: 'Session plans uploaded successfully',
+      sessionPlans,
+    });
   } catch (error) {
-      console.error('Error uploading session plans:', error.message);
-      res.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error('Error uploading session plans:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
@@ -73,20 +73,20 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   try {
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
-      include: [Topic],
     });
 
-    const formattedSessionPlans = sessionPlans.map(plan => ({
+    const formattedSessionPlans = sessionPlans.map((plan) => ({
       ...plan.toJSON(),
       planDetails: JSON.parse(plan.planDetails),
-      Topics: plan.Topics.map(topic => topic.topicName),
     }));
 
-    console.log('Formatted Session Plans:', formattedSessionPlans); // Debugging line
     res.json(formattedSessionPlans);
   } catch (error) {
     console.error('Error fetching session plans:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({
+      message: 'Internal server error',
+      error: error.message,
+    });
   }
 });
 
@@ -122,32 +122,24 @@ router.post('/sessionPlans/:id/addTopic', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    // Update the order of subsequent topics
-    await Topic.increment('order', {
-      by: 1,
-      where: {
-        sessionPlanId: id,
-        order: {
-          [Op.gte]: order,
-        },
-      },
-    });
+    const topics = JSON.parse(sessionPlan.planDetails) || [];
+    const updatedTopics = [
+      ...topics.slice(0, order - 1),
+      { name: topicName, concepts: [] },
+      ...topics.slice(order - 1),
+    ];
 
-    // Add the new topic
-    await Topic.create({
-      sessionPlanId: id,
-      topicName,
-      order,
-    });
+    sessionPlan.planDetails = JSON.stringify(updatedTopics);
+    await sessionPlan.save();
 
-    return res.status(201).json({ message: 'Topic added successfully' });
+    res.status(201).json({ message: 'Topic added successfully' });
   } catch (error) {
     console.error('Error adding topic:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Delete Session Plans
+// Delete Session Plans for a Session
 router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
 
@@ -159,27 +151,10 @@ router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting session plans:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-
-// Delete All Session Plans for a Session
-router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
-  const { sessionId } = req.params;
-
-  try {
-    await SessionPlan.destroy({
-      where: { sessionId },
+    res.status(500).json({
+      message: 'Internal server error',
+      error: error.message,
     });
-
-    await Topic.destroy({
-      where: { sessionPlanId: sessionId },
-    });
-
-    return res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting all session plans:', error);
-    return res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
