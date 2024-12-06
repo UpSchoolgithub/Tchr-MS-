@@ -131,6 +131,31 @@ const SessionManagement = () => {
     }
   };
 
+  const fetchDetails = async () => {
+    try {
+      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`;
+      const response = await axios.get(url);
+  
+      // Fallback to update state variables if missing
+      setStateValues({
+        schoolName: response.data.schoolName || 'School Name Not Available',
+        className: response.data.className || 'Class Name Not Available',
+        sectionName: response.data.sectionName || 'Section Name Not Available',
+        subjectName: response.data.subjectName || 'Subject Name Not Available',
+        board: response.data.board || 'Board Not Available',
+      });
+    } catch (error) {
+      console.error('Error fetching details:', error);
+    }
+  };
+  const [stateValues, setStateValues] = useState({
+    schoolName: 'School Name Not Available',
+    className: 'Class Name Not Available',
+    sectionName: 'Section Name Not Available',
+    subjectName: 'Subject Name Not Available',
+    board: 'Board Not Available',
+  });
+  
   return (
     <div>
       <h2>Session Management</h2>
@@ -139,11 +164,12 @@ const SessionManagement = () => {
 
       {/* Information Banner */}
       <div className="info-banner">
-        <p><strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}</p>
-        <p><strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}</p>
-        <p><strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}</p>
-        <p><strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}</p>
-        <p><strong>Board:</strong> {board}</p>
+      <p><strong>School Name:</strong> {stateValues.schoolName} | <strong>School ID:</strong> {schoolId}</p>
+<p><strong>Class Name:</strong> {stateValues.className} | <strong>Class ID:</strong> {classId}</p>
+<p><strong>Section Name:</strong> {stateValues.sectionName} | <strong>Section ID:</strong> {sectionId}</p>
+<p><strong>Subject Name:</strong> {stateValues.subjectName} | <strong>Subject ID:</strong> {subjectId}</p>
+<p><strong>Board:</strong> {stateValues.board}</p>
+
       </div>
 
       {/* File Upload */}
