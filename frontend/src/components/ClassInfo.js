@@ -370,9 +370,34 @@ const ClassInfo = () => {
             </tr>
           </thead>
           <tbody>
-  {classInfos.map((info) =>
-    info.sections.map((section) =>
-      section.subjects.map((subject) => (
+  {classInfos.map((info) => {
+    // Check if sections is an array before mapping
+    if (!Array.isArray(info.sections)) {
+      return (
+        <tr key={info.id}>
+          <td colSpan="9" style={{ textAlign: 'center', color: 'red' }}>
+            No sections available for class {info.className}.
+          </td>
+        </tr>
+      );
+    }
+
+    return info.sections.map((section) => {
+      // Check if subjects is an array before mapping
+      if (!Array.isArray(section.subjects)) {
+        return (
+          <tr key={section.id}>
+            <td>{info.className || 'Class name not available'}</td>
+            <td>{info.board || 'Board not available'}</td>
+            <td>{section.sectionName || 'Section name not available'}</td>
+            <td colSpan="6" style={{ textAlign: 'center', color: 'red' }}>
+              No subjects available for this section.
+            </td>
+          </tr>
+        );
+      }
+
+      return section.subjects.map((subject) => (
         <tr key={subject.id}>
           <td>{info.className || 'Class name not available'}</td>
           <td>{info.board || 'Board not available'}</td>
@@ -394,9 +419,9 @@ const ClassInfo = () => {
             </button>
           </td>
         </tr>
-      ))
-    )
-  )}
+      ));
+    });
+  })}
 </tbody>
 
 
