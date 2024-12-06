@@ -70,6 +70,7 @@ const SessionManagement = () => {
   };
 
   useEffect(() => {
+    fetchClassDetails(); // Fetch class, section, and subject names
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
 
