@@ -27,7 +27,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: ['id', 'sectionId', 'subjectId', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Ensure 'chapterName' is included
+      attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber', 'topic'],
     });
 
     res.json(sessions);

@@ -124,6 +124,54 @@ const SessionManagement = () => {
     }
   };
 
+  // View LP
+
+  const handleViewLessonPlan = async (sessionId, topic) => {
+    try {
+      // Prepare the payload for the API request
+      const payload = {
+        board: "CBSE", // Replace with the actual value
+        grade: "10", // Replace with the actual value
+        subject: "Math", // Replace with the actual value
+        subSubject: "Algebra", // Replace with the actual value
+        unit: "Linear Equations", // Replace with the actual value
+        chapter: topic.topic, // Topic name
+        topics: [
+          {
+            topic: topic.topic,
+            concepts: topic.concepts, // Concepts for the topic
+          },
+        ],
+        sessionType: "Theory", // Hardcoded for now
+        noOfSession: 1, // For single topic
+        duration: 45, // Set a default duration
+      };
+  
+      console.log("Fetching Lesson Plan with payload:", payload);
+  
+      const response = await axios.post(
+        `https://tms.up.school/api/dynamicLP`,
+        payload
+      );
+  
+      // Handle response
+      const lessonPlan = response.data.lesson_plan;
+      console.log("Lesson Plan:", lessonPlan);
+  
+      // Update state to display the lesson plan
+      setSessions((prevSessions) =>
+        prevSessions.map((session) =>
+          session.id === sessionId
+            ? { ...session, lessonPlan } // Add the fetched lesson plan to the session
+            : session
+        )
+      );
+    } catch (error) {
+      console.error("Error generating lesson plan:", error);
+      setError("Failed to fetch the lesson plan. Please try again.");
+    }
+  };
+  
   return (
     <div>
       <h2>Session Management</h2>
