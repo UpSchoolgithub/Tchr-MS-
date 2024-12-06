@@ -23,10 +23,10 @@ const validateDateOrder = (dates) => {
 // Fetch all class infos with sections and subjects grouped under each class
 router.get('/schools/:schoolId/classes', async (req, res) => {
   try {
-    const { board, classId, sectionId, subjectId } = req.query; // Add query parameters for filtering
+    const { board, classId, sectionId, subjectId } = req.query;
     const whereClause = { schoolId: req.params.schoolId };
     if (board) whereClause.board = board;
-    if (classId) whereClause.id = classId; // Filter by classId if provided
+    if (classId) whereClause.id = classId;
 
     const classInfos = await ClassInfo.findAll({
       where: whereClause,
@@ -34,12 +34,12 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
         {
           model: Section,
           required: sectionId ? true : false,
-          where: sectionId ? { id: sectionId } : {}, // Filter by sectionId if provided
+          where: sectionId ? { id: sectionId } : {},
           include: [
             {
               model: Subject,
               required: subjectId ? true : false,
-              where: subjectId ? { id: subjectId } : {}, // Filter by subjectId if provided
+              where: subjectId ? { id: subjectId } : {},
             },
           ],
         },
@@ -83,7 +83,6 @@ router.get('/schools/:schoolId/classes', async (req, res) => {
     res.status(500).json({ message: 'Error fetching class infos', error: error.message });
   }
 });
-
 
 // Route to create a new class with sections and subjects
 router.post('/schools/:schoolId/classes', async (req, res) => {
@@ -136,9 +135,6 @@ router.post('/schools/:schoolId/classes', async (req, res) => {
   }
 });
 
-
-
-// Route to add sections and subjects to an existing class
 // Route to add sections and subjects to an existing class
 router.post('/classes/:classId/sections', async (req, res) => {
   const { classId } = req.params;
@@ -190,7 +186,6 @@ router.post('/classes/:classId/sections', async (req, res) => {
               },
               { transaction }
             );
-            
           }
         }
       }
@@ -205,18 +200,14 @@ router.post('/classes/:classId/sections', async (req, res) => {
   }
 });
 
-
-
 // Route to update an existing subject
 router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId', async (req, res) => {
   const { subjectId } = req.params;
   const { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate } = req.body;
 
   try {
-    // Validate date order
     validateDateOrder({ academicStartDate, academicEndDate, revisionStartDate, revisionEndDate });
 
-    // Update subject
     const [updatedCount] = await Subject.update(
       { academicStartDate, academicEndDate, revisionStartDate, revisionEndDate },
       { where: { id: subjectId } }
@@ -273,6 +264,5 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/
     res.status(500).json({ message: 'Error deleting subject', error: error.message });
   }
 });
-
 
 module.exports = router;
