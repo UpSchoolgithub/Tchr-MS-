@@ -215,14 +215,15 @@ const SessionManagement = () => {
 
 {/* Display metadata at the top */}
 <div className="metadata">
-  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get('board') || 'N/A'}</p>
-  <p><strong>Class Name:</strong> {classDetails.className}</p>
+  <p><strong>Board:</strong> {classDetails.board || "N/A"}</p>
+  <p><strong>Class Name:</strong> {classDetails.className || "Class not found"}</p>
   <p><strong>Class ID:</strong> {classId}</p>
-  <p><strong>Section Name:</strong> {classDetails.sectionName}</p>
+  <p><strong>Section Name:</strong> {classDetails.sectionName || "Section not found"}</p>
   <p><strong>Section ID:</strong> {sectionId}</p>
-  <p><strong>Subject Name:</strong> {classDetails.subjectName}</p>
+  <p><strong>Subject Name:</strong> {classDetails.subjectName || "Subject not found"}</p>
   <p><strong>Subject ID:</strong> {subjectId}</p>
 </div>
+
 
 
 
