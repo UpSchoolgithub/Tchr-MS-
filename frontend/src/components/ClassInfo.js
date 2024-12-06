@@ -33,6 +33,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log('Class Infos Response:', response.data); // Check structure
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
         displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
@@ -46,10 +47,12 @@ const ClassInfo = () => {
   
   
   
+  
 
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
+      console.log('Sections Response:', response.data); // Check structure
       const selectedClass = classInfos.find((cls) => cls.id === classId); // Find the class name
       const updatedSections = response.data.map((section) => ({
         ...section,
@@ -61,6 +64,7 @@ const ClassInfo = () => {
       setError('Error fetching sections');
     }
   };
+  
   
   
 
@@ -370,53 +374,31 @@ const ClassInfo = () => {
     Object.keys(info.sections || {}).map((sec) =>
       info.sections[sec].subjects.map((subject) => (
         <tr key={subject.id}>
-          <td>{info.className}</td> {/* Show only the class name */}
-          <td>{info.board}</td>
-          <td>{sec}</td>
-          <td>{subject.subjectName}</td>
-          <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
+          <td>{info.className || 'Class name not available'}</td>
+          <td>{info.board || 'Board not available'}</td>
+          <td>{sec || 'Section not available'}</td>
+          <td>{subject.subjectName || 'Subject name not available'}</td>
+          <td>{new Date(subject.academicStartDate).toLocaleDateString() || 'N/A'}</td>
+          <td>{new Date(subject.academicEndDate).toLocaleDateString() || 'N/A'}</td>
+          <td>{new Date(subject.revisionStartDate).toLocaleDateString() || 'N/A'}</td>
+          <td>{new Date(subject.revisionEndDate).toLocaleDateString() || 'N/A'}</td>
           <td>
-          <button
-  onClick={() => {
-    const selectedClass = info; // Assume info contains the class data
-    const sectionData = info.sections[sec]; // Access section data by key or index
-    const subjectData = subject; // Assume subject contains the subject data
-
-    if (sectionData && sectionData.id && subjectData && subjectData.id) {
-      navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions?board=${selectedClass.board}`,
-        {
-          state: {
-            schoolName: schoolName || 'School Name Not Available',
-            className: selectedClass.className || 'Class Name Not Available',
-            sectionName: sectionData.sectionName || 'Section Name Not Available',
-            subjectName: subjectData.subjectName || 'Subject Name Not Available',
-            board: selectedClass.board || 'Board Not Available',
-          },
-        }
-      );
-    } else {
-      console.error("Section ID or Subject ID not found:", {
-        section: sectionData,
-        subject: subjectData,
-      });
-      setError(`Section ID or Subject ID not found.`);
-    }
-  }}
->
-  Manage Sessions
-</button>
-
-
+            <button
+              onClick={() => {
+                navigate(
+                  `/schools/${schoolId}/classes/${info.id}/sections/${sec}/subjects/${subject.id}/sessions`
+                );
+              }}
+            >
+              Manage Sessions
+            </button>
           </td>
         </tr>
       ))
     )
   )}
 </tbody>
+
 
         </table>
       </div>
