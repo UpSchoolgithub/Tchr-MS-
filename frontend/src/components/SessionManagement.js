@@ -5,7 +5,7 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
   const location = useLocation();
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState([]); // Initialize as an empty array
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
   const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
@@ -29,7 +29,14 @@ const SessionManagement = () => {
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
       const response = await axios.get(url);
-      setSessions(response.data);
+
+      // Ensure response is an array; fallback to an empty array
+      const fetchedSessions = response.data.sessions || [];
+      if (!Array.isArray(fetchedSessions)) {
+        throw new Error('Invalid data format: sessions is not an array');
+      }
+
+      setSessions(fetchedSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions. Please try again later.');
@@ -173,57 +180,63 @@ const SessionManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {sessions.map((session) => (
-            <tr key={session.id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedSessionIds.includes(session.id)}
-                  onChange={() => toggleSelection(session.id)}
-                />
-              </td>
-              <td>{session.unitName || 'N/A'}</td>
-              <td>{session.chapterName || 'N/A'}</td>
-              <td>
-                {editingSessionId === session.id ? (
+          {Array.isArray(sessions) && sessions.length > 0 ? (
+            sessions.map((session) => (
+              <tr key={session.id}>
+                <td>
                   <input
-                    type="number"
-                    value={editingNumberOfSessions}
-                    onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                    type="checkbox"
+                    checked={selectedSessionIds.includes(session.id)}
+                    onChange={() => toggleSelection(session.id)}
                   />
-                ) : (
-                  session.numberOfSessions
-                )}
-              </td>
-              <td>
-                {editingSessionId === session.id ? (
-                  <input
-                    type="number"
-                    value={editingPriorityNumber}
-                    onChange={(e) => setEditingPriorityNumber(e.target.value)}
-                  />
-                ) : (
-                  session.priorityNumber
-                )}
-              </td>
-              <td>
-                {editingSessionId === session.id ? (
-                  <>
-                    <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
-                    <button onClick={() => setEditingSessionId(null)}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => startEditing(session)}>Edit</button>
-                    <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-                    <Link to={`/sessions/${session.id}/sessionPlans`}>
-                      <button>Session Plan</button>
-                    </Link>
-                  </>
-                )}
-              </td>
+                </td>
+                <td>{session.unitName || 'N/A'}</td>
+                <td>{session.chapterName || 'N/A'}</td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="number"
+                      value={editingNumberOfSessions}
+                      onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                    />
+                  ) : (
+                    session.numberOfSessions
+                  )}
+                </td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="number"
+                      value={editingPriorityNumber}
+                      onChange={(e) => setEditingPriorityNumber(e.target.value)}
+                    />
+                  ) : (
+                    session.priorityNumber
+                  )}
+                </td>
+                <td>
+                  {editingSessionId === session.id ? (
+                    <>
+                      <button onClick={() => handleSessionUpdate(session.id)}>Save</button>
+                      <button onClick={() => setEditingSessionId(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEditing(session)}>Edit</button>
+                      <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
+                      <Link to={`/sessions/${session.id}/sessionPlans`}>
+                        <button>Session Plan</button>
+                      </Link>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6">No sessions available.</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
