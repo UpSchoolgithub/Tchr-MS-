@@ -27,9 +27,17 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber', 'topic'],
+      attributes: [
+        'id',
+        'unitName', // Explicitly include unitName
+        'chapterName',
+        'numberOfSessions',
+        'priorityNumber',
+        'topic',
+      ],
     });
     res.json(sessions);
+    
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
