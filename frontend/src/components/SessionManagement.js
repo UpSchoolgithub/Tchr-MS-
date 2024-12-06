@@ -47,11 +47,12 @@ const SessionManagement = () => {
 
   useEffect(() => {
     if (!location.state) {
-      fetchDetails();
+      fetchDetails(); // Fetch details if not passed via Link state
     }
-    fetchSessions();
-    }, [schoolId, classId, sectionId, subjectId]);
-
+  
+    fetchSessions(); // Always fetch sessions
+  }, [schoolId, classId, sectionId, subjectId]);
+  
   const startEditing = (session) => {
     setEditingSessionId(session.id);
     setEditingNumberOfSessions(session.numberOfSessions);
@@ -139,7 +140,8 @@ const SessionManagement = () => {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`;
       const response = await axios.get(url);
   
-      // Fallback to update state variables if missing
+      console.log('Fetched Details:', response.data); // Log fetched details
+  
       setStateValues({
         schoolName: response.data.schoolName || 'School Name Not Available',
         className: response.data.className || 'Class Name Not Available',
@@ -147,11 +149,12 @@ const SessionManagement = () => {
         subjectName: response.data.subjectName || 'Subject Name Not Available',
         board: response.data.board || 'Board Not Available',
       });
-      
     } catch (error) {
       console.error('Error fetching details:', error);
+      setError('Failed to fetch class, section, or subject details.');
     }
   };
+  
   const [stateValues, setStateValues] = useState({
     schoolName: 'School Name Not Available',
     className: 'Class Name Not Available',
