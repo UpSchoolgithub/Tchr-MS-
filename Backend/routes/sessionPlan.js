@@ -17,67 +17,54 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Upload Session Plans
-router.post(
-  '/sessions/:sessionId/sessionPlans/upload',
-  upload.single('file'),
-  async (req, res) => {
-    const { sessionId } = req.params;
-    const file = req.file;
+router.post('/sessions/:sessionId/sessionPlans/upload', upload.single('file'), async (req, res) => {
+  const { sessionId } = req.params;
+  const file = req.file;
 
-    try {
-      if (!file) {
-        throw new Error('No file uploaded');
+  try {
+    const workbook = XLSX.readFile(file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const sessionPlans = [];
+
+    sheet.forEach((row) => {
+      const sessionNumber = parseInt(row.SessionNumber, 10);
+      if (isNaN(sessionNumber)) {
+        throw new Error(`Invalid session number: ${row.SessionNumber}`);
       }
 
-      const workbook = XLSX.readFile(file.path);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+      const topicName = row.TopicName?.trim();
+      const concepts = row.Concepts
+        ? row.Concepts.split(';').map((concept) => concept.trim())
+        : [];
 
-      const sessionPlans = [];
-      const topicsMap = {};
+      const planDetails = [
+        {
+          name: topicName,
+          concepts: concepts,
+        },
+      ];
 
-      sheet.forEach((row) => {
-        const sessionNumber = parseInt(row.SessionNumber, 10);
-
-        if (isNaN(sessionNumber)) {
-          throw new Error(`Invalid session number: ${row.SessionNumber}`);
-        }
-
-        const topicName = row.TopicName?.trim();
-        const concepts = row.Concepts
-          ? row.Concepts.split(';').map((concept) => concept.trim())
-          : [];
-
-        if (!topicsMap[sessionNumber]) {
-          topicsMap[sessionNumber] = [];
-        }
-
-        topicsMap[sessionNumber].push({ name: topicName, concepts });
+      sessionPlans.push({
+        sessionId,
+        sessionNumber,
+        planDetails: JSON.stringify(planDetails), // Save as JSON string in the DB
       });
+    });
 
-      for (const sessionNumber in topicsMap) {
-        sessionPlans.push({
-          sessionId,
-          sessionNumber: parseInt(sessionNumber, 10),
-          planDetails: JSON.stringify(topicsMap[sessionNumber]),
-        });
-      }
+    await SessionPlan.bulkCreate(sessionPlans);
 
-      const createdSessionPlans = await SessionPlan.bulkCreate(sessionPlans);
-
-      res.status(201).json({
-        message: 'Session plans uploaded successfully',
-        createdSessionPlans,
-      });
-    } catch (error) {
-      console.error('Error uploading session plans:', error.message);
-      res.status(500).json({
-        message: 'Internal server error',
-        error: error.message,
-      });
-    }
+    res.status(201).json({
+      message: 'Session plans uploaded successfully',
+      sessionPlans,
+    });
+  } catch (error) {
+    console.error('Error uploading session plans:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
-);
+});
+
 
 // Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
