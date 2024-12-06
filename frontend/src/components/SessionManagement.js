@@ -17,25 +17,24 @@ const SessionManagement = () => {
   // Fetch metadata (e.g., board, class name, section name, subject name)
   const fetchClassDetails = async () => {
     try {
-      setIsLoading(true);
-      const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
-      const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
-      const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
-  
-      setClassDetails({
-        className: classResponse?.data?.className || "Unknown Class",
-        sectionName: sectionResponse?.data?.sectionName || "Unknown Section",
-        subjectName: subjectResponse?.data?.subjectName || "Unknown Subject",
-        board: new URLSearchParams(window.location.search).get("board") || "Unknown Board",
-      });
+        setIsLoading(true);
+        const classResponse = await axios.get(`https://tms.up.school/api/classes/${classId}`);
+        const sectionResponse = await axios.get(`https://tms.up.school/api/sections/${sectionId}`);
+        const subjectResponse = await axios.get(`https://tms.up.school/api/subjects/${subjectId}`);
+        
+        setClassDetails({
+            className: classResponse.data.className || "N/A",
+            sectionName: sectionResponse.data.sectionName || "N/A",
+            subjectName: subjectResponse.data.subjectName || "N/A",
+            board: new URLSearchParams(window.location.search).get("board") || "N/A",
+        });
     } catch (error) {
-      console.error("Error fetching class details:", error);
-      setError("Failed to fetch class, section, or subject details. Please try again later.");
+        console.error("Error fetching class details:", error);
+        setError("Failed to fetch class, section, or subject details. Please try again later.");
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
-  
+};
 
   
   
@@ -122,13 +121,12 @@ const SessionManagement = () => {
   const isSelected = (sessionId) => selectedSessionIds.includes(sessionId);
 
   const handleFileUpload = async (e) => {
+    e.preventDefault();
     const file = e.target.elements.file.files[0];
-    if (!file || !file.name.endsWith('.xlsx')) {
-      setError('Please upload a valid Excel file.');
+    if (!file) {
+      setError('Please select a file to upload.');
       return;
     }
-
-  
 
     const formData = new FormData();
     formData.append('file', file);
@@ -211,7 +209,7 @@ const SessionManagement = () => {
 
 {/* Display metadata at the top */}
 <div className="metadata">
-  <p><strong>Board:</strong> {classDetails.board || 'N/A'}</p>
+  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get("board") || 'N/A'}</p>
   <p><strong>Class Name:</strong> {classDetails.className || 'N/A'}</p>
   <p><strong>Class ID:</strong> {classId}</p>
   <p><strong>Section Name:</strong> {classDetails.sectionName || 'N/A'}</p>
@@ -219,7 +217,6 @@ const SessionManagement = () => {
   <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
   <p><strong>Subject ID:</strong> {subjectId}</p>
 </div>
-
 
 
       <form onSubmit={handleFileUpload}>

@@ -27,12 +27,8 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 
     const sessions = await Session.findAll({
       where: { sectionId, subjectId },
-      attributes: ['id', 'sectionId', 'subjectId', 'chapterName', 'numberOfSessions', 'priorityNumber'],
+      attributes: ['id', 'sectionId', 'subjectId', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Ensure 'chapterName' is included
     });
-
-    if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found for the specified parameters.' });
-    }
 
     res.json(sessions);
   } catch (error) {
@@ -40,6 +36,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
     res.status(500).json({ error: 'Failed to fetch sessions', details: error.message });
   }
 });
+
 
 // Create a new session
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
@@ -58,7 +55,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     res.status(201).json(newSession);
   } catch (error) {
     console.error('Error creating session:', error);
-    res.status(500).json({ error: 'Failed to create session', details: error.message });
+    res.status(500).json({ error: 'Failed to create session' });
   }
 });
 
@@ -71,7 +68,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
       return res.status(400).json({ error: 'File is required' });
     }
 
-    const section = await Section.findByPk(sectionId);
+    const section = await Section.findByPk(sectionId); // Lookup by sectionId
 
     if (!section) {
       return res.status(404).json({ error: `Section with ID '${sectionId}' not found` });
@@ -82,17 +79,28 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+    console.log("Parsed JSON Data:", jsonData);
+
     const sessions = jsonData
-      .filter(row => row.ChapterName && row.NumberOfSessions && row.PriorityNumber)
-      .map(row => ({
-        schoolId,
-        classId,
-        sectionId,
-        subjectId,
-        chapterName: row.ChapterName,
-        numberOfSessions: row.NumberOfSessions,
-        priorityNumber: row.PriorityNumber,
-      }));
+  .filter(row => {
+    if (!row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
+      console.warn("Skipping row due to missing fields:", row);
+      return false;
+    }
+    return true;
+  })
+  .map(row => ({
+    schoolId,
+    classId,
+    sectionId,
+    subjectId,
+    chapterName: row.ChapterName,
+    numberOfSessions: row.NumberOfSessions,
+    priorityNumber: row.PriorityNumber,
+  }));
+
+
+    console.log("Sessions Ready for Bulk Insert:", sessions);
 
     if (sessions.length === 0) {
       return res.status(400).json({ error: 'No valid data to upload.' });
@@ -101,7 +109,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    console.error('Error during bulk insert:', error);
+    console.error("Error during bulk insert:", error);
     res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
@@ -112,10 +120,6 @@ router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:se
     const { sessionId } = req.params;
     const { numberOfSessions, priorityNumber } = req.body;
 
-    if (!numberOfSessions || !priorityNumber) {
-      return res.status(400).json({ error: 'All fields are required for updating the session.' });
-    }
-
     const session = await Session.findByPk(sessionId);
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
@@ -123,7 +127,7 @@ router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:se
     res.json(session);
   } catch (error) {
     console.error('Error updating session:', error);
-    res.status(500).json({ error: 'Failed to update session', details: error.message });
+    res.status(500).json({ error: 'Failed to update session' });
   }
 });
 
@@ -138,7 +142,7 @@ router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/
     res.status(204).end();
   } catch (error) {
     console.error('Error deleting session:', error);
-    res.status(500).json({ error: 'Failed to delete session', details: error.message });
+    res.status(500).json({ error: 'Failed to delete session' });
   }
 });
 
