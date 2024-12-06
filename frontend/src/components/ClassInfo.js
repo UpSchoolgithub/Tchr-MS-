@@ -72,9 +72,9 @@ const ClassInfo = () => {
       return;
     }
   
+    // Check if the class already exists
     const existingClass = classInfos.find(
-      (cls) =>
-        cls.className === newClassName && cls.board === selectedBoard
+      (cls) => cls.className === newClassName && cls.board === selectedBoard
     );
   
     if (existingClass) {
@@ -85,16 +85,17 @@ const ClassInfo = () => {
     try {
       await axios.post(`https://tms.up.school/api/schools/${schoolId}/classes`, {
         className: newClassName,
-        board: selectedBoard, // Include board in the payload
+        board: selectedBoard,
       });
       setNewClassName('');
-      setSelectedBoard(''); // Reset board selection
-      fetchClassInfos();
+      setError('');
+      fetchClassInfos(); // Refresh the class info
     } catch (error) {
       console.error('Error adding class:', error);
       setError('Failed to add class. Please try again.');
     }
   };
+  
   
 
   const handleSectionSubmit = async () => {
@@ -102,43 +103,53 @@ const ClassInfo = () => {
       (cls) => `${cls.board} - ${cls.className}` === className
     );
   
-    if (!selectedClass) {
-      setError('Please select a valid class to add a section.');
+    if (!selectedClass || !newSectionName) {
+      setError('Please select a valid class and provide a section name.');
+      return;
+    }
+  
+    // Check if the section already exists
+    const existingSection = sections.find(
+      (sec) => sec.sectionName === newSectionName.toUpperCase()
+    );
+  
+    if (existingSection) {
+      setError('Section with this name already exists for the selected class.');
       return;
     }
   
     try {
       await axios.post(`https://tms.up.school/api/classes/${selectedClass.id}/sections`, {
-        sections: { [newSectionName.toUpperCase()]: { subjects: [] } },
+        sectionName: newSectionName.toUpperCase(),
         schoolId,
       });
       setNewSectionName('');
-      fetchSections(selectedClass.id);
+      setError('');
+      fetchSections(selectedClass.id); // Refresh sections
     } catch (error) {
       console.error('Error adding section:', error);
       setError('Failed to add section. Please try again.');
     }
   };
   
+  
 
   const handleClassChange = (selectedClassName) => {
     setClassName(selectedClassName);
   
-    // Find the selected class based on the class name
     const selectedClass = classInfos.find(
       (cls) => `${cls.board} - ${cls.className}` === selectedClassName
     );
   
     if (selectedClass) {
-      setSelectedBoard(selectedClass.board); // Set the correct board
+      setSelectedBoard(selectedClass.board);
       fetchSections(selectedClass.id); // Fetch sections for the selected class
-      setError(''); // Clear any previous errors
     } else {
-      setSelectedBoard(''); // Clear board if no class is selected
-      setSections([]); // Clear sections if no class is selected
-      setError('Class not found. Please add the class first.');
+      setSections([]);
+      setError('Class not found. Please select or add a class.');
     }
   };
+  
   
   
   
@@ -278,13 +289,14 @@ const ClassInfo = () => {
         <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
   <option value="">Select Class</option>
   {classInfos
-    .filter((info) => !selectedBoard || info.board === selectedBoard) // Filter by selected board
+    .filter((info) => info.board === selectedBoard) // Filter by board
     .map((info) => (
       <option key={info.id} value={`${info.board} - ${info.className}`}>
         {info.className}
       </option>
     ))}
 </select>
+
 
       </div>
   
