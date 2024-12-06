@@ -21,14 +21,16 @@ const SessionManagement = () => {
       const response = await axios.get(
         `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/details`
       );
+      console.log("Class Details Response:", response.data); // Debug response
       setClassDetails(response.data);
     } catch (error) {
-      console.error('Error fetching class details:', error);
-      setError('Failed to fetch class details. Please try again later.');
+      console.error("Error fetching class details:", error);
+      setError("Failed to fetch class details. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   // Fetch sessions for the given school, class, section, and subject
   const fetchSessions = async () => {
@@ -198,15 +200,16 @@ const SessionManagement = () => {
 
 {/* Display metadata at the top */}
 <div className="metadata">
-        <p><strong>Board:</strong> {classDetails.board || 'N/A'}</p>
-        <p><strong>Board ID:</strong> {classDetails.boardId || 'N/A'}</p>
-        <p><strong>Class:</strong> {classDetails.className || 'N/A'}</p>
-        <p><strong>Class ID:</strong> {classDetails.classId || classId}</p>
-        <p><strong>Section Name:</strong> {classDetails.sectionName || 'N/A'}</p>
-        <p><strong>Section ID:</strong> {classDetails.sectionId || sectionId}</p>
-        <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
-        <p><strong>Subject ID:</strong> {classDetails.subjectId || subjectId}</p>
-      </div>
+  <p><strong>Board:</strong> {classDetails.board || new URLSearchParams(window.location.search).get("board") || 'N/A'}</p>
+  <p><strong>Board ID:</strong> {classDetails.boardId || 'N/A'}</p>
+  <p><strong>Class:</strong> {classDetails.className || 'N/A'}</p>
+  <p><strong>Class ID:</strong> {classDetails.classId || classId}</p>
+  <p><strong>Section Name:</strong> {classDetails.sectionName || 'N/A'}</p>
+  <p><strong>Section ID:</strong> {classDetails.sectionId || sectionId}</p>
+  <p><strong>Subject Name:</strong> {classDetails.subjectName || 'N/A'}</p>
+  <p><strong>Subject ID:</strong> {classDetails.subjectId || subjectId}</p>
+</div>
+
 
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
