@@ -5,7 +5,9 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 const SessionManagement = () => {
   const { schoolId, classId, sectionId, subjectId } = useParams();
   const location = useLocation();
-  const [sessions, setSessions] = useState([]); // Initialize as an empty array
+
+  // State for sessions and other details
+  const [sessions, setSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
   const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
@@ -13,29 +15,23 @@ const SessionManagement = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Extract additional data passed via Link state or props
+  // Extract additional data passed via Link state or fallback
   const {
-    className = 'Class Name Not Available',
     schoolName = 'School Name Not Available',
+    className = 'Class Name Not Available',
     subjectName = 'Subject Name Not Available',
     sectionName = 'Section Name Not Available',
     board = 'Board Not Available',
   } = location.state || {};
 
-  // Fetch sessions for the given school, class, section, and subject
+  // Fetch sessions from the API
   const fetchSessions = async () => {
     setIsLoading(true);
     setError('');
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
       const response = await axios.get(url);
-
-      // Ensure response is an array; fallback to an empty array
       const fetchedSessions = response.data.sessions || [];
-      if (!Array.isArray(fetchedSessions)) {
-        throw new Error('Invalid data format: sessions is not an array');
-      }
-
       setSessions(fetchedSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -49,18 +45,23 @@ const SessionManagement = () => {
     fetchSessions();
   }, [schoolId, classId, sectionId, subjectId]);
 
+  // Start editing a session
   const startEditing = (session) => {
     setEditingSessionId(session.id);
     setEditingNumberOfSessions(session.numberOfSessions);
     setEditingPriorityNumber(session.priorityNumber);
   };
 
+  // Update a session
   const handleSessionUpdate = async (sessionId) => {
     try {
-      await axios.put(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`, {
-        numberOfSessions: editingNumberOfSessions,
-        priorityNumber: editingPriorityNumber,
-      });
+      await axios.put(
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`,
+        {
+          numberOfSessions: editingNumberOfSessions,
+          priorityNumber: editingPriorityNumber,
+        }
+      );
       setEditingSessionId(null);
       fetchSessions();
     } catch (error) {
@@ -69,9 +70,12 @@ const SessionManagement = () => {
     }
   };
 
+  // Delete a session
   const handleSessionDelete = async (sessionId) => {
     try {
-      await axios.delete(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`);
+      await axios.delete(
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/${sessionId}`
+      );
       fetchSessions();
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -79,16 +83,19 @@ const SessionManagement = () => {
     }
   };
 
+  // Bulk delete sessions
   const handleBulkDelete = async () => {
     if (selectedSessionIds.length === 0) {
       setError('Please select at least one session to delete.');
       return;
     }
-
     try {
-      await axios.post(`/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`, {
-        sessionIds: selectedSessionIds,
-      });
+      await axios.post(
+        `/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/sessions/bulk-delete`,
+        {
+          sessionIds: selectedSessionIds,
+        }
+      );
       setSelectedSessionIds([]);
       fetchSessions();
     } catch (error) {
@@ -97,12 +104,14 @@ const SessionManagement = () => {
     }
   };
 
+  // Toggle selection for bulk delete
   const toggleSelection = (sessionId) => {
     setSelectedSessionIds((prev) =>
       prev.includes(sessionId) ? prev.filter((id) => id !== sessionId) : [...prev, sessionId]
     );
   };
 
+  // Upload sessions in bulk from a file
   const handleFileUpload = async (e) => {
     e.preventDefault();
     const file = e.target.elements.file.files[0];
@@ -110,13 +119,11 @@ const SessionManagement = () => {
       setError('Please select a file to upload.');
       return;
     }
-
     const formData = new FormData();
     formData.append('file', file);
 
     setIsLoading(true);
     setError('');
-
     try {
       const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
       await axios.post(uploadUrl, formData, {
@@ -131,31 +138,6 @@ const SessionManagement = () => {
     }
   };
 
-  const fetchDetails = async () => {
-    try {
-      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}`;
-      const response = await axios.get(url);
-  
-      // Fallback to update state variables if missing
-      setStateValues({
-        schoolName: response.data.schoolName || 'School Name Not Available',
-        className: response.data.className || 'Class Name Not Available',
-        sectionName: response.data.sectionName || 'Section Name Not Available',
-        subjectName: response.data.subjectName || 'Subject Name Not Available',
-        board: response.data.board || 'Board Not Available',
-      });
-    } catch (error) {
-      console.error('Error fetching details:', error);
-    }
-  };
-  const [stateValues, setStateValues] = useState({
-    schoolName: 'School Name Not Available',
-    className: 'Class Name Not Available',
-    sectionName: 'Section Name Not Available',
-    subjectName: 'Subject Name Not Available',
-    board: 'Board Not Available',
-  });
-  
   return (
     <div>
       <h2>Session Management</h2>
@@ -164,11 +146,21 @@ const SessionManagement = () => {
 
       {/* Information Banner */}
       <div className="info-banner">
-        <p><strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}</p>
-        <p><strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}</p>
-        <p><strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}</p>
-        <p><strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}</p>
-        <p><strong>Board:</strong> {board}</p>
+        <p>
+          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
+        </p>
+        <p>
+          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
+        </p>
+        <p>
+          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
+        </p>
+        <p>
+          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
+        </p>
+        <p>
+          <strong>Board:</strong> {board}
+        </p>
       </div>
 
       {/* File Upload */}
@@ -223,6 +215,7 @@ const SessionManagement = () => {
                       type="number"
                       value={editingNumberOfSessions}
                       onChange={(e) => setEditingNumberOfSessions(e.target.value)}
+                      placeholder="Number of Sessions"
                     />
                   ) : (
                     session.numberOfSessions
@@ -234,6 +227,7 @@ const SessionManagement = () => {
                       type="number"
                       value={editingPriorityNumber}
                       onChange={(e) => setEditingPriorityNumber(e.target.value)}
+                      placeholder="Priority Number"
                     />
                   ) : (
                     session.priorityNumber
@@ -259,7 +253,9 @@ const SessionManagement = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="6">No sessions available.</td>
+              <td colSpan="6" style={{ textAlign: 'center', color: 'gray' }}>
+                No sessions available.
+              </td>
             </tr>
           )}
         </tbody>
