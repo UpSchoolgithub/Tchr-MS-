@@ -13,6 +13,7 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [board, setBoard] = useState(""); // Missing or incorrect
 
   // display school , class etc naems
   const {
@@ -24,7 +25,6 @@ const SessionPlans = () => {
     sectionId,
     subjectName = "Subject Name Not Available",
     subjectId,
-    board = "Board Not Available",
     chapterName = "Chapter Name Not Available",
     unitName = "Unit Name Not Available",
   } = location.state || {};
@@ -208,7 +208,7 @@ const SessionPlans = () => {
         <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong> {unitName}
       </p>
     </div>
-    
+
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>
