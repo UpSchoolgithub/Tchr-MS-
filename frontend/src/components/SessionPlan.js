@@ -88,11 +88,15 @@ const SessionPlans = () => {
         topicMap[topic.name] = { ...topic, concepts: [] };
         merged.push(topicMap[topic.name]);
       }
-      topicMap[topic.name].concepts = [...topicMap[topic.name].concepts, ...topic.concepts];
+      topicMap[topic.name].concepts = [
+        ...topicMap[topic.name].concepts,
+        ...(Array.isArray(topic.concepts) ? topic.concepts : []),
+      ];
     });
   
     return merged;
   };
+  
   
 
   // Add a new topic to a session
@@ -217,9 +221,9 @@ const SessionPlans = () => {
       const payloads = sessionPlans.flatMap((plan) => {
         const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
         return groupedTopics.map((topic) => {
-          if (!topic.name || topic.concepts.length === 0) {
-            console.error(`Invalid topic or concepts for session: ${plan.sessionNumber}`);
-            return null; // Skip invalid topics
+          if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
+            console.warn(`Skipping invalid topic for session: ${plan.sessionNumber}`);
+            return null;
           }
           return {
             sessionNumber: plan.sessionNumber,
@@ -234,7 +238,7 @@ const SessionPlans = () => {
             duration: 45,
           };
         });
-      }).filter(Boolean); // Remove null payloads
+      }).filter(Boolean); // Remove invalid payloads
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -261,6 +265,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
@@ -346,11 +351,14 @@ const SessionPlans = () => {
                 </td>
               )}
               <td>{topic.name || "No Topic Name"}</td>
-              <td>
-                {topic.concepts.map((concept, cIndex) => (
-                  <div key={cIndex}>{concept}</div>
-                ))}
-              </td>
+<td>
+  {(Array.isArray(topic.concepts) && topic.concepts.length > 0) 
+    ? topic.concepts.map((concept, cIndex) => (
+        <div key={cIndex}>{concept}</div>
+      )) 
+    : "No Concepts"}
+</td>
+
               <td>
                 {topic.lessonPlan ? (
                   <button
