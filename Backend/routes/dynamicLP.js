@@ -40,7 +40,7 @@ router.post("/dynamicLP", async (req, res) => {
             duration,
         };
 
-        console.log("Payload sent to Python service:", payload); // Debugging
+        console.log("Payload sent to Python service:", JSON.stringify(payload, null, 2));
 
         // Python microservice URL
         const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
