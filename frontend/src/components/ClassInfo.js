@@ -387,7 +387,7 @@ const ClassInfo = () => {
 
     if (sectionData && sectionData.id && subjectData && subjectData.id) {
       navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions?board=${selectedClass.board}`,
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions`,
         {
           state: {
             schoolName: schoolName || 'School Name Not Available',
@@ -398,6 +398,7 @@ const ClassInfo = () => {
           },
         }
       );
+      
     } else {
       console.error("Section ID or Subject ID not found:", {
         section: sectionData,
