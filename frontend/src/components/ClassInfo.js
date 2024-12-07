@@ -33,7 +33,6 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
-      console.log('Class Infos Response:', response.data); // Check structure
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
         displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
@@ -47,12 +46,10 @@ const ClassInfo = () => {
   
   
   
-  
 
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
-      console.log('Sections Response:', response.data); // Check structure
       const selectedClass = classInfos.find((cls) => cls.id === classId); // Find the class name
       const updatedSections = response.data.map((section) => ({
         ...section,
@@ -64,7 +61,6 @@ const ClassInfo = () => {
       setError('Error fetching sections');
     }
   };
-  
   
   
 
@@ -385,35 +381,20 @@ const ClassInfo = () => {
           <td>
           <button
   onClick={() => {
-    const selectedClass = info; // Assume info contains the class data
-    const sectionData = info.sections[sec]; // Access section data by key or index
-    const subjectData = subject; // Assume subject contains the subject data
-
-    if (sectionData && sectionData.id && subjectData && subjectData.id) {
+    const selectedClass = info;
+    const sectionData = info.sections[sec];
+    if (sectionData && sectionData.id) {
       navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions?board=${selectedClass.board}`,
-        {
-          state: {
-            schoolName: schoolName || 'School Name Not Available',
-            className: selectedClass.className || 'Class Name Not Available',
-            sectionName: sectionData.sectionName || 'Section Name Not Available',
-            subjectName: subjectData.subjectName || 'Subject Name Not Available',
-            board: selectedClass.board || 'Board Not Available',
-          },
-        }
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
       );
     } else {
-      console.error("Section ID or Subject ID not found:", {
-        section: sectionData,
-        subject: subjectData,
-      });
-      setError(`Section ID or Subject ID not found.`);
+      console.error("Section ID not found for section name:", sec);
+      setError(`Section ID not found for section name: ${sec}`);
     }
   }}
 >
   Manage Sessions
 </button>
-
 
           </td>
         </tr>
