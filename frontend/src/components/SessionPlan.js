@@ -79,16 +79,21 @@ const SessionPlans = () => {
   }, [sessionId]);
   
   // Utility to merge topics with the same name
-const mergeTopics = (topics) => {
-  const groupedTopics = {};
-  topics.forEach((topic) => {
-    if (!groupedTopics[topic.name]) {
-      groupedTopics[topic.name] = { name: topic.name, concepts: [], lessonPlan: topic.lessonPlan };
-    }
-    groupedTopics[topic.name].concepts.push(topic.concept);
-  });
-  return Object.values(groupedTopics);
-};
+  const mergeTopics = (topics) => {
+    const merged = [];
+    const topicMap = {};
+  
+    topics.forEach((topic) => {
+      if (!topicMap[topic.name]) {
+        topicMap[topic.name] = { ...topic, concepts: [] };
+        merged.push(topicMap[topic.name]);
+      }
+      topicMap[topic.name].concepts = [...topicMap[topic.name].concepts, ...topic.concepts];
+    });
+  
+    return merged;
+  };
+  
 
   // Add a new topic to a session
   const handleAddTopic = (sessionNumber) => {
