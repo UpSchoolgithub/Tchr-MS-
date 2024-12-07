@@ -202,6 +202,7 @@ const SessionPlans = () => {
             board, // Use the state variable for board
             grade: className, // Class Name is already fetched
             subject: subjectName, // Use fetched subject name
+            subSubject: "General", // Provide a fallback for subSubject
             unit: unitName, // Use unit name
             chapter: chapterName, // Use chapter name
             topics: [
@@ -215,6 +216,7 @@ const SessionPlans = () => {
             duration: 45, // Default duration for each session
           }));
         });
+        
     
         // Send all payloads to the backend for processing
         const responses = await Promise.all(
