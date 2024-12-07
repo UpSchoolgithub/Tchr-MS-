@@ -33,6 +33,7 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log('Class Infos Response:', response.data); // Check structure
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
         displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
@@ -46,10 +47,12 @@ const ClassInfo = () => {
   
   
   
+  
 
   const fetchSections = async (classId) => {
     try {
       const response = await axios.get(`https://tms.up.school/api/classes/${classId}/sections`);
+      console.log('Sections Response:', response.data); // Check structure
       const selectedClass = classInfos.find((cls) => cls.id === classId); // Find the class name
       const updatedSections = response.data.map((section) => ({
         ...section,
@@ -61,6 +64,7 @@ const ClassInfo = () => {
       setError('Error fetching sections');
     }
   };
+  
   
   
 
@@ -387,7 +391,7 @@ const ClassInfo = () => {
 
     if (sectionData && sectionData.id && subjectData && subjectData.id) {
       navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions`,
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subjectData.id}/sessions?board=${selectedClass.board}`,
         {
           state: {
             schoolName: schoolName || 'School Name Not Available',
@@ -398,7 +402,6 @@ const ClassInfo = () => {
           },
         }
       );
-      
     } else {
       console.error("Section ID or Subject ID not found:", {
         section: sectionData,
