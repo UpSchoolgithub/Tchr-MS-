@@ -4,7 +4,7 @@ const LessonPlanForm = () => {
   const [board, setBoard] = useState('');
   const [grade, setGrade] = useState('');
   const [subject, setSubject] = useState('');
-  const [subSubject, setSubSubject] = useState('');
+  //const [subSubject, setSubSubject] = useState('');
   const [unit, setUnit] = useState('');
   const [chapter, setChapter] = useState('');
   const [topics, setTopics] = useState([]);
@@ -26,7 +26,7 @@ const LessonPlanForm = () => {
       board,
       grade,
       subject,
-      subSubject,
+    //  subSubject,
       unit,
       chapter,
       topics: topics.map((t) => ({
@@ -61,7 +61,7 @@ const LessonPlanForm = () => {
       board,
       grade,
       subject,
-      subSubject,
+    //  subSubject,
       unit,
       chapter,
       topics: topics.map((t) => ({

@@ -153,7 +153,7 @@ const SessionPlans = () => {
         board: board || "CBSE", // Replace with actual value
         grade: "10", // Replace with actual value
         subject: "Math", // Replace with actual value
-        subSubject: "Algebra", // Replace with actual value
+        //subSubject: "Algebra", // Replace with actual value
         unit: "Linear Equations", // Replace with actual value
         chapter: topic.name, // Topic name
         topics: [

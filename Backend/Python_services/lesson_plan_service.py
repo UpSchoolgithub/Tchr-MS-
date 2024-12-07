@@ -30,7 +30,7 @@ class LessonPlanRequest(BaseModel):
     board: str
     grade: str
     subject: str
-    subSubject: str
+  #  subSubject: str
     unit: str
     chapter: str
     topics: List[Topic]
