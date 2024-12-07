@@ -29,6 +29,7 @@ const SessionPlans = () => {
     unitName = "Unit Name Not Available",
   } = location.state || {};
   
+  
   // Fetch board from query params
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
