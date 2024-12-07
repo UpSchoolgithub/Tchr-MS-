@@ -13,6 +13,7 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // display school , class etc naems
   const {
@@ -190,6 +191,8 @@ const SessionPlans = () => {
     // Generate lesson plan for all topics
     const handleGenerateAllLessonPlans = async () => {
       try {
+        setSaving(true); // Start saving process
+        setSuccessMessage(""); // Clear any previous success message
         const payload = sessionPlans.map((plan) => {
           const topics = topicsWithConcepts[plan.sessionNumber] || [];
           return topics.map((topic) => ({
@@ -235,9 +238,13 @@ const SessionPlans = () => {
     
         setTopicsWithConcepts(updatedTopicsWithConcepts);
         setError("");
+        setSuccessMessage("All topics' LP generated successfully!");
       } catch (error) {
         console.error("Error generating lesson plans:", error);
         setError("Failed to generate lesson plans. Please try again.");
+        setSuccessMessage(""); // Clear success message on error
+      } finally {
+        setSaving(false); // End saving process
       }
     };
 
@@ -272,6 +279,9 @@ const SessionPlans = () => {
       </p>
     </div>
 
+ {/* Success message */}
+ {successMessage && <div className="success-message">{successMessage}</div>}
+
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>
@@ -287,9 +297,12 @@ const SessionPlans = () => {
         </form>
       </div>
 {/* Generate Lesson Plan Button */}
-    <div className="generate-controls">
-      <button onClick={handleGenerateAllLessonPlans}>Generate All Lesson Plans</button>
+<div className="generate-controls">
+      <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
+        {saving ? "Generating..." : "Generate All Lesson Plans"}
+      </button>
     </div>
+
   {/* Table for Session Plans */}
   <div className="table-container">
       <table>
