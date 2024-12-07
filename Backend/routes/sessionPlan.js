@@ -8,6 +8,8 @@ const School = require('../models/School');
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
+const Chapter = require('../models/Chapter'); // Adjust the path if necessary
+
 const router = express.Router();
 
 // Configure multer for file uploads
