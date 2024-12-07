@@ -328,31 +328,50 @@ const SessionPlans = () => {
   {sessionPlans.map((plan) => (
     <React.Fragment key={plan.id}>
       {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-        <tr key={`${plan.sessionNumber}-${tIndex}`}>
-          <td>{plan.sessionNumber}</td>
-          <td>{topic.name}</td>
-          <td>
-            {topic.concepts.map((concept, cIndex) => (
-              <div key={cIndex}>{concept}</div>
-            ))}
-          </td>
-          <td>
-            {topic.lessonPlan ? (
-              <button
-                className="view-button"
-                onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-              >
-                View
-              </button>
-            ) : (
-              "Not Generated"
-            )}
-          </td>
-        </tr>
+        <React.Fragment key={`${plan.sessionNumber}-${tIndex}`}>
+          {topic.concepts.map((concept, cIndex) => (
+            <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
+              {tIndex === 0 && cIndex === 0 && (
+                <td
+                  rowSpan={
+                    topicsWithConcepts[plan.sessionNumber]?.reduce(
+                      (sum, topic) => sum + topic.concepts.length,
+                      0
+                    ) || 1
+                  }
+                >
+                  {plan.sessionNumber}
+                </td>
+              )}
+              {cIndex === 0 && (
+                <td rowSpan={topic.concepts.length}>{topic.name}</td>
+              )}
+              <td>{concept}</td>
+              {tIndex === 0 && cIndex === 0 && (
+                <td rowSpan={
+                  topicsWithConcepts[plan.sessionNumber]?.reduce(
+                    (sum, topic) => sum + topic.concepts.length,
+                    0
+                  ) || 1
+                }>
+                  <button
+                    onClick={() =>
+                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                    }
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                </td>
+              )}
+            </tr>
+          ))}
+        </React.Fragment>
       ))}
     </React.Fragment>
   ))}
 </tbody>
+
 
         </table>
       </div>
