@@ -49,20 +49,28 @@ const SessionPlans = () => {
         const response = await axios.get(
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
-  
+    
         setSessionPlans(response.data);
-  
+    
+        console.log("Fetched session plans:", response.data);
+    
+        // Parse each session's topics and their concepts
         const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-            name: entry.topic || "No Topic Name",
-            concepts: Array.isArray(entry.concepts) ? entry.concepts : [],
-            lessonPlan: entry.lessonPlan || "Not Generated",
+            topicName: entry.topic || "",
+            concepts: Array.isArray(entry.concept)
+              ? entry.concept
+              : entry.concept
+              ? entry.concept.split(";").map((c) => c.trim())
+              : [], // Parse concepts if they are a semicolon-separated string
+            lessonPlan: entry.lessonPlan || "",
           })) || [];
           return acc;
         }, {});
-  
+    
+        console.log("Parsed topicsWithConcepts:", initialData);
         setTopicsWithConcepts(initialData);
-  
+    
         if (response.data.length > 0) {
           setUploadDisabled(true);
         }
@@ -71,6 +79,7 @@ const SessionPlans = () => {
         setError("Failed to fetch session plans.");
       }
     };
+    
   
     fetchSessionPlans();
   }, [sessionId]);
@@ -355,12 +364,13 @@ const SessionPlans = () => {
                       )}
                       <td>{topic.name || "No Topic Name"}</td>
                       <td>
-                        {Array.isArray(topic.concepts) && topic.concepts.length > 0
-                          ? topic.concepts.map((concept, cIndex) => (
-                              <div key={cIndex}>{concept}</div>
-                            ))
-                          : "No Concepts"}
-                      </td>
+  {Array.isArray(topic.concepts) && topic.concepts.length > 0
+    ? topic.concepts.map((concept, cIndex) => (
+        <div key={cIndex}>{concept}</div>
+      ))
+    : "No Concepts"}
+</td>
+
                       <td>
                         {topic.lessonPlan ? (
                           <button
