@@ -34,8 +34,24 @@ const SessionManagement = () => {
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
       const response = await axios.get(url);
-      const fetchedSessions = response.data.sessions || [];
-      setSessions(fetchedSessions);
+  
+      // Map the response to state variables
+      const {
+        schoolName,
+        className,
+        board,
+        sectionName,
+        subjectName,
+        sessions = [],
+      } = response.data;
+  
+      // Update states
+      setSchoolName(schoolName);
+      setClassName(className);
+      setBoardName(board);
+      setSectionName(sectionName);
+      setSubjectName(subjectName);
+      setSessions(sessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError('Failed to fetch sessions. Please try again later.');
@@ -43,6 +59,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchSessions();
@@ -149,22 +166,27 @@ const SessionManagement = () => {
 
       {/* Information Banner */}
       <div className="info-banner">
-        <p>
-          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
-        </p>
-        <p>
-          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
-        </p>
-        <p>
-          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
-        </p>
-        <p>
-          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
-        </p>
-        <p>
-          <strong>Board:</strong> {boardName || 'Board Not Available'}
-        </p>
-      </div>
+  <p>
+    <strong>School Name:</strong> {schoolName || 'School Name Not Available'} |
+    <strong>School ID:</strong> {schoolId}
+  </p>
+  <p>
+    <strong>Class Name:</strong> {className || 'Class Name Not Available'} |
+    <strong>Class ID:</strong> {classId}
+  </p>
+  <p>
+    <strong>Section Name:</strong> {sectionName || 'Section Name Not Available'} |
+    <strong>Section ID:</strong> {sectionId}
+  </p>
+  <p>
+    <strong>Subject Name:</strong> {subjectName || 'Subject Name Not Available'} |
+    <strong>Subject ID:</strong> {subjectId}
+  </p>
+  <p>
+    <strong>Board:</strong> {boardName || 'Board Not Available'}
+  </p>
+</div>
+
 
       {/* File Upload */}
       <form onSubmit={handleFileUpload}>

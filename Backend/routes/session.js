@@ -23,6 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Fetch sessions for a specific subject within a section and class
+// Also used for fetching schol, class names in frontend 
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { schoolId, classId, sectionId, subjectId } = req.params;
 
