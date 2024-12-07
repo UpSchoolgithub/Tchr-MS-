@@ -19,6 +19,7 @@ import SessionPlan from './components/SessionPlan';
 import AddSection from './components/AddSection';
 import CreateManager from './components/CreateManager';
 import EditManager from './components/EditManager';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
