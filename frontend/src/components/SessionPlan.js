@@ -29,17 +29,18 @@ const SessionPlans = () => {
     chapterName = "Chapter Name Not Available",
     unitName = "Unit Name Not Available",
   } = location.state || {};
-
-  const { board: boardName = "Board Not Available" } = location.state || {};
+  
+  const boardName = location.state?.board || "Board Not Available";
   const [board, setBoard] = useState(boardName);
-
+  
   useEffect(() => {
-    if (!boardName) {
+    if (boardName === "Board Not Available") {
       const queryParams = new URLSearchParams(location.search);
       const boardParam = queryParams.get("board");
       setBoard(boardParam || "Board Not Available");
     }
   }, [boardName, location]);
+  
 
   // Fetch session plans
   useEffect(() => {
@@ -51,19 +52,15 @@ const SessionPlans = () => {
   
         setSessionPlans(response.data);
   
-        console.log("Fetched session plans:", response.data); // Debugging
-  
-        // Parse each session's topics and their concepts
         const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-            topicName: entry.topic || "",
-            concept: entry.concept || "", // Parse each concept separately
-            lessonPlan: entry.lessonPlan || "",
+            name: entry.topic || "No Topic Name",
+            concepts: Array.isArray(entry.concepts) ? entry.concepts : [],
+            lessonPlan: entry.lessonPlan || "Not Generated",
           })) || [];
           return acc;
         }, {});
   
-        console.log("Parsed topicsWithConcepts:", initialData); // Debugging
         setTopicsWithConcepts(initialData);
   
         if (response.data.length > 0) {
@@ -77,6 +74,7 @@ const SessionPlans = () => {
   
     fetchSessionPlans();
   }, [sessionId]);
+  
   
   // Utility to merge topics with the same name
   const mergeTopics = (topics) => {
@@ -98,6 +96,7 @@ const SessionPlans = () => {
   };
   
   
+  
 
   // Add a new topic to a session
   const handleAddTopic = (sessionNumber) => {
@@ -115,8 +114,8 @@ const SessionPlans = () => {
     try {
       setSaving(true);
       const planDetails = topicsWithConcepts[sessionNumber].map((entry) => ({
-        topic: entry.topicName,
-        concept: entry.concept,
+        topic: entry.name,
+        concepts: entry.concepts,
         lessonPlan: entry.lessonPlan,
       }));
   
@@ -125,14 +124,15 @@ const SessionPlans = () => {
       });
   
       setSaving(false);
-      setError("");
       setSuccessMessage("Session plan saved successfully!");
+      setError("");
     } catch (error) {
       console.error("Error saving session plan:", error);
       setError("Failed to save session plan. Please try again.");
       setSaving(false);
     }
   };
+  
   
 
   // Handle file upload
@@ -238,7 +238,7 @@ const SessionPlans = () => {
             duration: 45,
           };
         });
-      }).filter(Boolean); // Remove invalid payloads
+      }).filter(Boolean);
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -269,12 +269,14 @@ const SessionPlans = () => {
   
   
   
+  
 
   // View lesson plan
   const handleViewLessonPlan = (lessonPlan) => {
     setCurrentLessonPlan(lessonPlan);
     setShowModal(true);
   };
+  
 
   return (
     <div className="container">
@@ -297,7 +299,8 @@ const SessionPlans = () => {
           {subjectId}
         </p>
         <p>
-          <strong>Board:</strong> {board}</p>
+          <strong>Board:</strong> {board}
+        </p>
         <p>
           <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong>{" "}
           {unitName}
@@ -305,6 +308,7 @@ const SessionPlans = () => {
       </div>
   
       {successMessage && <div className="success-message">{successMessage}</div>}
+      {error && <div className="error-message">{error}</div>}
   
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
@@ -325,80 +329,77 @@ const SessionPlans = () => {
         <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
           {saving ? "Generating..." : "Generate All Lesson Plans"}
         </button>
-        {successMessage && <div className="success-message">{successMessage}</div>}
-        {error && <div className="error-message">{error}</div>}
       </div>
   
       <div className="table-container">
-  <table>
-    <thead>
-      <tr>
-        <th>Session Number</th>
-        <th>Topic Name</th>
-        <th>Concept</th>
-        <th>Lesson Plan</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {sessionPlans.map((plan) => (
-        <React.Fragment key={plan.id}>
-          {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex, topics) => (
-            <tr key={`${plan.sessionNumber}-${tIndex}`}>
-              {tIndex === 0 && (
-                <td rowSpan={topics.length}>
-                  {plan.sessionNumber}
-                </td>
-              )}
-              <td>{topic.name || "No Topic Name"}</td>
-<td>
-  {(Array.isArray(topic.concepts) && topic.concepts.length > 0) 
-    ? topic.concepts.map((concept, cIndex) => (
-        <div key={cIndex}>{concept}</div>
-      )) 
-    : "No Concepts"}
-</td>
-
-              <td>
-                {topic.lessonPlan ? (
-                  <button
-                    className="view-button"
-                    onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                  >
-                    View
-                  </button>
-                ) : (
-                  "Not Generated"
-                )}
-              </td>
-              {tIndex === 0 && (
-                <td rowSpan={topics.length}>
-                  <button
-                    onClick={() =>
-                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                    }
-                    disabled={saving}
-                  >
-                    {saving ? "Saving..." : "Save"}
-                  </button>
-                </td>
-              )}
+        <table>
+          <thead>
+            <tr>
+              <th>Session Number</th>
+              <th>Topic Name</th>
+              <th>Concept</th>
+              <th>Lesson Plan</th>
+              <th>Actions</th>
             </tr>
-          ))}
-          <tr>
-            <td colSpan="5">
-              <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-                + Add Topic
-              </button>
-            </td>
-          </tr>
-        </React.Fragment>
-      ))}
-    </tbody>
-  </table>
-</div>
-
-
+          </thead>
+          <tbody>
+            {sessionPlans.map((plan) => (
+              <React.Fragment key={plan.id}>
+                {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).map(
+                  (topic, tIndex, topics) => (
+                    <tr key={`${plan.sessionNumber}-${tIndex}`}>
+                      {tIndex === 0 && (
+                        <td rowSpan={topics.length}>
+                          {plan.sessionNumber}
+                        </td>
+                      )}
+                      <td>{topic.name || "No Topic Name"}</td>
+                      <td>
+                        {Array.isArray(topic.concepts) && topic.concepts.length > 0
+                          ? topic.concepts.map((concept, cIndex) => (
+                              <div key={cIndex}>{concept}</div>
+                            ))
+                          : "No Concepts"}
+                      </td>
+                      <td>
+                        {topic.lessonPlan ? (
+                          <button
+                            className="view-button"
+                            onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                          >
+                            View
+                          </button>
+                        ) : (
+                          "Not Generated"
+                        )}
+                      </td>
+                      {tIndex === 0 && (
+                        <td rowSpan={topics.length}>
+                          <button
+                            onClick={() =>
+                              handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                            }
+                            disabled={saving}
+                          >
+                            {saving ? "Saving..." : "Save"}
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  )
+                )}
+                <tr>
+                  <td colSpan="5">
+                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                      + Add Topic
+                    </button>
+                  </td>
+                </tr>
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
   
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
@@ -415,6 +416,7 @@ const SessionPlans = () => {
       </Modal>
     </div>
   );
+  
 };  
 
 export default SessionPlans;
