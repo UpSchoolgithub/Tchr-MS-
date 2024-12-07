@@ -182,7 +182,7 @@ const SessionPlans = () => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
   
-      // Ensure topic and concept are not empty
+      // Ensure topic and concept are valid
       if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
         throw new Error("Topic name or concepts are missing.");
       }
@@ -191,15 +191,9 @@ const SessionPlans = () => {
         board,
         grade: className,
         subject: subjectName,
-        subSubject: "Civics", // Adjust if needed
         unit: unitName,
         chapter: topic.name,
-        topics: [
-          {
-            topic: topic.name,
-            concepts: topic.concepts, // Ensure concepts are passed as an array
-          },
-        ],
+        topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
@@ -209,14 +203,17 @@ const SessionPlans = () => {
   
       const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
   
-      const lessonPlan = response.data.lesson_plan;
+      const generatedLessonPlan = response.data.lesson_plan;
+  
       setTopicsWithConcepts((prev) => ({
         ...prev,
         [sessionNumber]: prev[sessionNumber].map((t, index) =>
-          index === topicIndex ? { ...t, lessonPlan } : t
+          index === topicIndex ? { ...t, lessonPlan: generatedLessonPlan } : t
         ),
       }));
+  
       setError("");
+      console.log(`Lesson plan generated for topic: ${topic.name}`);
     } catch (error) {
       console.error("Error generating lesson plan:", error);
       setError("Failed to generate lesson plan. Please try again.");
@@ -245,18 +242,13 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: [
-              {
-                topic: topic.name,
-                concepts: topic.concepts, // Ensure concepts are passed as an array
-              },
-            ],
+            topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
-      }).filter(Boolean); // Remove invalid payloads
+      }).filter(Boolean);
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -267,12 +259,23 @@ const SessionPlans = () => {
       console.log("Payloads for all topics:", payloads);
   
       const responses = await Promise.allSettled(
-        payloads.map((payload) =>
-          axios.post("https://tms.up.school/api/dynamicLP", payload)
-        )
+        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
-      console.log("Responses for all topics:", responses);
+      // Update state with generated lesson plans
+      responses.forEach((response, index) => {
+        if (response.status === "fulfilled") {
+          const { sessionNumber, chapter } = payloads[index];
+          const generatedLessonPlan = response.value.data.lesson_plan;
+  
+          setTopicsWithConcepts((prev) => ({
+            ...prev,
+            [sessionNumber]: prev[sessionNumber].map((topic) =>
+              topic.name === chapter ? { ...topic, lessonPlan: generatedLessonPlan } : topic
+            ),
+          }));
+        }
+      });
   
       setSuccessMessage("All topics' LP generated successfully!");
       setError("");
@@ -283,6 +286,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
@@ -384,17 +388,18 @@ const SessionPlans = () => {
 
             {/* Render Lesson Plan Button */}
             <td>
-              {topic.lessonPlan ? (
-                <button
-                  className="view-button"
-                  onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                >
-                  View
-                </button>
-              ) : (
-                "Not Generated"
-              )}
-            </td>
+  {topic.lessonPlan ? (
+    <button
+      className="view-button"
+      onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+    >
+      View
+    </button>
+  ) : (
+    "Not Generated"
+  )}
+</td>
+
 
             {/* Render Actions (Save Button) */}
             {tIndex === 0 && cIndex === 0 && (
