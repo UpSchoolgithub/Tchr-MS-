@@ -23,27 +23,20 @@ router.post("/dynamicLP", async (req, res) => {
 
     // Validate required fields
     if (!board || !grade || !subject || !chapter || !topics || topics.length === 0) {
-      console.error("Validation failed. Missing required fields or empty topics.");
+      console.error("Validation failed. Missing fields or empty topics.");
       return res.status(400).json({
         message: "Invalid payload. Missing required fields or topics.",
       });
     }
 
-    // Validate topics and concepts structure
-    const invalidTopics = topics.filter(
-      (topic) => !topic.topic || !Array.isArray(topic.concepts) || topic.concepts.length === 0
-    );
-    if (invalidTopics.length > 0) {
-      console.error("Invalid topics or concepts detected:", JSON.stringify(invalidTopics, null, 2));
-      return res.status(400).json({
-        message: "Invalid payload. Topics must have valid names and non-empty concepts.",
-      });
-    }
+    // Add hardcoded subSubject
+    const subSubject = "Civics"; // Hardcoded value
 
     const payload = {
       board,
       grade,
       subject,
+      subSubject, // Include the hardcoded subSubject
       unit,
       chapter,
       topics,
