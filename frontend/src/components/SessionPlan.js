@@ -78,7 +78,17 @@ const SessionPlans = () => {
     fetchSessionPlans();
   }, [sessionId]);
   
-  
+  // Utility to merge topics with the same name
+const mergeTopics = (topics) => {
+  const groupedTopics = {};
+  topics.forEach((topic) => {
+    if (!groupedTopics[topic.name]) {
+      groupedTopics[topic.name] = { name: topic.name, concepts: [], lessonPlan: topic.lessonPlan };
+    }
+    groupedTopics[topic.name].concepts.push(topic.concept);
+  });
+  return Object.values(groupedTopics);
+};
 
   // Add a new topic to a session
   const handleAddTopic = (sessionNumber) => {
@@ -199,9 +209,10 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      const payloads = sessionPlans.flatMap((plan) =>
-        (topicsWithConcepts[plan.sessionNumber] || []).map((topic) => {
-          if (!topic.name || !topic.concepts.length) {
+      const payloads = sessionPlans.flatMap((plan) => {
+        const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
+        return groupedTopics.map((topic) => {
+          if (!topic.name || topic.concepts.length === 0) {
             console.error(`Invalid topic or concepts for session: ${plan.sessionNumber}`);
             return null; // Skip invalid topics
           }
@@ -212,15 +223,15 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: [{ topic: topic.name, concepts: topic.concepts }],
+            topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
-        })
-      ).filter(Boolean); // Remove null payloads
+        });
+      }).filter(Boolean); // Remove null payloads
   
-      if (!payloads.length) {
+      if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
         setSaving(false);
         return;
@@ -236,25 +247,6 @@ const SessionPlans = () => {
   
       console.log("Responses for all topics:", responses);
   
-      const updatedTopicsWithConcepts = { ...topicsWithConcepts };
-      responses.forEach((response, index) => {
-        if (response.status === "fulfilled" && response.value.data) {
-          const { sessionNumber } = payloads[index];
-          const lessonPlan = response.value.data.lesson_plan;
-  
-          updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
-            sessionNumber
-          ].map((topic, topicIndex) =>
-            payloads[index].topics[0].topic === topic.name
-              ? { ...topic, lessonPlan }
-              : topic
-          );
-        } else {
-          console.error(`Error for payload ${index}:`, response.reason);
-        }
-      });
-  
-      setTopicsWithConcepts(updatedTopicsWithConcepts);
       setSuccessMessage("All topics' LP generated successfully!");
       setError("");
     } catch (error) {
@@ -341,24 +333,24 @@ const SessionPlans = () => {
           <tbody>
   {sessionPlans.map((plan) => (
     <React.Fragment key={plan.id}>
-      {topicsWithConcepts[plan.sessionNumber]?.map((entry, index) => (
-        <tr key={`${plan.sessionNumber}-${index}`}>
-          {/* Only show session number in the first row */}
-          {index === 0 && (
+      {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex) => (
+        <tr key={`${plan.sessionNumber}-${tIndex}`}>
+          {tIndex === 0 && (
             <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
               {plan.sessionNumber}
             </td>
           )}
-          {/* Topic Name */}
-          <td>{entry.topicName}</td>
-          {/* Concept */}
-          <td>{entry.concept}</td>
-          {/* Lesson Plan */}
+          <td>{topic.name}</td>
           <td>
-            {entry.lessonPlan ? (
+            {topic.concepts.map((concept, cIndex) => (
+              <div key={cIndex}>{concept}</div>
+            ))}
+          </td>
+          <td>
+            {topic.lessonPlan ? (
               <button
                 className="view-button"
-                onClick={() => handleViewLessonPlan(entry.lessonPlan)}
+                onClick={() => handleViewLessonPlan(topic.lessonPlan)}
               >
                 View
               </button>
@@ -366,8 +358,7 @@ const SessionPlans = () => {
               "Not Generated"
             )}
           </td>
-          {/* Actions */}
-          {index === 0 && (
+          {tIndex === 0 && (
             <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
               <button
                 onClick={() =>
