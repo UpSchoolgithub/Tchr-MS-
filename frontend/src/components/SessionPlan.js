@@ -194,7 +194,6 @@ const SessionPlans = () => {
         setSaving(true);
         setSuccessMessage(""); // Clear any previous success message
     
-        // Prepare payloads based on topics, concepts, and session metadata
         const payloads = sessionPlans.map((plan) => {
           const topics = topicsWithConcepts[plan.sessionNumber] || [];
           return {
@@ -207,24 +206,22 @@ const SessionPlans = () => {
             chapter: chapterName, // Use chapter name
             topics: topics.map((topic) => ({
               name: topic.name,
-              concepts: topic.concepts, // Pass all concepts under the topic
+              concepts: topic.concepts, // Include all concepts for the topic
             })),
             sessionType: "Theory", // Fixed session type for now
-            noOfSession: topics.length, // Number of sessions based on topic count
-            duration: 45, // Default duration for each session
+            noOfSession: topics.length, // Number of topics in the session
+            duration: 45 * topics.length, // Duration based on number of topics
           };
         });
     
         console.log("Payloads to be sent:", payloads); // Debugging
     
-        // Send all payloads to the backend for processing
         const responses = await Promise.all(
           payloads.map((payload) =>
             axios.post("https://tms.up.school/api/dynamicLP", payload)
           )
         );
     
-        // Update topicsWithConcepts with the new lesson plans
         const updatedTopicsWithConcepts = { ...topicsWithConcepts };
         responses.forEach((response, index) => {
           const { sessionNumber } = payloads[index];
@@ -232,7 +229,7 @@ const SessionPlans = () => {
     
           updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
             sessionNumber
-          ].map((topic, topicIndex) => ({
+          ].map((topic) => ({
             ...topic,
             lessonPlan, // Add lesson plan for the topic
           }));
@@ -249,6 +246,7 @@ const SessionPlans = () => {
         setSaving(false);
       }
     };
+    
     
     
 
