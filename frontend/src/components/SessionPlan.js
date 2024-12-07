@@ -50,35 +50,29 @@ const SessionPlans = () => {
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
     
-        setSessionPlans(response.data);
-    
-        console.log("Fetched session plans:", response.data);
-    
-        // Parse each session's topics and their concepts
+        // Parse topics with concepts
         const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-            name: entry.topic || "No Topic Name", // Ensure topic name is assigned
+            name: entry.topic || "No Topic Name",
             concepts: Array.isArray(entry.concept)
               ? entry.concept
               : entry.concept
               ? entry.concept.split(";").map((c) => c.trim())
-              : [], // Parse concepts if they are a semicolon-separated string
+              : [], // Convert semicolon-separated concepts into an array
             lessonPlan: entry.lessonPlan || "",
           })) || [];
           return acc;
         }, {});
     
-        console.log("Parsed topicsWithConcepts:", initialData);
         setTopicsWithConcepts(initialData);
-    
-        if (response.data.length > 0) {
-          setUploadDisabled(true);
-        }
+        setSessionPlans(response.data);
+        if (response.data.length > 0) setUploadDisabled(true);
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
+    
     
     
   
@@ -182,18 +176,23 @@ const SessionPlans = () => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
   
-      // Ensure topic and concept are valid
+      // Validate topic and concepts
       if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
-        throw new Error("Topic name or concepts are missing.");
+        setError(`Topic "${topic.name || "Unnamed"}" is missing concepts or invalid.`);
+        return;
       }
   
+      // Prepare payload
       const payload = {
         board,
         grade: className,
         subject: subjectName,
         unit: unitName,
         chapter: topic.name,
-        topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
+        topics: topic.concepts.map((concept) => ({
+          topic: topic.name,
+          concept, // Each concept must be passed separately
+        })),
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
@@ -201,24 +200,26 @@ const SessionPlans = () => {
   
       console.log("Payload for individual lesson plan:", payload);
   
+      // Send to backend
       const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
   
-      const generatedLessonPlan = response.data.lesson_plan;
-  
+      // Update the lesson plan in the state
+      const lessonPlan = response.data.lesson_plan;
       setTopicsWithConcepts((prev) => ({
         ...prev,
         [sessionNumber]: prev[sessionNumber].map((t, index) =>
-          index === topicIndex ? { ...t, lessonPlan: generatedLessonPlan } : t
+          index === topicIndex ? { ...t, lessonPlan } : t
         ),
       }));
   
+      setSuccessMessage(`Lesson plan for topic "${topic.name}" generated successfully!`);
       setError("");
-      console.log(`Lesson plan generated for topic: ${topic.name}`);
     } catch (error) {
       console.error("Error generating lesson plan:", error);
-      setError("Failed to generate lesson plan. Please try again.");
+      setError(`Failed to generate lesson plan for topic "${topicsWithConcepts[sessionNumber][topicIndex]?.name}".`);
     }
   };
+  
   
   
   
