@@ -345,7 +345,7 @@ const SessionPlans = () => {
                   {plan.sessionNumber}
                 </td>
               )}
-              <td>{topic.name}</td>
+              <td>{topic.name || "No Topic Name"}</td>
               <td>
                 {topic.concepts.map((concept, cIndex) => (
                   <div key={cIndex}>{concept}</div>
@@ -389,6 +389,7 @@ const SessionPlans = () => {
     </tbody>
   </table>
 </div>
+
 
   
       <Modal show={showModal} onHide={() => setShowModal(false)}>
