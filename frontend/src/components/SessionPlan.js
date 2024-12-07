@@ -13,7 +13,6 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [board, setBoard] = useState(""); // Missing or incorrect
 
   // display school , class etc naems
   const {
@@ -25,19 +24,27 @@ const SessionPlans = () => {
     sectionId,
     subjectName = "Subject Name Not Available",
     subjectId,
-    board: boardName,
-
     chapterName = "Chapter Name Not Available",
     unitName = "Unit Name Not Available",
   } = location.state || {};
   
   
   // Fetch board from query params
+  const {
+    board: boardName = "Board Not Available",
+    ...rest
+  } = location.state || {};
+  
+  const [board, setBoard] = useState(boardName);
+  
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const boardParam = queryParams.get("board");
-    setBoard(boardParam || "");
-  }, [location]);
+    if (!boardName) {
+      const queryParams = new URLSearchParams(location.search);
+      const boardParam = queryParams.get("board");
+      setBoard(boardParam || "Board Not Available");
+    }
+  }, [boardName, location]);
+  
 
   // Fetch session plans
   useEffect(() => {
