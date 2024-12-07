@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
+import { Modal, Button } from "react-bootstrap";
 import "../styles.css";
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
   const location = useLocation();
-  // const [board, setBoard] = useState("");
   const [sessionPlans, setSessionPlans] = useState([]);
   const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
   const [error, setError] = useState("");
@@ -14,8 +14,9 @@ const SessionPlans = () => {
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [currentLessonPlan, setCurrentLessonPlan] = useState("");
 
-  // display school , class etc naems
   const {
     schoolName = "School Name Not Available",
     schoolId,
@@ -28,16 +29,10 @@ const SessionPlans = () => {
     chapterName = "Chapter Name Not Available",
     unitName = "Unit Name Not Available",
   } = location.state || {};
-  
-  
-  // Fetch board from query params
-  const {
-    board: boardName = "Board Not Available",
-    ...rest
-  } = location.state || {};
-  
+
+  const { board: boardName = "Board Not Available" } = location.state || {};
   const [board, setBoard] = useState(boardName);
-  
+
   useEffect(() => {
     if (!boardName) {
       const queryParams = new URLSearchParams(location.search);
@@ -45,7 +40,6 @@ const SessionPlans = () => {
       setBoard(boardParam || "Board Not Available");
     }
   }, [boardName, location]);
-  
 
   // Fetch session plans
   useEffect(() => {
@@ -106,6 +100,7 @@ const SessionPlans = () => {
 
       setSaving(false);
       setError("");
+      setSuccessMessage("Session plan saved successfully!");
     } catch (error) {
       console.error("Error saving session plan:", error);
       setError("Failed to save session plan. Please try again.");
@@ -150,10 +145,10 @@ const SessionPlans = () => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
       const payload = {
-        board: board || "CBSE",
+        board,
         grade: className,
         subject: subjectName,
-        subSubject: "Civics", // Dynamically fetch this value if applicable
+        subSubject: "Civics",
         unit: unitName,
         chapter: topic.name,
         topics: [{ topic: topic.name, concepts: topic.concepts }],
@@ -161,15 +156,15 @@ const SessionPlans = () => {
         noOfSession: 1,
         duration: 45,
       };
-  
-      console.log("Payload for individual lesson plan:", payload); // Debugging payload
-  
+
+      console.log("Payload for individual lesson plan:", payload);
+
       const response = await axios.post(
         "https://tms.up.school/api/dynamicLP",
         payload
       );
-      console.log("Lesson plan generated response:", response.data); // Debugging response
-  
+      console.log("Lesson plan generated response:", response.data);
+
       const lessonPlan = response.data.lesson_plan;
       setTopicsWithConcepts((prev) => ({
         ...prev,
@@ -179,92 +174,101 @@ const SessionPlans = () => {
       }));
       setError("");
     } catch (error) {
-      console.error("Error generating lesson plan:", error); // Debugging error
+      console.error("Error generating lesson plan:", error);
       setError("Failed to generate lesson plan. Please try again.");
     }
   };
-  
-    // Generate lesson plan for all topics
-    const handleGenerateAllLessonPlans = async () => {
-      try {
-        setSaving(true);
-    
-        const payloads = sessionPlans.map((plan) =>
-          (topicsWithConcepts[plan.sessionNumber] || []).map((topic) => ({
-            board,
-            grade: className,
-            subject: subjectName,
-            unit: unitName,
-            chapter: topic.name,
-            topics: [{ topic: topic.name, concepts: topic.concepts }],
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          }))
-        );
-    
-        console.log("Payloads for all topics:", payloads); // Debugging payloads
-    
-        const responses = await Promise.allSettled(
-          payloads.flat().map((payload) =>
-            axios.post("https://tms.up.school/api/dynamicLP", payload)
-          )
-        );
-    
-        console.log("Responses for all topics:", responses); // Debugging responses
-    
-        responses.forEach((response, index) => {
-          if (response.status === "fulfilled") {
-            console.log(`Success for payload ${index}:`, response.value.data);
-          } else {
-            console.error(`Error for payload ${index}:`, response.reason);
-          }
-        });
-    
-        setSuccessMessage("All topics' LP generated successfully!");
-        setError("");
-      } catch (error) {
-        console.error("Error generating all lesson plans:", error); // Debugging error
-        setError("Failed to generate lesson plans. Please try again.");
-      } finally {
-        setSaving(false);
-      }
-    };
-    
 
+  // Generate lesson plans for all topics
+  const handleGenerateAllLessonPlans = async () => {
+    try {
+      setSaving(true);
+
+      const payloads = sessionPlans.map((plan) =>
+        (topicsWithConcepts[plan.sessionNumber] || []).map((topic) => ({
+          board,
+          grade: className,
+          subject: subjectName,
+          unit: unitName,
+          chapter: topic.name,
+          topics: [{ topic: topic.name, concepts: topic.concepts }],
+          sessionType: "Theory",
+          noOfSession: 1,
+          duration: 45,
+        }))
+      );
+
+      console.log("Payloads for all topics:", payloads);
+
+      const responses = await Promise.allSettled(
+        payloads.flat().map((payload) =>
+          axios.post("https://tms.up.school/api/dynamicLP", payload)
+        )
+      );
+
+      console.log("Responses for all topics:", responses);
+
+      const updatedTopicsWithConcepts = { ...topicsWithConcepts };
+      responses.forEach((response, index) => {
+        if (response.status === "fulfilled") {
+          const { sessionNumber } = payloads.flat()[index];
+          const lessonPlan = response.value.data.lesson_plan;
+          updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
+            sessionNumber
+          ].map((topic, topicIndex) =>
+            topicIndex === index
+              ? { ...topic, lessonPlan }
+              : topic
+          );
+        }
+      });
+
+      setTopicsWithConcepts(updatedTopicsWithConcepts);
+      setSuccessMessage("All topics' LP generated successfully!");
+      setError("");
+    } catch (error) {
+      console.error("Error generating all lesson plans:", error);
+      setError("Failed to generate lesson plans. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // View lesson plan
   const handleViewLessonPlan = (lessonPlan) => {
-    alert(`Viewing Lesson Plan: ${lessonPlan}`);
-    // Replace with actual view logic, e.g., modal or new page
+    setCurrentLessonPlan(lessonPlan);
+    setShowModal(true);
   };
 
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
- {/* Display additional details */}
- <div className="info-banner">
-      <p>
-        <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
-      </p>
-      <p>
-        <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
-      </p>
-      <p>
-        <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
-      </p>
-      <p>
-        <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
-      </p>
-      <p>
-        <strong>Board:</strong> {board}</p>
-      <p>
-        <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong> {unitName}
-      </p>
-    </div>
+      <div className="info-banner">
+        <p>
+          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong>{" "}
+          {schoolId}
+        </p>
+        <p>
+          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong>{" "}
+          {classId}
+        </p>
+        <p>
+          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong>{" "}
+          {sectionId}
+        </p>
+        <p>
+          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong>{" "}
+          {subjectId}
+        </p>
+        <p>
+          <strong>Board:</strong> {board}</p>
+        <p>
+          <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong>{" "}
+          {unitName}
+        </p>
+      </div>
 
- {/* Success message */}
- {successMessage && <div className="success-message">{successMessage}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
 
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
@@ -280,82 +284,94 @@ const SessionPlans = () => {
           </button>
         </form>
       </div>
-{/* Generate Lesson Plan Button */}
-<div className="generate-controls">
-  <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
-    {saving ? "Generating..." : "Generate All Lesson Plans"}
-  </button>
-  {successMessage && <div className="success-message">{successMessage}</div>}
-  {error && <div className="error-message">{error}</div>}
-</div>
 
+      <div className="generate-controls">
+        <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
+          {saving ? "Generating..." : "Generate All Lesson Plans"}
+        </button>
+        {successMessage && <div className="success-message">{successMessage}</div>}
+        {error && <div className="error-message">{error}</div>}
+      </div>
 
-  {/* Table for Session Plans */}
-  <div className="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Session Number</th>
-            <th>Topic Names</th>
-            <th>Related Concepts</th>
-            <th>Lesson Plan</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sessionPlans.map((plan) => (
-            <React.Fragment key={plan.id}>
-              {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-                <tr key={`${plan.sessionNumber}-${tIndex}`}>
-                  {tIndex === 0 && (
-                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                      {plan.sessionNumber}
-                    </td>
-                  )}
-                  <td>{topic.name}</td>
-                  <td>
-                    {topic.concepts.map((concept, cIndex) => (
-                      <div key={cIndex}>{concept}</div>
-                    ))}
-                  </td>
-                  <td>
-                    {topic.lessonPlan ? (
-                      <button
-                        className="view-button"
-                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                      >
-                        View
-                      </button>
-                    ) : (
-                      "Not Generated"
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Session Number</th>
+              <th>Topic Names</th>
+              <th>Related Concepts</th>
+              <th>Lesson Plan</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sessionPlans.map((plan) => (
+              <React.Fragment key={plan.id}>
+                {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
+                  <tr key={`${plan.sessionNumber}-${tIndex}`}>
+                    {tIndex === 0 && (
+                      <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                        {plan.sessionNumber}
+                      </td>
                     )}
-                  </td>
-                  {tIndex === 0 && (
-                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                      <button
-                        onClick={() =>
-                          handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                        }
-                        disabled={saving}
-                      >
-                        {saving ? "Saving..." : "Save"}
-                      </button>
+                    <td>{topic.name}</td>
+                    <td>
+                      {topic.concepts.map((concept, cIndex) => (
+                        <div key={cIndex}>{concept}</div>
+                      ))}
                     </td>
-                  )}
+                    <td>
+                      {topic.lessonPlan ? (
+                        <button
+                          className="view-button"
+                          onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                        >
+                          View
+                        </button>
+                      ) : (
+                        "Not Generated"
+                      )}
+                    </td>
+                    {tIndex === 0 && (
+                      <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                        <button
+                          onClick={() =>
+                            handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                          }
+                          disabled={saving}
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan="5">
+                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                      + Add Topic
+                    </button>
+                  </td>
                 </tr>
-              ))}
-              <tr>
-                <td colSpan="5">
-                  <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-                    + Add Topic
-                  </button>
-                </td>
-              </tr>
-            </React.Fragment>
-          ))}
-        </tbody>
+              </React.Fragment>
+            ))}
+          </tbody>
         </table>
       </div>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Lesson Plan</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <pre>{currentLessonPlan}</pre>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
