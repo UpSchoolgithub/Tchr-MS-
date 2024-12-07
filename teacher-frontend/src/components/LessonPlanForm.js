@@ -4,7 +4,6 @@ const LessonPlanForm = () => {
   const [board, setBoard] = useState('');
   const [grade, setGrade] = useState('');
   const [subject, setSubject] = useState('');
-  //const [subSubject, setSubSubject] = useState('');
   const [unit, setUnit] = useState('');
   const [chapter, setChapter] = useState('');
   const [topics, setTopics] = useState([]);
@@ -21,12 +20,11 @@ const LessonPlanForm = () => {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    
+
     const lessonPlanRequest = {
       board,
       grade,
       subject,
-    //  subSubject,
       unit,
       chapter,
       topics: topics.map((t) => ({
@@ -56,12 +54,10 @@ const LessonPlanForm = () => {
   };
 
   const handleDownloadPDF = async () => {
-    // Include the edited content from generatedPlan in the request
     const lessonPlanRequest = {
       board,
       grade,
       subject,
-    //  subSubject,
       unit,
       chapter,
       topics: topics.map((t) => ({
@@ -71,18 +67,18 @@ const LessonPlanForm = () => {
       sessionType,
       noOfSession,
       duration,
-      generatedPlan // Add the updated generated plan content here
+      generatedPlan
     };
-  
+
     try {
       const response = await fetch('http://localhost:8000/download-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(lessonPlanRequest)
       });
-  
+
       if (!response.ok) throw new Error('Failed to download PDF');
-  
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement('a');
@@ -95,7 +91,6 @@ const LessonPlanForm = () => {
       console.error('Error downloading PDF:', error);
     }
   };
-  
 
   const addTopic = () => {
     setTopics([...topics, { topicName: '', concepts: [''] }]);
@@ -125,7 +120,6 @@ const LessonPlanForm = () => {
 
   return (
     <div>
-
       {!generatedPlan ? (
         <form onSubmit={handleGenerate}>
           <div className="form-group">
@@ -151,29 +145,6 @@ const LessonPlanForm = () => {
               <option value="Social Science">Social Science</option>
               <option value="English">English</option>
             </select>
-
-            {subject === 'Science' && (
-              <select onChange={(e) => setSubSubject(e.target.value)} value={subSubject} required>
-                <option value="">Select Science Subcategory</option>
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
-              </select>
-            )}
-            {subject === 'Social Science' && (
-              <select onChange={(e) => setSubSubject(e.target.value)} value={subSubject} required>
-                <option value="">Select Social Science Subcategory</option>
-                <option value="History">History</option>
-                <option value="Civics">Civics</option>
-                <option value="Geography">Geography</option>
-              </select>
-            )}
-            {subject === 'English' && (
-              <select onChange={(e) => setSubSubject(e.target.value)} value={subSubject} required>
-                <option value="Language">Language</option>
-                <option value="Literature">Literature</option>
-              </select>
-            )}
           </div>
 
           <div className="form-group">
