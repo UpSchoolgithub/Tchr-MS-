@@ -48,19 +48,21 @@ const SessionPlans = () => {
         const response = await axios.get(
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
+  
         setSessionPlans(response.data);
   
         console.log("Fetched session plans:", response.data); // Debugging
   
-        // Initialize topics and concepts
+        // Parse each session's topics and their concepts
         const initialData = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.planDetails?.map((topic) => ({
-            name: topic.topic || "", // Use `topic` from the response
-            concepts: topic.concepts || [], // Ensure concepts are initialized correctly
-            lessonPlan: topic.lessonPlan || "",
+          acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
+            topicName: entry.topic || "",
+            concept: entry.concept || "", // Parse each concept separately
+            lessonPlan: entry.lessonPlan || "",
           })) || [];
           return acc;
         }, {});
+  
         console.log("Parsed topicsWithConcepts:", initialData); // Debugging
         setTopicsWithConcepts(initialData);
   
@@ -75,6 +77,7 @@ const SessionPlans = () => {
   
     fetchSessionPlans();
   }, [sessionId]);
+  
   
 
   // Add a new topic to a session
@@ -92,16 +95,16 @@ const SessionPlans = () => {
   const handleSaveSessionPlan = async (sessionPlanId, sessionNumber) => {
     try {
       setSaving(true);
-      const planDetails = topicsWithConcepts[sessionNumber].map((topic) => ({
-        name: topic.name,
-        concepts: topic.concepts,
-        lessonPlan: topic.lessonPlan,
+      const planDetails = topicsWithConcepts[sessionNumber].map((entry) => ({
+        topic: entry.topicName,
+        concept: entry.concept,
+        lessonPlan: entry.lessonPlan,
       }));
-
+  
       await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, {
         planDetails: JSON.stringify(planDetails),
       });
-
+  
       setSaving(false);
       setError("");
       setSuccessMessage("Session plan saved successfully!");
@@ -111,6 +114,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
 
   // Handle file upload
   const handleFileUpload = async (e) => {
@@ -154,21 +158,20 @@ const SessionPlans = () => {
         subject: subjectName,
         subSubject: "Civics",
         unit: unitName,
-        chapter: topic.name,
-        topics: [{ topic: topic.name, concepts: topic.concepts }],
+        chapter: topic.topicName,
+        topics: [{ topic: topic.topicName, concepts: [topic.concept] }], // Send specific concept
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
       };
-
+  
       console.log("Payload for individual lesson plan:", payload);
-
+  
       const response = await axios.post(
         "https://tms.up.school/api/dynamicLP",
         payload
       );
-      console.log("Lesson plan generated response:", response.data);
-
+  
       const lessonPlan = response.data.lesson_plan;
       setTopicsWithConcepts((prev) => ({
         ...prev,
@@ -182,6 +185,7 @@ const SessionPlans = () => {
       setError("Failed to generate lesson plan. Please try again.");
     }
   };
+  
 
   // Generate lesson plans for all topics
   const handleGenerateAllLessonPlans = async () => {
@@ -334,24 +338,24 @@ const SessionPlans = () => {
           <tbody>
   {sessionPlans.map((plan) => (
     <React.Fragment key={plan.id}>
-      {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-        <tr key={`${plan.sessionNumber}-${tIndex}`}>
-          {tIndex === 0 && (
+      {topicsWithConcepts[plan.sessionNumber]?.map((entry, index) => (
+        <tr key={`${plan.sessionNumber}-${index}`}>
+          {/* Only show session number in the first row */}
+          {index === 0 && (
             <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
               {plan.sessionNumber}
             </td>
           )}
-          <td>{topic.name}</td>
+          {/* Topic Name */}
+          <td>{entry.topicName}</td>
+          {/* Concept */}
+          <td>{entry.concept}</td>
+          {/* Lesson Plan */}
           <td>
-            {topic.concepts.map((concept, cIndex) => (
-              <div key={cIndex}>{concept}</div>
-            ))}
-          </td>
-          <td>
-            {topic.lessonPlan ? (
+            {entry.lessonPlan ? (
               <button
                 className="view-button"
-                onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                onClick={() => handleViewLessonPlan(entry.lessonPlan)}
               >
                 View
               </button>
@@ -359,7 +363,8 @@ const SessionPlans = () => {
               "Not Generated"
             )}
           </td>
-          {tIndex === 0 && (
+          {/* Actions */}
+          {index === 0 && (
             <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
               <button
                 onClick={() =>
@@ -383,6 +388,7 @@ const SessionPlans = () => {
     </React.Fragment>
   ))}
 </tbody>
+
 
         </table>
       </div>
