@@ -13,6 +13,7 @@ const SessionPlans = () => {
   const [file, setFile] = useState(null);
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // display school , class etc naems
   const {
@@ -190,56 +191,64 @@ const SessionPlans = () => {
     // Generate lesson plan for all topics
     const handleGenerateAllLessonPlans = async () => {
       try {
-        const payload = sessionPlans.map((plan) => {
+        setSaving(true);
+        setSuccessMessage(""); // Clear any previous success message
+    
+        // Prepare payloads based on topics and session metadata
+        const payloads = sessionPlans.map((plan) => {
           const topics = topicsWithConcepts[plan.sessionNumber] || [];
           return topics.map((topic) => ({
             sessionNumber: plan.sessionNumber,
-            board: board || "CBSE", // Replace with actual value
-            grade: "10", // Replace with actual value
-            subject: "Math", // Replace with actual value
-            subSubject: "Algebra", // Replace with actual value
-            unit: "Linear Equations", // Replace with actual value
-            chapter: topic.name, // Topic name
+            board, // Use the state variable for board
+            grade: className, // Class Name is already fetched
+            subject: subjectName, // Use fetched subject name
+            unit: unitName, // Use unit name
+            chapter: chapterName, // Use chapter name
             topics: [
               {
                 topic: topic.name,
                 concepts: topic.concepts,
               },
             ],
-            sessionType: "Theory", // Hardcoded for now
-            noOfSession: 1, // For single topic
-            duration: 45, // Set a default duration
+            sessionType: "Theory", // Fixed session type for now
+            noOfSession: topics.length, // Number of sessions based on topic count
+            duration: 45, // Default duration for each session
           }));
         });
     
-        const allResponses = await Promise.all(
-          payload.flat().map((singlePayload) =>
-            axios.post("https://tms.up.school/api/dynamicLP", singlePayload)
+        // Send all payloads to the backend for processing
+        const responses = await Promise.all(
+          payloads.flat().map((payload) =>
+            axios.post("https://tms.up.school/api/dynamicLP", payload)
           )
         );
     
+        // Update topicsWithConcepts with the new lesson plans
         const updatedTopicsWithConcepts = { ...topicsWithConcepts };
-    
-        // Map responses to the respective sessionNumber and topic
-        allResponses.forEach((response, index) => {
-          const { sessionNumber } = payload.flat()[index];
+        responses.forEach((response, index) => {
+          const { sessionNumber } = payloads.flat()[index];
           const lessonPlan = response.data.lesson_plan;
           updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
             sessionNumber
           ].map((topic, topicIndex) =>
             topicIndex === index
-              ? { ...topic, lessonPlan } // Add the generated lesson plan
+              ? { ...topic, lessonPlan } // Add lesson plan to the topic
               : topic
           );
         });
     
         setTopicsWithConcepts(updatedTopicsWithConcepts);
         setError("");
+        setSuccessMessage("All topics' LP generated successfully!");
       } catch (error) {
         console.error("Error generating lesson plans:", error);
         setError("Failed to generate lesson plans. Please try again.");
+        setSuccessMessage("");
+      } finally {
+        setSaving(false);
       }
     };
+    
 
 
   // View lesson plan
@@ -272,6 +281,9 @@ const SessionPlans = () => {
       </p>
     </div>
 
+ {/* Success message */}
+ {successMessage && <div className="success-message">{successMessage}</div>}
+
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>
@@ -287,9 +299,15 @@ const SessionPlans = () => {
         </form>
       </div>
 {/* Generate Lesson Plan Button */}
-    <div className="generate-controls">
-      <button onClick={handleGenerateAllLessonPlans}>Generate All Lesson Plans</button>
-    </div>
+<div className="generate-controls">
+  <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
+    {saving ? "Generating..." : "Generate All Lesson Plans"}
+  </button>
+  {successMessage && <div className="success-message">{successMessage}</div>}
+  {error && <div className="error-message">{error}</div>}
+</div>
+
+
   {/* Table for Session Plans */}
   <div className="table-container">
       <table>
