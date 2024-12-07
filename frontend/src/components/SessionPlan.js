@@ -153,6 +153,7 @@ const SessionPlans = () => {
         board: board || "CBSE",
         grade: className,
         subject: subjectName,
+        subSubject: "Civics", // Dynamically fetch this value if applicable
         unit: unitName,
         chapter: topic.name,
         topics: [{ topic: topic.name, concepts: topic.concepts }],
