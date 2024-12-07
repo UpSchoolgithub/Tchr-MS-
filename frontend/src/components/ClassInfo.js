@@ -383,17 +383,25 @@ const ClassInfo = () => {
           <td>
           <button
   onClick={() => {
-    const selectedClass = info;
-    const sectionData = info.sections[sec];
-    console.log('Navigate to Manage Sessions:', {
-      selectedClass,
-      sectionData,
-      subjectId: subject.id,
-    });
+    const selectedClass = info; // The selected class info
+    const sectionData = info.sections[sec]; // Section data for the selected section
+    console.log('Debug: Navigating to Manage Sessions');
+    console.log('Selected Class:', selectedClass);
+    console.log('Section Data:', sectionData);
+    console.log('Subject ID:', subject.id);
 
     if (sectionData && sectionData.id) {
       navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
+        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`,
+        {
+          state: {
+            schoolName: schoolName, // Pass schoolName explicitly
+            className: selectedClass.className,
+            sectionName: sectionData.sectionName,
+            subjectName: subject.subjectName,
+            board: selectedClass.board,
+          },
+        }
       );
     } else {
       console.error("Section ID not found for section name:", sec);
@@ -403,6 +411,7 @@ const ClassInfo = () => {
 >
   Manage Sessions
 </button>
+
 
 
           </td>
