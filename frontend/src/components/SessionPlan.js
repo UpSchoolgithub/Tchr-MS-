@@ -195,27 +195,24 @@ const SessionPlans = () => {
         setSuccessMessage(""); // Clear any previous success message
     
         // Prepare payloads based on topics, concepts, and session metadata
-        const payloads = [];
-        sessionPlans.forEach((plan) => {
+        const payloads = sessionPlans.map((plan) => {
           const topics = topicsWithConcepts[plan.sessionNumber] || [];
-          topics.forEach((topic) => {
-            payloads.push({
-              sessionNumber: plan.sessionNumber,
-              board, // Use the state variable for board
-              grade: className, // Class Name is already fetched
-              subject: subjectName, // Use fetched subject name
-              subSubject: "General", // Provide a fallback for subSubject
-              unit: unitName, // Use unit name
-              chapter: chapterName, // Use chapter name
-              topics: topic.concepts.map((concept) => ({
-                topic: topic.name,
-                concept: concept, // Each concept as a sub-topic
-              })),
-              sessionType: "Theory", // Fixed session type for now
-              noOfSession: topics.length, // Number of sessions based on topic count
-              duration: 45, // Default duration for each session
-            });
-          });
+          return {
+            sessionNumber: plan.sessionNumber,
+            board, // Use the state variable for board
+            grade: className, // Class Name is already fetched
+            subject: subjectName, // Use fetched subject name
+            subSubject: "General", // Provide a fallback for subSubject
+            unit: unitName, // Use unit name
+            chapter: chapterName, // Use chapter name
+            topics: topics.map((topic) => ({
+              name: topic.name,
+              concepts: topic.concepts, // Pass all concepts under the topic
+            })),
+            sessionType: "Theory", // Fixed session type for now
+            noOfSession: topics.length, // Number of sessions based on topic count
+            duration: 45, // Default duration for each session
+          };
         });
     
         console.log("Payloads to be sent:", payloads); // Debugging
