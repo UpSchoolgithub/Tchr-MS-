@@ -146,47 +146,47 @@ const SessionPlans = () => {
   };
 
   // Generate lesson plan for a specific topic
-  const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
+  const handleGenerateLessonPlan = async (sessionNumber, topic) => {
     try {
-      const topic = topicsWithConcepts[sessionNumber][topicIndex];
       const payload = {
-        board: board || "CBSE", // Replace with actual value
-        grade: "10", // Replace with actual value
-        subject: "Math", // Replace with actual value
-        subSubject: "Algebra", // Replace with actual value
-        unit: "Linear Equations", // Replace with actual value
-        chapter: topic.name, // Topic name
+        sessionNumber, // Include the session number
+        board, // Use the state variable for board
+        grade: className, // Class Name is already fetched
+        subject: subjectName, // Use fetched subject name
+        subSubject: "General", // Provide a fallback for subSubject
+        unit: unitName, // Use unit name
+        chapter: chapterName, // Use chapter name
         topics: [
           {
-            topic: topic.name,
-            concepts: topic.concepts,
+            name: topic.name,
+            concepts: topic.concepts, // Include all concepts for the topic
           },
         ],
-        sessionType: "Theory", // Hardcoded for now
-        noOfSession: 1, // For single topic
-        duration: 45, // Set a default duration
+        sessionType: "Theory", // Fixed session type for now
+        noOfSession: 1, // Single topic, single session
+        duration: 45, // Default duration for one topic
       };
-
-      const response = await axios.post(
-        "https://tms.up.school/api/dynamicLP",
-        payload
-      );
-      const lessonPlan = response.data.lesson_plan;
-
-      // Update the topic with the fetched lesson plan
+  
+      console.log("Payload to be sent:", payload); // Debugging
+  
+      const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
+  
+      // Update the topic with the generated lesson plan
       setTopicsWithConcepts((prev) => ({
         ...prev,
-        [sessionNumber]: prev[sessionNumber].map((t, index) =>
-          index === topicIndex ? { ...t, lessonPlan } : t
+        [sessionNumber]: prev[sessionNumber].map((t) =>
+          t.name === topic.name ? { ...t, lessonPlan: response.data.lesson_plan } : t
         ),
       }));
-
+  
       setError("");
+      setSuccessMessage(`Lesson plan generated for topic "${topic.name}"!`);
     } catch (error) {
-      console.error("Error generating lesson plan:", error);
-      setError("Failed to generate lesson plan. Please try again.");
+      console.error(`Error generating lesson plan for topic "${topic.name}":`, error);
+      setError(`Failed to generate lesson plan for topic "${topic.name}". Please try again.`);
     }
   };
+  
 
     // Generate lesson plan for all topics
     const handleGenerateAllLessonPlans = async () => {
@@ -260,30 +260,37 @@ const SessionPlans = () => {
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
- {/* Display additional details */}
- <div className="info-banner">
-      <p>
-        <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
-      </p>
-      <p>
-        <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
-      </p>
-      <p>
-        <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
-      </p>
-      <p>
-        <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
-      </p>
-      <p>
-        <strong>Board:</strong> {board}</p>
-      <p>
-        <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong> {unitName}
-      </p>
-    </div>
-
- {/* Success message */}
- {successMessage && <div className="success-message">{successMessage}</div>}
-
+      {/* Display additional details */}
+      <div className="info-banner">
+        <p>
+          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong>{" "}
+          {schoolId}
+        </p>
+        <p>
+          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong>{" "}
+          {classId}
+        </p>
+        <p>
+          <strong>Section Name:</strong> {sectionName} |{" "}
+          <strong>Section ID:</strong> {sectionId}
+        </p>
+        <p>
+          <strong>Subject Name:</strong> {subjectName} |{" "}
+          <strong>Subject ID:</strong> {subjectId}
+        </p>
+        <p>
+          <strong>Board:</strong> {board}
+        </p>
+        <p>
+          <strong>Chapter Name:</strong> {chapterName} |{" "}
+          <strong>Unit Name:</strong> {unitName}
+        </p>
+      </div>
+  
+      {/* Success message */}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      {error && <div className="error-message">{error}</div>}
+  
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>
@@ -298,84 +305,96 @@ const SessionPlans = () => {
           </button>
         </form>
       </div>
-{/* Generate Lesson Plan Button */}
-<div className="generate-controls">
-  <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
-    {saving ? "Generating..." : "Generate All Lesson Plans"}
-  </button>
-  {successMessage && <div className="success-message">{successMessage}</div>}
-  {error && <div className="error-message">{error}</div>}
-</div>
-
-
-  {/* Table for Session Plans */}
-  <div className="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Session Number</th>
-            <th>Topic Names</th>
-            <th>Related Concepts</th>
-            <th>Lesson Plan</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sessionPlans.map((plan) => (
-            <React.Fragment key={plan.id}>
-              {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-                <tr key={`${plan.sessionNumber}-${tIndex}`}>
-                  {tIndex === 0 && (
-                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                      {plan.sessionNumber}
-                    </td>
-                  )}
-                  <td>{topic.name}</td>
-                  <td>
-                    {topic.concepts.map((concept, cIndex) => (
-                      <div key={cIndex}>{concept}</div>
-                    ))}
-                  </td>
-                  <td>
-                    {topic.lessonPlan ? (
-                      <button
-                        className="view-button"
-                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                      >
-                        View
-                      </button>
-                    ) : (
-                      "Not Generated"
-                    )}
-                  </td>
-                  {tIndex === 0 && (
-                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                      <button
-                        onClick={() =>
-                          handleSaveSessionPlan(plan.id, plan.sessionNumber)
+  
+      <div className="generate-controls">
+        <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
+          {saving ? "Generating..." : "Generate All Lesson Plans"}
+        </button>
+      </div>
+  
+      {/* Table for Session Plans */}
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Session Number</th>
+              <th>Topic Names</th>
+              <th>Related Concepts</th>
+              <th>Lesson Plan</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sessionPlans.map((plan) => (
+              <React.Fragment key={plan.id}>
+                {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
+                  <tr key={`${plan.sessionNumber}-${tIndex}`}>
+                    {tIndex === 0 && (
+                      <td
+                        rowSpan={
+                          topicsWithConcepts[plan.sessionNumber]?.length || 1
                         }
-                        disabled={saving}
                       >
-                        {saving ? "Saving..." : "Save"}
-                      </button>
+                        {plan.sessionNumber}
+                      </td>
+                    )}
+                    <td>{topic.name}</td>
+                    <td>
+                      {topic.concepts.map((concept, cIndex) => (
+                        <div key={cIndex}>{concept}</div>
+                      ))}
                     </td>
-                  )}
+                    <td>
+                      {topic.lessonPlan ? (
+                        <button
+                          className="view-button"
+                          onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                        >
+                          View
+                        </button>
+                      ) : (
+                        <button
+                          className="generate-button"
+                          onClick={() =>
+                            handleGenerateLessonPlan(plan.sessionNumber, topic)
+                          }
+                        >
+                          Generate
+                        </button>
+                      )}
+                    </td>
+                    {tIndex === 0 && (
+                      <td
+                        rowSpan={
+                          topicsWithConcepts[plan.sessionNumber]?.length || 1
+                        }
+                      >
+                        <button
+                          onClick={() =>
+                            handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                          }
+                          disabled={saving}
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan="5">
+                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                      + Add Topic
+                    </button>
+                  </td>
                 </tr>
-              ))}
-              <tr>
-                <td colSpan="5">
-                  <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-                    + Add Topic
-                  </button>
-                </td>
-              </tr>
-            </React.Fragment>
-          ))}
-        </tbody>
+              </React.Fragment>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
   );
-};
+}; 
 
 export default SessionPlans;
