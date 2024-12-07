@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useLocation, Link } from 'react-router-dom';
 
 const SessionManagement = () => {
-  const { schoolId, classId, sectionId, subjectId } = useParams();
+  const { schoolId, classId, sectionId, subjectId, boardName } = useParams(); // Include boardName in useParams
   const location = useLocation();
 
   // State for sessions and other details
@@ -21,7 +21,6 @@ const SessionManagement = () => {
     className = 'Class Name Not Available',
     subjectName = 'Subject Name Not Available',
     sectionName = 'Section Name Not Available',
-    board = 'Board Not Available',
   } = location.state || {};
 
   // Fetch sessions from the API
@@ -159,7 +158,7 @@ const SessionManagement = () => {
           <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
         </p>
         <p>
-          <strong>Board:</strong> {board}
+          <strong>Board:</strong> {boardName} {/* Display boardName directly from the URL */}
         </p>
       </div>
 
