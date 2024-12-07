@@ -320,88 +320,69 @@ const mergeTopics = (topics) => {
       </div>
   
       <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Session Number</th>
-              <th>Topic Name</th>
-              <th>Concept</th>
-              <th>Lesson Plan</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-  {sessionPlans.map((plan) => (
-    <React.Fragment key={plan.id}>
-      {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex) => (
-        <tr key={`${plan.sessionNumber}-${tIndex}`}>
-          {tIndex === 0 && (
-            <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-              {plan.sessionNumber}
-            </td>
-          )}
-          <td>{topic.name}</td>
-          <td>
-            {topic.concepts.map((concept, cIndex) => (
-              <div key={cIndex}>{concept}</div>
-            ))}
-          </td>
-          <td>
-            {topic.lessonPlan ? (
-              <button
-                className="view-button"
-                onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-              >
-                View
-              </button>
-            ) : (
-              "Not Generated"
-            )}
-          </td>
-          {tIndex === 0 && (
-            <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-              <button
-                onClick={() =>
-                  handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                }
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </td>
-          )}
-        </tr>
-      ))}
+  <table>
+    <thead>
       <tr>
-        <td colSpan="5">
-          <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-            + Add Topic
-          </button>
-        </td>
+        <th>Session Number</th>
+        <th>Topic Name</th>
+        <th>Concept</th>
+        <th>Lesson Plan</th>
+        <th>Actions</th>
       </tr>
-    </React.Fragment>
-  ))}
-</tbody>
-
-
-        </table>
-      </div>
-  
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Lesson Plan</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <pre>{currentLessonPlan}</pre>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
-  );
-};  
+    </thead>
+    <tbody>
+      {sessionPlans.map((plan) => (
+        <React.Fragment key={plan.id}>
+          {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex, topics) => (
+            <tr key={`${plan.sessionNumber}-${tIndex}`}>
+              {tIndex === 0 && (
+                <td rowSpan={topics.length}>
+                  {plan.sessionNumber}
+                </td>
+              )}
+              <td>{topic.name}</td>
+              <td>
+                {topic.concepts.map((concept, cIndex) => (
+                  <div key={cIndex}>{concept}</div>
+                ))}
+              </td>
+              <td>
+                {topic.lessonPlan ? (
+                  <button
+                    className="view-button"
+                    onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                  >
+                    View
+                  </button>
+                ) : (
+                  "Not Generated"
+                )}
+              </td>
+              {tIndex === 0 && (
+                <td rowSpan={topics.length}>
+                  <button
+                    onClick={() =>
+                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                    }
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                </td>
+              )}
+            </tr>
+          ))}
+          <tr>
+            <td colSpan="5">
+              <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                + Add Topic
+              </button>
+            </td>
+          </tr>
+        </React.Fragment>
+      ))}
+    </tbody>
+  </table>
+</div>
 
 export default SessionPlans;
