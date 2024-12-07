@@ -183,9 +183,18 @@ const SessionPlans = () => {
   const handleGenerateAllLessonPlans = async () => {
     try {
       setSaving(true);
-
-      const payloads = sessionPlans.map((plan) =>
-        (topicsWithConcepts[plan.sessionNumber] || []).map((topic) => ({
+  
+      console.log("sessionPlans:", sessionPlans);
+      console.log("topicsWithConcepts:", topicsWithConcepts);
+  
+      if (!Array.isArray(sessionPlans) || sessionPlans.length === 0) {
+        setError("No session plans available for processing.");
+        return;
+      }
+  
+      const payloads = sessionPlans.map((plan) => {
+        const topics = topicsWithConcepts[plan.sessionNumber] || [];
+        return topics.map((topic) => ({
           board,
           grade: className,
           subject: subjectName,
@@ -195,34 +204,42 @@ const SessionPlans = () => {
           sessionType: "Theory",
           noOfSession: 1,
           duration: 45,
-        }))
-      );
-
+        }));
+      });
+  
       console.log("Payloads for all topics:", payloads);
-
+  
       const responses = await Promise.allSettled(
         payloads.flat().map((payload) =>
           axios.post("https://tms.up.school/api/dynamicLP", payload)
         )
       );
-
+  
       console.log("Responses for all topics:", responses);
-
+  
       const updatedTopicsWithConcepts = { ...topicsWithConcepts };
+  
       responses.forEach((response, index) => {
-        if (response.status === "fulfilled") {
-          const { sessionNumber } = payloads.flat()[index];
+        if (response.status === "fulfilled" && response.value.data) {
+          const sessionNumber = sessionPlans[index]?.sessionNumber;
           const lessonPlan = response.value.data.lesson_plan;
-          updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
-            sessionNumber
-          ].map((topic, topicIndex) =>
-            topicIndex === index
-              ? { ...topic, lessonPlan }
-              : topic
-          );
+  
+          if (sessionNumber !== undefined) {
+            updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
+              sessionNumber
+            ].map((topic, topicIndex) =>
+              topicIndex === index
+                ? { ...topic, lessonPlan }
+                : topic
+            );
+          } else {
+            console.error(`No session number for payload index ${index}`);
+          }
+        } else {
+          console.error(`Error for payload ${index}:`, response.reason);
         }
       });
-
+  
       setTopicsWithConcepts(updatedTopicsWithConcepts);
       setSuccessMessage("All topics' LP generated successfully!");
       setError("");
@@ -233,6 +250,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
 
   // View lesson plan
   const handleViewLessonPlan = (lessonPlan) => {
