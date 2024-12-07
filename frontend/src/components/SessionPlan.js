@@ -194,33 +194,35 @@ const SessionPlans = () => {
         setSaving(true);
         setSuccessMessage(""); // Clear any previous success message
     
-        // Prepare payloads based on topics and session metadata
-        const payloads = sessionPlans.map((plan) => {
+        // Prepare payloads based on topics, concepts, and session metadata
+        const payloads = [];
+        sessionPlans.forEach((plan) => {
           const topics = topicsWithConcepts[plan.sessionNumber] || [];
-          return topics.map((topic) => ({
-            sessionNumber: plan.sessionNumber,
-            board, // Use the state variable for board
-            grade: className, // Class Name is already fetched
-            subject: subjectName, // Use fetched subject name
-            subSubject: "General", // Provide a fallback for subSubject
-            unit: unitName, // Use unit name
-            chapter: chapterName, // Use chapter name
-            topics: [
-              {
+          topics.forEach((topic) => {
+            payloads.push({
+              sessionNumber: plan.sessionNumber,
+              board, // Use the state variable for board
+              grade: className, // Class Name is already fetched
+              subject: subjectName, // Use fetched subject name
+              subSubject: "General", // Provide a fallback for subSubject
+              unit: unitName, // Use unit name
+              chapter: chapterName, // Use chapter name
+              topics: topic.concepts.map((concept) => ({
                 topic: topic.name,
-                concepts: topic.concepts,
-              },
-            ],
-            sessionType: "Theory", // Fixed session type for now
-            noOfSession: topics.length, // Number of sessions based on topic count
-            duration: 45, // Default duration for each session
-          }));
+                concept: concept, // Each concept as a sub-topic
+              })),
+              sessionType: "Theory", // Fixed session type for now
+              noOfSession: topics.length, // Number of sessions based on topic count
+              duration: 45, // Default duration for each session
+            });
+          });
         });
-        
+    
+        console.log("Payloads to be sent:", payloads); // Debugging
     
         // Send all payloads to the backend for processing
         const responses = await Promise.all(
-          payloads.flat().map((payload) =>
+          payloads.map((payload) =>
             axios.post("https://tms.up.school/api/dynamicLP", payload)
           )
         );
@@ -228,15 +230,15 @@ const SessionPlans = () => {
         // Update topicsWithConcepts with the new lesson plans
         const updatedTopicsWithConcepts = { ...topicsWithConcepts };
         responses.forEach((response, index) => {
-          const { sessionNumber } = payloads.flat()[index];
+          const { sessionNumber } = payloads[index];
           const lessonPlan = response.data.lesson_plan;
+    
           updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
             sessionNumber
-          ].map((topic, topicIndex) =>
-            topicIndex === index
-              ? { ...topic, lessonPlan } // Add lesson plan to the topic
-              : topic
-          );
+          ].map((topic, topicIndex) => ({
+            ...topic,
+            lessonPlan, // Add lesson plan for the topic
+          }));
         });
     
         setTopicsWithConcepts(updatedTopicsWithConcepts);
@@ -250,6 +252,7 @@ const SessionPlans = () => {
         setSaving(false);
       }
     };
+    
     
 
 
@@ -323,56 +326,64 @@ const SessionPlans = () => {
           </tr>
         </thead>
         <tbody>
-          {sessionPlans.map((plan) => (
-            <React.Fragment key={plan.id}>
-              {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-                <tr key={`${plan.sessionNumber}-${tIndex}`}>
-                  {tIndex === 0 && (
-                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                      {plan.sessionNumber}
-                    </td>
-                  )}
-                  <td>{topic.name}</td>
-                  <td>
-                    {topic.concepts.map((concept, cIndex) => (
-                      <div key={cIndex}>{concept}</div>
-                    ))}
-                  </td>
-                  <td>
-                    {topic.lessonPlan ? (
-                      <button
-                        className="view-button"
-                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                      >
-                        View
-                      </button>
-                    ) : (
-                      "Not Generated"
-                    )}
-                  </td>
-                  {tIndex === 0 && (
-                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                      <button
-                        onClick={() =>
-                          handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                        }
-                        disabled={saving}
-                      >
-                        {saving ? "Saving..." : "Save"}
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-              <tr>
-                <td colSpan="5">
-                  <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-                    + Add Topic
+        <tbody>
+  {sessionPlans.map((plan) => (
+    <React.Fragment key={plan.id}>
+      {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
+        <React.Fragment key={`${plan.sessionNumber}-${tIndex}`}>
+          {topic.concepts.map((concept, cIndex) => (
+            <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
+              {tIndex === 0 && cIndex === 0 && (
+                <td
+                  rowSpan={
+                    topic.concepts.length *
+                    (topicsWithConcepts[plan.sessionNumber]?.length || 1)
+                  }
+                >
+                  {plan.sessionNumber}
+                </td>
+              )}
+              {cIndex === 0 && (
+                <td rowSpan={topic.concepts.length}>{topic.name}</td>
+              )}
+              <td>{concept}</td>
+              <td>
+                {topic.lessonPlan ? (
+                  <button
+                    className="view-button"
+                    onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                  >
+                    View
+                  </button>
+                ) : (
+                  "Not Generated"
+                )}
+              </td>
+              {tIndex === 0 && cIndex === 0 && (
+                <td
+                  rowSpan={
+                    topic.concepts.length *
+                    (topicsWithConcepts[plan.sessionNumber]?.length || 1)
+                  }
+                >
+                  <button
+                    onClick={() =>
+                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                    }
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
                   </button>
                 </td>
-              </tr>
-            </React.Fragment>
+              )}
+            </tr>
           ))}
+        </React.Fragment>
+      ))}
+    </React.Fragment>
+  ))}
+</tbody>
+
         </tbody>
         </table>
       </div>
