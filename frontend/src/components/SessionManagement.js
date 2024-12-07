@@ -33,9 +33,12 @@ const SessionManagement = () => {
     setError('');
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
-      const response = await axios.get(url);
-  
-      // Map the response to state variables
+      const response = await axios.get(url, {
+        headers: {
+          'Cache-Control': 'no-cache', // Prevents caching
+          Pragma: 'no-cache',         // Ensures compatibility
+        },
+      });
       const {
         schoolName,
         className,
@@ -59,6 +62,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
   
 
   useEffect(() => {
