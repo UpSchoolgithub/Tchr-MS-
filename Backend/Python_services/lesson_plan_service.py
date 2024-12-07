@@ -90,18 +90,12 @@ def create_pdf(lesson_plan: str) -> str:
 @app.post("/generate-lesson-plan", response_model=LessonPlanResponse)
 async def generate_lesson_plan_endpoint(data: LessonPlanRequest):
     try:
-        session_plans = []
-        for session in data.sessions:
-            topics_with_plans = []
-            for topic in session["topics"]:
-                concepts_with_plans = []
-                for concept in topic["concepts"]:
-                    plan = generate_concept_plan(data, topic["topic"], concept)
-                    concepts_with_plans.append({"concept": concept, "plan": plan})
-                topics_with_plans.append({"topic": topic["topic"], "concepts": concepts_with_plans})
-            session_plans.append({"sessionNumber": session["sessionNumber"], "topics": topics_with_plans})
-        return {"sessions": session_plans}
+        lesson_plan = generate_lesson_plan(data)
+        if not lesson_plan["lesson_plan"]:
+            raise HTTPException(status_code=500, detail="Failed to generate lesson plan.")
+        return lesson_plan
     except Exception as e:
+        print(f"Error generating lesson plan: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/download-pdf")
