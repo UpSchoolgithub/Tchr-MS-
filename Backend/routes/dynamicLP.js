@@ -6,58 +6,61 @@ const router = express.Router();
 // POST Route for generating lesson plan dynamically
 router.post("/dynamicLP", async (req, res) => {
     try {
-        const {
-            board,
-            grade,
-            subject,
-            unit,
-            chapter,
-            topics,
-            sessionType,
-            noOfSession,
-            duration,
-        } = req.body;
-
-        // Validate payload
-        if (!board || !grade || !subject || !chapter || !topics || topics.length === 0) {
-            return res.status(400).json({
-                message: "Invalid payload. Missing required fields or topics.",
-            });
-        }
-
-        // Prepare payload to send to the Python microservice
-        const payload = {
-            board,
-            grade,
-            subject,
-            unit,
-            chapter,
-            topics,
-            sessionType,
-            noOfSession,
-            duration,
-        };
-
-        console.log("Payload sent to Python service:", JSON.stringify(payload, null, 2));
-
-        // Python microservice URL
-        const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
-
-        // Make a POST request to the Python service
-        const response = await axios.post(pythonServiceUrl, payload);
-
-        // Send back the response from the Python service to the frontend
-        res.status(200).json(response.data);
-    } catch (error) {
-        console.error("Error in dynamicLP route:", error.message);
-        if (error.response) {
-            console.error("Python service error:", error.response.data);
-        }
-        res.status(500).json({
-            message: "Failed to generate lesson plan. Please try again.",
-            error: error.message,
+      const {
+        board,
+        grade,
+        subject,
+        unit,
+        chapter,
+        topics,
+        sessionType,
+        noOfSession,
+        duration,
+      } = req.body;
+  
+      // Debug incoming payload
+      console.log("Incoming payload from frontend:", req.body);
+  
+      if (!board || !grade || !subject || !chapter || !topics || topics.length === 0) {
+        console.error("Validation failed. Missing fields or empty topics.");
+        return res.status(400).json({
+          message: "Invalid payload. Missing required fields or topics.",
         });
+      }
+  
+      const payload = {
+        board,
+        grade,
+        subject,
+        unit,
+        chapter,
+        topics,
+        sessionType,
+        noOfSession,
+        duration,
+      };
+  
+      // Debug payload to Python service
+      console.log("Payload sent to Python service:", payload);
+  
+      const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
+  
+      const response = await axios.post(pythonServiceUrl, payload);
+  
+      // Debug response from Python service
+      console.log("Response from Python service:", response.data);
+  
+      res.status(200).json(response.data);
+    } catch (error) {
+      console.error("Error in dynamicLP route:", error.message);
+      if (error.response) {
+        console.error("Python service error:", error.response.data);
+      }
+      res.status(500).json({
+        message: "Failed to generate lesson plan. Please try again.",
+        error: error.message,
+      });
     }
-});
-
+  });
+  
 module.exports = router;

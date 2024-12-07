@@ -58,16 +58,18 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
         """
     }
     messages = [system_msg]
-    # Use OpenAI API to generate the lesson plan
+
     try:
+        print("Requesting OpenAI with messages:", messages)  # Debugging OpenAI request
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages
         )
+        print("OpenAI response:", response)  # Debugging OpenAI response
         lesson_plan = response.choices[0].message.content
         return {"lesson_plan": lesson_plan}
     except Exception as e:
-        print(f"Error with OpenAI API: {e}")
+        print(f"Error with OpenAI API: {e}")  # Debugging error
         return {"lesson_plan": ""}
 
 
@@ -89,12 +91,17 @@ def create_pdf(lesson_plan: str) -> str:
 @app.post("/generate-lesson-plan", response_model=LessonPlanResponse)
 async def generate_lesson_plan_endpoint(data: LessonPlanRequest):
     try:
+        print("Incoming payload for lesson plan generation:", data.dict())  # Debugging payload
+
         lesson_plan = generate_lesson_plan(data)
         if not lesson_plan["lesson_plan"]:
+            print("Failed to generate lesson plan. Empty response from OpenAI.")
             raise HTTPException(status_code=500, detail="Failed to generate lesson plan.")
+
+        print("Generated lesson plan:", lesson_plan)  # Debugging response
         return lesson_plan
     except Exception as e:
-        print(f"Error generating lesson plan: {e}")
+        print(f"Error generating lesson plan: {e}")  # Debugging error
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/download-pdf")
