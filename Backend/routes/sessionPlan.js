@@ -171,4 +171,37 @@ router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
   }
 });
 
+//  new route to fetch the required metadata (schoolName, className, sectionName, etc.) without session details.
+router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/metadata', async (req, res) => {
+  const { schoolId, classId, sectionId, subjectId } = req.params;
+
+  try {
+    // Fetch school, class, section, and subject details
+    const school = await School.findByPk(schoolId, { attributes: ['name'] });
+    const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
+    const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
+    const subject = await Subject.findByPk(subjectId, { attributes: ['subjectName'] });
+
+    if (!school || !classInfo || !section || !subject) {
+      return res.status(404).json({ message: 'One or more entities not found.' });
+    }
+
+    // Return only metadata
+    res.json({
+      schoolId,
+      schoolName: school.name,
+      classId,
+      className: classInfo.className,
+      board: classInfo.board,
+      sectionId,
+      sectionName: section.sectionName,
+      subjectId,
+      subjectName: subject.subjectName,
+    });
+  } catch (error) {
+    console.error('Error fetching metadata:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
 module.exports = router;
