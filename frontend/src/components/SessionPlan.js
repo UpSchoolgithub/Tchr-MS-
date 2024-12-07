@@ -385,4 +385,22 @@ const mergeTopics = (topics) => {
   </table>
 </div>
 
+  
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Lesson Plan</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <pre>{currentLessonPlan}</pre>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+};  
+
 export default SessionPlans;
