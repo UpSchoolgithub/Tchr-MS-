@@ -196,8 +196,6 @@ const SessionPlans = () => {
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
-      {board && <p>Board: {board}</p>}
-      {error && <div className="error">{error}</div>}
  {/* Display additional details */}
  <div className="info-banner">
       <p>
