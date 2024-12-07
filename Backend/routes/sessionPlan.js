@@ -184,7 +184,9 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
     const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
     const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
     const subject = await Subject.findByPk(subjectId, { attributes: ['subjectName'] });
-
+    const chapter = await Chapter.findByPk(chapterId, { attributes: ['chapterName'] });
+    const unit = await Unit.findByPk(unitId, { attributes: ['unitName'] });
+    
     if (!school || !classInfo || !section || !subject) {
       return res.status(404).json({ message: 'One or more entities not found.' });
     }
