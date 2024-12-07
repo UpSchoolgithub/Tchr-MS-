@@ -31,7 +31,7 @@ router.post("/dynamicLP", async (req, res) => {
             board,
             grade,
             subject,
-            subSubject,
+           // subSubject,
             unit,
             chapter,
             topics,
