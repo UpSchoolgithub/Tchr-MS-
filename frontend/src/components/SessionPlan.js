@@ -184,51 +184,55 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      console.log("sessionPlans:", sessionPlans);
-      console.log("topicsWithConcepts:", topicsWithConcepts);
+      console.log("sessionPlans:", sessionPlans); // Debugging sessionPlans
+      console.log("topicsWithConcepts:", topicsWithConcepts); // Debugging topicsWithConcepts
   
       if (!Array.isArray(sessionPlans) || sessionPlans.length === 0) {
         setError("No session plans available for processing.");
         return;
       }
   
-      const payloads = sessionPlans.map((plan) => {
+      const payloads = [];
+      sessionPlans.forEach((plan) => {
         const topics = topicsWithConcepts[plan.sessionNumber] || [];
-        return topics.map((topic) => ({
-          board,
-          grade: className,
-          subject: subjectName,
-          unit: unitName,
-          chapter: topic.name,
-          topics: [{ topic: topic.name, concepts: topic.concepts }],
-          sessionType: "Theory",
-          noOfSession: 1,
-          duration: 45,
-        }));
+        topics.forEach((topic) => {
+          payloads.push({
+            sessionNumber: plan.sessionNumber, // Ensure session number is included
+            board,
+            grade: className,
+            subject: subjectName,
+            unit: unitName,
+            chapter: topic.name,
+            topics: [{ topic: topic.name, concepts: topic.concepts }],
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          });
+        });
       });
   
-      console.log("Payloads for all topics:", payloads);
+      console.log("Payloads for all topics:", payloads); // Debugging payloads
   
       const responses = await Promise.allSettled(
-        payloads.flat().map((payload) =>
+        payloads.map((payload) =>
           axios.post("https://tms.up.school/api/dynamicLP", payload)
         )
       );
   
-      console.log("Responses for all topics:", responses);
+      console.log("Responses for all topics:", responses); // Debugging responses
   
       const updatedTopicsWithConcepts = { ...topicsWithConcepts };
   
       responses.forEach((response, index) => {
         if (response.status === "fulfilled" && response.value.data) {
-          const sessionNumber = sessionPlans[index]?.sessionNumber;
+          const { sessionNumber } = payloads[index]; // Use sessionNumber from payload
           const lessonPlan = response.value.data.lesson_plan;
   
           if (sessionNumber !== undefined) {
             updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
               sessionNumber
             ].map((topic, topicIndex) =>
-              topicIndex === index
+              payloads[index].topics[0].topic === topic.name
                 ? { ...topic, lessonPlan }
                 : topic
             );
@@ -250,6 +254,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
 
   // View lesson plan
