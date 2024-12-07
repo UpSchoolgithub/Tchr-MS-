@@ -4,6 +4,7 @@ const XLSX = require('xlsx');
 const { Op } = require('sequelize');
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic');
+const School = require('../models/School');
 
 const router = express.Router();
 
