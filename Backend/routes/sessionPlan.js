@@ -5,7 +5,9 @@ const { Op } = require('sequelize');
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic');
 const School = require('../models/School');
-
+const ClassInfo = require('../models/ClassInfo');
+const Section = require('../models/Section');
+const Subject = require('../models/Subject');
 const router = express.Router();
 
 // Configure multer for file uploads
