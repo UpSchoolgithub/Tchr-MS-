@@ -326,64 +326,56 @@ const SessionPlans = () => {
           </tr>
         </thead>
         <tbody>
-        <tbody>
-  {sessionPlans.map((plan) => (
-    <React.Fragment key={plan.id}>
-      {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-        <React.Fragment key={`${plan.sessionNumber}-${tIndex}`}>
-          {topic.concepts.map((concept, cIndex) => (
-            <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
-              {tIndex === 0 && cIndex === 0 && (
-                <td
-                  rowSpan={
-                    topic.concepts.length *
-                    (topicsWithConcepts[plan.sessionNumber]?.length || 1)
-                  }
-                >
-                  {plan.sessionNumber}
-                </td>
-              )}
-              {cIndex === 0 && (
-                <td rowSpan={topic.concepts.length}>{topic.name}</td>
-              )}
-              <td>{concept}</td>
-              <td>
-                {topic.lessonPlan ? (
-                  <button
-                    className="view-button"
-                    onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                  >
-                    View
-                  </button>
-                ) : (
-                  "Not Generated"
-                )}
-              </td>
-              {tIndex === 0 && cIndex === 0 && (
-                <td
-                  rowSpan={
-                    topic.concepts.length *
-                    (topicsWithConcepts[plan.sessionNumber]?.length || 1)
-                  }
-                >
-                  <button
-                    onClick={() =>
-                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                    }
-                    disabled={saving}
-                  >
-                    {saving ? "Saving..." : "Save"}
+          {sessionPlans.map((plan) => (
+            <React.Fragment key={plan.id}>
+              {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
+                <tr key={`${plan.sessionNumber}-${tIndex}`}>
+                  {tIndex === 0 && (
+                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                      {plan.sessionNumber}
+                    </td>
+                  )}
+                  <td>{topic.name}</td>
+                  <td>
+                    {topic.concepts.map((concept, cIndex) => (
+                      <div key={cIndex}>{concept}</div>
+                    ))}
+                  </td>
+                  <td>
+                    {topic.lessonPlan ? (
+                      <button
+                        className="view-button"
+                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                      >
+                        View
+                      </button>
+                    ) : (
+                      "Not Generated"
+                    )}
+                  </td>
+                  {tIndex === 0 && (
+                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                      <button
+                        onClick={() =>
+                          handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                        }
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              <tr>
+                <td colSpan="5">
+                  <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                    + Add Topic
                   </button>
                 </td>
-              )}
-            </tr>
+              </tr>
+            </React.Fragment>
           ))}
-        </React.Fragment>
-      ))}
-    </React.Fragment>
-  ))}
-</tbody>
-
         </tbody>
         </table>
       </div>
