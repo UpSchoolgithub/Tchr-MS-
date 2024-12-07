@@ -18,7 +18,6 @@ const SessionManagement = () => {
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionsData, setSessionsData] = useState(null);
 
   // Extract additional data passed via Link state or fallback
   const {
@@ -30,20 +29,20 @@ const SessionManagement = () => {
 
   // Fetch sessions from the API
   const fetchSessions = async () => {
+    setIsLoading(true);
+    setError('');
     try {
-      const response = await axios.get(`https://tms.up.school/api/schools/32/classes/137/sections/189/subjects/123/sessions`, {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${yourJwtToken}`,
-        },
-      });
-      setSessionsData(response.data); // Store the data in state
+      const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
+      const response = await axios.get(url);
+      const fetchedSessions = response.data.sessions || [];
+      setSessions(fetchedSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
+      setError('Failed to fetch sessions. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchSessions();
