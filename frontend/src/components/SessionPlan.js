@@ -52,11 +52,14 @@ const SessionPlans = () => {
 
         // Initialize topics and concepts
         const initialData = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.planDetails?.map((topic) => ({
-            name: topic.name || "",
-            concepts: topic.concepts || [],
-            lessonPlan: topic.lessonPlan || "",
-          })) || [];
+          acc[plan.sessionNumber] = plan.planDetails?.flatMap((topic) =>
+            topic.concepts.map((concept) => ({
+              topic: topic.name || "",
+              concept: concept || "",
+              lessonPlan: "",
+            }))
+          ) || [];
+          
           return acc;
         }, {});
         setTopicsWithConcepts(initialData);
@@ -290,9 +293,9 @@ const SessionPlans = () => {
           {unitName}
         </p>
       </div>
-
+  
       {successMessage && <div className="success-message">{successMessage}</div>}
-
+  
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>
@@ -307,7 +310,7 @@ const SessionPlans = () => {
           </button>
         </form>
       </div>
-
+  
       <div className="generate-controls">
         <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
           {saving ? "Generating..." : "Generate All Lesson Plans"}
@@ -315,14 +318,14 @@ const SessionPlans = () => {
         {successMessage && <div className="success-message">{successMessage}</div>}
         {error && <div className="error-message">{error}</div>}
       </div>
-
+  
       <div className="table-container">
         <table>
           <thead>
             <tr>
               <th>Session Number</th>
-              <th>Topic Names</th>
-              <th>Related Concepts</th>
+              <th>Topic Name</th>
+              <th>Concept</th>
               <th>Lesson Plan</th>
               <th>Actions</th>
             </tr>
@@ -330,24 +333,20 @@ const SessionPlans = () => {
           <tbody>
             {sessionPlans.map((plan) => (
               <React.Fragment key={plan.id}>
-                {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-                  <tr key={`${plan.sessionNumber}-${tIndex}`}>
-                    {tIndex === 0 && (
+                {topicsWithConcepts[plan.sessionNumber]?.map((entry, cIndex) => (
+                  <tr key={`${plan.sessionNumber}-${cIndex}`}>
+                    {cIndex === 0 && (
                       <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
                         {plan.sessionNumber}
                       </td>
                     )}
-                    <td>{topic.name}</td>
+                    <td>{entry.topic}</td>
+                    <td>{entry.concept}</td>
                     <td>
-                      {topic.concepts.map((concept, cIndex) => (
-                        <div key={cIndex}>{concept}</div>
-                      ))}
-                    </td>
-                    <td>
-                      {topic.lessonPlan ? (
+                      {entry.lessonPlan ? (
                         <button
                           className="view-button"
-                          onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                          onClick={() => handleViewLessonPlan(entry.lessonPlan)}
                         >
                           View
                         </button>
@@ -355,7 +354,7 @@ const SessionPlans = () => {
                         "Not Generated"
                       )}
                     </td>
-                    {tIndex === 0 && (
+                    {cIndex === 0 && (
                       <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
                         <button
                           onClick={() =>
@@ -381,7 +380,7 @@ const SessionPlans = () => {
           </tbody>
         </table>
       </div>
-
+  
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Lesson Plan</Modal.Title>
@@ -397,6 +396,6 @@ const SessionPlans = () => {
       </Modal>
     </div>
   );
-};
+};  
 
 export default SessionPlans;

@@ -42,35 +42,41 @@ class LessonPlanResponse(BaseModel):
     lesson_plan: str
 
 def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
-    system_msg = {
-        "role": "system",
-        "content": f"""Create a structured lesson plan session-wise:
-        
-        - Board: {data.board}
-        - Grade: {data.grade}
-        - Subject: {data.subject}
-        - Unit: {data.unit}
-        - Chapter: {data.chapter}
-        - Topics: {[topic.topic for topic in data.topics]}
-        - Session Type: {data.sessionType}
-        - Number of Sessions: {data.noOfSession}
-        - Duration per Session: {data.duration} minutes
-        """
-    }
-    messages = [system_msg]
+    all_lesson_plans = {}  # To store lesson plans for each concept
+    for topic in data.topics:
+        for concept in topic.concepts:
+            try:
+                # Create a message for the specific concept
+                system_msg = {
+                    "role": "system",
+                    "content": f"""Create a detailed lesson plan for the following concept:
+                    
+                    - Board: {data.board}
+                    - Grade: {data.grade}
+                    - Subject: {data.subject}
+                    - Unit: {data.unit}
+                    - Chapter: {data.chapter}
+                    - Topic: {topic.topic}
+                    - Concept: {concept}
+                    - Session Type: {data.sessionType}
+                    - Duration: {data.duration} minutes
+                    """
+                }
+                messages = [system_msg]
+                
+                # Generate lesson plan using OpenAI API
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages
+                )
+                lesson_plan = response.choices[0].message.content
+                all_lesson_plans[concept] = lesson_plan
+            except Exception as e:
+                print(f"Error with OpenAI API for concept {concept}: {e}")
+                all_lesson_plans[concept] = "Error generating lesson plan."
+    
+    return {"lesson_plan": all_lesson_plans}
 
-    try:
-        print("Requesting OpenAI with messages:", messages)  # Debugging OpenAI request
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages
-        )
-        print("OpenAI response:", response)  # Debugging OpenAI response
-        lesson_plan = response.choices[0].message.content
-        return {"lesson_plan": lesson_plan}
-    except Exception as e:
-        print(f"Error with OpenAI API: {e}")  # Debugging error
-        return {"lesson_plan": ""}
 
 
 def create_pdf(lesson_plan: str) -> str:
@@ -91,17 +97,13 @@ def create_pdf(lesson_plan: str) -> str:
 @app.post("/generate-lesson-plan", response_model=LessonPlanResponse)
 async def generate_lesson_plan_endpoint(data: LessonPlanRequest):
     try:
-        print("Incoming payload for lesson plan generation:", data.dict())  # Debugging payload
-
-        lesson_plan = generate_lesson_plan(data)
-        if not lesson_plan["lesson_plan"]:
-            print("Failed to generate lesson plan. Empty response from OpenAI.")
+        lesson_plan_data = generate_lesson_plan(data)
+        if not lesson_plan_data["lesson_plan"]:
             raise HTTPException(status_code=500, detail="Failed to generate lesson plan.")
-
-        print("Generated lesson plan:", lesson_plan)  # Debugging response
-        return lesson_plan
+        
+        return lesson_plan_data  # Return all lesson plans concept-wise
     except Exception as e:
-        print(f"Error generating lesson plan: {e}")  # Debugging error
+        print(f"Error generating lesson plan: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/download-pdf")

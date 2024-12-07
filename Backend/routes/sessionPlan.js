@@ -55,8 +55,10 @@ router.post(
           topicsMap[sessionNumber] = [];
         }
 
-        topicsMap[sessionNumber].push({ name: topicName, concepts });
-      });
+        topicsMap[sessionNumber].push(
+          ...concepts.map((concept) => ({ name: topicName, concept, lessonPlan: "" }))
+        );
+              });
 
       for (const sessionNumber in topicsMap) {
         sessionPlans.push({
@@ -93,8 +95,13 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
 
     const formattedSessionPlans = sessionPlans.map((plan) => ({
       ...plan.toJSON(),
-      planDetails: JSON.parse(plan.planDetails),
+      planDetails: JSON.parse(plan.planDetails).map((entry) => ({
+        topic: entry.name,
+        concept: entry.concept,
+        lessonPlan: entry.lessonPlan || "",
+      })),
     }));
+    
 
     res.json(formattedSessionPlans);
   } catch (error) {
@@ -117,8 +124,13 @@ router.put('/sessionPlans/:id', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    sessionPlan.planDetails = planDetails;
-    await sessionPlan.save();
+    sessionPlan.planDetails = JSON.stringify(
+      planDetails.map((entry) => ({
+        topic: entry.topic,
+        concept: entry.concept,
+        lessonPlan: entry.lessonPlan,
+      }))
+    );
 
     res.json({ message: 'Session plan updated successfully' });
   } catch (error) {
@@ -140,10 +152,11 @@ router.post('/sessionPlans/:id/addTopic', async (req, res) => {
 
     const topics = JSON.parse(sessionPlan.planDetails) || [];
     const updatedTopics = [
-      ...topics.slice(0, order - 1),
-      { name: topicName, concepts: [] },
-      ...topics.slice(order - 1),
-    ];
+  ...topics.slice(0, order - 1),
+  { name: topicName, concept: "", lessonPlan: "" },
+  ...topics.slice(order - 1),
+];
+
 
     sessionPlan.planDetails = JSON.stringify(updatedTopics);
     await sessionPlan.save();
