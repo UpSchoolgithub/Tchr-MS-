@@ -187,6 +187,61 @@ const SessionPlans = () => {
     }
   };
 
+    // Generate lesson plan for all topics
+    const handleGenerateAllLessonPlans = async () => {
+      try {
+        const payload = sessionPlans.map((plan) => {
+          const topics = topicsWithConcepts[plan.sessionNumber] || [];
+          return topics.map((topic) => ({
+            sessionNumber: plan.sessionNumber,
+            board: board || "CBSE", // Replace with actual value
+            grade: "10", // Replace with actual value
+            subject: "Math", // Replace with actual value
+            subSubject: "Algebra", // Replace with actual value
+            unit: "Linear Equations", // Replace with actual value
+            chapter: topic.name, // Topic name
+            topics: [
+              {
+                topic: topic.name,
+                concepts: topic.concepts,
+              },
+            ],
+            sessionType: "Theory", // Hardcoded for now
+            noOfSession: 1, // For single topic
+            duration: 45, // Set a default duration
+          }));
+        });
+    
+        const allResponses = await Promise.all(
+          payload.flat().map((singlePayload) =>
+            axios.post("https://tms.up.school/api/dynamicLP", singlePayload)
+          )
+        );
+    
+        const updatedTopicsWithConcepts = { ...topicsWithConcepts };
+    
+        // Map responses to the respective sessionNumber and topic
+        allResponses.forEach((response, index) => {
+          const { sessionNumber } = payload.flat()[index];
+          const lessonPlan = response.data.lesson_plan;
+          updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
+            sessionNumber
+          ].map((topic, topicIndex) =>
+            topicIndex === index
+              ? { ...topic, lessonPlan } // Add the generated lesson plan
+              : topic
+          );
+        });
+    
+        setTopicsWithConcepts(updatedTopicsWithConcepts);
+        setError("");
+      } catch (error) {
+        console.error("Error generating lesson plans:", error);
+        setError("Failed to generate lesson plans. Please try again.");
+      }
+    };
+
+
   // View lesson plan
   const handleViewLessonPlan = (lessonPlan) => {
     alert(`Viewing Lesson Plan: ${lessonPlan}`);
@@ -231,77 +286,74 @@ const SessionPlans = () => {
           </button>
         </form>
       </div>
-
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Session Number</th>
-              <th>Topic Names</th>
-              <th>Related Concepts</th>
-              <th>Lesson Plan</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessionPlans.map((plan) => (
-              <React.Fragment key={plan.id}>
-                {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
-                  <tr key={`${plan.sessionNumber}-${tIndex}`}>
-                    {tIndex === 0 && (
-                      <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                        {plan.sessionNumber}
-                      </td>
-                    )}
-                    <td>{topic.name}</td>
-                    <td>
-                      {topic.concepts.map((concept, cIndex) => (
-                        <div key={cIndex}>{concept}</div>
-                      ))}
+{/* Generate Lesson Plan Button */}
+    <div className="generate-controls">
+      <button onClick={handleGenerateAllLessonPlans}>Generate All Lesson Plans</button>
+    </div>
+  {/* Table for Session Plans */}
+  <div className="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Session Number</th>
+            <th>Topic Names</th>
+            <th>Related Concepts</th>
+            <th>Lesson Plan</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sessionPlans.map((plan) => (
+            <React.Fragment key={plan.id}>
+              {topicsWithConcepts[plan.sessionNumber]?.map((topic, tIndex) => (
+                <tr key={`${plan.sessionNumber}-${tIndex}`}>
+                  {tIndex === 0 && (
+                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                      {plan.sessionNumber}
                     </td>
-                    <td>
-                      {topic.lessonPlan ? (
-                        <button
-                          className="view-button"
-                          onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                        >
-                          View
-                        </button>
-                      ) : (
-                        <button
-                          className="generate-button"
-                          onClick={() =>
-                            handleGenerateLessonPlan(plan.sessionNumber, tIndex)
-                          }
-                        >
-                          Generate
-                        </button>
-                      )}
-                    </td>
-                    {tIndex === 0 && (
-                      <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
-                        <button
-                          onClick={() =>
-                            handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                          }
-                          disabled={saving}
-                        >
-                          {saving ? "Saving..." : "Save"}
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan="5">
-                    <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-                      + Add Topic
-                    </button>
+                  )}
+                  <td>{topic.name}</td>
+                  <td>
+                    {topic.concepts.map((concept, cIndex) => (
+                      <div key={cIndex}>{concept}</div>
+                    ))}
                   </td>
+                  <td>
+                    {topic.lessonPlan ? (
+                      <button
+                        className="view-button"
+                        onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                      >
+                        View
+                      </button>
+                    ) : (
+                      "Not Generated"
+                    )}
+                  </td>
+                  {tIndex === 0 && (
+                    <td rowSpan={topicsWithConcepts[plan.sessionNumber]?.length || 1}>
+                      <button
+                        onClick={() =>
+                          handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                        }
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
-              </React.Fragment>
-            ))}
-          </tbody>
+              ))}
+              <tr>
+                <td colSpan="5">
+                  <button onClick={() => handleAddTopic(plan.sessionNumber)}>
+                    + Add Topic
+                  </button>
+                </td>
+              </tr>
+            </React.Fragment>
+          ))}
+        </tbody>
         </table>
       </div>
     </div>
