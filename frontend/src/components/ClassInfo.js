@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 
 const ClassInfo = () => {
-  const { schoolId } = useOutletContext();
+  const { schoolId, schoolName } = useOutletContext();
   const navigate = useNavigate();
   const [classInfos, setClassInfos] = useState([]);
   const [className, setClassName] = useState('');
