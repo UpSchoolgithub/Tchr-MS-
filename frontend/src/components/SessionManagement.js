@@ -12,47 +12,38 @@ const SessionManagement = () => {
 
   // State for sessions and other details
   const [sessions, setSessions] = useState([]);
-  const [schoolName, setSchoolName] = useState('');
-  const [className, setClassName] = useState('');
-  const [sectionName, setSectionName] = useState('');
-  const [subjectName, setSubjectName] = useState('');
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [editingNumberOfSessions, setEditingNumberOfSessions] = useState('');
   const [editingPriorityNumber, setEditingPriorityNumber] = useState('');
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionsData, setSessionsData] = useState(null);
 
-  // Fetch sessions and other related details from the API
+  // Extract additional data passed via Link state or fallback
+  const {
+    schoolName = 'School Name Not Available',
+    className = 'Class Name Not Available',
+    subjectName = 'Subject Name Not Available',
+    sectionName = 'Section Name Not Available',
+  } = location.state || {};
+
+  // Fetch sessions from the API
   const fetchSessions = async () => {
-    setIsLoading(true);
     try {
-      const response = await axios.get(
-        `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`,
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${yourJwtToken}`, // Replace with valid token
-          },
-        }
-      );
-
-      const data = response.data;
-
-      // Extract names and sessions from API response
-      setSchoolName(data.schoolName || 'School Name Not Available');
-      setClassName(data.className || 'Class Name Not Available');
-      setSectionName(data.sectionName || 'Section Name Not Available');
-      setSubjectName(data.subjectName || 'Subject Name Not Available');
-      setSessions(data.sessions || []);
+      const response = await axios.get(`https://tms.up.school/api/schools/32/classes/137/sections/189/subjects/123/sessions`, {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${yourJwtToken}`,
+        },
+      });
+      setSessionsData(response.data); // Store the data in state
     } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details. Please try again later.');
-    } finally {
-      setIsLoading(false);
+      console.error('Error fetching sessions:', error);
     }
   };
+  
 
   useEffect(() => {
     fetchSessions();
@@ -124,6 +115,33 @@ const SessionManagement = () => {
     );
   };
 
+  // Upload sessions in bulk from a file
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    const file = e.target.elements.file.files[0];
+    if (!file) {
+      setError('Please select a file to upload.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsLoading(true);
+    setError('');
+    try {
+      const uploadUrl = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions/upload`;
+      await axios.post(uploadUrl, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      fetchSessions();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setError('Failed to upload file. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       <h2>Session Management</h2>
@@ -149,12 +167,34 @@ const SessionManagement = () => {
         </p>
       </div>
 
+      {/* File Upload */}
+      <form onSubmit={handleFileUpload}>
+        <input type="file" name="file" accept=".xlsx, .xls" required />
+        <button type="submit">Upload</button>
+      </form>
+
+      {/* Bulk Delete */}
+      <button onClick={handleBulkDelete} disabled={selectedSessionIds.length === 0}>
+        Bulk Delete
+      </button>
+
       {/* Session Table */}
       <table>
         <thead>
           <tr>
+            <th>
+              <input
+                type="checkbox"
+                onChange={(e) =>
+                  setSelectedSessionIds(
+                    e.target.checked ? sessions.map((session) => session.id) : []
+                  )
+                }
+                checked={selectedSessionIds.length === sessions.length && sessions.length > 0}
+              />
+            </th>
             <th>Unit Name</th>
-            <th>Chapter Name</th>
+            <th>Chapter</th>
             <th>Number of Sessions</th>
             <th>Priority Number</th>
             <th>Actions</th>
@@ -164,6 +204,13 @@ const SessionManagement = () => {
           {Array.isArray(sessions) && sessions.length > 0 ? (
             sessions.map((session) => (
               <tr key={session.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedSessionIds.includes(session.id)}
+                    onChange={() => toggleSelection(session.id)}
+                  />
+                </td>
                 <td>{session.unitName || 'N/A'}</td>
                 <td>{session.chapterName || 'N/A'}</td>
                 <td>
@@ -210,7 +257,7 @@ const SessionManagement = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="5" style={{ textAlign: 'center', color: 'gray' }}>
+              <td colSpan="6" style={{ textAlign: 'center', color: 'gray' }}>
                 No sessions available.
               </td>
             </tr>
