@@ -183,7 +183,7 @@ const SessionPlans = () => {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
   
       // Ensure topic and concept are not empty
-      if (!topic.name || !topic.concepts.length) {
+      if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
         throw new Error("Topic name or concepts are missing.");
       }
   
@@ -194,7 +194,12 @@ const SessionPlans = () => {
         subSubject: "Civics", // Adjust if needed
         unit: unitName,
         chapter: topic.name,
-        topics: [{ topic: topic.name, concepts: topic.concepts }],
+        topics: [
+          {
+            topic: topic.name,
+            concepts: topic.concepts, // Ensure concepts are passed as an array
+          },
+        ],
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
@@ -202,10 +207,7 @@ const SessionPlans = () => {
   
       console.log("Payload for individual lesson plan:", payload);
   
-      const response = await axios.post(
-        "https://tms.up.school/api/dynamicLP",
-        payload
-      );
+      const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
   
       const lessonPlan = response.data.lesson_plan;
       setTopicsWithConcepts((prev) => ({
@@ -220,6 +222,7 @@ const SessionPlans = () => {
       setError("Failed to generate lesson plan. Please try again.");
     }
   };
+  
   
   
 
@@ -242,13 +245,18 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
+            topics: [
+              {
+                topic: topic.name,
+                concepts: topic.concepts, // Ensure concepts are passed as an array
+              },
+            ],
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
-      }).filter(Boolean);
+      }).filter(Boolean); // Remove invalid payloads
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -275,6 +283,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
