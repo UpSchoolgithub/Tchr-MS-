@@ -57,7 +57,7 @@ const SessionPlans = () => {
         // Parse each session's topics and their concepts
         const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-            topicName: entry.topic || "",
+            name: entry.topic || "No Topic Name", // Ensure topic name is assigned
             concepts: Array.isArray(entry.concept)
               ? entry.concept
               : entry.concept
@@ -79,6 +79,7 @@ const SessionPlans = () => {
         setError("Failed to fetch session plans.");
       }
     };
+    
     
   
     fetchSessionPlans();
