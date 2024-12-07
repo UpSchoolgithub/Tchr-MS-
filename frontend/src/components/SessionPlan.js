@@ -152,14 +152,20 @@ const SessionPlans = () => {
   const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
+  
+      // Ensure topic and concept are not empty
+      if (!topic.name || !topic.concepts.length) {
+        throw new Error("Topic name or concepts are missing.");
+      }
+  
       const payload = {
         board,
         grade: className,
         subject: subjectName,
-        subSubject: "Civics",
+        subSubject: "Civics", // Adjust if needed
         unit: unitName,
-        chapter: topic.topicName,
-        topics: [{ topic: topic.topicName, concepts: [topic.concept] }], // Send specific concept
+        chapter: topic.name,
+        topics: [{ topic: topic.name, concepts: topic.concepts }],
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
@@ -186,26 +192,21 @@ const SessionPlans = () => {
     }
   };
   
+  
 
   // Generate lesson plans for all topics
   const handleGenerateAllLessonPlans = async () => {
     try {
       setSaving(true);
   
-      console.log("sessionPlans:", sessionPlans); // Debugging sessionPlans
-      console.log("topicsWithConcepts:", topicsWithConcepts); // Debugging topicsWithConcepts
-  
-      if (!Array.isArray(sessionPlans) || sessionPlans.length === 0) {
-        setError("No session plans available for processing.");
-        return;
-      }
-  
-      const payloads = [];
-      sessionPlans.forEach((plan) => {
-        const topics = topicsWithConcepts[plan.sessionNumber] || [];
-        topics.forEach((topic) => {
-          payloads.push({
-            sessionNumber: plan.sessionNumber, // Ensure session number is included
+      const payloads = sessionPlans.flatMap((plan) =>
+        (topicsWithConcepts[plan.sessionNumber] || []).map((topic) => {
+          if (!topic.name || !topic.concepts.length) {
+            console.error(`Invalid topic or concepts for session: ${plan.sessionNumber}`);
+            return null; // Skip invalid topics
+          }
+          return {
+            sessionNumber: plan.sessionNumber,
             board,
             grade: className,
             subject: subjectName,
@@ -215,11 +216,17 @@ const SessionPlans = () => {
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
-          });
-        });
-      });
+          };
+        })
+      ).filter(Boolean); // Remove null payloads
   
-      console.log("Payloads for all topics:", payloads); // Debugging payloads
+      if (!payloads.length) {
+        setError("No valid topics to generate lesson plans.");
+        setSaving(false);
+        return;
+      }
+  
+      console.log("Payloads for all topics:", payloads);
   
       const responses = await Promise.allSettled(
         payloads.map((payload) =>
@@ -227,26 +234,21 @@ const SessionPlans = () => {
         )
       );
   
-      console.log("Responses for all topics:", responses); // Debugging responses
+      console.log("Responses for all topics:", responses);
   
       const updatedTopicsWithConcepts = { ...topicsWithConcepts };
-  
       responses.forEach((response, index) => {
         if (response.status === "fulfilled" && response.value.data) {
-          const { sessionNumber } = payloads[index]; // Use sessionNumber from payload
+          const { sessionNumber } = payloads[index];
           const lessonPlan = response.value.data.lesson_plan;
   
-          if (sessionNumber !== undefined) {
-            updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
-              sessionNumber
-            ].map((topic, topicIndex) =>
-              payloads[index].topics[0].topic === topic.name
-                ? { ...topic, lessonPlan }
-                : topic
-            );
-          } else {
-            console.error(`No session number for payload index ${index}`);
-          }
+          updatedTopicsWithConcepts[sessionNumber] = updatedTopicsWithConcepts[
+            sessionNumber
+          ].map((topic, topicIndex) =>
+            payloads[index].topics[0].topic === topic.name
+              ? { ...topic, lessonPlan }
+              : topic
+          );
         } else {
           console.error(`Error for payload ${index}:`, response.reason);
         }
@@ -262,6 +264,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
 
