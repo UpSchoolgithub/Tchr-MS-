@@ -34,6 +34,7 @@ const SessionManagement = () => {
     try {
       const url = `https://tms.up.school/api/schools/${schoolId}/classes/${classId}/sections/${sectionId}/subjects/${subjectId}/sessions`;
       const response = await axios.get(url);
+      console.log('Sessions Response:', response.data); // Log API response
       const fetchedSessions = response.data.sessions || [];
       setSessions(fetchedSessions);
     } catch (error) {
@@ -43,6 +44,7 @@ const SessionManagement = () => {
       setIsLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchSessions();

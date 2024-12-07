@@ -33,9 +33,10 @@ const ClassInfo = () => {
   const fetchClassInfos = async () => {
     try {
       const response = await axios.get(`https://tms.up.school/api/schools/${schoolId}/classes`);
+      console.log('Class Info Response:', response.data); // Log API response
       const formattedClasses = response.data.map((cls) => ({
         ...cls,
-        displayName: `${cls.board} - ${cls.className}`, // Combine board and class name
+        displayName: `${cls.board} - ${cls.className}`,
       }));
       setClassInfos(formattedClasses);
     } catch (error) {
@@ -43,6 +44,7 @@ const ClassInfo = () => {
       setError('Error fetching class data');
     }
   };
+  
   
   
   
@@ -383,6 +385,12 @@ const ClassInfo = () => {
   onClick={() => {
     const selectedClass = info;
     const sectionData = info.sections[sec];
+    console.log('Navigate to Manage Sessions:', {
+      selectedClass,
+      sectionData,
+      subjectId: subject.id,
+    });
+
     if (sectionData && sectionData.id) {
       navigate(
         `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`
@@ -395,6 +403,7 @@ const ClassInfo = () => {
 >
   Manage Sessions
 </button>
+
 
           </td>
         </tr>
