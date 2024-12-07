@@ -8,8 +8,6 @@ const School = require('../models/School');
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
-const Chapter = require('../models/Chapter'); // Adjust the path if necessary
-
 const router = express.Router();
 
 // Configure multer for file uploads
@@ -181,19 +179,17 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
   const { schoolId, classId, sectionId, subjectId } = req.params;
 
   try {
+    // Fetch school, class, section, and subject details
     const school = await School.findByPk(schoolId, { attributes: ['name'] });
     const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
     const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
     const subject = await Subject.findByPk(subjectId, { attributes: ['subjectName'] });
 
-    // Fetch Chapter and Unit
-    const chapter = await Chapter.findOne({ where: { classId, subjectId }, attributes: ['chapterName'] });
-    const unit = await Unit.findOne({ where: { classId, subjectId }, attributes: ['unitName'] });
-
-    if (!school || !classInfo || !section || !subject || !chapter || !unit) {
+    if (!school || !classInfo || !section || !subject) {
       return res.status(404).json({ message: 'One or more entities not found.' });
     }
 
+    // Return only metadata
     res.json({
       schoolId,
       schoolName: school.name,
@@ -204,14 +200,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
       sectionName: section.sectionName,
       subjectId,
       subjectName: subject.subjectName,
-      chapterName: chapter.chapterName,
-      unitName: unit.unitName,
     });
   } catch (error) {
     console.error('Error fetching metadata:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
-
 
 module.exports = router;
