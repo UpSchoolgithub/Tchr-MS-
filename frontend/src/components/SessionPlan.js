@@ -25,6 +25,8 @@ const SessionPlans = () => {
     sectionId,
     subjectName = "Subject Name Not Available",
     subjectId,
+    board: boardName,
+
     chapterName = "Chapter Name Not Available",
     unitName = "Unit Name Not Available",
   } = location.state || {};
