@@ -6,7 +6,7 @@ import "../styles.css";
 const SessionPlans = () => {
   const { sessionId } = useParams();
   const location = useLocation();
-  const [board, setBoard] = useState("");
+  // const [board, setBoard] = useState("");
   const [sessionPlans, setSessionPlans] = useState([]);
   const [topicsWithConcepts, setTopicsWithConcepts] = useState({});
   const [error, setError] = useState("");
@@ -14,6 +14,21 @@ const SessionPlans = () => {
   const [uploadDisabled, setUploadDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // display school , class etc naems
+  const {
+    schoolName = "School Name Not Available",
+    schoolId,
+    className = "Class Name Not Available",
+    classId,
+    sectionName = "Section Name Not Available",
+    sectionId,
+    subjectName = "Subject Name Not Available",
+    subjectId,
+    board = "Board Not Available",
+    chapterName = "Chapter Name Not Available",
+    unitName = "Unit Name Not Available",
+  } = location.state || {};
+  
   // Fetch board from query params
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -173,7 +188,27 @@ const SessionPlans = () => {
       <h2 className="header">Session Plans</h2>
       {board && <p>Board: {board}</p>}
       {error && <div className="error">{error}</div>}
-
+ {/* Display additional details */}
+ <div className="info-banner">
+      <p>
+        <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
+      </p>
+      <p>
+        <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
+      </p>
+      <p>
+        <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
+      </p>
+      <p>
+        <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
+      </p>
+      <p>
+        <strong>Board:</strong> {board}</p>
+      <p>
+        <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong> {unitName}
+      </p>
+    </div>
+    
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>

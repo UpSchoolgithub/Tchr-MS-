@@ -246,9 +246,25 @@ const SessionManagement = () => {
                     <>
                       <button onClick={() => startEditing(session)}>Edit</button>
                       <button onClick={() => handleSessionDelete(session.id)}>Delete</button>
-                      <Link to={`/sessions/${session.id}/sessionPlans`}>
-                        <button>Session Plan</button>
-                      </Link>
+                      <Link
+  to={`/sessions/${session.id}/sessionPlans`}
+  state={{
+    schoolName,
+    schoolId,
+    className,
+    classId,
+    sectionName,
+    sectionId,
+    subjectName,
+    subjectId,
+    board: boardName,
+    chapterName: session.chapterName || "Chapter Name Not Available",
+    unitName: session.unitName || "Unit Name Not Available",
+  }}
+>
+  <button>Session Plan</button>
+</Link>
+
                     </>
                   )}
                 </td>
