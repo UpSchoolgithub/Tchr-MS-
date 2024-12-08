@@ -251,7 +251,9 @@ const ClassInfo = () => {
       ...prevFilters,
       [name]: value,
     }));
+    console.log("Filters Updated:", { ...filters, [name]: value }); // Debugging
   };
+  
   
   // Filter data based on selected filters
 const filteredClassInfos = classInfos.filter((info) => {
