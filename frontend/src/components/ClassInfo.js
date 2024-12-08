@@ -256,20 +256,21 @@ const ClassInfo = () => {
   
   
   // Filter data based on selected filters
-const filteredClassInfos = classInfos.filter((info) => {
-  const matchesClass = filters.class ? info.className === filters.class : true;
-  const matchesBoard = filters.board ? info.board === filters.board : true;
-  const matchesSection = filters.section
-    ? Object.keys(info.sections || {}).some((sec) => sec === filters.section)
-    : true;
-  const matchesSubject = filters.subject
-    ? Object.keys(info.sections || {}).some((sec) =>
-        info.sections[sec].subjects.some((sub) => sub.subjectName === filters.subject)
-      )
-    : true;
-
-  return matchesClass && matchesBoard && matchesSection && matchesSubject;
-});
+  const filteredClassInfos = classInfos.filter((info) => {
+    const matchesClass = filters.class ? info.className === filters.class : true;
+    const matchesBoard = filters.board ? info.board === filters.board : true;
+    const matchesSection = filters.section
+      ? Object.keys(info.sections || {}).includes(filters.section)
+      : true;
+    const matchesSubject = filters.subject
+      ? Object.keys(info.sections || {}).some((sec) =>
+          info.sections[sec].subjects.some((sub) => sub.subjectName === filters.subject)
+        )
+      : true;
+  
+    return matchesClass && matchesBoard && matchesSection && matchesSubject;
+  });
+  
 
 // Debugging
 console.log("Filtered Data:", filteredClassInfos);
@@ -487,11 +488,11 @@ console.log("Filters Applied:", filters);
             </tr>
           </thead>
           <tbody>
-  {classInfos.map((info) =>
+  {filteredClassInfos.map((info) =>
     Object.keys(info.sections || {}).map((sec) =>
       info.sections[sec].subjects.map((subject) => (
         <tr key={subject.id}>
-          <td>{info.className}</td> {/* Show only the class name */}
+          <td>{info.className}</td>
           <td>{info.board}</td>
           <td>{sec}</td>
           <td>{subject.subjectName}</td>
@@ -500,45 +501,32 @@ console.log("Filters Applied:", filters);
           <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
           <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
           <td>
-          <button
-  onClick={() => {
-    const selectedClass = info; // The selected class info
-    const sectionData = info.sections[sec]; // Section data for the selected section
-    console.log('Debug: Navigating to Manage Sessions');
-    console.log('Selected Class:', selectedClass);
-    console.log('Section Data:', sectionData);
-    console.log('Subject ID:', subject.id);
-
-    if (sectionData && sectionData.id) {
-      navigate(
-        `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`,
-        {
-          state: {
-            schoolName: schoolName, // Pass schoolName explicitly
-            className: selectedClass.className,
-            sectionName: sectionData.sectionName,
-            subjectName: subject.subjectName,
-            board: selectedClass.board,
-          },
-        }
-      );
-    } else {
-      console.error("Section ID not found for section name:", sec);
-      setError(`Section ID not found for section name: ${sec}`);
-    }
-  }}
->
-  Manage Sessions
-</button>
-
-
-
+            <button
+              onClick={() => {
+                const sectionData = info.sections[sec];
+                navigate(
+                  `/schools/${schoolId}/classes/${info.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`,
+                  {
+                    state: {
+                      schoolName,
+                      className: info.className,
+                      sectionName: sec,
+                      subjectName: subject.subjectName,
+                      board: info.board,
+                    },
+                  }
+                );
+              }}
+            >
+              Manage Sessions
+            </button>
           </td>
         </tr>
       ))
     )
   )}
 </tbody>
+
 
         </table>
       </div>
