@@ -299,7 +299,7 @@ console.log("Filters Applied:", filters);
     marginBottom: '10px',
   }}
 >
-  {isExpanded ? 'Close Add New Class' : 'Add New Class'}
+  {isExpanded ? 'X' : 'Add New Class'}
 </button>
 
 {/* Expandable Section */}
