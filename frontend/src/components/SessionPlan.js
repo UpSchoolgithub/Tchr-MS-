@@ -244,11 +244,46 @@ const SessionPlans = () => {
         });
       }).filter(Boolean);
   
+      console.log("Payloads for all topics:", payloads);
+  
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
         setSaving(false);
         return;
       }
+  
+      const responses = await Promise.allSettled(
+        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
+      );
+  
+      console.log("Responses for all topics:", responses);
+  
+      // Update state with generated lesson plans
+      responses.forEach((response, index) => {
+        if (response.status === "fulfilled") {
+          const { sessionNumber, chapter } = payloads[index];
+          const generatedLessonPlan = response.value.data.lesson_plan;
+  
+          setTopicsWithConcepts((prev) => ({
+            ...prev,
+            [sessionNumber]: prev[sessionNumber].map((topic) =>
+              topic.name === chapter ? { ...topic, lessonPlan: generatedLessonPlan } : topic
+            ),
+          }));
+        }
+      });
+  
+      setSuccessMessage("All topics' LP generated successfully!");
+      setError("");
+    } catch (error) {
+      console.error("Error generating all lesson plans:", error);
+      setError("Failed to generate lesson plans. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+
   
       console.log("Payloads for all topics:", payloads);
   
