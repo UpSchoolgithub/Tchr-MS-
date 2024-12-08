@@ -292,7 +292,7 @@ console.log("Filters Applied:", filters);
   onClick={toggleExpanded}
   style={{
     padding: '10px 20px',
-    backgroundColor: isExpanded ? 'a8cdf4' : '007bff',
+    backgroundColor: isExpanded ? '#dc3545' : '#dc3545',
     color: 'white',
     border: 'none',
     cursor: 'pointer',
