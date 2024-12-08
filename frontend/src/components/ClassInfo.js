@@ -558,7 +558,7 @@ console.log("Filters Applied:", filters);
               onClick={() => {
                 const sectionData = info.sections[sec];
                 navigate(
-                  `/schools/${schoolId}/classes/${info.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions`,
+                  `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`,
                   {
                     state: {
                       schoolName,
