@@ -475,7 +475,7 @@ console.log("Filters Applied:", filters);
       style={{
         marginLeft: "10px",
         padding: "5px 10px",
-        backgroundColor: "red",
+        backgroundColor: "grey",
         color: "white",
         border: "none",
         cursor: "pointer",
