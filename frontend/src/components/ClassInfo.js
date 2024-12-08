@@ -565,7 +565,7 @@ console.log("Filters Applied:", filters);
                       className: info.className,
                       sectionName: sec,
                       subjectName: subject.subjectName,
-                      board: info.board,
+                      board: selectedClass.board,
                     },
                   }
                 );
