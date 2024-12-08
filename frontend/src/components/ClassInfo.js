@@ -276,118 +276,154 @@ const ClassInfo = () => {
 console.log("Filtered Data:", filteredClassInfos);
 console.log("Filters Applied:", filters);
 
+//const AddNewClassSection = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleExpand = () => {
+    setIsExpanded((prev) => !prev);
+  };
+
   return (
     <div>
       {error && <div className="error">{error}</div>}
 
-      {/* Board Selection */}
+{/* Toggle Button for Expandable Section */}
+<button
+  onClick={toggleExpanded}
+  style={{
+    padding: '10px 20px',
+    backgroundColor: isExpanded ? 'red' : 'green',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    marginBottom: '10px',
+  }}
+>
+  {isExpanded ? 'Close Add New Class' : 'Add New Class'}
+</button>
+
+{/* Expandable Section */}
+{isExpanded && (
+  <div
+    style={{
+      border: '1px solid #ccc',
+      padding: '15px',
+      borderRadius: '5px',
+      backgroundColor: '#f9f9f9',
+      marginBottom: '20px',
+    }}
+  >
+    {/* Board Selection */}
+    <div>
+      <label>Select Board:</label>
+      <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)}>
+        <option value="">Select Board</option>
+        {boardOptions.map((board) => (
+          <option key={board} value={board}>
+            {board}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Class Input and Selection */}
+    <div>
+      <input
+        type="text"
+        placeholder="Enter new class"
+        value={newClassName}
+        onChange={(e) => setNewClassName(e.target.value)}
+      />
+      <button onClick={handleClassSubmit}>Add New Class</button>
+      <span> Or Select Existing Class:</span>
+      <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
+        <option value="">Select Class</option>
+        {classInfos.map((info) => (
+          <option key={info.id} value={`${info.board} - ${info.className}`}>
+            {info.displayName}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Section Input */}
+    <div>
+      <input
+        type="text"
+        placeholder="Enter new section"
+        value={newSectionName}
+        onChange={(e) => setNewSectionName(e.target.value)}
+      />
+      <button onClick={handleSectionSubmit}>Add New Section</button>
+    </div>
+
+    {/* Subject Form */}
+    <form onSubmit={handleSectionSubjectSubmit}>
       <div>
-        <label>Select Board:</label>
-        <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)}>
-          <option value="">Select Board</option>
-          {boardOptions.map((board) => (
-            <option key={board} value={board}>
-              {board}
+        <label>Section:</label>
+        <select value={section} onChange={(e) => setSection(e.target.value)} required>
+          <option value="">Select Section</option>
+          {sections.map((sec) => (
+            <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
+              {sec.displayName} {/* Updated display */}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Class Input and Selection */}
       <div>
-        <input
-          type="text"
-          placeholder="Enter new class"
-          value={newClassName}
-          onChange={(e) => setNewClassName(e.target.value)}
-        />
-        <button onClick={handleClassSubmit}>Add New Class</button>
-        <span> Or Select Existing Class:</span>
-        <select value={className} onChange={(e) => handleClassChange(e.target.value)}>
-    <option value="">Select Class</option>
-    {classInfos.map((info) => (
-      <option key={info.id} value={`${info.board} - ${info.className}`}>
-        {info.displayName}
-      </option>
+        <label>Subject:</label>
+        <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
+          <option value="">Select Subject</option>
+          {getSubjects(className).map((subj) => (
+            <option key={subj} value={subj}>
+              {subj}
+            </option>
           ))}
         </select>
       </div>
-
-      {/* Section Input */}
       <div>
+        <label>Academic Start Date:</label>
         <input
-          type="text"
-          placeholder="Enter new section"
-          value={newSectionName}
-          onChange={(e) => setNewSectionName(e.target.value)}
+          type="date"
+          value={academicStartDate}
+          onChange={(e) => setAcademicStartDate(e.target.value)}
+          required
         />
-        <button onClick={handleSectionSubmit}>Add New Section</button>
       </div>
-
-      {/* Subject Form */}
-      <form onSubmit={handleSectionSubjectSubmit}>
       <div>
-  <label>Section:</label>
-  <select value={section} onChange={(e) => setSection(e.target.value)} required>
-    <option value="">Select Section</option>
-    {sections.map((sec) => (
-      <option key={sec.id} value={`${selectedBoard} - ${sec.sectionName}`}>
-        {sec.displayName} {/* Updated display */}
-      </option>
-    ))}
-  </select>
-</div>
+        <label>Academic End Date:</label>
+        <input
+          type="date"
+          value={academicEndDate}
+          onChange={(e) => setAcademicEndDate(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label>Revision Start Date:</label>
+        <input
+          type="date"
+          value={revisionStartDate}
+          onChange={(e) => setRevisionStartDate(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label>Revision End Date:</label>
+        <input
+          type="date"
+          value={revisionEndDate}
+          onChange={(e) => setRevisionEndDate(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit">Add Section and Subject</button>
+    </form>
+    </div>
+      )}
 
-
-        <div>
-          <label>Subject:</label>
-          <select value={subject} onChange={(e) => setSubject(e.target.value)} required>
-            <option value="">Select Subject</option>
-            {getSubjects(className).map((subj) => (
-              <option key={subj} value={subj}>
-                {subj}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Academic Start Date:</label>
-          <input
-            type="date"
-            value={academicStartDate}
-            onChange={(e) => setAcademicStartDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Academic End Date:</label>
-          <input
-            type="date"
-            value={academicEndDate}
-            onChange={(e) => setAcademicEndDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Revision Start Date:</label>
-          <input
-            type="date"
-            value={revisionStartDate}
-            onChange={(e) => setRevisionStartDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Revision End Date:</label>
-          <input
-            type="date"
-            value={revisionEndDate}
-            onChange={(e) => setRevisionEndDate(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Add Section and Subject</button>
-      </form>
+      
 {/*} filters for table */}
 <div>
   <h3>Filters</h3>
