@@ -570,7 +570,7 @@ console.log("Filters Applied:", filters);
                       className: info.className,
                       sectionName: sec,
                       subjectName: subject.subjectName,
-                      board: selectedClass.board,
+                      board: info.board, // Use the `info.board` value directly
                     },
                   }
                 );
