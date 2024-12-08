@@ -304,6 +304,30 @@ const SessionPlans = () => {
     }
   };
   
+  const handleDownloadLessonPlan = async (lessonPlan, topicName, conceptName) => {
+    try {
+      // Define the file name
+      const fileName = `${topicName}-${conceptName || "General"}.txt`;
+  
+      // Create a Blob from the lesson plan content
+      const blob = new Blob([lessonPlan], { type: "text/plain" });
+  
+      // Create a link element
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+  
+      // Trigger the download
+      document.body.appendChild(link);
+      link.click();
+  
+      // Clean up
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading lesson plan:", error);
+      setError("Failed to download lesson plan.");
+    }
+  };
   
   
   
@@ -413,17 +437,29 @@ const SessionPlans = () => {
 
             {/* Render Lesson Plan Button */}
             <td>
-              {typeof concept === "object" && concept.lessonPlan ? (
-                <button
-                  className="view-button"
-                  onClick={() => handleViewLessonPlan(concept.lessonPlan)}
-                >
-                  View
-                </button>
-              ) : (
-                "Not Generated"
-              )}
-            </td>
+  {typeof concept === "object" && concept.lessonPlan ? (
+    <>
+      <button
+        className="view-button"
+        onClick={() => handleViewLessonPlan(concept.lessonPlan)}
+      >
+        View
+      </button>
+      <button
+        className="download-button"
+        onClick={() =>
+          handleDownloadLessonPlan(concept.lessonPlan, topic.name, concept.concept)
+        }
+        style={{ marginLeft: "10px" }}
+      >
+        Download
+      </button>
+    </>
+  ) : (
+    "Not Generated"
+  )}
+</td>
+
 
             {/* Render Actions (Save Button) */}
             {tIndex === 0 && cIndex === 0 && (
