@@ -236,15 +236,16 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
+            topics: topic.concepts.map((concept) => ({
+              topic: topic.name,
+              concept: concept.trim(), // Ensure each concept is a non-empty string
+            })),
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
-      }).filter(Boolean);
-  
-      console.log("Payloads for all topics:", payloads);
+      }).filter(Boolean); // Remove invalid payloads
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -252,29 +253,25 @@ const SessionPlans = () => {
         return;
       }
   
+      console.log("Payloads for all topics:", payloads);
+  
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
-      console.log("Responses for all topics:", responses);
-  
-      // Update state with generated lesson plans
       responses.forEach((response, index) => {
-        if (response.status === "fulfilled") {
-          const { sessionNumber, chapter } = payloads[index];
-          const generatedLessonPlan = response.value.data.lesson_plan;
-  
-          setTopicsWithConcepts((prev) => ({
-            ...prev,
-            [sessionNumber]: prev[sessionNumber].map((topic) =>
-              topic.name === chapter ? { ...topic, lessonPlan: generatedLessonPlan } : topic
-            ),
-          }));
+        if (response.status === "rejected") {
+          console.error("Error in payload:", payloads[index]);
+          console.error("Error response:", response.reason);
         }
       });
   
-      setSuccessMessage("All topics' LP generated successfully!");
-      setError("");
+      const successfulPlans = responses.filter((res) => res.status === "fulfilled");
+      if (successfulPlans.length > 0) {
+        setSuccessMessage("Some lesson plans generated successfully!");
+      } else {
+        setError("All lesson plans failed to generate.");
+      }
     } catch (error) {
       console.error("Error generating all lesson plans:", error);
       setError("Failed to generate lesson plans. Please try again.");
@@ -282,6 +279,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
