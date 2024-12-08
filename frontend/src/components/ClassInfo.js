@@ -562,22 +562,23 @@ console.log("Filters Applied:", filters);
       setError("Invalid section data");
       return;
     }
-                navigate(
-                  `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`,
-                  {
-                    state: {
-                      schoolName,
-                      className: info.className,
-                      sectionName: sec,
-                      subjectName: subject.subjectName,
-                      board: info.board, // Use the `info.board` value directly
-                    },
-                  }
-                );
-              }}
-            >
-              Manage Sessions
-            </button>
+    navigate(
+      `/schools/${schoolId}/classes/${info.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${info.board}`,
+      {
+        state: {
+          schoolName,
+          className: info.className,
+          sectionName: sec,
+          subjectName: subject.subjectName,
+          board: info.board,
+        },
+      }
+    );
+  }}
+>
+  Manage Sessions
+</button>
+
           </td>
         </tr>
       ))
