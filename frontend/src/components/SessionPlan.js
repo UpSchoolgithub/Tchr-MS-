@@ -222,32 +222,34 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
+      // Construct payloads for each concept individually
       const payloads = sessionPlans.flatMap((plan) => {
         const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
-        return groupedTopics.map((topic) => {
+        return groupedTopics.flatMap((topic) => {
           const validConcepts = Array.isArray(topic.concepts)
-            ? topic.concepts.filter((concept) => concept.trim() !== "") // Remove empty concepts
-            : []; // Default to empty array if concepts is not valid
+            ? topic.concepts.filter((concept) => concept.trim() !== "") // Filter valid concepts
+            : []; // Default to empty array if concepts are invalid
   
           if (!topic.name || validConcepts.length === 0) {
             console.warn(`Skipping invalid topic: ${topic.name}`);
             return null;
           }
   
-          return {
+          // Generate a separate payload for each concept
+          return validConcepts.map((concept) => ({
             sessionNumber: plan.sessionNumber,
             board,
             grade: className,
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: validConcepts.map((concept) => ({ topic: topic.name, concept })), // Ensure valid structure
+            topics: [{ topic: topic.name, concept }], // Single concept payload
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
-          };
+          }));
         });
-      }).filter(Boolean);
+      }).filter(Boolean); // Remove null entries
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -255,15 +257,38 @@ const SessionPlans = () => {
         return;
       }
   
-      console.log("Payloads for all topics:", JSON.stringify(payloads, null, 2));
+      console.log("Payloads for all topics and concepts:", JSON.stringify(payloads, null, 2));
   
+      // Send requests for all payloads
       const responses = await Promise.allSettled(
-        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
+        payloads.map((payload) =>
+          axios.post("https://tms.up.school/api/dynamicLP", payload)
+        )
       );
   
+      // Process responses and update state
       responses.forEach((response, index) => {
+        const { sessionNumber, topics } = payloads[index];
+        const concept = topics[0].concept; // Extract the concept
+  
         if (response.status === "fulfilled") {
-          console.log("Lesson plan generated:", response.value.data.lesson_plan);
+          const generatedLessonPlan = response.value.data.lesson_plan;
+          console.log("Lesson plan generated:", generatedLessonPlan);
+  
+          // Update lesson plan for the specific concept
+          setTopicsWithConcepts((prev) => ({
+            ...prev,
+            [sessionNumber]: prev[sessionNumber].map((topic) =>
+              topic.name === topics[0].topic
+                ? {
+                    ...topic,
+                    concepts: topic.concepts.map((c) =>
+                      c === concept ? { concept: c, lessonPlan: generatedLessonPlan } : c
+                    ),
+                  }
+                : topic
+            ),
+          }));
         } else {
           console.error("Error generating lesson plan:", response.reason);
         }
