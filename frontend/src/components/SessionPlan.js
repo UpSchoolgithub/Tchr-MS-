@@ -405,22 +405,25 @@ const SessionPlans = () => {
             )}
 
             {/* Render Concept */}
-            <td>{concept}</td>
+            <td>
+              {typeof concept === "string"
+                ? concept
+                : concept.concept /* Safely access the concept key */}
+            </td>
 
             {/* Render Lesson Plan Button */}
             <td>
-  {topic.lessonPlan ? (
-    <button
-      className="view-button"
-      onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-    >
-      View
-    </button>
-  ) : (
-    "Not Generated"
-  )}
-</td>
-
+              {typeof concept === "object" && concept.lessonPlan ? (
+                <button
+                  className="view-button"
+                  onClick={() => handleViewLessonPlan(concept.lessonPlan)}
+                >
+                  View
+                </button>
+              ) : (
+                "Not Generated"
+              )}
+            </td>
 
             {/* Render Actions (Save Button) */}
             {tIndex === 0 && cIndex === 0 && (
@@ -446,6 +449,7 @@ const SessionPlans = () => {
     </React.Fragment>
   ))}
 </tbody>
+
         </table>
       </div>
   
