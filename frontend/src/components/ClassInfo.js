@@ -386,43 +386,80 @@ const ClassInfo = () => {
   <h3>Filters</h3>
   <div>
     <label>Class:</label>
-    <input
-      type="text"
+    <select
       name="class"
       value={filters.class}
-      onChange={handleFilterChange}
-      placeholder="Filter by Class"
-    />
+      onChange={(e) => handleFilterChange(e)}
+    >
+      <option value="">Select Class</option>
+      {classInfos.map((info) => (
+        <option key={info.id} value={info.className}>
+          {info.className}
+        </option>
+      ))}
+    </select>
   </div>
+
   <div>
     <label>Board:</label>
-    <input
-      type="text"
+    <select
       name="board"
       value={filters.board}
-      onChange={handleFilterChange}
-      placeholder="Filter by Board"
-    />
+      onChange={(e) => handleFilterChange(e)}
+    >
+      <option value="">Select Board</option>
+      {[...new Set(classInfos.map((info) => info.board))].map((board) => (
+        <option key={board} value={board}>
+          {board}
+        </option>
+      ))}
+    </select>
   </div>
+
   <div>
     <label>Section:</label>
-    <input
-      type="text"
+    <select
       name="section"
       value={filters.section}
-      onChange={handleFilterChange}
-      placeholder="Filter by Section"
-    />
+      onChange={(e) => handleFilterChange(e)}
+    >
+      <option value="">Select Section</option>
+      {classInfos
+        .flatMap((info) =>
+          Object.keys(info.sections || {}).map((sec) => ({
+            id: sec,
+            name: sec,
+          }))
+        )
+        .map((section) => (
+          <option key={section.id} value={section.name}>
+            {section.name}
+          </option>
+        ))}
+    </select>
   </div>
+
   <div>
     <label>Subject:</label>
-    <input
-      type="text"
+    <select
       name="subject"
       value={filters.subject}
-      onChange={handleFilterChange}
-      placeholder="Filter by Subject"
-    />
+      onChange={(e) => handleFilterChange(e)}
+    >
+      <option value="">Select Subject</option>
+      {classInfos
+        .flatMap((info) =>
+          Object.keys(info.sections || {}).flatMap((sec) =>
+            info.sections[sec].subjects.map((sub) => sub.subjectName)
+          )
+        )
+        .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
+        .map((subject) => (
+          <option key={subject} value={subject}>
+            {subject}
+          </option>
+        ))}
+    </select>
   </div>
 </div>
 
