@@ -237,6 +237,38 @@ const ClassInfo = () => {
     setRevisionEndDate('');
   };
 
+  const [filters, setFilters] = useState({
+    class: '',
+    board: '',
+    section: '',
+    subject: '',
+  });
+  
+  // Handle filter change
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [name]: value,
+    }));
+  };
+  
+  // Filter data based on selected filters
+  const filteredClassInfos = classInfos.filter((info) => {
+    const matchesClass = filters.class ? info.className.includes(filters.class) : true;
+    const matchesBoard = filters.board ? info.board.includes(filters.board) : true;
+    const matchesSection = filters.section
+      ? Object.keys(info.sections || {}).some((sec) => sec.includes(filters.section))
+      : true;
+    const matchesSubject = filters.subject
+      ? Object.keys(info.sections || {}).some((sec) =>
+          info.sections[sec].subjects.some((sub) => sub.subjectName.includes(filters.subject))
+        )
+      : true;
+  
+    return matchesClass && matchesBoard && matchesSection && matchesSubject;
+  });
+  
   return (
     <div>
       {error && <div className="error">{error}</div>}
@@ -349,6 +381,50 @@ const ClassInfo = () => {
         </div>
         <button type="submit">Add Section and Subject</button>
       </form>
+{/*} filters for table */}
+<div>
+  <h3>Filters</h3>
+  <div>
+    <label>Class:</label>
+    <input
+      type="text"
+      name="class"
+      value={filters.class}
+      onChange={handleFilterChange}
+      placeholder="Filter by Class"
+    />
+  </div>
+  <div>
+    <label>Board:</label>
+    <input
+      type="text"
+      name="board"
+      value={filters.board}
+      onChange={handleFilterChange}
+      placeholder="Filter by Board"
+    />
+  </div>
+  <div>
+    <label>Section:</label>
+    <input
+      type="text"
+      name="section"
+      value={filters.section}
+      onChange={handleFilterChange}
+      placeholder="Filter by Section"
+    />
+  </div>
+  <div>
+    <label>Subject:</label>
+    <input
+      type="text"
+      name="subject"
+      value={filters.subject}
+      onChange={handleFilterChange}
+      placeholder="Filter by Subject"
+    />
+  </div>
+</div>
 
       {/* Class, Section, and Subject Details */}
       <div>
