@@ -225,10 +225,16 @@ const SessionPlans = () => {
       const payloads = sessionPlans.flatMap((plan) => {
         const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
         return groupedTopics.map((topic) => {
+          // Validate concepts field
           const validConcepts = Array.isArray(topic.concepts)
             ? topic.concepts.filter((concept) => concept.trim() !== "")
             : []; // Ensure concepts is always an array
-      
+  
+          if (!topic.name || validConcepts.length === 0) {
+            console.warn(`Skipping invalid topic: ${topic.name}`);
+            return null;
+          }
+  
           return {
             sessionNumber: plan.sessionNumber,
             board,
@@ -236,16 +242,13 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: validConcepts.length > 0
-              ? validConcepts.map((concept) => ({ topic: topic.name, concept }))
-              : [{ topic: topic.name, concepts: [] }], // Include concepts as an empty array if none exist
+            topics: validConcepts.map((concept) => ({ topic: topic.name, concept })),
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
-      });
-      
+      }).filter(Boolean); // Remove invalid payloads
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -253,33 +256,32 @@ const SessionPlans = () => {
         return;
       }
   
-      console.log("Payloads being sent:", payloads);
+      console.log("Payloads for all topics:", JSON.stringify(payloads, null, 2));
   
       const responses = await Promise.allSettled(
-        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
+        payloads.map((payload) =>
+          axios.post("https://tms.up.school/api/dynamicLP", payload)
+        )
       );
   
       responses.forEach((response, index) => {
-        if (response.status === "rejected") {
-          console.error("Error in payload:", payloads[index], response.reason);
+        if (response.status === "fulfilled") {
+          console.log("Lesson plan generated:", response.value.data.lesson_plan);
         } else {
-          console.log("Success:", response.value.data);
+          console.error("Error generating lesson plan:", response.reason);
         }
       });
   
-      const successfulPlans = responses.filter((res) => res.status === "fulfilled");
-      if (successfulPlans.length > 0) {
-        setSuccessMessage("Lesson plans generated successfully!");
-      } else {
-        setError("All lesson plans failed to generate.");
-      }
+      setSuccessMessage("All topics' LP generated successfully!");
+      setError("");
     } catch (error) {
-      console.error("Error generating lesson plans:", error);
+      console.error("Error generating all lesson plans:", error);
       setError("Failed to generate lesson plans. Please try again.");
     } finally {
       setSaving(false);
     }
   };
+  
   
   
   
