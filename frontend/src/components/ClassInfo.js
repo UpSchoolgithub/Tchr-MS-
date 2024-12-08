@@ -277,12 +277,12 @@ console.log("Filtered Data:", filteredClassInfos);
 console.log("Filters Applied:", filters);
 
 //const AddNewClassSection = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const toggleExpand = () => {
-    setIsExpanded((prev) => !prev);
-  };
-
+    const [isExpanded, setIsExpanded] = useState(false);
+  
+    // Function to toggle the expanded state
+    const toggleExpanded = () => {
+      setIsExpanded((prev) => !prev);
+    };
   return (
     <div>
       {error && <div className="error">{error}</div>}
