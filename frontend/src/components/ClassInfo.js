@@ -554,9 +554,14 @@ console.log("Filters Applied:", filters);
           <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
           <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
           <td>
-            <button
-              onClick={() => {
-                const sectionData = info.sections[sec];
+          <button
+  onClick={() => {
+    const sectionData = info.sections[sec]; // Retrieve section data
+    if (!sectionData || !sectionData.id) {
+      console.error("Section data or ID not found:", sectionData);
+      setError("Invalid section data");
+      return;
+    }
                 navigate(
                   `/schools/${schoolId}/classes/${selectedClass.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${selectedClass.board}`,
                   {
