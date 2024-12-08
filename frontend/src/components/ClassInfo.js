@@ -254,21 +254,25 @@ const ClassInfo = () => {
   };
   
   // Filter data based on selected filters
-  const filteredClassInfos = classInfos.filter((info) => {
-    const matchesClass = filters.class ? info.className.includes(filters.class) : true;
-    const matchesBoard = filters.board ? info.board.includes(filters.board) : true;
-    const matchesSection = filters.section
-      ? Object.keys(info.sections || {}).some((sec) => sec.includes(filters.section))
-      : true;
-    const matchesSubject = filters.subject
-      ? Object.keys(info.sections || {}).some((sec) =>
-          info.sections[sec].subjects.some((sub) => sub.subjectName.includes(filters.subject))
-        )
-      : true;
-  
-    return matchesClass && matchesBoard && matchesSection && matchesSubject;
-  });
-  
+const filteredClassInfos = classInfos.filter((info) => {
+  const matchesClass = filters.class ? info.className === filters.class : true;
+  const matchesBoard = filters.board ? info.board === filters.board : true;
+  const matchesSection = filters.section
+    ? Object.keys(info.sections || {}).some((sec) => sec === filters.section)
+    : true;
+  const matchesSubject = filters.subject
+    ? Object.keys(info.sections || {}).some((sec) =>
+        info.sections[sec].subjects.some((sub) => sub.subjectName === filters.subject)
+      )
+    : true;
+
+  return matchesClass && matchesBoard && matchesSection && matchesSubject;
+});
+
+// Debugging
+console.log("Filtered Data:", filteredClassInfos);
+console.log("Filters Applied:", filters);
+
   return (
     <div>
       {error && <div className="error">{error}</div>}
