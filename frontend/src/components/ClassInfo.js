@@ -292,7 +292,7 @@ console.log("Filters Applied:", filters);
   onClick={toggleExpanded}
   style={{
     padding: '10px 20px',
-    backgroundColor: isExpanded ? 'red' : 'green',
+    backgroundColor: isExpanded ? 'a8cdf4' : '007bff',
     color: 'white',
     border: 'none',
     cursor: 'pointer',
@@ -418,7 +418,7 @@ console.log("Filters Applied:", filters);
           required
         />
       </div>
-      <button type="submit">Add Section and Subject</button>
+      <button type="submit">Add Class</button>
     </form>
     </div>
       )}
