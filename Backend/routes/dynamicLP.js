@@ -29,34 +29,55 @@ router.post("/dynamicLP", async (req, res) => {
       });
     }
 
-    // Ensure `concepts` is always an array
-    const sanitizedTopics = topics.map((topic) => ({
-      ...topic,
-      concepts: Array.isArray(topic.concepts) ? topic.concepts : [], // Default to empty array
-    }));
+    // Prepare payloads for each topic-concept combination
+    const lessonPlans = [];
 
-    const payload = {
-      board,
-      grade,
-      subject,
-      subSubject: "Civics", // Hardcoded value
-      unit,
-      chapter,
-      topics: sanitizedTopics,
-      sessionType,
-      noOfSession,
-      duration,
-    };
+    for (const topic of topics) {
+      if (!topic.topic || !topic.concepts || topic.concepts.length === 0) {
+        console.warn(`Skipping topic ${topic.topic || "Unnamed"} due to missing concepts.`);
+        continue;
+      }
 
-    console.log("Sanitized Payload:", JSON.stringify(payload, null, 2));
+      for (const concept of topic.concepts) {
+        const payload = {
+          board,
+          grade,
+          subject,
+          subSubject: "Conisder relavant subject", // Hardcoded value
+          unit,
+          chapter,
+          topic: topic.topic, // Include topic name
+          concept, // Include the specific concept
+          sessionType,
+          noOfSession,
+          duration,
+        };
 
-    // Send to Python service
-    const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
-    const response = await axios.post(pythonServiceUrl, payload);
+        // Debug each payload
+        console.log("Payload for topic-concept pair:", JSON.stringify(payload, null, 2));
 
-    console.log("Response from Python service:", JSON.stringify(response.data, null, 2));
+        // Send to Python service
+        try {
+          const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
+          const response = await axios.post(pythonServiceUrl, payload);
+          lessonPlans.push({
+            topic: topic.topic,
+            concept,
+            lessonPlan: response.data.lesson_plan, // Assuming the Python service returns a `lesson_plan`
+          });
+        } catch (error) {
+          console.error(`Error generating lesson plan for topic "${topic.topic}" and concept "${concept}":`, error.message);
+          lessonPlans.push({
+            topic: topic.topic,
+            concept,
+            lessonPlan: `Error generating lesson plan for concept "${concept}".`,
+          });
+        }
+      }
+    }
 
-    res.status(200).json(response.data);
+    // Return all lesson plans
+    res.status(200).json({ lessonPlans });
   } catch (error) {
     console.error("Error in dynamicLP route:", error.message);
 
@@ -70,6 +91,5 @@ router.post("/dynamicLP", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
