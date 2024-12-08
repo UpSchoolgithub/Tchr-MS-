@@ -227,8 +227,8 @@ const SessionPlans = () => {
         return groupedTopics.map((topic) => {
           const validConcepts = Array.isArray(topic.concepts)
             ? topic.concepts.filter((concept) => concept.trim() !== "")
-            : [];
-  
+            : []; // Ensure concepts is always an array
+      
           return {
             sessionNumber: plan.sessionNumber,
             board,
@@ -236,16 +236,16 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: validConcepts.map((concept) => ({
-              topic: topic.name,
-              concept: concept,
-            })),
+            topics: validConcepts.length > 0
+              ? validConcepts.map((concept) => ({ topic: topic.name, concept }))
+              : [{ topic: topic.name, concepts: [] }], // Include concepts as an empty array if none exist
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
       });
+      
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
