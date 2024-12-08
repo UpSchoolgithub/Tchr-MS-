@@ -48,20 +48,26 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
             try:
                 # Create a message for the specific concept
                 system_msg = {
-                    "role": "system",
-                    "content": f"""Create a detailed lesson plan for the following concept:
-                    
-                    - Board: {data.board}
-                    - Grade: {data.grade}
-                    - Subject: {data.subject}
-                    - Unit: {data.unit}
-                    - Chapter: {data.chapter}
-                    - Topic: {topic.topic}
-                    - Concept: {concept}
-                    - Session Type: {data.sessionType}
-                    - Duration: {data.duration} minutes
-                    """
-                }
+    "role": "system",
+    "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
+
+    - **Board**: {data.board}
+    - **Grade**: {data.grade}
+    - **Subject**: {data.subject}
+    - **Sub-Subject**: {data.subSubject}
+    - **Unit**: {data.unit}
+    - **Chapter**: {data.chapter}
+    - **Session Type**: {data.sessionType}
+    - **Number of Sessions**: {data.noOfSession}
+    - **Duration per Session**: {data.duration} minutes
+
+    Each topic should include its associated concepts for detailed discussion. Here are the topics with their respective concepts:
+    {[f"{topic.topic}: {', '.join(topic.concepts)}" for topic in data.topics]}
+
+    Ensure the plan integrates these topics and concepts into engaging teaching activities, objectives, and assessments.
+    """
+}
+
                 messages = [system_msg]
                 
                 # Generate lesson plan using OpenAI API
