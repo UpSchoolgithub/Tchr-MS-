@@ -91,13 +91,13 @@ const SessionPlans = () => {
         merged.push(topicMap[topic.name]);
       }
       topicMap[topic.name].concepts = [
-        ...topicMap[topic.name].concepts,
-        ...(Array.isArray(topic.concepts) ? topic.concepts : []),
-      ];
+        ...new Set([...topicMap[topic.name].concepts, ...(Array.isArray(topic.concepts) ? topic.concepts : [])]),
+      ]; // Ensure unique concepts
     });
   
     return merged;
   };
+  
   
   
   
@@ -225,10 +225,9 @@ const SessionPlans = () => {
       const payloads = sessionPlans.flatMap((plan) => {
         const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
         return groupedTopics.map((topic) => {
-          // Validate concepts field
           const validConcepts = Array.isArray(topic.concepts)
-            ? topic.concepts.filter((concept) => concept.trim() !== "")
-            : []; // Ensure concepts is always an array
+            ? topic.concepts.filter((concept) => concept.trim() !== "") // Remove empty concepts
+            : []; // Default to empty array if concepts is not valid
   
           if (!topic.name || validConcepts.length === 0) {
             console.warn(`Skipping invalid topic: ${topic.name}`);
@@ -242,13 +241,13 @@ const SessionPlans = () => {
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: validConcepts.map((concept) => ({ topic: topic.name, concept })),
+            topics: validConcepts.map((concept) => ({ topic: topic.name, concept })), // Ensure valid structure
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
-      }).filter(Boolean); // Remove invalid payloads
+      }).filter(Boolean);
   
       if (payloads.length === 0) {
         setError("No valid topics to generate lesson plans.");
@@ -259,9 +258,7 @@ const SessionPlans = () => {
       console.log("Payloads for all topics:", JSON.stringify(payloads, null, 2));
   
       const responses = await Promise.allSettled(
-        payloads.map((payload) =>
-          axios.post("https://tms.up.school/api/dynamicLP", payload)
-        )
+        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
       responses.forEach((response, index) => {
@@ -272,7 +269,7 @@ const SessionPlans = () => {
         }
       });
   
-      setSuccessMessage("All topics' LP generated successfully!");
+      setSuccessMessage("All lesson plans generated successfully!");
       setError("");
     } catch (error) {
       console.error("Error generating all lesson plans:", error);
@@ -281,6 +278,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   

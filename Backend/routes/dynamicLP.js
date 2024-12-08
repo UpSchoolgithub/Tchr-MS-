@@ -18,7 +18,7 @@ router.post("/dynamicLP", async (req, res) => {
       duration,
     } = req.body;
 
-    // Debug incoming payload
+    // Debug payload
     console.log("Incoming payload from frontend:", JSON.stringify(req.body, null, 2));
 
     // Validate required fields
@@ -29,40 +29,38 @@ router.post("/dynamicLP", async (req, res) => {
       });
     }
 
-    // Add hardcoded subSubject
-    const subSubject = "Civics"; // Hardcoded value
+    // Ensure `concepts` is always an array
+    const sanitizedTopics = topics.map((topic) => ({
+      ...topic,
+      concepts: Array.isArray(topic.concepts) ? topic.concepts : [], // Default to empty array
+    }));
 
     const payload = {
       board,
       grade,
       subject,
-      subSubject, // Include the hardcoded subSubject
+      subSubject: "Civics", // Hardcoded value
       unit,
       chapter,
-      topics,
+      topics: sanitizedTopics,
       sessionType,
       noOfSession,
       duration,
     };
 
-    // Debug payload before sending to Python service
-    console.log("Payload sent to Python service:", JSON.stringify(payload, null, 2));
+    console.log("Sanitized Payload:", JSON.stringify(payload, null, 2));
 
+    // Send to Python service
     const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
-
-    // Send payload to Python service
     const response = await axios.post(pythonServiceUrl, payload);
 
-    // Debug response from Python service
     console.log("Response from Python service:", JSON.stringify(response.data, null, 2));
 
-    // Send back response to the frontend
     res.status(200).json(response.data);
   } catch (error) {
     console.error("Error in dynamicLP route:", error.message);
 
     if (error.response) {
-      // Log error details from Python service
       console.error("Python service error details:", JSON.stringify(error.response.data, null, 2));
     }
 
@@ -72,5 +70,6 @@ router.post("/dynamicLP", async (req, res) => {
     });
   }
 });
+
 
 module.exports = router;
