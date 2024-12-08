@@ -42,66 +42,46 @@ class LessonPlanResponse(BaseModel):
     lesson_plan: str
 
 def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
-    """
-    Generates a detailed lesson plan for each concept under each topic provided in the data.
-
-    Parameters:
-        data (LessonPlanRequest): The request object containing lesson plan details.
-
-    Returns:
-        Dict[str, Any]: A dictionary containing the lesson plans for each concept.
-    """
     all_lesson_plans = {}  # To store lesson plans for each concept
     for topic in data.topics:
         for concept in topic.concepts:
             try:
-                # Create a message for the specific topic and concept
+                # Create a message for the specific concept
                 system_msg = {
                     "role": "system",
                     "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
 
-    - **Board**: {data.board}
-    - **Grade**: {data.grade}
-    - **Subject**: {data.subject}
-    - **Sub-Subject**: {data.subSubject}
-    - **Unit**: {data.unit}
-    - **Chapter**: {data.chapter}
-    - **Topic**: {topic.topic}
-    - **Concept**: {concept}
-    - **Session Type**: {data.sessionType}
-    - **Number of Sessions**: {data.noOfSession}
-    - **Duration per Session**: {data.duration} minutes
+                    - **Board**: {data.board}
+                    - **Grade**: {data.grade}
+                    - **Subject**: {data.subject}
+                    - **Sub-Subject**: {data.subSubject}
+                    - **Unit**: {data.unit}
+                    - **Chapter**: {data.chapter}
+                    - **Topic**: {topic.topic}
+                    - **Concept**: {concept}
+                    - **Session Type**: {data.sessionType}
+                    - **Number of Sessions**: {data.noOfSession}
+                    - **Duration per Session**: {data.duration} minutes
 
-    Create a lesson plan that includes:
-    - Objectives tailored to the concept.
-    - Teaching aids and materials required.
-    - Activities and engagement strategies specific to the concept.
-    - Assessment methods to evaluate understanding of the concept.
-    - Homework or follow-up activities to reinforce the concept.
-
-    Ensure the plan is engaging, structured, and aligned with the provided educational context.
+                    Ensure the lesson plan highlights the specific **concept** in detail, including learning objectives, teaching aids, activities, and assessments related to the concept.
                     """
                 }
 
-                # Prepare the message payload
                 messages = [system_msg]
-
+                
                 # Generate lesson plan using OpenAI API
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=messages
                 )
-                
-                # Extract the lesson plan content
                 lesson_plan = response.choices[0].message.content
-                all_lesson_plans[f"{topic.topic}: {concept}"] = lesson_plan
+                all_lesson_plans[concept] = lesson_plan
             except Exception as e:
-                # Handle errors and log them
-                print(f"Error with OpenAI API for concept '{concept}' in topic '{topic.topic}': {e}")
-                all_lesson_plans[f"{topic.topic}: {concept}"] = "Error generating lesson plan."
-
-    # Return the lesson plans for all concepts
+                print(f"Error with OpenAI API for concept {concept}: {e}")
+                all_lesson_plans[concept] = "Error generating lesson plan."
+    
     return {"lesson_plan": all_lesson_plans}
+
 
 
 def create_pdf(lesson_plan: str) -> str:
