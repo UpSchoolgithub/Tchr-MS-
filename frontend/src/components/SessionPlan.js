@@ -340,8 +340,8 @@ const SessionPlans = () => {
   
 
   // View lesson plan
-  const handleViewLessonPlan = (lessonPlan) => {
-    setCurrentLessonPlan(lessonPlan);
+  const handleViewLessonPlan = (lessonPlan, conceptName) => {
+    setCurrentLessonPlan({ lessonPlan, conceptName });
     setShowModal(true);
   };
   
@@ -440,11 +440,17 @@ const SessionPlans = () => {
   {typeof concept === "object" && concept.lessonPlan ? (
     <>
       <button
-        className="view-button"
-        onClick={() => handleViewLessonPlan(concept.lessonPlan)}
-      >
-        View
-      </button>
+  className="view-button"
+  onClick={() =>
+    handleViewLessonPlan(
+      concept.lessonPlan,
+      typeof concept === "string" ? concept : concept.concept
+    )
+  }
+>
+  View
+</button>
+
       <button
         className="download-button"
         onClick={() =>
@@ -490,18 +496,23 @@ const SessionPlans = () => {
       </div>
   
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Lesson Plan</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <pre>{currentLessonPlan}</pre>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+  <Modal.Header closeButton>
+    <Modal.Title>
+      {currentLessonPlan.conceptName
+        ? `Lesson Plan for Concept: ${currentLessonPlan.conceptName}`
+        : "Lesson Plan"}
+    </Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <pre>{currentLessonPlan.lessonPlan}</pre>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowModal(false)}>
+      Close
+    </Button>
+  </Modal.Footer>
+</Modal>
+
     </div>
   );
   
