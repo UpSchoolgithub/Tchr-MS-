@@ -227,8 +227,7 @@ const SessionPlans = () => {
         const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
         return groupedTopics.flatMap((topic) => {
           const validConcepts = Array.isArray(topic.concepts)
-            ? topic.concepts
-                .filter((concept) => typeof concept === "string" && concept.trim() !== "") // Ensure valid string concepts
+            ? topic.concepts.filter((concept) => concept.trim() !== "") // Filter valid concepts
             : []; // Default to empty array if concepts are invalid
   
           if (!topic.name || validConcepts.length === 0) {
@@ -236,7 +235,7 @@ const SessionPlans = () => {
             return null;
           }
   
-          // Generate a separate payload for each valid concept
+          // Generate a separate payload for each concept
           return validConcepts.map((concept) => ({
             sessionNumber: plan.sessionNumber,
             board,
@@ -304,7 +303,6 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
-  
   
   const handleDownloadLessonPlan = async (lessonPlan, topicName, conceptName) => {
     try {
