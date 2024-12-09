@@ -367,7 +367,32 @@ const SessionPlans = () => {
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
-    
+      <div className="info-banner">
+        <p>
+          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong>{" "}
+          {schoolId}
+        </p>
+        <p>
+          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong>{" "}
+          {classId}
+        </p>
+        <p>
+          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong>{" "}
+          {sectionId}
+        </p>
+        <p>
+          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong>{" "}
+          {subjectId}
+        </p>
+        <p>
+          <strong>Board:</strong> {board}
+        </p>
+        <p>
+          <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong>{" "}
+          {unitName}
+        </p>
+      </div>
+  
       {successMessage && <div className="success-message">{successMessage}</div>}
       {error && <div className="error-message">{error}</div>}
   

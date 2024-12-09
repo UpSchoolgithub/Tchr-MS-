@@ -9,6 +9,7 @@ const ClassInfo = () => {
   const [className, setClassName] = useState('');
   const [newClassName, setNewClassName] = useState('');
   const [selectedBoard, setSelectedBoard] = useState(''); // State for board selection
+  const [editingClassId, setEditingClassId] = useState(null);
 
   const [sections, setSections] = useState([]);
   const [newSectionName, setNewSectionName] = useState('');
@@ -75,6 +76,7 @@ const ClassInfo = () => {
     }
   };
 
+  
   useEffect(() => {
     fetchClassInfos();
   }, [schoolId]);
