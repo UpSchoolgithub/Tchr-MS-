@@ -37,23 +37,30 @@ const CreateManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Temporarily hardcode the token for testing
-      const token = '<your_valid_token_here>';
+      const token = localStorage.getItem('authToken'); // Fetch token from localStorage
+      if (!token) {
+        setErrorMessage('Authentication token is missing. Please log in again.');
+        return;
+      }
   
       await axios.post(
         'https://tms.up.school/api/managers',
         { name, email, phoneNumber, password, schoolIds },
         {
           headers: {
-            Authorization: `Bearer ${token}`,  // Send the token in the request headers
+            Authorization: `Bearer ${token}`, // Send the token in the request headers
           },
         }
       );
       navigate('/managers');
     } catch (error) {
-      console.error('Error:', error.response || error.message);
+      console.error('Error:', error.response?.data || error.message);
+      setErrorMessage(
+        error.response?.data?.message || 'Failed to create manager. Please try again.'
+      );
     }
   };
+  
   
   
 
