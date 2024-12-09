@@ -65,6 +65,15 @@ const ClassInfo = () => {
   };
   
   
+  const handleDeleteClass = async (classId) => {
+    try {
+      await axios.delete(`https://tms.up.school/api/schools/${schoolId}/classes/${classId}`);
+      fetchClassInfos();
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      setError('Failed to delete class. Please try again.');
+    }
+  };
 
   useEffect(() => {
     fetchClassInfos();
@@ -538,6 +547,7 @@ console.log("Filters Applied:", filters);
               <th>Revision Start Date</th>
               <th>Revision End Date</th>
               <th>Actions</th>
+              <th>Sessions</th>
             </tr>
           </thead>
           <tbody>
@@ -553,6 +563,9 @@ console.log("Filters Applied:", filters);
           <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
           <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
           <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
+          <td>
+                  <button onClick={() => handleDeleteClass(cls.id)}>Delete</button>
+                </td>
           <td>
           <button
   onClick={() => {
