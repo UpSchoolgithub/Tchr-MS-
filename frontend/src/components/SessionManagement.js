@@ -147,25 +147,7 @@ const SessionManagement = () => {
       {error && <div className="error">{error}</div>}
       {isLoading && <p>Loading...</p>}
 
-      {/* Information Banner */}
-      <div className="info-banner">
-        <p>
-          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
-        </p>
-        <p>
-          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
-        </p>
-        <p>
-          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
-        </p>
-        <p>
-          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
-        </p>
-        <p>
-          <strong>Board:</strong> {boardName || 'Board Not Available'}
-        </p>
-      </div>
-
+      
       {/* File Upload */}
       <form onSubmit={handleFileUpload}>
         <input type="file" name="file" accept=".xlsx, .xls" required />
