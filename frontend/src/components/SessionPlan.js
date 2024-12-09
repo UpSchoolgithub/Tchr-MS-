@@ -321,22 +321,27 @@ const SessionPlans = () => {
       // Create a new jsPDF instance
       const doc = new jsPDF();
   
+      // Add a border to the PDF
+      doc.setDrawColor(0, 0, 0);
+      doc.rect(5, 5, 200, 287); // Draw border with padding
+  
       // Add content to the PDF
       doc.setFontSize(12);
-      doc.text(`Session Number: ${sessionNumber}`, 10, 10);
-      doc.text(`Class Name: ${className}`, 10, 20);
-      doc.text(`Subject: ${subjectName}`, 10, 30);
-      doc.text(`Board: ${board}`, 10, 40);
-      doc.text(`Topic Name: ${topicName}`, 10, 50);
-      doc.text(`Concept Name: ${conceptName || "N/A"}`, 10, 60);
+      doc.text(`Session Number: ${sessionNumber}`, 10, 20);
+      doc.text(`Class Name: ${className}`, 10, 30);
+      doc.text(`Subject: ${subjectName}`, 10, 40);
+      doc.text(`Board: ${board}`, 10, 50);
+      doc.text(`Topic Name: ${topicName}`, 10, 60);
+      doc.text(`Concept Name: ${conceptName || "N/A"}`, 10, 70);
   
       doc.setFontSize(10);
-      doc.text("Lesson Plan:", 10, 70);
+      doc.text("Lesson Plan:", 10, 80);
       doc.setFontSize(9);
   
-      // Split the lesson plan into lines to handle long text
-      const lessonPlanLines = doc.splitTextToSize(lessonPlan, 180);
-      doc.text(lessonPlanLines, 10, 80);
+      // Split the lesson plan into lines to handle long text, removing timings like '(5 minutes)'
+      const sanitizedLessonPlan = lessonPlan.replace(/\(\d+ minutes\)/g, "");
+      const lessonPlanLines = doc.splitTextToSize(sanitizedLessonPlan, 180);
+      doc.text(lessonPlanLines, 10, 90);
   
       // Save the PDF
       doc.save(fileName);
