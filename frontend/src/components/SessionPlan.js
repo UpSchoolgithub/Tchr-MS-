@@ -327,12 +327,13 @@ const SessionPlans = () => {
   
       // Add content to the PDF
       doc.setFontSize(12);
-      doc.text(`Session Number: ${sessionNumber}`, 10, 20);
-      doc.text(`Class Name: ${className}`, 10, 30);
-      doc.text(`Subject: ${subjectName}`, 10, 40);
-      doc.text(`Board: ${board}`, 10, 50);
-      doc.text(`Topic Name: ${topicName}`, 10, 60);
-      doc.text(`Concept Name: ${conceptName || "N/A"}`, 10, 70);
+  
+      if (sessionNumber) doc.text(`Session Number: ${sessionNumber}`, 10, 20);
+      if (className) doc.text(`Class Name: ${className}`, 10, 30);
+      if (subjectName) doc.text(`Subject: ${subjectName}`, 10, 40);
+      if (board) doc.text(`Board: ${board}`, 10, 50);
+      if (topicName) doc.text(`Topic Name: ${topicName}`, 10, 60);
+      if (conceptName) doc.text(`Concept Name: ${conceptName || "N/A"}`, 10, 70);
   
       doc.setFontSize(10);
       doc.text("Lesson Plan:", 10, 80);
