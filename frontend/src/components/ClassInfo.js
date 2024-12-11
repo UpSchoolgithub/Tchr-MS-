@@ -561,39 +561,123 @@ console.log("Filters Applied:", filters);
           <td>{info.board}</td>
           <td>{sec}</td>
           <td>{subject.subjectName}</td>
-          <td>{new Date(subject.academicStartDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.academicEndDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.revisionStartDate).toLocaleDateString()}</td>
-          <td>{new Date(subject.revisionEndDate).toLocaleDateString()}</td>
           <td>
-                  <button onClick={() => handleDeleteClass(cls.id)}>Delete</button>
-                </td>
+            {editingSubject === subject.id ? (
+              <input
+                type="date"
+                value={tempDates.academicStartDate || subject.academicStartDate}
+                onChange={(e) =>
+                  setTempDates((prev) => ({
+                    ...prev,
+                    academicStartDate: e.target.value,
+                  }))
+                }
+              />
+            ) : (
+              new Date(subject.academicStartDate).toLocaleDateString()
+            )}
+          </td>
           <td>
-          <button
-  onClick={() => {
-    const sectionData = info.sections[sec]; // Retrieve section data
-    if (!sectionData || !sectionData.id) {
-      console.error("Section data or ID not found:", sectionData);
-      setError("Invalid section data");
-      return;
-    }
-    navigate(
-      `/schools/${schoolId}/classes/${info.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${info.board}`,
-      {
-        state: {
-          schoolName,
-          className: info.className,
-          sectionName: sec,
-          subjectName: subject.subjectName,
-          board: info.board,
-        },
-      }
-    );
-  }}
->
-  Manage Sessions
-</button>
-
+            {editingSubject === subject.id ? (
+              <input
+                type="date"
+                value={tempDates.academicEndDate || subject.academicEndDate}
+                onChange={(e) =>
+                  setTempDates((prev) => ({
+                    ...prev,
+                    academicEndDate: e.target.value,
+                  }))
+                }
+              />
+            ) : (
+              new Date(subject.academicEndDate).toLocaleDateString()
+            )}
+          </td>
+          <td>
+            {editingSubject === subject.id ? (
+              <input
+                type="date"
+                value={tempDates.revisionStartDate || subject.revisionStartDate}
+                onChange={(e) =>
+                  setTempDates((prev) => ({
+                    ...prev,
+                    revisionStartDate: e.target.value,
+                  }))
+                }
+              />
+            ) : (
+              new Date(subject.revisionStartDate).toLocaleDateString()
+            )}
+          </td>
+          <td>
+            {editingSubject === subject.id ? (
+              <input
+                type="date"
+                value={tempDates.revisionEndDate || subject.revisionEndDate}
+                onChange={(e) =>
+                  setTempDates((prev) => ({
+                    ...prev,
+                    revisionEndDate: e.target.value,
+                  }))
+                }
+              />
+            ) : (
+              new Date(subject.revisionEndDate).toLocaleDateString()
+            )}
+          </td>
+          <td>
+            {editingSubject === subject.id ? (
+              <button
+                onClick={() =>
+                  handleSaveClick(info.id, info.sections[sec].id, subject.id)
+                }
+              >
+                Save
+              </button>
+            ) : (
+              <button
+                onClick={() =>
+                  handleEditClick(
+                    subject.id,
+                    subject.academicStartDate,
+                    subject.academicEndDate,
+                    subject.revisionStartDate,
+                    subject.revisionEndDate
+                  )
+                }
+              >
+                Edit
+              </button>
+            )}
+            <button onClick={() => handleDeleteClick(info.id, info.sections[sec].id, subject.id)}>
+              Delete
+            </button>
+          </td>
+          <td>
+            <button
+              onClick={() => {
+                const sectionData = info.sections[sec];
+                if (!sectionData || !sectionData.id) {
+                  console.error("Section data or ID not found:", sectionData);
+                  setError("Invalid section data");
+                  return;
+                }
+                navigate(
+                  `/schools/${schoolId}/classes/${info.id}/sections/${sectionData.id}/subjects/${subject.id}/sessions?board=${info.board}`,
+                  {
+                    state: {
+                      schoolName,
+                      className: info.className,
+                      sectionName: sec,
+                      subjectName: subject.subjectName,
+                      board: info.board,
+                    },
+                  }
+                );
+              }}
+            >
+              Manage Sessions
+            </button>
           </td>
         </tr>
       ))
