@@ -25,6 +25,7 @@ app.add_middleware(
 class Topic(BaseModel):
     topic: str
     concepts: List[str]
+    conceptDetails: Optional[List[str]] = []  # New field for concept detailing
 
 class LessonPlanRequest(BaseModel):
     board: str
@@ -39,12 +40,14 @@ class LessonPlanRequest(BaseModel):
     generatedPlan: Optional[str] = None  # New field to accept modified content
 
 class LessonPlanResponse(BaseModel):
-    lesson_plan: str
+    lesson_plan: Dict[str, str]
 
-def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
+def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
     all_lesson_plans = {}  # To store lesson plans for each concept
     for topic in data.topics:
-        for concept in topic.concepts:
+        for idx, concept in enumerate(topic.concepts):
+            concept_detailing = topic.conceptDetails[idx] if idx < len(topic.conceptDetails) else "No detailing provided."
+
             try:
                 # Create a message for the specific concept
                 system_msg = {
@@ -54,16 +57,16 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                     - **Board**: {data.board}
                     - **Grade**: {data.grade}
                     - **Subject**: {data.subject}
-                    - **Sub-Subject**: {data.subSubject}
                     - **Unit**: {data.unit}
                     - **Chapter**: {data.chapter}
                     - **Topic**: {topic.topic}
                     - **Concept**: {concept}
+                    - **Concept Detailing**: {concept_detailing}
                     - **Session Type**: {data.sessionType}
                     - **Number of Sessions**: {data.noOfSession}
                     - **Duration per Session**: {data.duration} minutes
 
-                    Ensure the lesson plan highlights the specific **concept** in detail, including learning objectives, teaching aids, activities, and assessments related to the concept.
+                    Ensure the lesson plan highlights the specific **concept** and its **detailing** in a structured manner. Include learning objectives, teaching aids, activities, and assessments.
                     """
                 }
 
@@ -81,8 +84,6 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                 all_lesson_plans[concept] = "Error generating lesson plan."
     
     return {"lesson_plan": all_lesson_plans}
-
-
 
 def create_pdf(lesson_plan: str) -> str:
     pdf_path = "lesson_plan.pdf"
