@@ -164,19 +164,29 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId },
-    });
+    console.log(`Fetching session plans for sessionId: ${sessionId}`);
+    const sessionPlans = await SessionPlan.findAll({ where: { sessionId } });
 
-    const formattedSessionPlans = sessionPlans.map((plan) => ({
-      ...plan.toJSON(),
-      planDetails: JSON.parse(plan.planDetails).map((entry) => ({
-        topic: entry.name,
-        concept: entry.concept,
-        conceptDetailing: entry.conceptDetailing || "", // Include Concept Detailing
-        lessonPlan: entry.lessonPlan || "",
-      })),
-    }));
+    if (!sessionPlans.length) {
+      return res.status(404).json({ message: 'No session plans found for this session ID' });
+    }
+
+    const formattedSessionPlans = sessionPlans.map((plan) => {
+      try {
+        return {
+          ...plan.toJSON(),
+          planDetails: JSON.parse(plan.planDetails).map((entry) => ({
+            topic: entry.name,
+            concept: entry.concept,
+            conceptDetailing: entry.conceptDetailing || '',
+            lessonPlan: entry.lessonPlan || '',
+          })),
+        };
+      } catch (error) {
+        console.error(`Error parsing planDetails for sessionPlanId: ${plan.id}`, error);
+        return { ...plan.toJSON(), planDetails: [] };
+      }
+    });
 
     res.json(formattedSessionPlans);
   } catch (error) {
@@ -187,6 +197,7 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
     });
   }
 });
+
 
 
 // Update Session Plan
