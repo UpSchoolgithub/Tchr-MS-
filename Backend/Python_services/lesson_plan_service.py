@@ -42,15 +42,15 @@ class LessonPlanRequest(BaseModel):
 class LessonPlanResponse(BaseModel):
     lesson_plan: Dict[str, str]
 
-def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
+def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
     all_lesson_plans = {}  # To store lesson plans for each concept
     for topic in data.topics:
         for idx, concept in enumerate(topic.concepts):
-            # Fetch corresponding conceptDetailing
-            concept_detailing = topic.conceptDetails[idx] if idx < len(topic.conceptDetails) else "No detailing provided."
-
             try:
-                # Create a detailed prompt for the specific concept
+                # Include conceptDetailing in the prompt
+                concept_detailing = topic.concepts_detailing[idx] if idx < len(topic.concepts_detailing) else ""
+
+                # Create a message for the specific concept
                 system_msg = {
                     "role": "system",
                     "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
@@ -58,6 +58,7 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
                     - **Board**: {data.board}
                     - **Grade**: {data.grade}
                     - **Subject**: {data.subject}
+                    - **Sub-Subject**: {data.subSubject}
                     - **Unit**: {data.unit}
                     - **Chapter**: {data.chapter}
                     - **Topic**: {topic.topic}
@@ -67,26 +68,19 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
                     - **Number of Sessions**: {data.noOfSession}
                     - **Duration per Session**: {data.duration} minutes
 
-                    Ensure the lesson plan highlights the specific **concept** and its **detailing**. Include:
-                    - Learning objectives
-                    - Teaching aids
-                    - Teaching activities
-                    - Assessments
+                    Ensure the lesson plan highlights the specific **concept** in detail, including learning objectives, teaching aids, activities, and assessments related to the concept.
                     """
                 }
 
                 messages = [system_msg]
-                
+
                 # Generate lesson plan using OpenAI API
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=messages
                 )
                 lesson_plan = response.choices[0].message.content
-
-                # Store the lesson plan for this specific concept
                 all_lesson_plans[concept] = lesson_plan
-
             except Exception as e:
                 print(f"Error with OpenAI API for concept {concept}: {e}")
                 all_lesson_plans[concept] = "Error generating lesson plan."

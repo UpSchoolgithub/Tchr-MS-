@@ -176,7 +176,11 @@ const SessionPlans = () => {
   const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
-      if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
+      if (
+        !topic.name ||
+        !Array.isArray(topic.concepts) ||
+        topic.concepts.length === 0
+      ) {
         setError(`Topic "${topic.name || "Unnamed"}" is missing concepts or invalid.`);
         return;
       }
@@ -187,7 +191,11 @@ const SessionPlans = () => {
         subject: subjectName,
         unit: unitName,
         chapter: topic.name,
-        topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
+        topics: topic.concepts.map((concept, index) => ({
+          topic: topic.name,
+          concept,
+          conceptDetailing: topic.conceptDetailing.split(";")[index] || "",
+        })), // Include concept detailing
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
@@ -195,7 +203,10 @@ const SessionPlans = () => {
   
       console.log("Payload for Lesson Plan:", payload);
   
-      const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
+      const response = await axios.post(
+        "https://tms.up.school/api/dynamicLP",
+        payload
+      );
       console.log("Generated Lesson Plan Response:", response.data);
   
       const lessonPlan = response.data.lesson_plan;
@@ -209,9 +220,12 @@ const SessionPlans = () => {
       setError("");
     } catch (error) {
       console.error("Error generating lesson plan:", error);
-      setError(`Failed to generate lesson plan for topic "${topicsWithConcepts[sessionNumber][topicIndex]?.name}".`);
+      setError(
+        `Failed to generate lesson plan for topic "${topicsWithConcepts[sessionNumber][topicIndex]?.name}".`
+      );
     }
   };
+  
   
   
   
