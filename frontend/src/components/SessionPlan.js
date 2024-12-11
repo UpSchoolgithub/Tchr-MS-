@@ -49,17 +49,26 @@ const SessionPlans = () => {
         const response = await axios.get(
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
+        console.log("API Response Data:", response.data);
   
-        console.log("API Response:", response.data);
+        const initialData = response.data.reduce((acc, plan) => {
+          acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
+            name: entry.topic || "No Topic Name",
+            concepts: Array.isArray(entry.concept)
+              ? entry.concept
+              : entry.concept?.split(";").map((c) => c.trim()) || [],
+            conceptDetailing: Array.isArray(entry.conceptDetailing)
+              ? entry.conceptDetailing
+              : entry.conceptDetailing?.split(";").map((c) => c.trim()) || [],
+            lessonPlan: entry.lessonPlan || "",
+          })) || [];
+          return acc;
+        }, {});
   
-        // Check if the response contains sessionPlans
-        if (Array.isArray(response.data.sessionPlans)) {
-          setSessionPlans(response.data.sessionPlans);
-        } else if (Array.isArray(response.data)) {
-          setSessionPlans(response.data);
-        } else {
-          throw new Error("Unexpected API response format. Expected an array.");
-        }
+        console.log("Parsed Data for State:", initialData);
+        setTopicsWithConcepts(initialData);
+        setSessionPlans(response.data); // Double-check this state update
+        if (response.data.length > 0) setUploadDisabled(true);
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
@@ -68,6 +77,7 @@ const SessionPlans = () => {
   
     fetchSessionPlans();
   }, [sessionId]);
+  
   
   
   
