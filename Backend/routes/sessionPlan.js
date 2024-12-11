@@ -172,24 +172,24 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
 
     const formattedSessionPlans = sessionPlans.map((plan) => {
       try {
+        const parsedDetails = typeof plan.planDetails === "string" 
+          ? JSON.parse(plan.planDetails) 
+          : plan.planDetails; // Handle already-parsed data
         return {
           ...plan.toJSON(),
-          planDetails: JSON.parse(plan.planDetails).map((entry) => ({
+          planDetails: parsedDetails.map((entry) => ({
             topic: entry.name,
             concept: entry.concept,
-            conceptDetailing: entry.conceptDetailing || '',
-            lessonPlan: entry.lessonPlan || '',
+            conceptDetailing: entry.conceptDetailing || "",
+            lessonPlan: entry.lessonPlan || "",
           })),
         };
       } catch (error) {
-        console.error(
-          `Error parsing planDetails for sessionPlanId: ${plan.id}`,
-          error
-        );
+        console.error(`Error parsing planDetails for sessionPlanId: ${plan.id}`, error);
         return { ...plan.toJSON(), planDetails: [] };
       }
     });
-
+    
     res.json(formattedSessionPlans);
   } catch (error) {
     console.error('Error fetching session plans:', error);
@@ -199,6 +199,7 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
     });
   }
 });
+
 
 
 
@@ -214,14 +215,13 @@ router.put('/sessionPlans/:id', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    sessionPlan.planDetails = JSON.stringify(
-      planDetails.map((entry) => ({
-        topic: entry.topic,
-        concept: entry.concept,
-        conceptDetailing: entry.conceptDetailing || "", // Include Concept Detailing
-        lessonPlan: entry.lessonPlan || "", // Include lessonPlan during update
-      }))
-    );
+    sessionPlan.planDetails = JSON.stringify(planDetails.map((entry) => ({
+      topic: entry.topic,
+      concept: entry.concept,
+      conceptDetailing: entry.conceptDetailing || "",
+      lessonPlan: entry.lessonPlan || "",
+    })));
+    
 
     await sessionPlan.save(); // Save the updated session plan
 
