@@ -106,16 +106,21 @@ const SessionPlans = () => {
         prev[sessionNumber] = [];
       }
   
-      // Add a default topic with empty fields
       return {
         ...prev,
         [sessionNumber]: [
           ...prev[sessionNumber],
-          { name: "New Topic", concepts: ["New Concept"], conceptDetailing: [""], lessonPlan: "" },
+          {
+            name: "New Topic",
+            concepts: ["New Concept"], // Ensure at least one concept
+            conceptDetailing: ["Provide details here"], // Ensure at least one detailing
+            lessonPlan: "",
+          },
         ],
       };
     });
   };
+  
   
 
   // Save session plan
@@ -180,23 +185,26 @@ const SessionPlans = () => {
   
       if (response.data.skippedRows > 0) {
         setError(
-          `${response.data.skippedRows} rows were skipped due to errors. Review and upload again.`
+          `${response.data.skippedRows} rows were skipped due to errors: ${response.data.errors
+            .map((err) => `Row ${err.row}: ${err.reason}`)
+            .join(", ")}`
         );
+      } else {
+        setSuccessMessage("Session plans uploaded successfully.");
       }
   
       const updatedPlans = await axios.get(
         `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
       );
-  
       setSessionPlans(updatedPlans.data);
       setUploadDisabled(true);
-      setSuccessMessage("Session plans uploaded successfully.");
       setFile(null);
     } catch (error) {
       console.error("Error uploading file:", error);
       setError("Failed to upload session plan. Please try again.");
     }
   };
+  
   
 
   // Generate lesson plan for a specific topic
