@@ -32,6 +32,10 @@ router.post(
         throw new Error('No file uploaded');
       }
 
+      if (!file.mimetype.includes('spreadsheetml') && !file.mimetype.includes('excel')) {
+        throw new Error('Invalid file format. Please upload an Excel file.');
+      }
+
       const workbook = XLSX.readFile(file.path);
       const sheetName = workbook.SheetNames[0];
       const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
@@ -41,43 +45,59 @@ router.post(
 
       sheet.forEach((row) => {
         const sessionNumber = parseInt(row.SessionNumber, 10);
-      
+
         if (isNaN(sessionNumber)) {
           throw new Error(`Invalid session number: ${row.SessionNumber}`);
         }
-      
+
         const topicName = row.TopicName?.trim();
         const concepts = row.Concepts
           ? row.Concepts.split(';').map((concept) => concept.trim())
           : [];
         const conceptDetailing = row.ConceptDetailing
           ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
-          : []; // Parse Concept Detailing
-      
+          : [];
+
+        if (!topicName || concepts.length === 0) {
+          console.warn(`Skipping invalid row: ${JSON.stringify(row)}`);
+          return;
+        }
+
+        if (concepts.length !== conceptDetailing.length) {
+          throw new Error(
+            `Mismatch between concepts and concept detailing for topic: ${topicName}`
+          );
+        }
+
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
-      
+
         topicsMap[sessionNumber].push(
           ...concepts.map((concept, index) => ({
             name: topicName,
             concept,
-            conceptDetailing: conceptDetailing[index] || "", // Match detailing with concept or default to ""
-            lessonPlan: "",
+            conceptDetailing: conceptDetailing[index] || '',
+            lessonPlan: '',
           }))
         );
       });
-      
+
+      console.log('Parsed Topics Map:', topicsMap);
 
       for (const sessionNumber in topicsMap) {
+        const planDetails = topicsMap[sessionNumber];
+        if (!Array.isArray(planDetails)) {
+          throw new Error(`Invalid planDetails format for sessionNumber: ${sessionNumber}`);
+        }
         sessionPlans.push({
           sessionId,
           sessionNumber: parseInt(sessionNumber, 10),
-          planDetails: JSON.stringify(topicsMap[sessionNumber]),
+          planDetails: JSON.stringify(planDetails),
         });
       }
-      
-      
+
+      console.log('Session Plans:', sessionPlans);
 
       const createdSessionPlans = await SessionPlan.bulkCreate(sessionPlans);
 
@@ -87,6 +107,12 @@ router.post(
       });
     } catch (error) {
       console.error('Error uploading session plans:', error.message);
+      if (error.message.includes('Invalid')) {
+        return res.status(400).json({
+          message: 'Validation error',
+          error: error.message,
+        });
+      }
       res.status(500).json({
         message: 'Internal server error',
         error: error.message,
@@ -94,6 +120,7 @@ router.post(
     }
   }
 );
+
 // Store Generated LP
 router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   const { id } = req.params;
