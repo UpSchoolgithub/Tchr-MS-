@@ -16,6 +16,10 @@ const SessionPlans = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [currentLessonPlan, setCurrentLessonPlan] = useState("");
+  const [currentSessionPlanId, setCurrentSessionPlanId] = useState(null); // Store current session plan ID
+  const [currentTopicIndex, setCurrentTopicIndex] = useState(null); // Store current topic index
+
+  const [savingPlan, setSavingPlan] = useState(false);
 
   const {
     schoolName = "School Name Not Available",
@@ -353,11 +357,43 @@ const SessionPlans = () => {
   
 
   // View lesson plan
-  const handleViewLessonPlan = (lessonPlan) => {
+  const handleViewLessonPlan = (lessonPlan, sessionPlanId, topicIndex) => {
     setCurrentLessonPlan(lessonPlan);
+    setCurrentSessionPlanId(sessionPlanId);
+    setCurrentTopicIndex(topicIndex);
     setShowModal(true);
   };
-  
+
+  // Save lesson plan to the database
+  const handleSaveLessonPlan = async () => {
+    if (!currentLessonPlan) {
+        setError('No lesson plan to save.');
+        return;
+    }
+
+    try {
+        const response = await axios.post(
+            `https://tms.up.school/api/sessionPlans/${currentLessonPlan.id}/saveLessonPlan`,
+            {
+                updatedLessonPlan: {
+                    topicName: currentLessonPlan.topicName,
+                    concept: currentLessonPlan.concept,
+                    lessonPlan: currentLessonPlan.lessonPlan,
+                },
+            }
+        );
+
+        if (response.status === 200) {
+            setSuccessMessage('Lesson plan saved successfully!');
+        } else {
+            setError('Failed to save lesson plan. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error saving lesson plan:', error);
+        setError('An error occurred while saving the lesson plan.');
+    }
+};
+
 
   return (
     <div className="container">
@@ -524,18 +560,21 @@ const SessionPlans = () => {
       </div>
   
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Lesson Plan</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <pre>{currentLessonPlan}</pre>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+    <Modal.Header closeButton>
+        <Modal.Title>Lesson Plan</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+        <pre>{currentLessonPlan.lessonPlan}</pre>
+    </Modal.Body>
+    <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowModal(false)}>
             Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        </Button>
+        <Button variant="primary" onClick={handleSaveLessonPlan}>
+            Save Plan
+        </Button>
+    </Modal.Footer>
+</Modal>;
     </div>
   );
   

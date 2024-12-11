@@ -205,8 +205,37 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   }
 });
 
+//Endpoint for Saving Lesson Plans
 
+router.post('/sessionPlans/:id/saveLessonPlan', async (req, res) => {
+  const { id } = req.params; // Session Plan ID
+  const { updatedLessonPlan } = req.body; // Updated Lesson Plan Data
 
+  try {
+      const sessionPlan = await SessionPlan.findByPk(id);
+      if (!sessionPlan) {
+          return res.status(404).json({ message: 'Session plan not found' });
+      }
+
+      const planDetails = JSON.parse(sessionPlan.planDetails);
+
+      // Find the topic that matches and update its lesson plan
+      const updatedPlanDetails = planDetails.map((entry) => {
+          if (entry.name === updatedLessonPlan.topicName && entry.concept === updatedLessonPlan.concept) {
+              return { ...entry, lessonPlan: updatedLessonPlan.lessonPlan }; // Update lesson plan
+          }
+          return entry;
+      });
+
+      sessionPlan.planDetails = JSON.stringify(updatedPlanDetails);
+      await sessionPlan.save();
+
+      res.status(200).json({ message: 'Lesson plan saved successfully', updatedPlanDetails });
+  } catch (error) {
+      console.error('Error saving lesson plan:', error.message);
+      res.status(500).json({ message: 'Failed to save lesson plan.', error: error.message });
+  }
+});
 
 // Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
