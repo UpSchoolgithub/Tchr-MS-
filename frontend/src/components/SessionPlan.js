@@ -50,25 +50,15 @@ const SessionPlans = () => {
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
   
-        if (Array.isArray(response.data)) {
+        console.log("API Response:", response.data);
+  
+        // Check if the response contains sessionPlans
+        if (Array.isArray(response.data.sessionPlans)) {
+          setSessionPlans(response.data.sessionPlans);
+        } else if (Array.isArray(response.data)) {
           setSessionPlans(response.data);
-          const initialData = response.data.reduce((acc, plan) => {
-            acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-              name: entry.topic || "No Topic Name",
-              concepts: Array.isArray(entry.concept)
-                ? entry.concept
-                : entry.concept?.split(";").map((c) => c.trim()) || [],
-              conceptDetailing: Array.isArray(entry.conceptDetailing)
-                ? entry.conceptDetailing
-                : entry.conceptDetailing?.split(";").map((c) => c.trim()) || [],
-              lessonPlan: entry.lessonPlan || "",
-            })) || [];
-            return acc;
-          }, {});
-          setTopicsWithConcepts(initialData);
-          if (response.data.length > 0) setUploadDisabled(true);
         } else {
-          throw new Error("Invalid response format. Expected an array.");
+          throw new Error("Unexpected API response format. Expected an array.");
         }
       } catch (error) {
         console.error("Error fetching session plans:", error);
@@ -78,6 +68,7 @@ const SessionPlans = () => {
   
     fetchSessionPlans();
   }, [sessionId]);
+  
   
   
   // Utility to merge topics with the same name
@@ -400,7 +391,8 @@ const SessionPlans = () => {
     </tr>
   </thead>
   <tbody>
-    {sessionPlans.map((plan) => (
+  {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+    sessionPlans.map((plan) => (
       <React.Fragment key={plan.id}>
         {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).flatMap((topic, tIndex) =>
           topic.concepts.map((concept, cIndex) => (
@@ -419,28 +411,32 @@ const SessionPlans = () => {
 
               {/* Render Topic Name once per topic */}
               {cIndex === 0 && (
-                <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
+                <td rowSpan={topic.concepts.length}>
+                  {topic.name || "No Topic Name"}
+                </td>
               )}
 
               {/* Render Concept */}
-              <td>{concept}</td>
+              <td>{concept || "No Concept"}</td>
 
               {/* Render Concept Detailing */}
               <td>
-  <input
-    type="text"
-    value={topic.conceptDetailing[cIndex] || ""}
-    placeholder="Enter concept details"
-    onChange={(e) =>
-      setTopicsWithConcepts((prev) => {
-        const updatedTopics = { ...prev };
-        updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] = e.target.value;
-        return updatedTopics;
-      })
-    }
-  />
-</td>
-
+                <input
+                  type="text"
+                  value={topic.conceptDetailing[cIndex] || ""}
+                  placeholder="Enter concept details"
+                  onChange={(e) =>
+                    setTopicsWithConcepts((prev) => {
+                      const updatedTopics = { ...prev };
+                      if (!updatedTopics[plan.sessionNumber]) return prev; // Ensure session exists
+                      if (!updatedTopics[plan.sessionNumber][tIndex]) return prev; // Ensure topic exists
+                      updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] =
+                        e.target.value;
+                      return updatedTopics;
+                    })
+                  }
+                />
+              </td>
 
               {/* Render Lesson Plan Button */}
               <td>
@@ -481,8 +477,14 @@ const SessionPlans = () => {
           </td>
         </tr>
       </React.Fragment>
-    ))}
-  </tbody>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6">No session plans available. Please upload or create a new one.</td>
+    </tr>
+  )}
+</tbody>
+
 </table>
 
       </div>
