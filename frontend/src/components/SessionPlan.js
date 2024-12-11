@@ -49,36 +49,32 @@ const SessionPlans = () => {
         const response = await axios.get(
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
-  
-        console.log("API Response Data:", response.data);
-  
-        // Access sessionPlans array correctly
-        const plans = response.data.sessionPlans || []; // Default to empty array if undefined
-  
-        const initialData = plans.reduce((acc, plan) => {
+    
+        const initialData = response.data.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
             name: entry.topic || "No Topic Name",
             concepts: Array.isArray(entry.concept)
-              ? entry.concept
+              ? [...new Set(entry.concept)]
               : entry.concept?.split(";").map((c) => c.trim()) || [],
             conceptDetailing: Array.isArray(entry.conceptDetailing)
-              ? entry.conceptDetailing
-              : entry.conceptDetailing?.split(";").map((c) => c.trim()) || [],
+              ? [...new Set(entry.conceptDetailing)]
+              : entry.conceptDetailing
+                  ?.split(";")
+                  .map((c) => c.trim()) || [],
             lessonPlan: entry.lessonPlan || "",
           })) || [];
           return acc;
         }, {});
-  
-        console.log("Parsed Data for State:", initialData);
-  
+    
         setTopicsWithConcepts(initialData);
-        setSessionPlans(plans); // Set only the sessionPlans array
-        if (plans.length > 0) setUploadDisabled(true);
+        setSessionPlans(response.data);
+        if (response.data.length > 0) setUploadDisabled(true);
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
+    
   
     fetchSessionPlans();
   }, [sessionId]);
@@ -91,16 +87,27 @@ const SessionPlans = () => {
   const mergeTopics = (topics) => {
     const merged = [];
     const topicMap = {};
+  
     topics.forEach((topic) => {
       if (!topicMap[topic.name]) {
         topicMap[topic.name] = { ...topic, concepts: [], conceptDetailing: [] };
         merged.push(topicMap[topic.name]);
       }
-      topicMap[topic.name].concepts.push(...topic.concepts);
-      topicMap[topic.name].conceptDetailing.push(...topic.conceptDetailing);
+      // Ensure no duplicates are added
+      topicMap[topic.name].concepts = [
+        ...new Set([...topicMap[topic.name].concepts, ...topic.concepts]),
+      ];
+      topicMap[topic.name].conceptDetailing = [
+        ...new Set([
+          ...topicMap[topic.name].conceptDetailing,
+          ...topic.conceptDetailing,
+        ]),
+      ];
     });
+  
     return merged;
   };
+  
   
   
   
