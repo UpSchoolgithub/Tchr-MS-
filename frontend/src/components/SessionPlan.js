@@ -49,9 +49,13 @@ const SessionPlans = () => {
         const response = await axios.get(
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
+  
         console.log("API Response Data:", response.data);
   
-        const initialData = response.data.reduce((acc, plan) => {
+        // Access sessionPlans array correctly
+        const plans = response.data.sessionPlans || []; // Default to empty array if undefined
+  
+        const initialData = plans.reduce((acc, plan) => {
           acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
             name: entry.topic || "No Topic Name",
             concepts: Array.isArray(entry.concept)
@@ -66,9 +70,10 @@ const SessionPlans = () => {
         }, {});
   
         console.log("Parsed Data for State:", initialData);
+  
         setTopicsWithConcepts(initialData);
-        setSessionPlans(response.data); // Double-check this state update
-        if (response.data.length > 0) setUploadDisabled(true);
+        setSessionPlans(plans); // Set only the sessionPlans array
+        if (plans.length > 0) setUploadDisabled(true);
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
@@ -77,6 +82,7 @@ const SessionPlans = () => {
   
     fetchSessionPlans();
   }, [sessionId]);
+  
   
   
   
