@@ -45,34 +45,34 @@ router.post(
 
       sheet.forEach((row) => {
         const sessionNumber = parseInt(row.SessionNumber, 10);
-
         if (isNaN(sessionNumber)) {
-          throw new Error(`Invalid session number: ${row.SessionNumber}`);
+          console.warn(`Skipping row with invalid session number: ${JSON.stringify(row)}`);
+          return;
         }
-
+      
         const topicName = row.TopicName?.trim();
+        if (!topicName) {
+          console.warn(`Skipping row with missing topic name: ${JSON.stringify(row)}`);
+          return;
+        }
+      
         const concepts = row.Concepts
           ? row.Concepts.split(';').map((concept) => concept.trim())
           : [];
         const conceptDetailing = row.ConceptDetailing
           ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
           : [];
-
-        if (!topicName || concepts.length === 0) {
-          console.warn(`Skipping invalid row: ${JSON.stringify(row)}`);
+      
+        if (concepts.length !== conceptDetailing.length) {
+          console.warn(`Mismatch between concepts and detailing: ${JSON.stringify(row)}`);
           return;
         }
-
-        if (concepts.length !== conceptDetailing.length) {
-          throw new Error(
-            `Mismatch between concepts and concept detailing for topic: ${topicName}`
-          );
-        }
-
+      
+        // Add valid rows to topicsMap
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
-
+      
         topicsMap[sessionNumber].push(
           ...concepts.map((concept, index) => ({
             name: topicName,
@@ -82,6 +82,7 @@ router.post(
           }))
         );
       });
+      
 
       console.log('Parsed Topics Map:', topicsMap);
 
