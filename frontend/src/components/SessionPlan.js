@@ -240,7 +240,6 @@ const SessionPlans = () => {
         return;
       }
   
-      // Prepare payload for generation
       const payload = {
         board,
         grade: className,
@@ -257,6 +256,7 @@ const SessionPlans = () => {
       };
   
       const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
+  
       const generatedLessonPlan = response.data.lesson_plan;
   
       setTopicsWithConcepts((prev) => ({
@@ -273,6 +273,7 @@ const SessionPlans = () => {
       setError(`Failed to generate lesson plan for topic "${topicsWithConcepts[sessionNumber][topicIndex]?.name}".`);
     }
   };
+  
   
   
   

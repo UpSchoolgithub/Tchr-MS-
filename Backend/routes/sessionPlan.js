@@ -163,29 +163,48 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    const planDetails = JSON.parse(sessionPlan.planDetails).map((entry) => {
-      if (entry.lessonPlan && entry.lessonPlan.trim()) {
-        return entry; // Skip if lessonPlan already exists
-      }
+    const planDetails = JSON.parse(sessionPlan.planDetails);
 
-      // Example lesson plan generation logic
-      const generatedLessonPlan = `Generated lesson plan for ${entry.concept}`;
-      return {
-        ...entry,
-        lessonPlan: generatedLessonPlan, // Update the lessonPlan field
-      };
-    });
+    // Map through planDetails and update lessonPlan field
+    const updatedPlanDetails = await Promise.all(
+      planDetails.map(async (entry) => {
+        if (entry.lessonPlan && entry.lessonPlan.trim()) {
+          return entry; // Skip if lessonPlan already exists
+        }
+
+        // Call dynamicLP for each topic
+        const payload = {
+          board: req.body.board,
+          grade: req.body.grade,
+          subject: req.body.subject,
+          unit: req.body.unit,
+          chapter: entry.name,
+          concepts: [{ concept: entry.concept, detailing: entry.conceptDetailing }],
+          sessionType: 'Theory',
+          noOfSession: 1,
+          duration: entry.duration || 45,
+        };
+
+        const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
+
+        return {
+          ...entry,
+          lessonPlan: response.data.lesson_plan || '', // Update lessonPlan
+        };
+      })
+    );
 
     // Save updated planDetails back to the database
-    sessionPlan.planDetails = JSON.stringify(planDetails);
+    sessionPlan.planDetails = JSON.stringify(updatedPlanDetails);
     await sessionPlan.save();
 
-    res.status(200).json({ message: 'Lesson plans generated and stored successfully', planDetails });
+    res.status(200).json({ message: 'Lesson plans generated and stored successfully', updatedPlanDetails });
   } catch (error) {
     console.error('Error generating lesson plans:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 
