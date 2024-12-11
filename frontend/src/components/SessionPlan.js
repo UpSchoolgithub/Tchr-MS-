@@ -103,28 +103,41 @@ const SessionPlans = () => {
 
   // Add a new topic to a session
   const handleAddTopic = (sessionNumber) => {
-    setTopicsWithConcepts((prev) => ({
-      ...prev,
-      [sessionNumber]: [
-        ...(prev[sessionNumber] || []),
-        { name: "", concepts: [], lessonPlan: "" },
-      ],
-    }));
+    setTopicsWithConcepts((prev) => {
+      if (!prev[sessionNumber]) {
+        prev[sessionNumber] = [];
+      }
+  
+      // Add a default topic with empty fields
+      return {
+        ...prev,
+        [sessionNumber]: [
+          ...prev[sessionNumber],
+          { name: "New Topic", concepts: ["New Concept"], conceptDetailing: [""], lessonPlan: "" },
+        ],
+      };
+    });
   };
+  
 
   // Save session plan
   const handleSaveSessionPlan = async (sessionPlanId, sessionNumber) => {
+    const planDetails = topicsWithConcepts[sessionNumber].map((entry) => ({
+      topic: entry.name?.trim() || "Unnamed Topic",
+      concepts: entry.concepts.filter((c) => c.trim().length > 0),
+      conceptDetailing: entry.conceptDetailing,
+      lessonPlan: entry.lessonPlan,
+    }));
+  
+    // Validate topics and concepts
+    if (planDetails.some((detail) => !detail.topic || detail.concepts.length === 0)) {
+      setError("Some topics or concepts are missing or invalid. Please fix them before saving.");
+      return;
+    }
+  
     try {
       setSaving(true);
-      const planDetails = topicsWithConcepts[sessionNumber].map((entry) => ({
-        topic: entry.name,
-        concepts: entry.concepts,
-        lessonPlan: entry.lessonPlan,
-      }));
-  
-      await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, {
-        planDetails: JSON.stringify(planDetails),
-      });
+      await axios.put(`https://tms.up.school/api/sessionPlans/${sessionPlanId}`, { planDetails });
   
       setSaving(false);
       setSuccessMessage("Session plan saved successfully!");
@@ -137,6 +150,7 @@ const SessionPlans = () => {
   };
   
   
+  
 
   // Handle file upload
   const handleFileUpload = async (e) => {
@@ -145,30 +159,37 @@ const SessionPlans = () => {
       setError("Please select a file to upload.");
       return;
     }
+  
     const formData = new FormData();
     formData.append("file", file);
+  
     try {
-      await axios.post(
+      const response = await axios.post(
         `https://tms.up.school/api/sessions/${sessionId}/sessionPlans/upload`,
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
-      setFile(null);
-      const response = await axios.get(
+  
+      if (response.data.skippedRows > 0) {
+        setError(
+          `${response.data.skippedRows} rows were skipped due to errors. Review and upload again.`
+        );
+      }
+  
+      const updatedPlans = await axios.get(
         `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
       );
-      setSessionPlans(response.data);
+  
+      setSessionPlans(updatedPlans.data);
       setUploadDisabled(true);
-      setError("");
+      setSuccessMessage("Session plans uploaded successfully.");
+      setFile(null);
     } catch (error) {
       console.error("Error uploading file:", error);
       setError("Failed to upload session plan. Please try again.");
     }
   };
+  
 
   // Generate lesson plan for a specific topic
   const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
@@ -179,36 +200,32 @@ const SessionPlans = () => {
         return;
       }
   
-      // Generate payload for each concept with detailing
-      const conceptsWithDetails = topic.concepts.map((concept, index) => ({
-        concept,
-        detailing: topic.conceptDetailing[index] || "No detailing provided.",
-      }));
-  
+      // Prepare payload for generation
       const payload = {
         board,
         grade: className,
         subject: subjectName,
         unit: unitName,
         chapter: topic.name,
-        concepts: conceptsWithDetails, // Include concept and detailing
+        concepts: topic.concepts.map((concept, index) => ({
+          concept,
+          detailing: topic.conceptDetailing[index] || "No detailing provided.",
+        })),
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
       };
   
-      console.log("Payload for Lesson Plan:", payload);
-  
       const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
-      console.log("Generated Lesson Plan Response:", response.data);
+      const generatedLessonPlan = response.data.lesson_plan;
   
-      const lessonPlan = response.data.lesson_plan;
       setTopicsWithConcepts((prev) => ({
         ...prev,
-        [sessionNumber]: prev[sessionNumber].map((t, index) =>
-          index === topicIndex ? { ...t, lessonPlan } : t
+        [sessionNumber]: prev[sessionNumber].map((t, idx) =>
+          idx === topicIndex ? { ...t, lessonPlan: generatedLessonPlan } : t
         ),
       }));
+  
       setSuccessMessage(`Lesson plan for topic "${topic.name}" generated successfully!`);
       setError("");
     } catch (error) {
