@@ -156,7 +156,6 @@ router.get('/sessions/:sessionId/sessionPlans/:sessionNumber', async (req, res) 
 // Store Generated LP
 router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   const { id } = req.params;
-  const { sessionNumber } = req.body;
 
   try {
     const sessionPlan = await SessionPlan.findByPk(id);
@@ -164,17 +163,16 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    // Parse and update planDetails with generated lesson plans
     const planDetails = JSON.parse(sessionPlan.planDetails).map((entry) => {
       if (entry.lessonPlan && entry.lessonPlan.trim()) {
         return entry; // Skip if lessonPlan already exists
       }
 
-      // Generate lesson plan (replace with actual logic)
-      const generatedLessonPlan = `Generated lesson plan for ${entry.topicName}`;
+      // Example lesson plan generation logic
+      const generatedLessonPlan = `Generated lesson plan for ${entry.concept}`;
       return {
         ...entry,
-        lessonPlan: generatedLessonPlan,
+        lessonPlan: generatedLessonPlan, // Update the lessonPlan field
       };
     });
 
@@ -188,6 +186,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 // Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
