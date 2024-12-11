@@ -50,30 +50,40 @@ const SessionPlans = () => {
           `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
         );
     
-        const initialData = response.data.reduce((acc, plan) => {
-          acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-            name: entry.topic || "No Topic Name",
-            concepts: Array.isArray(entry.concept)
-              ? [...new Set(entry.concept)]
-              : entry.concept?.split(";").map((c) => c.trim()) || [],
-            conceptDetailing: Array.isArray(entry.conceptDetailing)
-              ? [...new Set(entry.conceptDetailing)]
-              : entry.conceptDetailing
-                  ?.split(";")
-                  .map((c) => c.trim()) || [],
-            lessonPlan: entry.lessonPlan || "",
-          })) || [];
-          return acc;
-        }, {});
+        console.log("API Response Data:", response.data); // Log the response
     
-        setTopicsWithConcepts(initialData);
-        setSessionPlans(response.data);
-        if (response.data.length > 0) setUploadDisabled(true);
+        // Verify if the response is an object with `sessionPlans` as a key
+        if (response.data && Array.isArray(response.data.sessionPlans)) {
+          const initialData = response.data.sessionPlans.reduce((acc, plan) => {
+            acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
+              name: entry.topic || "No Topic Name",
+              concepts: Array.isArray(entry.concept)
+                ? [...new Set(entry.concept)]
+                : entry.concept?.split(";").map((c) => c.trim()) || [],
+              conceptDetailing: Array.isArray(entry.conceptDetailing)
+                ? [...new Set(entry.conceptDetailing)]
+                : entry.conceptDetailing
+                    ?.split(";")
+                    .map((c) => c.trim()) || [],
+              lessonPlan: entry.lessonPlan || "",
+            })) || [];
+            return acc;
+          }, {});
+    
+          setTopicsWithConcepts(initialData);
+          setSessionPlans(response.data.sessionPlans);
+          if (response.data.sessionPlans.length > 0) setUploadDisabled(true);
+        } else {
+          throw new Error(
+            "Unexpected API response format. Expected an array in response.data.sessionPlans."
+          );
+        }
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
+    
     
   
     fetchSessionPlans();
