@@ -60,10 +60,10 @@ router.post(
           return; // Skip invalid row
         }
       
-        // Continue processing valid rows
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
+      
         topicsMap[sessionNumber].push(
           ...concepts.map((concept, index) => ({
             name: topicName,
@@ -73,7 +73,7 @@ router.post(
           }))
         );
       });
-      
+        
       
 
       console.log('Parsed Topics Map:', topicsMap);
@@ -157,10 +157,13 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
 
   try {
     console.log(`Fetching session plans for sessionId: ${sessionId}`);
-    const sessionPlans = await SessionPlan.findAll({ where: { sessionId } });
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+    });
 
     if (!sessionPlans.length) {
-      return res.status(404).json({ message: 'No session plans found for this session ID' });
+      console.warn(`No session plans found for sessionId: ${sessionId}`);
+      return res.status(404).json({ message: 'No session plans found' });
     }
 
     const formattedSessionPlans = sessionPlans.map((plan) => {
@@ -175,7 +178,10 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
           })),
         };
       } catch (error) {
-        console.error(`Error parsing planDetails for sessionPlanId: ${plan.id}`, error);
+        console.error(
+          `Error parsing planDetails for sessionPlanId: ${plan.id}`,
+          error
+        );
         return { ...plan.toJSON(), planDetails: [] };
       }
     });
@@ -189,6 +195,7 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
     });
   }
 });
+
 
 
 
