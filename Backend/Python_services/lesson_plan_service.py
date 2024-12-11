@@ -46,10 +46,11 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
     all_lesson_plans = {}  # To store lesson plans for each concept
     for topic in data.topics:
         for idx, concept in enumerate(topic.concepts):
+            # Fetch corresponding conceptDetailing
             concept_detailing = topic.conceptDetails[idx] if idx < len(topic.conceptDetails) else "No detailing provided."
 
             try:
-                # Create a message for the specific concept
+                # Create a detailed prompt for the specific concept
                 system_msg = {
                     "role": "system",
                     "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
@@ -66,7 +67,11 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
                     - **Number of Sessions**: {data.noOfSession}
                     - **Duration per Session**: {data.duration} minutes
 
-                    Ensure the lesson plan highlights the specific **concept** and its **detailing** in a structured manner. Include learning objectives, teaching aids, activities, and assessments.
+                    Ensure the lesson plan highlights the specific **concept** and its **detailing**. Include:
+                    - Learning objectives
+                    - Teaching aids
+                    - Teaching activities
+                    - Assessments
                     """
                 }
 
@@ -78,12 +83,16 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, str]:
                     messages=messages
                 )
                 lesson_plan = response.choices[0].message.content
+
+                # Store the lesson plan for this specific concept
                 all_lesson_plans[concept] = lesson_plan
+
             except Exception as e:
                 print(f"Error with OpenAI API for concept {concept}: {e}")
                 all_lesson_plans[concept] = "Error generating lesson plan."
-    
+
     return {"lesson_plan": all_lesson_plans}
+
 
 def create_pdf(lesson_plan: str) -> str:
     pdf_path = "lesson_plan.pdf"
