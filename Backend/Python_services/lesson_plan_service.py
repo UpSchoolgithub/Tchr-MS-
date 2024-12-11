@@ -43,10 +43,9 @@ class LessonPlanResponse(BaseModel):
     lesson_plan: Dict[str, str]
 
 def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
-    all_lesson_plans = {}  # Store lesson plans for each concept grouped by topic
+    all_lesson_plans = {}  # Store lesson plans for each concept
     for topic in data.topics:
-        topic_plans = {}
-        for concept, concept_detail in zip(topic.concepts, topic.conceptDetails):
+        for concept, concept_detail in zip(topic.concepts, topic.conceptDetails or []):
             try:
                 # Create a message for the specific concept with its detailing
                 system_msg = {
@@ -58,7 +57,6 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                     - **Subject**: {data.subject}
                     - **Unit**: {data.unit}
                     - **Chapter**: {data.chapter}
-                    - **Topic**: {topic.topic}
                     - **Concept**: {concept}
                     - **Concept Detailing**: {concept_detail}
                     - **Session Type**: {data.sessionType}
@@ -74,12 +72,12 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                     messages=messages
                 )
                 lesson_plan = response.choices[0].message.content
-                topic_plans[concept] = lesson_plan
+                # Store lesson plan by concept
+                all_lesson_plans[concept] = lesson_plan
             except Exception as e:
                 print(f"Error with OpenAI API for concept {concept}: {e}")
-                topic_plans[concept] = "Error generating lesson plan."
+                all_lesson_plans[concept] = "Error generating lesson plan."
 
-        all_lesson_plans[topic.topic] = topic_plans
     return {"lesson_plan": all_lesson_plans}
 
 
