@@ -94,6 +94,41 @@ router.post(
     }
   }
 );
+// Store Generated LP
+router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
+  const { id } = req.params;
+  const { sessionNumber } = req.body;
+
+  try {
+    const sessionPlan = await SessionPlan.findByPk(id);
+    if (!sessionPlan) {
+      return res.status(404).json({ message: 'Session plan not found' });
+    }
+
+    // Parse and update planDetails with generated lesson plans
+    const planDetails = JSON.parse(sessionPlan.planDetails).map((entry) => {
+      if (entry.lessonPlan && entry.lessonPlan.trim()) {
+        return entry; // Skip if lessonPlan already exists
+      }
+
+      // Generate lesson plan (replace with actual logic)
+      const generatedLessonPlan = `Generated lesson plan for ${entry.topicName}`;
+      return {
+        ...entry,
+        lessonPlan: generatedLessonPlan,
+      };
+    });
+
+    // Save updated planDetails back to the database
+    sessionPlan.planDetails = JSON.stringify(planDetails);
+    await sessionPlan.save();
+
+    res.status(200).json({ message: 'Lesson plans generated and stored successfully', planDetails });
+  } catch (error) {
+    console.error('Error generating lesson plans:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
 
 // Fetch Session Plans
 // Fetch Session Plans
@@ -142,7 +177,7 @@ router.put('/sessionPlans/:id', async (req, res) => {
         topic: entry.topic,
         concept: entry.concept,
         conceptDetailing: entry.conceptDetailing || "", // Include Concept Detailing
-        lessonPlan: entry.lessonPlan,
+        lessonPlan: entry.lessonPlan || "", // Include lessonPlan during update
       }))
     );
 

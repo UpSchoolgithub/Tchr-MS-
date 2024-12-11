@@ -21,20 +21,30 @@ const SessionPlan = sequelize.define('SessionPlan', {
     allowNull: false,
     get() {
       const value = this.getDataValue('planDetails');
-      return value
-        ? JSON.parse(value).map((entry) => ({
-            ...entry,
-            conceptDetailing: entry.conceptDetailing || "", // Add default value if conceptDetailing is missing
-          }))
-        : [];
+      try {
+        const parsedValue = value ? JSON.parse(value) : [];
+        if (!Array.isArray(parsedValue)) {
+          throw new Error('Invalid planDetails format');
+        }
+        return parsedValue.map((entry) => ({
+          topicName: entry.topicName || "Unnamed Topic",
+          concept: entry.concept || "No Concept",
+          conceptDetailing: entry.conceptDetailing || "No Detailing Provided",
+          lessonPlan: entry.lessonPlan || "",
+        }));
+      } catch (error) {
+        console.error('Error parsing planDetails:', error);
+        return [];
+      }
     },
     set(value) {
-      // Ensure that `conceptDetailing` is always included when setting the value
-      const processedValue = value.map((entry) => ({
-        ...entry,
-        conceptDetailing: entry.conceptDetailing || "", // Add default value if not provided
+      const validatedValue = value.map((entry) => ({
+        topicName: entry.topicName || "Unnamed Topic",
+        concept: entry.concept || "No Concept",
+        conceptDetailing: entry.conceptDetailing || "No Detailing Provided",
+        lessonPlan: entry.lessonPlan || "",
       }));
-      this.setDataValue('planDetails', JSON.stringify(processedValue));
+      this.setDataValue('planDetails', JSON.stringify(validatedValue));
     },
   },
 });
