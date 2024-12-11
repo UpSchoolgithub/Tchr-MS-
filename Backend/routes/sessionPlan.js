@@ -45,17 +45,7 @@ router.post(
 
       sheet.forEach((row) => {
         const sessionNumber = parseInt(row.SessionNumber, 10);
-        if (isNaN(sessionNumber)) {
-          console.warn(`Skipping row with invalid session number: ${JSON.stringify(row)}`);
-          return;
-        }
-      
         const topicName = row.TopicName?.trim();
-        if (!topicName) {
-          console.warn(`Skipping row with missing topic name: ${JSON.stringify(row)}`);
-          return;
-        }
-      
         const concepts = row.Concepts
           ? row.Concepts.split(';').map((concept) => concept.trim())
           : [];
@@ -64,15 +54,16 @@ router.post(
           : [];
       
         if (concepts.length !== conceptDetailing.length) {
-          console.warn(`Mismatch between concepts and detailing: ${JSON.stringify(row)}`);
-          return;
+          console.warn(
+            `Mismatch between concepts and detailing: ${JSON.stringify(row)}`
+          );
+          return; // Skip invalid row
         }
       
-        // Add valid rows to topicsMap
+        // Continue processing valid rows
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
-      
         topicsMap[sessionNumber].push(
           ...concepts.map((concept, index) => ({
             name: topicName,
@@ -82,6 +73,7 @@ router.post(
           }))
         );
       });
+      
       
 
       console.log('Parsed Topics Map:', topicsMap);
