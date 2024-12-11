@@ -24,29 +24,22 @@ const SessionPlan = sequelize.define('SessionPlan', {
       try {
         const parsedValue = value ? JSON.parse(value) : [];
         if (!Array.isArray(parsedValue)) {
-          throw new Error('Invalid planDetails format');
+          throw new Error("Invalid planDetails format");
         }
-        return parsedValue.map((entry) => ({
-          topicName: entry.topicName || "Unnamed Topic",
-          concept: entry.concept || "No Concept",
-          conceptDetailing: entry.conceptDetailing || "No Detailing Provided",
-          lessonPlan: entry.lessonPlan || "",
-        }));
+        return parsedValue;
       } catch (error) {
-        console.error('Error parsing planDetails:', error);
+        console.error("Error parsing planDetails:", error);
         return [];
       }
     },
     set(value) {
-      const validatedValue = value.map((entry) => ({
-        topicName: entry.topicName || "Unnamed Topic",
-        concept: entry.concept || "No Concept",
-        conceptDetailing: entry.conceptDetailing || "No Detailing Provided",
-        lessonPlan: entry.lessonPlan || "",
-      }));
-      this.setDataValue('planDetails', JSON.stringify(validatedValue));
+      if (!Array.isArray(value)) {
+        throw new Error("planDetails must be an array");
+      }
+      this.setDataValue('planDetails', JSON.stringify(value));
     },
   },
+  
 });
 
 // Define associations in an `associate` method for consistency
