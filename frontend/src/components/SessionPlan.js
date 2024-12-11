@@ -56,11 +56,13 @@ const SessionPlans = () => {
             name: entry.topic || "No Topic Name",
             concepts: Array.isArray(entry.concept)
               ? entry.concept
-              : entry.concept
-              ? entry.concept.split(";").map((c) => c.trim())
-              : [], // Convert semicolon-separated concepts into an array
+              : entry.concept?.split(";").map((c) => c.trim()) || [],
+            conceptDetailing: Array.isArray(entry.conceptDetailing)
+              ? entry.conceptDetailing
+              : entry.conceptDetailing?.split(";").map((c) => c.trim()) || [],
             lessonPlan: entry.lessonPlan || "",
           })) || [];
+          
           return acc;
         }, {});
     
@@ -84,20 +86,17 @@ const SessionPlans = () => {
   const mergeTopics = (topics) => {
     const merged = [];
     const topicMap = {};
-  
     topics.forEach((topic) => {
       if (!topicMap[topic.name]) {
-        topicMap[topic.name] = { ...topic, concepts: [] };
+        topicMap[topic.name] = { ...topic, concepts: [], conceptDetailing: [] };
         merged.push(topicMap[topic.name]);
       }
-      topicMap[topic.name].concepts = [
-        ...topicMap[topic.name].concepts,
-        ...(Array.isArray(topic.concepts) ? topic.concepts : []),
-      ];
+      topicMap[topic.name].concepts.push(...topic.concepts);
+      topicMap[topic.name].conceptDetailing.push(...topic.conceptDetailing);
     });
-  
     return merged;
   };
+  
   
   
   
@@ -388,19 +387,20 @@ const SessionPlans = () => {
 
               {/* Render Concept Detailing */}
               <td>
-                <input
-                  type="text"
-                  value={topic.conceptDetailing || ""}
-                  placeholder="Enter concept details"
-                  onChange={(e) =>
-                    setTopicsWithConcepts((prev) => {
-                      const updatedTopics = { ...prev };
-                      updatedTopics[plan.sessionNumber][tIndex].conceptDetailing = e.target.value;
-                      return updatedTopics;
-                    })
-                  }
-                />
-              </td>
+  <input
+    type="text"
+    value={topic.conceptDetailing[cIndex] || ""}
+    placeholder="Enter concept details"
+    onChange={(e) =>
+      setTopicsWithConcepts((prev) => {
+        const updatedTopics = { ...prev };
+        updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] = e.target.value;
+        return updatedTopics;
+      })
+    }
+  />
+</td>
+
 
               {/* Render Lesson Plan Button */}
               <td>
