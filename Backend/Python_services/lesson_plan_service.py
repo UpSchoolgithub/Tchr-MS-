@@ -50,7 +50,7 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                 # Create a message for the specific concept with its detailing
                 system_msg = {
                     "role": "system",
-                    "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
+                    "content": f"""Create a detailed and structured lesson plan for the {concept} based on the following details:
 
                     - **Board**: {data.board}
                     - **Grade**: {data.grade}
