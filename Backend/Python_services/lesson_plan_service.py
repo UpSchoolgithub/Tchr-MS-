@@ -75,9 +75,8 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                 # Create a message for the specific concept with its allocated time
                 system_msg = {
                     "role": "system",
-                    "content": f"""Create a detailed and structured lesson plan based on the following details:
+                    "content": f"""Create a detailed and structured lesson plan based on the concept and its details provided below. Use the concept details to create the plan and align it with the specified parameters. The lesson plan must follow the given format:
 
-                    - **School**: Include the school's perspective in educational goals
                     - **Board**: {data.board}
                     - **Grade**: {data.grade}
                     - **Subject**: {data.subject}
@@ -85,15 +84,29 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                     - **Chapter**: {data.chapter}
                     - **Topic**: {topic.topic}
                     - **Concept**: {concept}
-                    - **Concept Detailing**: {concept_detail}
-                    - **Allocated Time**: {duration} minutes
-                    - **Session Type**: {data.sessionType}
 
-                    Ensure the lesson plan highlights:
-                    - **Learning Objectives** specific to the concept.
-                    - Relevant **teaching aids**.
-                    - Engaging **activities** to cover the allocated time.
-                    - Appropriate **assessments** for the concept.
+                    **Duration**: {duration} minutes
+
+                    **Objectives**:
+                    - List specific learning objectives for this concept.
+
+                    **Teaching Aids**:
+                    - Mention any tools, resources, or materials required.
+
+                    **Prerequisites**:
+                    - Outline the prior knowledge or skills needed for students to understand the concept.
+
+                    **Content**:
+                    - Provide a detailed explanation of the concept using the concept details.
+
+                    **Activities**:
+                    - Include interactive or engaging activities that utilize the allocated time effectively.
+
+                    **Summary**:
+                    - Summarize the key takeaways from the lesson.
+
+                    **Homework**:
+                    - Assign relevant tasks or exercises to reinforce the concept.
                     """
                 }
                 messages = [system_msg]
