@@ -21,10 +21,20 @@ const SessionPlan = sequelize.define('SessionPlan', {
     allowNull: false,
     get() {
       const value = this.getDataValue('planDetails');
-      return value ? JSON.parse(value) : [];
+      return value
+        ? JSON.parse(value).map((entry) => ({
+            ...entry,
+            conceptDetailing: entry.conceptDetailing || "", // Add default value if conceptDetailing is missing
+          }))
+        : [];
     },
     set(value) {
-      this.setDataValue('planDetails', JSON.stringify(value));
+      // Ensure that `conceptDetailing` is always included when setting the value
+      const processedValue = value.map((entry) => ({
+        ...entry,
+        conceptDetailing: entry.conceptDetailing || "", // Add default value if not provided
+      }));
+      this.setDataValue('planDetails', JSON.stringify(processedValue));
     },
   },
 });
