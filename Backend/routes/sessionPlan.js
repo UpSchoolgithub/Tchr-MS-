@@ -42,8 +42,9 @@ router.post(
 
       const sessionPlans = [];
       const topicsMap = {};
+      const errors = [];
 
-      sheet.forEach((row) => {
+      sheet.forEach((row, index) => {
         const sessionNumber = parseInt(row.SessionNumber, 10);
         const topicName = row.TopicName?.trim();
         const concepts = row.Concepts
@@ -52,37 +53,50 @@ router.post(
         const conceptDetailing = row.ConceptDetailing
           ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
           : [];
-      
-        if (concepts.length !== conceptDetailing.length) {
-          console.warn(
-            `Mismatch between concepts and detailing: ${JSON.stringify(row)}`
-          );
-          return; // Skip invalid row
+
+        if (!sessionNumber || !topicName || concepts.length === 0) {
+          errors.push({
+            row: index + 1,
+            reason: 'Missing required fields: SessionNumber, TopicName, or Concepts.',
+          });
+          return;
         }
-      
+
+        if (concepts.length !== conceptDetailing.length) {
+          errors.push({
+            row: index + 1,
+            reason: 'Mismatch between Concepts and ConceptDetailing.',
+          });
+          return;
+        }
+
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
-      
+
         topicsMap[sessionNumber].push(
-          ...concepts.map((concept, index) => ({
+          ...concepts.map((concept, idx) => ({
             name: topicName,
             concept,
-            conceptDetailing: conceptDetailing[index] || '',
+            conceptDetailing: conceptDetailing[idx] || '',
             lessonPlan: '',
           }))
         );
       });
-        
-      
 
       console.log('Parsed Topics Map:', topicsMap);
 
+      // Prepare session plans
       for (const sessionNumber in topicsMap) {
         const planDetails = topicsMap[sessionNumber];
         if (!Array.isArray(planDetails)) {
-          throw new Error(`Invalid planDetails format for sessionNumber: ${sessionNumber}`);
+          errors.push({
+            sessionNumber,
+            reason: 'Invalid planDetails format.',
+          });
+          continue;
         }
+
         sessionPlans.push({
           sessionId,
           sessionNumber: parseInt(sessionNumber, 10),
@@ -92,20 +106,22 @@ router.post(
 
       console.log('Session Plans:', sessionPlans);
 
-      const createdSessionPlans = await SessionPlan.bulkCreate(sessionPlans);
+      // Save session plans
+      if (sessionPlans.length > 0) {
+        await SessionPlan.bulkCreate(sessionPlans);
+      }
 
-      res.status(201).json({
+      // Response with results
+      const responseMessage = {
         message: 'Session plans uploaded successfully',
-        createdSessionPlans,
-      });
+        uploadedPlans: sessionPlans.length,
+        skippedRows: errors.length,
+        errors,
+      };
+
+      res.status(201).json(responseMessage);
     } catch (error) {
       console.error('Error uploading session plans:', error.message);
-      if (error.message.includes('Invalid')) {
-        return res.status(400).json({
-          message: 'Validation error',
-          error: error.message,
-        });
-      }
       res.status(500).json({
         message: 'Internal server error',
         error: error.message,
