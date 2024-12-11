@@ -43,40 +43,43 @@ class LessonPlanResponse(BaseModel):
     lesson_plan: Dict[str, str]
 
 def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
-    all_lesson_plans = {}  # Store lesson plans for each concept
-    for concept in data.concepts:
-        try:
-            # Create a message for the specific concept with its detailing
-            system_msg = {
-                "role": "system",
-                "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
+    all_lesson_plans = {}  # Store lesson plans for each concept grouped by topic
+    for topic in data.topics:
+        topic_plans = {}
+        for concept, concept_detail in zip(topic.concepts, topic.conceptDetails):
+            try:
+                # Create a message for the specific concept with its detailing
+                system_msg = {
+                    "role": "system",
+                    "content": f"""Create a detailed and structured lesson plan session-wise based on the following details:
 
-                - **Board**: {data.board}
-                - **Grade**: {data.grade}
-                - **Subject**: {data.subject}
-                - **Unit**: {data.unit}
-                - **Chapter**: {data.chapter}
-                - **Concept**: {concept["concept"]}
-                - **Concept Detailing**: {concept["detailing"]}
-                - **Session Type**: {data.sessionType}
-                - **Number of Sessions**: {data.noOfSession}
-                - **Duration per Session**: {data.duration} minutes
+                    - **Board**: {data.board}
+                    - **Grade**: {data.grade}
+                    - **Subject**: {data.subject}
+                    - **Unit**: {data.unit}
+                    - **Chapter**: {data.chapter}
+                    - **Topic**: {topic.topic}
+                    - **Concept**: {concept}
+                    - **Concept Detailing**: {concept_detail}
+                    - **Session Type**: {data.sessionType}
+                    - **Number of Sessions**: {data.noOfSession}
+                    - **Duration per Session**: {data.duration} minutes
 
-                Ensure the lesson plan highlights the specific **concept** in detail, including learning objectives, teaching aids, activities, and assessments related to the concept.
-                """
-            }
+                    Ensure the lesson plan highlights the specific **concept** in detail, including learning objectives, teaching aids, activities, and assessments related to the concept.
+                    """
+                }
+                messages = [system_msg]
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages
+                )
+                lesson_plan = response.choices[0].message.content
+                topic_plans[concept] = lesson_plan
+            except Exception as e:
+                print(f"Error with OpenAI API for concept {concept}: {e}")
+                topic_plans[concept] = "Error generating lesson plan."
 
-            messages = [system_msg]
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages
-            )
-            lesson_plan = response.choices[0].message.content
-            all_lesson_plans[concept["concept"]] = lesson_plan
-        except Exception as e:
-            print(f"Error with OpenAI API for concept {concept['concept']}: {e}")
-            all_lesson_plans[concept["concept"]] = "Error generating lesson plan."
-
+        all_lesson_plans[topic.topic] = topic_plans
     return {"lesson_plan": all_lesson_plans}
 
 
