@@ -20,6 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Upload Session Plans
+// Upload Session Plans
 router.post(
   '/sessions/:sessionId/sessionPlans/upload',
   upload.single('file'),
@@ -86,40 +87,26 @@ router.post(
 
       console.log('Parsed Topics Map:', topicsMap);
 
-      // Prepare session plans
       for (const sessionNumber in topicsMap) {
-        const planDetails = topicsMap[sessionNumber];
-        if (!Array.isArray(planDetails)) {
-          errors.push({
-            sessionNumber,
-            reason: 'Invalid planDetails format.',
-          });
-          continue;
-        }
-
         sessionPlans.push({
           sessionId,
           sessionNumber: parseInt(sessionNumber, 10),
-          planDetails: JSON.stringify(planDetails),
+          planDetails: topicsMap[sessionNumber], // Directly pass the array
         });
       }
 
       console.log('Session Plans:', sessionPlans);
 
-      // Save session plans
       if (sessionPlans.length > 0) {
         await SessionPlan.bulkCreate(sessionPlans);
       }
 
-      // Response with results
-      const responseMessage = {
+      res.status(201).json({
         message: 'Session plans uploaded successfully',
         uploadedPlans: sessionPlans.length,
         skippedRows: errors.length,
         errors,
-      };
-
-      res.status(201).json(responseMessage);
+      });
     } catch (error) {
       console.error('Error uploading session plans:', error.message);
       res.status(500).json({
@@ -129,6 +116,7 @@ router.post(
     }
   }
 );
+
 
 // Store Generated LP
 router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
