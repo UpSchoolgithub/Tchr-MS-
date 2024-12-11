@@ -349,77 +349,102 @@ const SessionPlans = () => {
       </div>
   
       <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Session Number</th>
-              <th>Topic Name</th>
-              <th>Concept</th>
-              <th>Lesson Plan</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-  {sessionPlans.map((plan) => (
-    <React.Fragment key={plan.id}>
-      {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).flatMap((topic, tIndex) =>
-        topic.concepts.map((concept, cIndex) => (
-          <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
-            {/* Render Session Number once per session */}
-            {tIndex === 0 && cIndex === 0 && (
-              <td rowSpan={mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).reduce((acc, t) => acc + t.concepts.length, 0)}>
-                {plan.sessionNumber}
-              </td>
-            )}
-
-            {/* Render Topic Name once per topic */}
-            {cIndex === 0 && (
-              <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
-            )}
-
-            {/* Render Concept */}
-            <td>{concept}</td>
-
-            {/* Render Lesson Plan Button */}
-            <td>
-  {topic.lessonPlan ? (
-    <button
-      className="view-button"
-      onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-    >
-      View
-    </button>
-  ) : (
-    "Not Generated"
-  )}
-</td>
-
-
-            {/* Render Actions (Save Button) */}
-            {tIndex === 0 && cIndex === 0 && (
-              <td rowSpan={mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).reduce((acc, t) => acc + t.concepts.length, 0)}>
-                <button
-                  onClick={() => handleSaveSessionPlan(plan.id, plan.sessionNumber)}
-                  disabled={saving}
+      <table>
+  <thead>
+    <tr>
+      <th>Session Number</th>
+      <th>Topic Name</th>
+      <th>Concept</th>
+      <th>Concept Detailing</th>
+      <th>Lesson Plan</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {sessionPlans.map((plan) => (
+      <React.Fragment key={plan.id}>
+        {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).flatMap((topic, tIndex) =>
+          topic.concepts.map((concept, cIndex) => (
+            <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
+              {/* Render Session Number once per session */}
+              {tIndex === 0 && cIndex === 0 && (
+                <td
+                  rowSpan={mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).reduce(
+                    (acc, t) => acc + t.concepts.length,
+                    0
+                  )}
                 >
-                  {saving ? "Saving..." : "Save"}
-                </button>
+                  {plan.sessionNumber}
+                </td>
+              )}
+
+              {/* Render Topic Name once per topic */}
+              {cIndex === 0 && (
+                <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
+              )}
+
+              {/* Render Concept */}
+              <td>{concept}</td>
+
+              {/* Render Concept Detailing */}
+              <td>
+                <input
+                  type="text"
+                  value={topic.conceptDetailing || ""}
+                  placeholder="Enter concept details"
+                  onChange={(e) =>
+                    setTopicsWithConcepts((prev) => {
+                      const updatedTopics = { ...prev };
+                      updatedTopics[plan.sessionNumber][tIndex].conceptDetailing = e.target.value;
+                      return updatedTopics;
+                    })
+                  }
+                />
               </td>
-            )}
-          </tr>
-        ))
-      )}
-      <tr>
-        <td colSpan="5">
-          <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-            + Add Topic
-          </button>
-        </td>
-      </tr>
-    </React.Fragment>
-  ))}
-</tbody>
-        </table>
+
+              {/* Render Lesson Plan Button */}
+              <td>
+                {topic.lessonPlan ? (
+                  <button
+                    className="view-button"
+                    onClick={() => handleViewLessonPlan(topic.lessonPlan)}
+                  >
+                    View
+                  </button>
+                ) : (
+                  "Not Generated"
+                )}
+              </td>
+
+              {/* Render Actions (Save Button) */}
+              {tIndex === 0 && cIndex === 0 && (
+                <td
+                  rowSpan={mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).reduce(
+                    (acc, t) => acc + t.concepts.length,
+                    0
+                  )}
+                >
+                  <button
+                    onClick={() => handleSaveSessionPlan(plan.id, plan.sessionNumber)}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                </td>
+              )}
+            </tr>
+          ))
+        )}
+        <tr>
+          <td colSpan="6">
+            <button onClick={() => handleAddTopic(plan.sessionNumber)}>+ Add Topic</button>
+          </td>
+        </tr>
+      </React.Fragment>
+    ))}
+  </tbody>
+</table>
+
       </div>
   
       <Modal show={showModal} onHide={() => setShowModal(false)}>

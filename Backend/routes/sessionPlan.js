@@ -41,24 +41,33 @@ router.post(
 
       sheet.forEach((row) => {
         const sessionNumber = parseInt(row.SessionNumber, 10);
-
+      
         if (isNaN(sessionNumber)) {
           throw new Error(`Invalid session number: ${row.SessionNumber}`);
         }
-
+      
         const topicName = row.TopicName?.trim();
         const concepts = row.Concepts
           ? row.Concepts.split(';').map((concept) => concept.trim())
           : [];
-
+        const conceptDetailing = row.ConceptDetailing
+          ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
+          : []; // Parse Concept Detailing
+      
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
-
+      
         topicsMap[sessionNumber].push(
-          ...concepts.map((concept) => ({ name: topicName, concept, lessonPlan: "" }))
+          ...concepts.map((concept, index) => ({
+            name: topicName,
+            concept,
+            conceptDetailing: conceptDetailing[index] || "", // Match detailing with concept or default to ""
+            lessonPlan: "",
+          }))
         );
-              });
+      });
+      
 
       for (const sessionNumber in topicsMap) {
         sessionPlans.push({
@@ -67,6 +76,8 @@ router.post(
           planDetails: JSON.stringify(topicsMap[sessionNumber]),
         });
       }
+      
+      
 
       const createdSessionPlans = await SessionPlan.bulkCreate(sessionPlans);
 
@@ -85,6 +96,7 @@ router.post(
 );
 
 // Fetch Session Plans
+// Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
 
@@ -98,10 +110,10 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
       planDetails: JSON.parse(plan.planDetails).map((entry) => ({
         topic: entry.name,
         concept: entry.concept,
+        conceptDetailing: entry.conceptDetailing || "", // Include Concept Detailing
         lessonPlan: entry.lessonPlan || "",
       })),
     }));
-    
 
     res.json(formattedSessionPlans);
   } catch (error) {
@@ -112,6 +124,7 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
     });
   }
 });
+
 
 // Update Session Plan
 router.put('/sessionPlans/:id', async (req, res) => {
@@ -128,9 +141,12 @@ router.put('/sessionPlans/:id', async (req, res) => {
       planDetails.map((entry) => ({
         topic: entry.topic,
         concept: entry.concept,
+        conceptDetailing: entry.conceptDetailing || "", // Include Concept Detailing
         lessonPlan: entry.lessonPlan,
       }))
     );
+
+    await sessionPlan.save(); // Save the updated session plan
 
     res.json({ message: 'Session plan updated successfully' });
   } catch (error) {
@@ -138,6 +154,7 @@ router.put('/sessionPlans/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to update session plan' });
   }
 });
+
 
 // Add a new topic in the middle
 router.post('/sessionPlans/:id/addTopic', async (req, res) => {
