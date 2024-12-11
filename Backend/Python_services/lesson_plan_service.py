@@ -42,28 +42,58 @@ class LessonPlanRequest(BaseModel):
 class LessonPlanResponse(BaseModel):
     lesson_plan: Dict[str, str]
 
+def allocate_time(concept_details: List[str], total_duration: int) -> List[int]:
+    """
+    Allocate proportional time for each concept based on the length of its detailing.
+    """
+    # Calculate word counts for each concept detailing
+    word_counts = [len(detail.split()) for detail in concept_details]
+    total_words = sum(word_counts)
+
+    if total_words == 0:  # Edge case: No concept detailing provided
+        return [total_duration // len(concept_details)] * len(concept_details)
+
+    # Proportional time allocation
+    allocated_times = [int(total_duration * (count / total_words)) for count in word_counts]
+
+    # Ensure total time matches the session duration
+    remaining_time = total_duration - sum(allocated_times)
+    if remaining_time > 0:
+        allocated_times[-1] += remaining_time  # Add leftover time to the last concept
+
+    return allocated_times
+
+
 def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
-    all_lesson_plans = {}  # Store lesson plans for each concept
+    all_lesson_plans = {}  # Store lesson plans grouped by topic
     for topic in data.topics:
-        for concept, concept_detail in zip(topic.concepts, topic.conceptDetails or []):
+        topic_plans = {}
+        concept_durations = allocate_time(topic.conceptDetails, data.duration)
+
+        for concept, concept_detail, duration in zip(topic.concepts, topic.conceptDetails, concept_durations):
             try:
-                # Create a message for the specific concept with its detailing
+                # Create a message for the specific concept with its allocated time
                 system_msg = {
                     "role": "system",
-                    "content": f"""Create a detailed and structured lesson plan for the {concept} based on the following details:
+                    "content": f"""Create a detailed and structured lesson plan based on the following details:
 
+                    - **School**: Include the school's perspective in educational goals
                     - **Board**: {data.board}
                     - **Grade**: {data.grade}
                     - **Subject**: {data.subject}
                     - **Unit**: {data.unit}
                     - **Chapter**: {data.chapter}
+                    - **Topic**: {topic.topic}
                     - **Concept**: {concept}
                     - **Concept Detailing**: {concept_detail}
+                    - **Allocated Time**: {duration} minutes
                     - **Session Type**: {data.sessionType}
-                    - **Number of Sessions**: {data.noOfSession}
-                    - **Duration per Session**: {data.duration} minutes
 
-                    Ensure the lesson plan highlights the specific **concept** in detail, including learning objectives, teaching aids, activities, and assessments related to the concept.
+                    Ensure the lesson plan highlights:
+                    - **Learning Objectives** specific to the concept.
+                    - Relevant **teaching aids**.
+                    - Engaging **activities** to cover the allocated time.
+                    - Appropriate **assessments** for the concept.
                     """
                 }
                 messages = [system_msg]
@@ -73,10 +103,18 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                 )
                 lesson_plan = response.choices[0].message.content
                 # Store lesson plan by concept
-                all_lesson_plans[concept] = lesson_plan
+                topic_plans[concept] = {
+                    "lesson_plan": lesson_plan,
+                    "duration": duration
+                }
             except Exception as e:
                 print(f"Error with OpenAI API for concept {concept}: {e}")
-                all_lesson_plans[concept] = "Error generating lesson plan."
+                topic_plans[concept] = {
+                    "lesson_plan": "Error generating lesson plan.",
+                    "duration": duration
+                }
+
+        all_lesson_plans[topic.topic] = topic_plans
 
     return {"lesson_plan": all_lesson_plans}
 

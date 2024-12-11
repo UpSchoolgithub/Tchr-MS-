@@ -3,6 +3,31 @@ const axios = require("axios");
 
 const router = express.Router();
 
+// Helper function to calculate proportional time allocation
+function allocateDurations(concepts, conceptDetails, totalDuration) {
+  const wordCounts = conceptDetails.map((detail) =>
+    detail ? detail.split(" ").length : 0
+  );
+  const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
+
+  if (totalWords === 0) {
+    // Equal allocation if no details are provided
+    return Array(concepts.length).fill(Math.floor(totalDuration / concepts.length));
+  }
+
+  const durations = wordCounts.map((count) =>
+    Math.floor((count / totalWords) * totalDuration)
+  );
+
+  // Ensure total time matches exactly
+  const allocatedTotal = durations.reduce((sum, duration) => sum + duration, 0);
+  if (allocatedTotal < totalDuration) {
+    durations[durations.length - 1] += totalDuration - allocatedTotal;
+  }
+
+  return durations;
+}
+
 // POST Route for generating lesson plan dynamically
 router.post("/dynamicLP", async (req, res) => {
   try {
@@ -29,11 +54,24 @@ router.post("/dynamicLP", async (req, res) => {
       });
     }
 
-    // Ensure `concepts` is always an array
-    const sanitizedTopics = topics.map((topic) => ({
-      ...topic,
-      concepts: Array.isArray(topic.concepts) ? topic.concepts : [], // Default to empty array
-    }));
+    // Process topics to allocate durations and include concept details
+    const processedTopics = topics.map((topic) => {
+      const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
+      const conceptDetails = Array.isArray(topic.conceptDetails)
+        ? topic.conceptDetails
+        : [];
+      const durations = allocateDurations(concepts, conceptDetails, duration);
+
+      // Combine concepts, details, and durations into a structured format
+      return {
+        ...topic,
+        concepts: concepts.map((concept, index) => ({
+          concept,
+          detail: conceptDetails[index] || "",
+          duration: durations[index] || 0,
+        })),
+      };
+    });
 
     const payload = {
       board,
@@ -42,13 +80,13 @@ router.post("/dynamicLP", async (req, res) => {
       subSubject: "Civics", // Hardcoded value
       unit,
       chapter,
-      topics: sanitizedTopics,
+      topics: processedTopics,
       sessionType,
       noOfSession,
       duration,
     };
 
-    console.log("Sanitized Payload:", JSON.stringify(payload, null, 2));
+    console.log("Processed Payload:", JSON.stringify(payload, null, 2));
 
     // Send to Python service
     const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
@@ -70,6 +108,5 @@ router.post("/dynamicLP", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

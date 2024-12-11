@@ -10,6 +10,13 @@ const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 const router = express.Router();
 
+// Proportional Time Allocation
+const allocateDurations = (conceptDetails, totalDuration) => {
+  const wordCounts = conceptDetails.map((detail) => (detail ? detail.split(" ").length : 1));
+  const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
+  return wordCounts.map((count) => Math.floor((count / totalWords) * totalDuration));
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: './uploads/',
@@ -20,7 +27,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Upload Session Plans
-// Upload Session Plans
 router.post(
   '/sessions/:sessionId/sessionPlans/upload',
   upload.single('file'),
@@ -30,11 +36,11 @@ router.post(
 
     try {
       if (!file) {
-        throw new Error('No file uploaded');
+        return res.status(400).json({ message: 'No file uploaded' });
       }
 
       if (!file.mimetype.includes('spreadsheetml') && !file.mimetype.includes('excel')) {
-        throw new Error('Invalid file format. Please upload an Excel file.');
+        return res.status(400).json({ message: 'Invalid file format. Please upload an Excel file.' });
       }
 
       const workbook = XLSX.readFile(file.path);
@@ -55,6 +61,7 @@ router.post(
           ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
           : [];
 
+        // Validate required fields
         if (!sessionNumber || !topicName || concepts.length === 0) {
           errors.push({
             row: index + 1,
@@ -63,6 +70,7 @@ router.post(
           return;
         }
 
+        // Check if the number of concepts matches the number of details
         if (concepts.length !== conceptDetailing.length) {
           errors.push({
             row: index + 1,
@@ -71,22 +79,30 @@ router.post(
           return;
         }
 
+        // Allocate durations proportionally
+        const durations = allocateDurations(conceptDetailing, 45); // Assuming 45 minutes per session
+
+        // Initialize the session number in topics map if not already present
         if (!topicsMap[sessionNumber]) {
           topicsMap[sessionNumber] = [];
         }
 
+        // Add concepts to topics map with allocated durations
         topicsMap[sessionNumber].push(
           ...concepts.map((concept, idx) => ({
             name: topicName,
             concept,
             conceptDetailing: conceptDetailing[idx] || '',
+            duration: durations[idx] || 0, // Include calculated duration
             lessonPlan: '',
           }))
         );
       });
 
+      // Log parsed topics map for debugging
       console.log('Parsed Topics Map:', topicsMap);
 
+      // Prepare session plans from topics map
       for (const sessionNumber in topicsMap) {
         sessionPlans.push({
           sessionId,
@@ -95,12 +111,12 @@ router.post(
         });
       }
 
-      console.log('Session Plans:', sessionPlans);
-
+      // Save session plans to the database
       if (sessionPlans.length > 0) {
         await SessionPlan.bulkCreate(sessionPlans);
       }
 
+      // Send success response
       res.status(201).json({
         message: 'Session plans uploaded successfully',
         uploadedPlans: sessionPlans.length,
@@ -117,6 +133,25 @@ router.post(
   }
 );
 
+// Fetch Specific Topic Details
+router.get('/sessions/:sessionId/sessionPlans/:sessionNumber', async (req, res) => {
+  const { sessionId, sessionNumber } = req.params;
+
+  try {
+    const sessionPlan = await SessionPlan.findOne({
+      where: { sessionId, sessionNumber },
+    });
+
+    if (!sessionPlan) {
+      return res.status(404).json({ message: "Session plan not found for the specified session number." });
+    }
+
+    res.json(sessionPlan);
+  } catch (error) {
+    console.error('Error fetching specific session plan:', error.message);
+    res.status(500).json({ message: "Internal server error.", error: error.message });
+  }
+});
 
 // Store Generated LP
 router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
@@ -155,33 +190,48 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
 });
 
 // Fetch Session Plans
-// Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
+  const { page = 1, limit = 10, search = '' } = req.query;
 
   try {
     console.log(`Fetching session plans for sessionId: ${sessionId}`);
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId },
+    const offset = (page - 1) * limit;
+
+    const whereCondition = {
+      sessionId,
+    };
+
+    // Add search filter if provided
+    if (search.trim()) {
+      whereCondition['planDetails'] = {
+        [Op.like]: `%${search.trim()}%`,
+      };
+    }
+
+    const sessionPlans = await SessionPlan.findAndCountAll({
+      where: whereCondition,
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
     });
 
-    if (!sessionPlans.length) {
+    if (sessionPlans.rows.length === 0) {
       console.warn(`No session plans found for sessionId: ${sessionId}`);
       return res.status(404).json({ message: 'No session plans found' });
     }
 
-    const formattedSessionPlans = sessionPlans.map((plan) => {
+    const formattedSessionPlans = sessionPlans.rows.map((plan) => {
       try {
-        const parsedDetails = typeof plan.planDetails === "string" 
-          ? JSON.parse(plan.planDetails) 
+        const parsedDetails = typeof plan.planDetails === 'string'
+          ? JSON.parse(plan.planDetails)
           : plan.planDetails; // Handle already-parsed data
         return {
           ...plan.toJSON(),
           planDetails: parsedDetails.map((entry) => ({
             topic: entry.name,
             concept: entry.concept,
-            conceptDetailing: entry.conceptDetailing || "",
-            lessonPlan: entry.lessonPlan || "",
+            conceptDetailing: entry.conceptDetailing || '',
+            lessonPlan: entry.lessonPlan || '',
           })),
         };
       } catch (error) {
@@ -189,8 +239,13 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
         return { ...plan.toJSON(), planDetails: [] };
       }
     });
-    
-    res.json(formattedSessionPlans);
+
+    res.json({
+      totalCount: sessionPlans.count,
+      totalPages: Math.ceil(sessionPlans.count / limit),
+      currentPage: parseInt(page, 10),
+      sessionPlans: formattedSessionPlans,
+    });
   } catch (error) {
     console.error('Error fetching session plans:', error);
     res.status(500).json({
@@ -199,6 +254,7 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
     });
   }
 });
+
 
 
 
@@ -239,6 +295,14 @@ router.post('/sessionPlans/:id/addTopic', async (req, res) => {
   const { topicName, order } = req.body;
 
   try {
+    // Validate input fields
+    if (!topicName || typeof topicName !== 'string' || topicName.trim() === '') {
+      return res.status(400).json({ message: 'Invalid topic name provided. It must be a non-empty string.' });
+    }
+    if (isNaN(order) || order < 1) {
+      return res.status(400).json({ message: 'Invalid order position specified. It must be a positive number.' });
+    }
+
     const sessionPlan = await SessionPlan.findByPk(id);
     if (!sessionPlan) {
       return res.status(404).json({ message: 'Session plan not found' });
@@ -246,21 +310,21 @@ router.post('/sessionPlans/:id/addTopic', async (req, res) => {
 
     const topics = JSON.parse(sessionPlan.planDetails) || [];
     const updatedTopics = [
-  ...topics.slice(0, order - 1),
-  { name: topicName, concept: "", lessonPlan: "" },
-  ...topics.slice(order - 1),
-];
-
+      ...topics.slice(0, order - 1),
+      { name: topicName, concept: '', lessonPlan: '' },
+      ...topics.slice(order - 1),
+    ];
 
     sessionPlan.planDetails = JSON.stringify(updatedTopics);
     await sessionPlan.save();
 
-    res.status(201).json({ message: 'Topic added successfully' });
+    res.status(201).json({ message: 'Topic added successfully', updatedTopics });
   } catch (error) {
-    console.error('Error adding topic:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error adding topic:', error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 // Delete Session Plans for a Session
 router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
@@ -281,22 +345,20 @@ router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
   }
 });
 
-//  new route to fetch the required metadata (schoolName, className, sectionName, etc.) without session details.
 router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/metadata', async (req, res) => {
   const { schoolId, classId, sectionId, subjectId } = req.params;
 
   try {
-    // Fetch school, class, section, and subject details
     const school = await School.findByPk(schoolId, { attributes: ['name'] });
     const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
     const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
     const subject = await Subject.findByPk(subjectId, { attributes: ['subjectName'] });
+    const sessionCount = await SessionPlan.count({ where: { sectionId, subjectId } });
 
     if (!school || !classInfo || !section || !subject) {
-      return res.status(404).json({ message: 'One or more entities not found.' });
+      return res.status(404).json({ message: "One or more entities not found." });
     }
 
-    // Return only metadata
     res.json({
       schoolId,
       schoolName: school.name,
@@ -307,10 +369,11 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
       sectionName: section.sectionName,
       subjectId,
       subjectName: subject.subjectName,
+      sessionCount, // New field for session count
     });
   } catch (error) {
-    console.error('Error fetching metadata:', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error("Error fetching metadata:", error.message);
+    res.status(500).json({ message: "Internal server error.", error: error.message });
   }
 });
 
