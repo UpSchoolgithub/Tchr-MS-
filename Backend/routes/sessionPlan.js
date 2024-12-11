@@ -188,6 +188,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
 });
 
 
+
 // Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
