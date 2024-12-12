@@ -49,66 +49,91 @@ router.post(
 
       const sessionPlans = [];
       const errors = [];
+      let rowIndex = 1; // Start row index (1-based)
 
-      // Process each row in the uploaded sheet
-      for (const row of sheet) {
-        const sessionNumber = parseInt(row.SessionNumber, 10);
-        const topicName = row.TopicName?.trim();
-        const concepts = row.Concepts
-          ? row.Concepts.split(';').map((concept) => concept.trim())
-          : [];
-        const conceptDetails = row.ConceptDetailing
-          ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
-          : [];
+      // Start a transaction
+      const transaction = await sequelize.transaction();
 
-        // Validate required fields
-        if (!sessionNumber || !topicName || concepts.length === 0) {
-          errors.push({
-            row: row.index,
-            reason: 'Missing required fields: SessionNumber, TopicName, or Concepts.',
-          });
-          continue;
+      try {
+        // Process each row in the uploaded sheet
+        for (const row of sheet) {
+          const sessionNumber = parseInt(row.SessionNumber, 10);
+          const topicName = row.TopicName?.trim();
+          const concepts = row.Concepts
+            ? row.Concepts.split(';').map((concept) => concept.trim())
+            : [];
+          const conceptDetails = row.ConceptDetailing
+            ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
+            : [];
+
+          // Validate required fields
+          if (!sessionNumber || !topicName || concepts.length === 0) {
+            errors.push({
+              row: rowIndex,
+              reason: 'Missing required fields: SessionNumber, TopicName, or Concepts.',
+            });
+            rowIndex++;
+            continue;
+          }
+
+          // Check if the number of concepts matches the number of details
+          if (concepts.length !== conceptDetails.length) {
+            errors.push({
+              row: rowIndex,
+              reason: 'Mismatch between Concepts and ConceptDetailing.',
+            });
+            rowIndex++;
+            continue;
+          }
+
+          // Create the `SessionPlan` entry
+          const sessionPlan = await SessionPlan.create(
+            {
+              sessionId,
+              sessionNumber,
+              topicName,
+            },
+            { transaction }
+          );
+
+          // Create `Concept` and `LessonPlan` entries
+          for (let i = 0; i < concepts.length; i++) {
+            const concept = await Concept.create(
+              {
+                sessionPlanId: sessionPlan.id,
+                concept: concepts[i],
+                conceptDetailing: conceptDetails[i],
+              },
+              { transaction }
+            );
+
+            await LessonPlan.create(
+              {
+                conceptId: concept.id,
+                generatedLP: '', // Initially empty
+              },
+              { transaction }
+            );
+          }
+
+          sessionPlans.push(sessionPlan);
+          rowIndex++;
         }
 
-        // Check if the number of concepts matches the number of details
-        if (concepts.length !== conceptDetails.length) {
-          errors.push({
-            row: row.index,
-            reason: 'Mismatch between Concepts and ConceptDetailing.',
-          });
-          continue;
-        }
+        // Commit the transaction
+        await transaction.commit();
 
-        // Create the `SessionPlan` entry
-        const sessionPlan = await SessionPlan.create({
-          sessionId,
-          sessionNumber,
-          topicName,
+        res.status(201).json({
+          message: 'Session plans uploaded successfully',
+          sessionPlans,
+          skippedRows: errors.length,
+          errors,
         });
-
-        // Create `Concept` and `LessonPlan` entries
-        for (let i = 0; i < concepts.length; i++) {
-          const concept = await Concept.create({
-            sessionPlanId: sessionPlan.id,
-            concept: concepts[i],
-            conceptDetailing: conceptDetails[i],
-          });
-
-          await LessonPlan.create({
-            conceptId: concept.id,
-            generatedLP: '', // Initially empty
-          });
-        }
-
-        sessionPlans.push(sessionPlan);
+      } catch (err) {
+        // Rollback the transaction in case of an error
+        await transaction.rollback();
+        throw err;
       }
-
-      res.status(201).json({
-        message: 'Session plans uploaded successfully',
-        sessionPlans,
-        skippedRows: errors.length,
-        errors,
-      });
     } catch (error) {
       console.error('Error uploading session plans:', error.message);
       res.status(500).json({
@@ -118,6 +143,7 @@ router.post(
     }
   }
 );
+
 
 
 // Fetch Specific Topic Details
@@ -222,25 +248,23 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    console.log(`Fetching session plans for sessionId: ${sessionId}`);
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
         {
           model: Concept,
-          include: [LessonPlan],
+          include: [{ model: LessonPlan }], // Include LessonPlan if needed
         },
       ],
     });
 
     if (!sessionPlans.length) {
-      console.warn(`No session plans found for sessionId: ${sessionId}`);
       return res.status(404).json({ message: 'No session plans found.' });
     }
 
     res.json({ sessionPlans });
   } catch (error) {
-    console.error(`Error fetching session plans for sessionId ${sessionId}:`, error); // Detailed log
+    console.error(`Error fetching session plans for sessionId ${sessionId}:`, error);
     res.status(500).json({
       message: 'Internal server error',
       error: error.message,
