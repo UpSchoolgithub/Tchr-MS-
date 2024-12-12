@@ -1,9 +1,12 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-const Topic = require('./Topic');
-const Session = require('./Session'); // Import the Session model
 
 const SessionPlan = sequelize.define('SessionPlan', {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
   sessionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -16,36 +19,15 @@ const SessionPlan = sequelize.define('SessionPlan', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  planDetails: {
-    type: DataTypes.TEXT,
+  topicName: {
+    type: DataTypes.STRING,
     allowNull: false,
-    get() {
-      const value = this.getDataValue('planDetails');
-      try {
-        const parsedValue = value ? JSON.parse(value) : [];
-        if (!Array.isArray(parsedValue)) {
-          throw new Error("Invalid planDetails format");
-        }
-        return parsedValue;
-      } catch (error) {
-        console.error("Error parsing planDetails:", error);
-        return [];
-      }
-    },
-    set(value) {
-      if (!Array.isArray(value)) {
-        throw new Error("planDetails must be an array");
-      }
-      this.setDataValue('planDetails', JSON.stringify(value));
-    },
   },
-  
 });
 
-// Define associations in an `associate` method for consistency
 SessionPlan.associate = (models) => {
   SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', onDelete: 'CASCADE' });
-  SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', onDelete: 'CASCADE' });
+  SessionPlan.hasMany(models.Concept, { foreignKey: 'sessionPlanId', onDelete: 'CASCADE' });
 };
 
 module.exports = SessionPlan;

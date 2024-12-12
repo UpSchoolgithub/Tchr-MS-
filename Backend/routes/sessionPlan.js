@@ -48,78 +48,64 @@ router.post(
       const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
       const sessionPlans = [];
-      const topicsMap = {};
       const errors = [];
 
-      sheet.forEach((row, index) => {
+      // Process each row in the uploaded sheet
+      for (const row of sheet) {
         const sessionNumber = parseInt(row.SessionNumber, 10);
         const topicName = row.TopicName?.trim();
         const concepts = row.Concepts
           ? row.Concepts.split(';').map((concept) => concept.trim())
           : [];
-        const conceptDetailing = row.ConceptDetailing
+        const conceptDetails = row.ConceptDetailing
           ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
           : [];
 
         // Validate required fields
         if (!sessionNumber || !topicName || concepts.length === 0) {
           errors.push({
-            row: index + 1,
+            row: row.index,
             reason: 'Missing required fields: SessionNumber, TopicName, or Concepts.',
           });
-          return;
+          continue;
         }
 
         // Check if the number of concepts matches the number of details
-        if (concepts.length !== conceptDetailing.length) {
+        if (concepts.length !== conceptDetails.length) {
           errors.push({
-            row: index + 1,
+            row: row.index,
             reason: 'Mismatch between Concepts and ConceptDetailing.',
           });
-          return;
+          continue;
         }
 
-        // Allocate durations proportionally
-        const durations = allocateDurations(conceptDetailing, 45); // Assuming 45 minutes per session
-
-        // Initialize the session number in topics map if not already present
-        if (!topicsMap[sessionNumber]) {
-          topicsMap[sessionNumber] = [];
-        }
-
-        // Add concepts to topics map with allocated durations
-        topicsMap[sessionNumber].push(
-          ...concepts.map((concept, idx) => ({
-            name: topicName,
-            concept,
-            conceptDetailing: conceptDetailing[idx] || '',
-            duration: durations[idx] || 0, // Include calculated duration
-            lessonPlan: '',
-          }))
-        );
-      });
-
-      // Log parsed topics map for debugging
-      console.log('Parsed Topics Map:', topicsMap);
-
-      // Prepare session plans from topics map
-      for (const sessionNumber in topicsMap) {
-        sessionPlans.push({
+        // Create the `SessionPlan` entry
+        const sessionPlan = await SessionPlan.create({
           sessionId,
-          sessionNumber: parseInt(sessionNumber, 10),
-          planDetails: topicsMap[sessionNumber], // Directly pass the array
+          sessionNumber,
+          topicName,
         });
+
+        // Create `Concept` and `LessonPlan` entries
+        for (let i = 0; i < concepts.length; i++) {
+          const concept = await Concept.create({
+            sessionPlanId: sessionPlan.id,
+            concept: concepts[i],
+            conceptDetailing: conceptDetails[i],
+          });
+
+          await LessonPlan.create({
+            conceptId: concept.id,
+            generatedLP: '', // Initially empty
+          });
+        }
+
+        sessionPlans.push(sessionPlan);
       }
 
-      // Save session plans to the database
-      if (sessionPlans.length > 0) {
-        await SessionPlan.bulkCreate(sessionPlans);
-      }
-
-      // Send success response
       res.status(201).json({
         message: 'Session plans uploaded successfully',
-        uploadedPlans: sessionPlans.length,
+        sessionPlans,
         skippedRows: errors.length,
         errors,
       });
@@ -132,6 +118,7 @@ router.post(
     }
   }
 );
+
 
 // Fetch Specific Topic Details
 router.get('/sessions/:sessionId/sessionPlans/:sessionNumber', async (req, res) => {
@@ -205,97 +192,53 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   }
 });
 
-//Endpoint for Saving Lesson Plans
-
+// Save Lesson Plan
 router.post('/sessionPlans/:id/saveLessonPlan', async (req, res) => {
   const { id } = req.params; // Session Plan ID
-  const { updatedLessonPlan } = req.body; // Updated Lesson Plan Data
+  const { conceptId, generatedLP } = req.body;
 
   try {
-      const sessionPlan = await SessionPlan.findByPk(id);
-      if (!sessionPlan) {
-          return res.status(404).json({ message: 'Session plan not found' });
-      }
+    const lessonPlan = await LessonPlan.findOne({ where: { conceptId } });
+    if (!lessonPlan) {
+      return res.status(404).json({ message: 'Lesson plan not found.' });
+    }
 
-      const planDetails = JSON.parse(sessionPlan.planDetails);
+    lessonPlan.generatedLP = generatedLP; // Update the lesson plan
+    await lessonPlan.save();
 
-      // Find the topic that matches and update its lesson plan
-      const updatedPlanDetails = planDetails.map((entry) => {
-          if (entry.name === updatedLessonPlan.topicName && entry.concept === updatedLessonPlan.concept) {
-              return { ...entry, lessonPlan: updatedLessonPlan.lessonPlan }; // Update lesson plan
-          }
-          return entry;
-      });
-
-      sessionPlan.planDetails = JSON.stringify(updatedPlanDetails);
-      await sessionPlan.save();
-
-      res.status(200).json({ message: 'Lesson plan saved successfully', updatedPlanDetails });
+    res.status(200).json({ message: 'Lesson plan saved successfully.' });
   } catch (error) {
-      console.error('Error saving lesson plan:', error.message);
-      res.status(500).json({ message: 'Failed to save lesson plan.', error: error.message });
+    console.error('Error saving lesson plan:', error.message);
+    res.status(500).json({
+      message: 'Failed to save lesson plan.',
+      error: error.message,
+    });
   }
 });
+
 
 // Fetch Session Plans
 router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
-  const { page = 1, limit = 10, search = '' } = req.query;
 
   try {
-    console.log(`Fetching session plans for sessionId: ${sessionId}`);
-    const offset = (page - 1) * limit;
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+      include: [
+        {
+          model: Concept,
+          include: [LessonPlan], // Include lesson plans
+        },
+      ],
+    });
 
-    const whereCondition = {
-      sessionId,
-    };
-
-    // Add search filter if provided
-    if (search.trim()) {
-      whereCondition['planDetails'] = {
-        [Op.like]: `%${search.trim()}%`,
-      };
+    if (!sessionPlans.length) {
+      return res.status(404).json({ message: 'No session plans found.' });
     }
 
-    const sessionPlans = await SessionPlan.findAndCountAll({
-      where: whereCondition,
-      limit: parseInt(limit, 10),
-      offset: parseInt(offset, 10),
-    });
-
-    if (sessionPlans.rows.length === 0) {
-      console.warn(`No session plans found for sessionId: ${sessionId}`);
-      return res.status(404).json({ message: 'No session plans found' });
-    }
-
-    const formattedSessionPlans = sessionPlans.rows.map((plan) => {
-      try {
-        const parsedDetails = typeof plan.planDetails === 'string'
-          ? JSON.parse(plan.planDetails)
-          : plan.planDetails; // Handle already-parsed data
-        return {
-          ...plan.toJSON(),
-          planDetails: parsedDetails.map((entry) => ({
-            topic: entry.name,
-            concept: entry.concept,
-            conceptDetailing: entry.conceptDetailing || '',
-            lessonPlan: entry.lessonPlan || '',
-          })),
-        };
-      } catch (error) {
-        console.error(`Error parsing planDetails for sessionPlanId: ${plan.id}`, error);
-        return { ...plan.toJSON(), planDetails: [] };
-      }
-    });
-
-    res.json({
-      totalCount: sessionPlans.count,
-      totalPages: Math.ceil(sessionPlans.count / limit),
-      currentPage: parseInt(page, 10),
-      sessionPlans: formattedSessionPlans,
-    });
+    res.json({ sessionPlans });
   } catch (error) {
-    console.error('Error fetching session plans:', error);
+    console.error('Error fetching session plans:', error.message);
     res.status(500).json({
       message: 'Internal server error',
       error: error.message,
