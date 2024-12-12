@@ -28,6 +28,19 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+// Helper function to validate row data
+const validateRow = (row) => {
+  if (!row.SessionNumber || !row.TopicName || !row.Concepts) {
+    return 'Missing required fields: SessionNumber, TopicName, or Concepts.';
+  }
+  const concepts = row.Concepts.split(';');
+  const details = row.ConceptDetailing ? row.ConceptDetailing.split(';') : [];
+  if (concepts.length !== details.length) {
+    return 'Mismatch between Concepts and ConceptDetailing.';
+  }
+  return null; // No validation errors
+};
+
 
 // Upload Session Plans
 router.post(
@@ -50,6 +63,10 @@ router.post(
       const sheetName = workbook.SheetNames[0];
       const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
+      if (!sheet || sheet.length === 0) {
+        return res.status(400).json({ message: 'Uploaded file is empty or invalid.' });
+      }
+
       const sessionPlans = [];
       const errors = [];
       let rowIndex = 1; // Start row index (1-based)
@@ -59,71 +76,50 @@ router.post(
 
       try {
         // Process each row in the uploaded sheet
-        for (const row of sheet) {
+        for (const [index, row] of sheet.entries()) {
+          rowIndex = index + 1; // Update row index
+
+          // Validate row data
+          const validationError = validateRow(row);
+          if (validationError) {
+            errors.push({ row: rowIndex, reason: validationError });
+            continue;
+          }
+
           const sessionNumber = parseInt(row.SessionNumber, 10);
-          const topicName = row.TopicName?.trim();
-          const concepts = row.Concepts
-            ? row.Concepts.split(';').map((concept) => concept.trim())
-            : [];
-          const conceptDetails = row.ConceptDetailing
-            ? row.ConceptDetailing.split(';').map((detail) => detail.trim())
-            : [];
+          const topicName = row.TopicName.trim();
+          const concepts = row.Concepts.split(';').map((c) => c.trim());
+          const conceptDetails = row.ConceptDetailing.split(';').map((d) => d.trim());
 
-          // Validate required fields
-          if (!sessionNumber || !topicName || concepts.length === 0) {
-            errors.push({
-              row: rowIndex,
-              reason: 'Missing required fields: SessionNumber, TopicName, or Concepts.',
-            });
-            rowIndex++;
-            continue;
-          }
-
-          // Check if the number of concepts matches the number of details
-          if (concepts.length !== conceptDetails.length) {
-            errors.push({
-              row: rowIndex,
-              reason: 'Mismatch between Concepts and ConceptDetailing.',
-            });
-            rowIndex++;
-            continue;
-          }
-
-          // Create the `SessionPlan` entry
-          const sessionPlan = await SessionPlan.create(
-            {
-              sessionId,
-              sessionNumber,
-              topicName,
-            },
-            { transaction }
-          );
-
-          // Create `Concept` and `LessonPlan` entries
-          for (let i = 0; i < concepts.length; i++) {
-            const concept = await Concept.create(
-              {
-                sessionPlanId: sessionPlan.id,
-                concept: concepts[i],
-                conceptDetailing: conceptDetails[i],
-              },
+          try {
+            // Create the `SessionPlan` entry
+            const sessionPlan = await SessionPlan.create(
+              { sessionId, sessionNumber, topicName },
               { transaction }
             );
 
-            await LessonPlan.create(
-              {
-                conceptId: concept.id,
-                generatedLP: '', // Initially empty
-              },
-              { transaction }
-            );
-          }
+            // Create `Concept` and `LessonPlan` entries in bulk
+            const conceptEntries = concepts.map((concept, i) => ({
+              sessionPlanId: sessionPlan.id,
+              concept,
+              conceptDetailing: conceptDetails[i],
+            }));
+            const conceptsCreated = await Concept.bulkCreate(conceptEntries, { transaction });
 
-          sessionPlans.push(sessionPlan);
-          rowIndex++;
+            const lessonPlans = conceptsCreated.map((concept) => ({
+              conceptId: concept.id,
+              generatedLP: '', // Initially empty
+            }));
+            await LessonPlan.bulkCreate(lessonPlans, { transaction });
+
+            sessionPlans.push(sessionPlan);
+          } catch (err) {
+            console.error(`Error processing row ${rowIndex}:`, err.message);
+            errors.push({ row: rowIndex, reason: 'Database error during row processing.' });
+          }
         }
 
-        // Commit the transaction
+        // Commit transaction if no critical errors
         await transaction.commit();
 
         res.status(201).json({
@@ -132,10 +128,9 @@ router.post(
           skippedRows: errors.length,
           errors,
         });
-      } catch (err) {
-        // Rollback the transaction in case of an error
-        await transaction.rollback();
-        throw err;
+      } catch (error) {
+        await transaction.rollback(); // Ensure rollback
+        throw error; // Re-throw for outer catch block
       }
     } catch (error) {
       console.error('Error uploading session plans:', error.message);
@@ -146,7 +141,6 @@ router.post(
     }
   }
 );
-
 
 
 // Fetch Specific Topic Details

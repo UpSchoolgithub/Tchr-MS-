@@ -5,9 +5,7 @@ const router = express.Router();
 
 // Helper function to calculate proportional time allocation
 function allocateDurations(concepts, conceptDetails, totalDuration) {
-  const wordCounts = conceptDetails.map((detail) =>
-    detail ? detail.split(" ").length : 0
-  );
+  const wordCounts = conceptDetails.map((detail) => (detail ? detail.split(" ").length : 1)); // Default to 1 if no detail
   const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
 
   if (totalWords === 0) {
@@ -28,6 +26,16 @@ function allocateDurations(concepts, conceptDetails, totalDuration) {
   return durations;
 }
 
+// Utility function for field validation
+function validateFields(fields) {
+  for (const [key, value] of Object.entries(fields)) {
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      return `${key} is required and cannot be empty.`;
+    }
+  }
+  return null;
+}
+
 // POST Route for generating lesson plan dynamically
 router.post("/dynamicLP", async (req, res) => {
   try {
@@ -43,14 +51,21 @@ router.post("/dynamicLP", async (req, res) => {
       duration,
     } = req.body;
 
-    // Debug payload
     console.log("Incoming payload from frontend:", JSON.stringify(req.body, null, 2));
 
     // Validate required fields
-    if (!board || !grade || !subject || !chapter || !topics || topics.length === 0) {
-      console.error("Validation failed. Missing fields or empty topics.");
+    const missingFieldError = validateFields({
+      board,
+      grade,
+      subject,
+      chapter,
+      topics,
+    });
+
+    if (missingFieldError) {
+      console.error("Validation failed:", missingFieldError);
       return res.status(400).json({
-        message: "Invalid payload. Missing required fields or topics.",
+        message: `Invalid payload. ${missingFieldError}`,
       });
     }
 
@@ -60,7 +75,7 @@ router.post("/dynamicLP", async (req, res) => {
       const conceptDetails = Array.isArray(topic.conceptDetails)
         ? topic.conceptDetails
         : [];
-      const durations = allocateDurations(concepts, conceptDetails, duration);
+      const durations = allocateDurations(concepts, conceptDetails, duration || 45); // Default duration to 45 mins
 
       // Combine concepts, details, and durations into a structured format
       return {
@@ -77,7 +92,7 @@ router.post("/dynamicLP", async (req, res) => {
       board,
       grade,
       subject,
-      subSubject: "Civics", // Hardcoded value
+      subSubject: "Civics", // Hardcoded value; consider making this configurable
       unit,
       chapter,
       topics: processedTopics,
@@ -88,9 +103,11 @@ router.post("/dynamicLP", async (req, res) => {
 
     console.log("Processed Payload:", JSON.stringify(payload, null, 2));
 
-    // Send to Python service
+    // Send to Python service with a timeout
     const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
-    const response = await axios.post(pythonServiceUrl, payload);
+    const response = await axios.post(pythonServiceUrl, payload, {
+      timeout: 10000, // 10 seconds timeout
+    });
 
     console.log("Response from Python service:", JSON.stringify(response.data, null, 2));
 
