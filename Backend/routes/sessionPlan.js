@@ -222,29 +222,32 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
+    console.log(`Fetching session plans for sessionId: ${sessionId}`);
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
         {
           model: Concept,
-          include: [LessonPlan], // Include lesson plans
+          include: [LessonPlan],
         },
       ],
     });
 
     if (!sessionPlans.length) {
+      console.warn(`No session plans found for sessionId: ${sessionId}`);
       return res.status(404).json({ message: 'No session plans found.' });
     }
 
     res.json({ sessionPlans });
   } catch (error) {
-    console.error('Error fetching session plans:', error.message);
+    console.error(`Error fetching session plans for sessionId ${sessionId}:`, error); // Detailed log
     res.status(500).json({
       message: 'Internal server error',
       error: error.message,
     });
   }
 });
+
 
 
 
