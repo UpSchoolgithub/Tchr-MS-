@@ -94,18 +94,25 @@ router.post(
           try {
             // Create the `SessionPlan` entry
             const sessionPlan = await SessionPlan.create(
-              { sessionId, sessionNumber, topicName },
+              { sessionId, sessionNumber },
               { transaction }
             );
 
-            // Create `Concept` and `LessonPlan` entries in bulk
+            // Create the `Topic` entry
+            const topic = await Topic.create(
+              { sessionPlanId: sessionPlan.id, topicName },
+              { transaction }
+            );
+
+            // Create `Concept` entries linked to the topic
             const conceptEntries = concepts.map((concept, i) => ({
-              sessionPlanId: sessionPlan.id,
+              topicId: topic.id,
               concept,
               conceptDetailing: conceptDetails[i],
             }));
             const conceptsCreated = await Concept.bulkCreate(conceptEntries, { transaction });
 
+            // Create `LessonPlan` entries linked to the concepts
             const lessonPlans = conceptsCreated.map((concept) => ({
               conceptId: concept.id,
               generatedLP: '', // Initially empty
