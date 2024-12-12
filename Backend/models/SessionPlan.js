@@ -19,15 +19,11 @@ const SessionPlan = sequelize.define('SessionPlan', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  topicName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
 });
 
 SessionPlan.associate = (models) => {
   SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', onDelete: 'CASCADE' });
-  SessionPlan.hasMany(models.Concept, { foreignKey: 'sessionPlanId', onDelete: 'CASCADE' });
+  SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', onDelete: 'CASCADE' });
 };
 
 module.exports = SessionPlan;
