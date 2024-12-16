@@ -12,7 +12,7 @@ const router = express.Router();
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
-
+const axios = require('axios'); 
 // Proportional Time Allocation
 const allocateDurations = (conceptDetails, totalDuration) => {
   const wordCounts = conceptDetails.map((detail) => (detail ? detail.split(" ").length : 1));
@@ -177,49 +177,54 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const sessionPlan = await SessionPlan.findByPk(id);
+    // Fetch the session plan and associated topics and concepts
+    const sessionPlan = await SessionPlan.findByPk(id, {
+      include: {
+        model: Topic,
+        as: 'Topics',
+        include: {
+          model: Concept,
+          as: 'Concepts',
+        },
+      },
+    });
+
     if (!sessionPlan) {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    const planDetails = JSON.parse(sessionPlan.planDetails);
-
-    // Map through planDetails and update lessonPlan field
-    const updatedPlanDetails = await Promise.all(
-      planDetails.map(async (entry) => {
-        if (entry.lessonPlan && entry.lessonPlan.trim()) {
-          return entry; // Skip if lessonPlan already exists
-        }
-
-        // Call dynamicLP for each topic
+    // Loop through all topics and their concepts to call the Python service
+    for (const topic of sessionPlan.Topics) {
+      for (const concept of topic.Concepts) {
+        // Construct payload for the Python service
         const payload = {
-          board: req.body.board,
-          grade: req.body.grade,
-          subject: req.body.subject,
-          unit: req.body.unit,
-          chapter: entry.name,
-          concepts: [{ concept: entry.concept, detailing: entry.conceptDetailing }],
+          board: req.body.board || 'CBSE',
+          grade: req.body.grade || '8',
+          subject: req.body.subject || 'History',
+          unit: req.body.unit || 'Unit Name',
+          chapter: topic.topicName,
+          concepts: [{ concept: concept.concept, detailing: concept.conceptDetailing }],
           sessionType: 'Theory',
           noOfSession: 1,
-          duration: entry.duration || 45,
+          duration: 45,
         };
 
+        // Call the Python API to generate the lesson plan
         const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
 
-        return {
-          ...entry,
-          lessonPlan: response.data.lesson_plan || '', // Update lessonPlan
-        };
-      })
-    );
+        // Update the generatedLP field in the database
+        await LessonPlan.update(
+          { generatedLP: response.data.lesson_plan || '' }, // Set lesson plan content
+          { where: { conceptId: concept.id } } // Update for the matching concept
+        );
 
-    // Save updated planDetails back to the database
-    sessionPlan.planDetails = JSON.stringify(updatedPlanDetails);
-    await sessionPlan.save();
+        console.log(`Updated lesson plan for conceptId ${concept.id}`);
+      }
+    }
 
-    res.status(200).json({ message: 'Lesson plans generated and stored successfully', updatedPlanDetails });
+    res.status(200).json({ message: 'Lesson plans generated and updated successfully' });
   } catch (error) {
-    console.error('Error generating lesson plans:', error);
+    console.error('Error generating and updating lesson plans:', error.message);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
