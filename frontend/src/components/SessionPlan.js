@@ -298,33 +298,38 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      const payloads = sessionPlans.flatMap((plan) => {
-        const groupedTopics = mergeTopics(topicsWithConcepts[plan.sessionNumber] || []);
-        return groupedTopics.map((topic) => {
+      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) => {
+        return topics.map((topic) => {
           if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
-            console.warn(`Skipping invalid topic for session: ${plan.sessionNumber}`);
+            console.warn(`Skipping invalid topic: ${topic.name || "Unnamed Topic"}`);
             return null;
           }
           return {
-            sessionNumber: plan.sessionNumber,
+            sessionNumber: sessionNumber,
             board,
             grade: className,
             subject: subjectName,
             unit: unitName,
             chapter: topic.name,
-            topics: topic.concepts.map((concept) => ({ topic: topic.name, concept })),
+            concepts: topic.concepts.map((concept, index) => ({
+              concept,
+              detailing: topic.conceptDetailing[index] || "No detailing provided",
+            })),
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         });
-      }).filter(Boolean);
+      }).filter(Boolean); // Filter out null entries
+      
   
-      if (payloads.length === 0) {
-        setError("No valid topics to generate lesson plans.");
-        setSaving(false);
-        return;
-      }
+      console.log("Payloads for Lesson Plan Generation:", payloads);
+if (payloads.length === 0) {
+  setError("No valid topics to generate lesson plans.");
+  setSaving(false);
+  return;
+}
+
   
       console.log("Payloads for all topics:", payloads);
   
