@@ -193,15 +193,26 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
+    // Default values for missing fields
+    const board = req.body.board || 'CBSE';
+    const grade = req.body.grade || '8';
+    const subject = req.body.subject || 'History';
+    const unit = req.body.unit || 'Default Unit';
+
     // Loop through all topics and their concepts to call the Python service
     for (const topic of sessionPlan.Topics) {
       for (const concept of topic.Concepts) {
+        if (!concept.concept || !concept.conceptDetailing) {
+          console.warn(`Skipping concept with missing details: conceptId ${concept.id}`);
+          continue; // Skip invalid concepts
+        }
+
         // Construct payload for the Python service
         const payload = {
-          board: req.body.board || 'CBSE',
-          grade: req.body.grade || '8',
-          subject: req.body.subject || 'History',
-          unit: req.body.unit || 'Unit Name',
+          board,
+          grade,
+          subject,
+          unit,
           chapter: topic.topicName,
           concepts: [{ concept: concept.concept, detailing: concept.conceptDetailing }],
           sessionType: 'Theory',
@@ -209,16 +220,18 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
           duration: 45,
         };
 
+        console.log('Payload being sent to Python service:', payload);
+
         // Call the Python API to generate the lesson plan
         const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
 
         // Update the generatedLP field in the database
         await LessonPlan.update(
-          { generatedLP: response.data.lesson_plan || '' }, // Set lesson plan content
-          { where: { conceptId: concept.id } } // Update for the matching concept
+          { generatedLP: response.data.lesson_plan || '' }, // Save lesson plan
+          { where: { conceptId: concept.id } }
         );
 
-        console.log(`Updated lesson plan for conceptId ${concept.id}`);
+        console.log(`Lesson plan updated for conceptId ${concept.id}`);
       }
     }
 
@@ -228,6 +241,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 // Save Lesson Plan
 router.post('/sessionPlans/:id/saveLessonPlan', async (req, res) => {
