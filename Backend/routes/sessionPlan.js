@@ -30,6 +30,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 // Helper function to validate row data
 const validateRow = (row) => {
+  console.log("Validating row:", row); // Debugging
   if (!row.SessionNumber || !row.TopicName || !row.Concepts) {
     return 'Missing required fields: SessionNumber, TopicName, or Concepts.';
   }
@@ -40,6 +41,7 @@ const validateRow = (row) => {
   }
   return null; // No validation errors
 };
+
 
 
 // Upload Session Plans
