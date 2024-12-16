@@ -400,12 +400,13 @@ if (payloads.length === 0) {
   const handleViewLessonPlan = async (conceptId) => {
     try {
       const response = await axios.get(`/api/sessionPlans/${conceptId}/view`);
-      setLessonPlanContent(response.data.lessonPlan || 'No Lesson Plan Available');
+      setLessonPlanContent(response.data.lessonPlan || 'No Lesson Plan Found');
     } catch (error) {
       console.error('Error fetching lesson plan:', error.message);
-      setLessonPlanContent('Failed to load lesson plan.');
+      setLessonPlanContent('Failed to fetch lesson plan.');
     }
   };
+  
   
   
 
@@ -558,12 +559,10 @@ if (payloads.length === 0) {
             {/* Render Lesson Plan Button */}
             <td>
               {topic.lessonPlan ? (
-                <button
-                  className="view-button"
-                  onClick={() => handleViewLessonPlan(topic.lessonPlan)}
-                >
-                  View
-                </button>
+                <button onClick={() => handleViewLessonPlan(concept.id)}>
+                View
+              </button>
+              
               ) : (
                 "Not Generated"
               )}
