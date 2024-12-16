@@ -173,12 +173,6 @@ router.get('/sessions/:sessionId/sessionPlans/:sessionNumber', async (req, res) 
 });
 
 // Store Generated LP
-const axios = require('axios');
-const SessionPlan = require('../models/SessionPlan');
-const Topic = require('../models/Topic');
-const Concept = require('../models/concept');
-const LessonPlan = require('../models/LessonPlan');
-
 router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   const { id } = req.params;
 
