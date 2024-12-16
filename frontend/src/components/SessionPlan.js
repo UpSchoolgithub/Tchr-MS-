@@ -18,6 +18,7 @@ const SessionPlans = () => {
   const [currentLessonPlan, setCurrentLessonPlan] = useState("");
   const [currentSessionPlanId, setCurrentSessionPlanId] = useState(null); // Store current session plan ID
   const [currentTopicIndex, setCurrentTopicIndex] = useState(null); // Store current topic index
+  const [lessonPlanContent, setLessonPlanContent] = useState('');
 
   const [savingPlan, setSavingPlan] = useState(false);
 
@@ -405,6 +406,7 @@ if (payloads.length === 0) {
       setLessonPlanContent('Failed to load lesson plan.');
     }
   };
+  
   
 
   // Save lesson plan to the database
