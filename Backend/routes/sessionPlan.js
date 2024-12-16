@@ -184,8 +184,8 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     });
 
     if (validSessionPlans.every((plan) => plan.Topics.length === 0)) {
-      console.error("Validation failed. No valid topics or concepts.");
-      return res.status(400).json({ message: "Invalid topic or concept structure." });
+      console.error('Validation failed. No valid topics or concepts.');
+      return res.status(400).json({ message: 'Invalid topic or concept structure.' });
     }
 
     console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
@@ -195,20 +195,22 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
       for (const topic of plan.Topics) {
         for (const concept of topic.Concepts) {
           const payload = {
-            board: req.body.board || "Board Not Specified",
-            grade: req.body.grade || "Grade Not Specified",
-            subject: req.body.subject || "Subject Not Specified",
-            unit: req.body.unit || "Unit Not Specified",
+            board: req.body.board || 'Board Not Specified',
+            grade: req.body.grade || 'Grade Not Specified',
+            subject: req.body.subject || 'Subject Not Specified',
+            unit: req.body.unit || 'Unit Not Specified',
             chapter: topic.topicName,
             concepts: [{ concept: concept.concept, detailing: concept.conceptDetailing }],
           };
-          
-          console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
-          
+
+          console.log(
+            `Sending payload for concept ID ${concept.id}:`,
+            JSON.stringify(payload, null, 2)
+          );
 
           try {
             const response = await axios.post(
-              "https://dynamiclp.up.school/generate-lesson-plan",
+              'https://dynamiclp.up.school/generate-lesson-plan',
               payload
             );
 
@@ -217,16 +219,16 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             if (!lessonPlan) {
               await LessonPlan.create({
                 conceptId: concept.id,
-                generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+                generatedLP: response.data.lesson_plan || 'No Lesson Plan Generated',
               });
             } else {
-              lessonPlan.generatedLP = response.data.lesson_plan || "No Lesson Plan Generated";
+              lessonPlan.generatedLP = response.data.lesson_plan || 'No Lesson Plan Generated';
               await lessonPlan.save();
             }
             console.log(`Saved LP for concept ID: ${concept.id}`);
           } catch (error) {
             console.error(`Failed for concept ID ${concept.id}:`, error.message);
-            
+
             if (error.response) {
               console.error(
                 `Error details for concept ID ${concept.id}:`,
@@ -234,15 +236,16 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
               );
             }
           }
-          
+        }
+      }
+    }
 
-    res.status(200).json({ message: "Lesson plans generated and saved successfully." });
+    res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
   } catch (error) {
     console.error('Error in generating lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
 });
-
 
 
 
