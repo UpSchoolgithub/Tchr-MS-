@@ -43,25 +43,21 @@ class LessonPlanResponse(BaseModel):
     lesson_plan: Dict[str, str]
 
 def allocate_time(concept_details: List[str], total_duration: int) -> List[int]:
-    """
-    Allocate proportional time for each concept based on the length of its detailing.
-    """
-    # Calculate word counts for each concept detailing
-    word_counts = [len(detail.split()) for detail in concept_details]
-    total_words = sum(word_counts)
-
-    if total_words == 0:  # Edge case: No concept detailing provided
+    if not concept_details or all(not d.strip() for d in concept_details):
+        # Equal time allocation if conceptDetails are empty
         return [total_duration // len(concept_details)] * len(concept_details)
 
-    # Proportional time allocation
+    word_counts = [len(detail.split()) for detail in concept_details]
+    total_words = sum(word_counts)
     allocated_times = [int(total_duration * (count / total_words)) for count in word_counts]
 
-    # Ensure total time matches the session duration
+    # Adjust remaining time
     remaining_time = total_duration - sum(allocated_times)
     if remaining_time > 0:
-        allocated_times[-1] += remaining_time  # Add leftover time to the last concept
+        allocated_times[-1] += remaining_time
 
     return allocated_times
+
 
 
 def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
@@ -149,12 +145,14 @@ def create_pdf(lesson_plan: str) -> str:
 
 @app.post("/generate-lesson-plan", response_model=LessonPlanResponse)
 async def generate_lesson_plan_endpoint(data: LessonPlanRequest):
+    print("Received Payload:", data.dict())  # Log the full incoming payload
     try:
         lesson_plan_data = generate_lesson_plan(data)
+        print("Generated Lesson Plan:", lesson_plan_data)  # Log the generated plan
         if not lesson_plan_data["lesson_plan"]:
             raise HTTPException(status_code=500, detail="Failed to generate lesson plan.")
         
-        return lesson_plan_data  # Return all lesson plans concept-wise
+        return lesson_plan_data
     except Exception as e:
         print(f"Error generating lesson plan: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
