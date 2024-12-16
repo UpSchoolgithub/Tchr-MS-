@@ -50,42 +50,36 @@ const SessionPlans = () => {
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
-        const response = await axios.get(
-          `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
-        );
+        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
     
-        console.log("API Response Data:", response.data); // Log the response
-    
-        // Verify if the response is an object with `sessionPlans` as a key
         if (response.data && Array.isArray(response.data.sessionPlans)) {
           const initialData = response.data.sessionPlans.reduce((acc, plan) => {
             const topics = plan.Topics || [];
-            acc[plan.sessionNumber] = topics.map((topic) => ({
-              name: topic.topicName || "Unnamed Topic",
-              concepts: Array.isArray(topic.Concepts)
-                ? topic.Concepts.map((concept) => concept.concept)
-                : [],
-              conceptDetailing: Array.isArray(topic.Concepts)
-                ? topic.Concepts.map((concept) => concept.conceptDetailing)
-                : [],
+            
+            // Deduplicate topics using mergeTopics
+            const deduplicatedTopics = mergeTopics(topics);
+    
+            acc[plan.sessionNumber] = deduplicatedTopics.map((topic) => ({
+              name: topic.name || "Unnamed Topic",
+              concepts: topic.concepts || [],
+              conceptDetailing: topic.conceptDetailing || [],
               lessonPlan: "",
             }));
+    
             return acc;
           }, {});
     
           setTopicsWithConcepts(initialData);
           setSessionPlans(response.data.sessionPlans);
-          if (response.data.sessionPlans.length > 0) setUploadDisabled(true);
         } else {
-          throw new Error(
-            "Unexpected API response format. Expected an array in response.data.sessionPlans."
-          );
+          throw new Error("Invalid session plans format from API.");
         }
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
+    
     
     
   
@@ -98,28 +92,30 @@ const SessionPlans = () => {
   
   // Utility to merge topics with the same name
   const mergeTopics = (topics) => {
-    const merged = [];
-    const topicMap = {};
+    const topicMap = {}; // A map to avoid duplicates
   
     topics.forEach((topic) => {
-      if (!topicMap[topic.name]) {
-        topicMap[topic.name] = { ...topic, concepts: [], conceptDetailing: [] };
-        merged.push(topicMap[topic.name]);
+      if (!Array.isArray(topic.Concepts)) return; // Skip invalid concepts
+  
+      if (!topicMap[topic.topicName]) {
+        topicMap[topic.topicName] = {
+          name: topic.topicName,
+          concepts: [],
+          conceptDetailing: [],
+        };
       }
-      // Ensure no duplicates are added
-      topicMap[topic.name].concepts = [
-        ...new Set([...topicMap[topic.name].concepts, ...topic.concepts]),
-      ];
-      topicMap[topic.name].conceptDetailing = [
-        ...new Set([
-          ...topicMap[topic.name].conceptDetailing,
-          ...topic.conceptDetailing,
-        ]),
-      ];
+  
+      topic.Concepts.forEach((concept) => {
+        if (concept.concept && !topicMap[topic.topicName].concepts.includes(concept.concept)) {
+          topicMap[topic.topicName].concepts.push(concept.concept);
+          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "");
+        }
+      });
     });
   
-    return merged;
+    return Object.values(topicMap);
   };
+  
   
   
   
