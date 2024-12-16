@@ -68,6 +68,8 @@ const SessionPlans = () => {
           // Transform into the required format
           const initialData = Object.values(deduplicatedSessions).reduce((acc, plan) => {
             const topics = mergeTopics(plan.Topics || []);
+            console.log("Valid Topics:", topics); // Debug valid topics
+          
             acc[plan.sessionNumber] = topics.map((topic) => ({
               name: topic.name || "Unnamed Topic",
               concepts: topic.concepts || [],
@@ -76,6 +78,7 @@ const SessionPlans = () => {
             }));
             return acc;
           }, {});
+          
     
           setTopicsWithConcepts(initialData);
           setSessionPlans(Object.values(deduplicatedSessions));
@@ -101,10 +104,10 @@ const SessionPlans = () => {
   
   // Utility to merge topics with the same name
   const mergeTopics = (topics) => {
-    const topicMap = {}; // A map to avoid duplicates
+    const topicMap = {}; // To track unique topics by name
   
     topics.forEach((topic) => {
-      if (!Array.isArray(topic.Concepts)) return; // Skip invalid concepts
+      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) return; // Skip invalid topics
   
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
@@ -114,6 +117,7 @@ const SessionPlans = () => {
         };
       }
   
+      // Merge valid concepts and details
       topic.Concepts.forEach((concept) => {
         if (concept.concept && !topicMap[topic.topicName].concepts.includes(concept.concept)) {
           topicMap[topic.topicName].concepts.push(concept.concept);
@@ -122,7 +126,7 @@ const SessionPlans = () => {
       });
     });
   
-    return Object.values(topicMap);
+    return Object.values(topicMap).filter(topic => topic.concepts.length > 0); // Return topics with valid concepts
   };
   
   
