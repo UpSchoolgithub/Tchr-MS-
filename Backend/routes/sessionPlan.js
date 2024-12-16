@@ -173,7 +173,6 @@ router.get('/sessions/:sessionId/sessionPlans/:sessionNumber', async (req, res) 
 });
 
 // Store Generated LP
-// In your route for generating lesson plans
 router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   const { id } = req.params;
 
@@ -197,24 +196,42 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
           concepts: [{ concept: concept.concept, detailing: concept.conceptDetailing }],
         };
 
-        // Call Python service
+        // Call dynamic LP generation service
         const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
 
-        // Save the lesson plan in database
-        await LessonPlan.update(
-          { generatedLP: response.data.lesson_plan },
-          { where: { conceptId: concept.id } }
-        );
+        // Save generated lesson plan
+        const lessonPlan = await LessonPlan.findOne({ where: { conceptId: concept.id } });
+        if (lessonPlan) {
+          lessonPlan.generatedLP = response.data.lesson_plan || 'No Lesson Plan';
+          await lessonPlan.save();
+        }
       }
     }
 
-    res.status(200).json({ message: 'Lesson plans generated and updated successfully' });
+    res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
   } catch (error) {
-    console.error('Error generating and updating lesson plans:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error generating and saving lesson plans:', error.message);
+    res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
 });
 
+
+router.get('/sessionPlans/:id/view', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const lessonPlan = await LessonPlan.findOne({ where: { conceptId: id } });
+
+    if (!lessonPlan || !lessonPlan.generatedLP) {
+      return res.status(404).json({ message: 'Lesson plan not found or not generated.' });
+    }
+
+    res.status(200).json({ lessonPlan: lessonPlan.generatedLP });
+  } catch (error) {
+    console.error('Error fetching lesson plan:', error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
 
 
 // Save Lesson Plan

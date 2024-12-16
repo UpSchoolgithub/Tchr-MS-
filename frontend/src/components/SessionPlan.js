@@ -396,12 +396,16 @@ if (payloads.length === 0) {
   
 
   // View lesson plan
-  const handleViewLessonPlan = (lessonPlan, sessionPlanId, topicIndex) => {
-    setCurrentLessonPlan(lessonPlan);
-    setCurrentSessionPlanId(sessionPlanId);
-    setCurrentTopicIndex(topicIndex);
-    setShowModal(true);
+  const handleViewLessonPlan = async (conceptId) => {
+    try {
+      const response = await axios.get(`/api/sessionPlans/${conceptId}/view`);
+      setLessonPlanContent(response.data.lessonPlan || 'No Lesson Plan Available');
+    } catch (error) {
+      console.error('Error fetching lesson plan:', error.message);
+      setLessonPlanContent('Failed to load lesson plan.');
+    }
   };
+  
 
   // Save lesson plan to the database
   const handleSaveLessonPlan = async () => {
