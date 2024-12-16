@@ -11,7 +11,7 @@ const Concept = sequelize.define('Concept', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'topics', // Reference to 'topics' table
+      model: 'topics',
       key: 'id',
     },
   },
