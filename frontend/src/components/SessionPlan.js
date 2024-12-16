@@ -299,28 +299,51 @@ const SessionPlans = () => {
       setSaving(true);
   
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) => {
-        return topics.map((topic) => {
-          if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
-            console.warn(`Skipping invalid topic: ${topic.name || "Unnamed Topic"}`);
-            return null;
-          }
-          return {
-            sessionNumber: sessionNumber,
-            board,
-            grade: className,
-            subject: subjectName,
-            unit: unitName,
-            chapter: topic.name,
-            concepts: topic.concepts.map((concept, index) => ({
-              concept,
-              detailing: topic.conceptDetailing[index] || "No detailing provided",
-            })),
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          };
-        });
-      }).filter(Boolean); // Filter out null entries
+        return topics
+          .map((topic) => {
+            if (
+              !topic.name ||
+              !Array.isArray(topic.concepts) ||
+              topic.concepts.length === 0
+            ) {
+              console.warn(`Skipping invalid topic: ${topic.name || "Unnamed Topic"}`);
+              return null;
+            }
+      
+            const validTopics = topic.concepts
+              .map((concept, index) => {
+                const detailing = topic.conceptDetailing[index];
+                if (concept && detailing) {
+                  return {
+                    topic: topic.name,
+                    concept,
+                    detailing,
+                  };
+                }
+                return null;
+              })
+              .filter(Boolean); // Remove invalid entries
+      
+            if (validTopics.length === 0) {
+              console.warn(`Skipping topic with no valid concepts: ${topic.name}`);
+              return null;
+            }
+      
+            return {
+              sessionNumber,
+              board,
+              grade: className,
+              subject: subjectName,
+              unit: unitName,
+              chapter: topic.name,
+              topics: validTopics, // Use only valid topics
+              sessionType: "Theory",
+              noOfSession: 1,
+              duration: 45,
+            };
+          })
+          .filter(Boolean); // Remove null payloads
+      });
       
   
       console.log("Payloads for Lesson Plan Generation:", payloads);
