@@ -157,7 +157,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Fetch all session plans and ensure unique session numbers
+    // Fetch all session plans with topics and concepts
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId: id },
       include: [{ model: Topic, include: [Concept] }],
@@ -167,56 +167,33 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    // Validate Topics and Concepts before proceeding
-    const validatePayload = (topic) => {
-      console.log("Validating Topic:", JSON.stringify(topic, null, 2)); // Log the topic payload
-    
-      if (!topic.topicName || !Array.isArray(topic.Concepts) || topic.Concepts.length === 0) {
-        console.error("Invalid topic structure:", topic);
+    // Validation function for topics and concepts
+    const validateTopic = (topic) => {
+      if (!topic.topicName || !Array.isArray(topic.Concepts)) {
         return false; // Missing topic name or concepts
       }
-    
-      const conceptDetails = topic.Concepts.map((concept) => concept.conceptDetailing || "");
-      if (
-        topic.Concepts.length !== conceptDetails.length || 
-        topic.Concepts.some((concept) => !concept.concept)
-      ) {
-        console.error("Concept details mismatch or missing concepts:", topic);
-        return false; // conceptDetails must align with concepts
-      }
-    
-      return true;
+      return topic.Concepts.every(
+        (concept) => concept.concept && concept.conceptDetailing
+      );
     };
-    
 
-    const isValid = sessionPlans.every((plan) =>
-      plan.Topics.every((topic) => validatePayload(topic))
-    );
-    if (!isValid) {
-      console.error("Validation failed. Topics or concepts are invalid.");
-      console.log("Session Plans Data:", JSON.stringify(sessionPlans, null, 2)); // Log full payload
+    // Filter valid topics and concepts
+    const validSessionPlans = sessionPlans.map((plan) => {
+      const validTopics = plan.Topics.filter((topic) => validateTopic(topic));
+      return { ...plan, Topics: validTopics };
+    });
+
+    if (validSessionPlans.every((plan) => plan.Topics.length === 0)) {
+      console.error("Validation failed. No valid topics or concepts.");
       return res.status(400).json({ message: "Invalid topic or concept structure." });
     }
-    
 
     console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
 
-    // Proceed to group and process topics and concepts
-    const uniqueSessionPlans = new Map();
-    sessionPlans.forEach((plan) => {
-      if (!uniqueSessionPlans.has(plan.sessionNumber)) {
-        uniqueSessionPlans.set(plan.sessionNumber, plan.Topics || []);
-      }
-    });
-
-    for (const [sessionNumber, topics] of uniqueSessionPlans.entries()) {
-      for (const topic of topics) {
+    // Process valid topics and concepts
+    for (const plan of validSessionPlans) {
+      for (const topic of plan.Topics) {
         for (const concept of topic.Concepts) {
-          if (!concept.concept || !concept.conceptDetailing) {
-            console.warn(`Skipping incomplete concept ID: ${concept.id}`);
-            continue;
-          }
-
           const payload = {
             board: req.body.board || "Board Not Specified",
             grade: req.body.grade || "Grade Not Specified",
@@ -232,6 +209,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
               payload
             );
 
+            // Save or update lesson plan
             let lessonPlan = await LessonPlan.findOne({ where: { conceptId: concept.id } });
             if (!lessonPlan) {
               await LessonPlan.create({
@@ -255,9 +233,8 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     console.error('Error in generating lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
-  console.log("Session Plans Data:", JSON.stringify(sessionPlans, null, 2));
-
 });
+
 
 
 
