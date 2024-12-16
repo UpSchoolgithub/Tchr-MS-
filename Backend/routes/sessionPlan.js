@@ -198,24 +198,22 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             board: req.body.board || "Board Not Specified",
             grade: req.body.grade || "Grade Not Specified",
             subject: req.body.subject || "Subject Not Specified",
-            subSubject: "Civics", // Hardcoded as "Civics"
+            subSubject: "Civics", // Hardcoded
             unit: req.body.unit || "Unit Not Specified",
             chapter: topic.topicName,
-            sessionType: req.body.sessionType || "Default", // Add sessionType
-            noOfSession: req.body.noOfSession || 1, // Add noOfSession
-            duration: req.body.duration || 45, // Add default duration
+            sessionType: req.body.sessionType || "Default",
+            noOfSession: req.body.noOfSession || 1,
+            duration: req.body.duration || 45,
             topics: [
               {
                 topic: topic.topicName,
-                concepts: [
-                  {
-                    concept: concept.concept,
-                    detailing: concept.conceptDetailing,
-                  },
-                ],
+                concepts: topic.Concepts.map(
+                  (concept) => `${concept.concept}: ${concept.conceptDetailing}`
+                ), // Concatenate concept and detailing
               },
             ],
           };
+          
     
           console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
     
