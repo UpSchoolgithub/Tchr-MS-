@@ -202,6 +202,9 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             chapter: topic.topicName,
             concepts: [{ concept: concept.concept, detailing: concept.conceptDetailing }],
           };
+          
+          console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
+          
 
           try {
             const response = await axios.post(
@@ -223,10 +226,15 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             console.log(`Saved LP for concept ID: ${concept.id}`);
           } catch (error) {
             console.error(`Failed for concept ID ${concept.id}:`, error.message);
+            
+            if (error.response) {
+              console.error(
+                `Error details for concept ID ${concept.id}:`,
+                JSON.stringify(error.response.data, null, 2)
+              );
+            }
           }
-        }
-      }
-    }
+          
 
     res.status(200).json({ message: "Lesson plans generated and saved successfully." });
   } catch (error) {
