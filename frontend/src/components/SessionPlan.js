@@ -105,10 +105,10 @@ const SessionPlans = () => {
   
   // Utility to merge topics with the same name
   const mergeTopics = (topics) => {
-    const topicMap = {};
+    const topicMap = {}; // To track unique topics by name
   
     topics.forEach((topic) => {
-      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) return;
+      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) return; // Skip invalid topics
   
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
@@ -118,16 +118,21 @@ const SessionPlans = () => {
         };
       }
   
+      // Merge valid concepts and details
       topic.Concepts.forEach((concept) => {
-        if (concept.concept) {
-          topicMap[topic.topicName].concepts.push(concept.concept);
-          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "No detailing provided");
+        if (concept && concept.id && concept.concept) { // Include the concept id
+          topicMap[topic.topicName].concepts.push({
+            id: concept.id, // Add the ID
+            name: concept.concept,
+          });
+          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "");
         }
       });
     });
   
-    return Object.values(topicMap);
+    return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
   };
+  
   
     
   
@@ -573,15 +578,15 @@ if (payloads.length === 0) {
 
               {/* Render Lesson Plan Button */}
               <td>
-                {topic.lessonPlan ? (
-                  <button onClick={() => handleViewLessonPlan(concept.id)}>
-                  View
-                </button>
-                
-                ) : (
-                  "Not Generated"
-                )}
-              </td>
+  {topic.lessonPlan ? (
+    <button onClick={() => handleViewLessonPlan(concept.id)}>
+      View
+    </button>
+  ) : (
+    "Not Generated"
+  )}
+</td>
+
 
               {/* Render Actions (Save Button) */}
               {tIndex === 0 && cIndex === 0 && (
