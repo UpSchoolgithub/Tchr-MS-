@@ -105,10 +105,10 @@ const SessionPlans = () => {
   
   // Utility to merge topics with the same name
   const mergeTopics = (topics) => {
-    const topicMap = {}; // To track unique topics by name
+    const topicMap = {};
   
     topics.forEach((topic) => {
-      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) return; // Skip invalid topics
+      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) return;
   
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
@@ -118,16 +118,15 @@ const SessionPlans = () => {
         };
       }
   
-      // Merge valid concepts and details
       topic.Concepts.forEach((concept) => {
         if (concept.concept) {
           topicMap[topic.topicName].concepts.push(concept.concept);
-          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "No details provided");
+          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "No detailing provided");
         }
       });
     });
   
-    return Object.values(topicMap).filter((topic) => topic.concepts.length > 0); // Return topics with valid concepts
+    return Object.values(topicMap);
   };
   
     
