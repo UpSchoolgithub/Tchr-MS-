@@ -400,28 +400,28 @@ if (payloads.length === 0) {
 
   // View lesson plan
   // View lesson plan
-const handleViewLessonPlan = async (conceptId) => {
-  if (!conceptId) {
-    setError("Concept ID is missing. Cannot fetch lesson plan.");
-    return;
-  }
-
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessionPlans/${conceptId}/view`
-    );
-
-    // Ensure response has the lesson plan
-    const lessonPlan = response.data?.lessonPlan || "No Lesson Plan Found";
-    setLessonPlanContent(lessonPlan);
-    setShowModal(true);
-    setError("");
-  } catch (error) {
-    console.error("Error fetching lesson plan:", error.message);
-    setLessonPlanContent("Failed to fetch lesson plan.");
-    setShowModal(true);
-  }
-};
+  const handleViewLessonPlan = async (conceptId) => {
+    if (!conceptId) {
+      setError("Concept ID is missing. Cannot fetch lesson plan.");
+      return;
+    }
+  
+    try {
+      const response = await axios.get(
+        `https://tms.up.school/api/sessionPlans/${conceptId}/view`
+      );
+      console.log("API Response: ", response.data); // Debugging log
+      const lessonPlan = response.data?.lessonPlan || "No Lesson Plan Found";
+      setLessonPlanContent(lessonPlan);
+      setShowModal(true);
+      setError("");
+    } catch (error) {
+      console.error("Error fetching lesson plan:", error.message);
+      setLessonPlanContent("Failed to fetch lesson plan.");
+      setShowModal(true);
+    }
+  };
+  
 
   
   
@@ -646,8 +646,9 @@ const handleViewLessonPlan = async (conceptId) => {
     <Button variant="secondary" onClick={() => setShowModal(false)}>
       Close
     </Button>
-    </Modal.Footer>
-</Modal>;
+  </Modal.Footer>
+</Modal>
+
     </div>
   );
   
