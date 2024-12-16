@@ -21,7 +21,7 @@ Concept.init(
   {
     sequelize,
     modelName: 'Concept',
-    tableName: 'concepts', // Ensure this matches your database table name
+    tableName: 'Concepts', // Ensure this matches your database table name
   }
 );
 
