@@ -106,7 +106,7 @@ router.post("/dynamicLP", async (req, res) => {
     // Send to Python service with a timeout
     const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
     const response = await axios.post(pythonServiceUrl, payload, {
-      timeout: 10000, // 10 seconds timeout
+      timeout: 50000, // 10 seconds timeout
     });
 
     console.log("Response from Python service:", JSON.stringify(response.data, null, 2));
