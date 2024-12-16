@@ -466,8 +466,8 @@ const SessionPlans = () => {
       <React.Fragment key={plan.id}>
         {mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).flatMap((topic, tIndex) =>
           topic.concepts.map((concept, cIndex) => (
-            <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
-              {/* Render Session Number once per session */}
+<tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+{/* Render Session Number once per session */}
               {tIndex === 0 && cIndex === 0 && (
                 <td
                   rowSpan={mergeTopics(topicsWithConcepts[plan.sessionNumber] || []).reduce(
