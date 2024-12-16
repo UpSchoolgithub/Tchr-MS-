@@ -114,21 +114,24 @@ const SessionPlans = () => {
         topicMap[topic.topicName] = {
           name: topic.topicName,
           concepts: [],
-          conceptDetailing: [],
         };
       }
   
       // Merge valid concepts and details
       topic.Concepts.forEach((concept) => {
-        if (concept.concept && !topicMap[topic.topicName].concepts.includes(concept.concept)) {
-          topicMap[topic.topicName].concepts.push(concept.concept);
-          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "");
+        if (concept.concept && !topicMap[topic.topicName].concepts.find((c) => c.id === concept.id)) {
+          topicMap[topic.topicName].concepts.push({
+            id: concept.id, // Include concept.id
+            concept: concept.concept,
+            conceptDetailing: concept.conceptDetailing || "",
+          });
         }
       });
     });
   
-    return Object.values(topicMap).filter(topic => topic.concepts.length > 0); // Return topics with valid concepts
+    return Object.values(topicMap).filter((topic) => topic.concepts.length > 0); // Return topics with valid concepts
   };
+  
   
   
   
@@ -558,15 +561,18 @@ if (payloads.length === 0) {
 
             {/* Render Lesson Plan Button */}
             <td>
-              {topic.lessonPlan ? (
-                <button onClick={() => handleViewLessonPlan(concept.id)}>
-                View
-              </button>
-              
-              ) : (
-                "Not Generated"
-              )}
-            </td>
+  {topic.lessonPlan ? (
+    <button
+      onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)} // Pass valid concept.id
+    >
+      View
+    </button>
+  ) : (
+    "Not Generated"
+  )}
+</td>
+
+
 
             {/* Render Actions (Save Button) */}
             {tIndex === 0 && cIndex === 0 && (
