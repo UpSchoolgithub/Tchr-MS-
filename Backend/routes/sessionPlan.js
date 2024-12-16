@@ -169,23 +169,35 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
 
     // Validate Topics and Concepts before proceeding
     const validatePayload = (topic) => {
-      if (!topic.topic || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
+      console.log("Validating Topic:", JSON.stringify(topic, null, 2)); // Log the topic payload
+    
+      if (!topic.topicName || !Array.isArray(topic.Concepts) || topic.Concepts.length === 0) {
+        console.error("Invalid topic structure:", topic);
         return false; // Missing topic name or concepts
       }
-      if (!Array.isArray(topic.conceptDetailing) || topic.conceptDetailing.length !== topic.concepts.length) {
+    
+      const conceptDetails = topic.Concepts.map((concept) => concept.conceptDetailing || "");
+      if (
+        topic.Concepts.length !== conceptDetails.length || 
+        topic.Concepts.some((concept) => !concept.concept)
+      ) {
+        console.error("Concept details mismatch or missing concepts:", topic);
         return false; // conceptDetails must align with concepts
       }
+    
       return true;
     };
+    
 
     const isValid = sessionPlans.every((plan) =>
       plan.Topics.every((topic) => validatePayload(topic))
     );
-
     if (!isValid) {
-      console.error("Invalid payload detected, skipping API call.");
+      console.error("Validation failed. Topics or concepts are invalid.");
+      console.log("Session Plans Data:", JSON.stringify(sessionPlans, null, 2)); // Log full payload
       return res.status(400).json({ message: "Invalid topic or concept structure." });
     }
+    
 
     console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
 
@@ -243,6 +255,8 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     console.error('Error in generating lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
+  console.log("Session Plans Data:", JSON.stringify(sessionPlans, null, 2));
+
 });
 
 
@@ -308,7 +322,7 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
             {
               model: Concept,
               as: 'Concepts',
-              attributes: ["id", "concept", "conceptDetailing"] // Ensure conceptDetailing is included
+              attributes: ["id", "concept", "conceptDetailing"],
 
             },
           ],
