@@ -215,14 +215,16 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
 
             // Save generated LP in database
             let lessonPlan = await LessonPlan.findOne({ where: { conceptId: concept.id } });
-            if (lessonPlan) {
-              lessonPlan.generatedLP = generatedLP;
-              await lessonPlan.save();
-            } else {
-              await LessonPlan.create({
-                conceptId: concept.id,
-                generatedLP,
-              });
+if (!lessonPlan) {
+    lessonPlan = await LessonPlan.create({
+        conceptId: concept.id,
+        generatedLP: generatedLP,
+    });
+} else {
+    lessonPlan.generatedLP = generatedLP; // Ensure generatedLP is updated
+    await lessonPlan.save();
+
+
             }
 
             console.log(`Lesson plan saved for concept ${concept.id}`);
