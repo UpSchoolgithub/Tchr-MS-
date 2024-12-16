@@ -114,17 +114,15 @@ const SessionPlans = () => {
         topicMap[topic.topicName] = {
           name: topic.topicName,
           concepts: [],
+          conceptDetailing: [],
         };
       }
   
       // Merge valid concepts and details
       topic.Concepts.forEach((concept) => {
-        if (concept.concept && !topicMap[topic.topicName].concepts.find((c) => c.id === concept.id)) {
-          topicMap[topic.topicName].concepts.push({
-            id: concept.id, // Include concept.id
-            concept: concept.concept,
-            conceptDetailing: concept.conceptDetailing || "",
-          });
+        if (concept.concept) {
+          topicMap[topic.topicName].concepts.push(concept.concept);
+          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "No details provided");
         }
       });
     });
@@ -132,10 +130,7 @@ const SessionPlans = () => {
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0); // Return topics with valid concepts
   };
   
-  
-  
-  
-  
+    
   
   
 
@@ -401,14 +396,26 @@ if (payloads.length === 0) {
 
   // View lesson plan
   const handleViewLessonPlan = async (conceptId) => {
+    if (!conceptId) {
+      setError("Concept ID is missing. Cannot fetch lesson plan.");
+      return;
+    }
+  
     try {
-      const response = await axios.get(`/api/sessionPlans/${conceptId}/view`);
-      setLessonPlanContent(response.data.lessonPlan || 'No Lesson Plan Found');
+      const response = await axios.get(
+        `https://tms.up.school/api/sessionPlans/${conceptId}/view`
+      );
+  
+      setLessonPlanContent(response.data.lessonPlan || "No Lesson Plan Found");
+      setShowModal(true);
+      setError("");
     } catch (error) {
-      console.error('Error fetching lesson plan:', error.message);
-      setLessonPlanContent('Failed to fetch lesson plan.');
+      console.error("Error fetching lesson plan:", error.message);
+      setLessonPlanContent("Failed to fetch lesson plan.");
+      setShowModal(true);
     }
   };
+  
   
   
   
@@ -541,33 +548,32 @@ if (payloads.length === 0) {
               <td>{concept.concept || "No Concept"}</td>
 
               {/* Render Concept Detailing */}
-              <td>
-                <input
-                  type="text"
-                  value={topic.conceptDetailing[cIndex] || ""}
-                  placeholder="Enter concept details"
-                  onChange={(e) =>
-                    setTopicsWithConcepts((prev) => {
-                      const updatedTopics = { ...prev };
-                      if (!updatedTopics[plan.sessionNumber]) return prev; // Ensure session exists
-                      if (!updatedTopics[plan.sessionNumber][tIndex])
-                        return prev; // Ensure topic exists
-                      updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] =
-                        e.target.value;
-                      return updatedTopics;
-                    })
-                  }
-                />
-              </td>
+<td>
+  <input
+    type="text"
+    value={topic.conceptDetailing[cIndex] || ""}
+    placeholder="Enter concept details"
+    onChange={(e) =>
+      setTopicsWithConcepts((prev) => {
+        const updatedTopics = { ...prev };
+        if (!updatedTopics[plan.sessionNumber]) return prev; // Ensure session exists
+        if (!updatedTopics[plan.sessionNumber][tIndex]) return prev; // Ensure topic exists
+        updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] =
+          e.target.value;
+        return updatedTopics;
+      })
+    }
+  />
+</td>
+
 
               {/* Render Lesson Plan Button */}
               <td>
                 {topic.lessonPlan ? (
-                  <button
-                    onClick={() => handleViewLessonPlan(concept.id)} // Pass valid concept.id
-                  >
-                    View
-                  </button>
+                  <button onClick={() => handleViewLessonPlan(concept.id)}>
+                  View
+                </button>
+                
                 ) : (
                   "Not Generated"
                 )}
@@ -618,19 +624,16 @@ if (payloads.length === 0) {
       </div>
   
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-    <Modal.Header closeButton>
-        <Modal.Title>Lesson Plan</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-        <pre>{currentLessonPlan.lessonPlan}</pre>
-    </Modal.Body>
-    <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
-        </Button>
-        <Button variant="primary" onClick={handleSaveLessonPlan}>
-            Save Plan
-        </Button>
+  <Modal.Header closeButton>
+    <Modal.Title>Lesson Plan</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <pre>{lessonPlanContent}</pre>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowModal(false)}>
+      Close
+    </Button>
     </Modal.Footer>
 </Modal>;
     </div>

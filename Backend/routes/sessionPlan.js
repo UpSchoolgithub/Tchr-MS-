@@ -274,6 +274,8 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
             {
               model: Concept,
               as: 'Concepts',
+              attributes: ["id", "concept", "conceptDetailing"] // Ensure conceptDetailing is included
+
             },
           ],
         },
