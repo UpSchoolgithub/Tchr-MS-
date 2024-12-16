@@ -365,15 +365,18 @@ if (payloads.length === 0) {
         if (response.status === "fulfilled") {
           const { sessionNumber, chapter } = payloads[index];
           const generatedLessonPlan = response.value.data.lesson_plan;
-  
+      
           setTopicsWithConcepts((prev) => ({
             ...prev,
             [sessionNumber]: prev[sessionNumber].map((topic) =>
               topic.name === chapter ? { ...topic, lessonPlan: generatedLessonPlan } : topic
             ),
           }));
+        } else {
+          console.error(`Failed to generate LP for topic: ${payloads[index].chapter}`);
         }
       });
+      
   
       setSuccessMessage("All topics' LP generated successfully!");
       setError("");
@@ -403,32 +406,34 @@ if (payloads.length === 0) {
   // Save lesson plan to the database
   const handleSaveLessonPlan = async () => {
     if (!currentLessonPlan) {
-        setError('No lesson plan to save.');
-        return;
+      setError("No lesson plan to save.");
+      return;
     }
-
+  
     try {
-        const response = await axios.post(
-            `https://tms.up.school/api/sessionPlans/${currentLessonPlan.id}/saveLessonPlan`,
-            {
-                updatedLessonPlan: {
-                    topicName: currentLessonPlan.topicName,
-                    concept: currentLessonPlan.concept,
-                    lessonPlan: currentLessonPlan.lessonPlan,
-                },
-            }
-        );
-
-        if (response.status === 200) {
-            setSuccessMessage('Lesson plan saved successfully!');
-        } else {
-            setError('Failed to save lesson plan. Please try again.');
-        }
+      const payload = {
+        topicName: currentLessonPlan.topicName,
+        concept: currentLessonPlan.concept,
+        lessonPlan: currentLessonPlan.lessonPlan,
+      };
+  
+      const response = await axios.post(
+        `https://tms.up.school/api/sessionPlans/${currentSessionPlanId}/saveLessonPlan`,
+        payload
+      );
+  
+      if (response.status === 200) {
+        setSuccessMessage("Lesson plan saved successfully!");
+        setShowModal(false);
+      } else {
+        setError("Failed to save lesson plan.");
+      }
     } catch (error) {
-        console.error('Error saving lesson plan:', error);
-        setError('An error occurred while saving the lesson plan.');
+      console.error("Error saving lesson plan:", error);
+      setError("An error occurred while saving the lesson plan.");
     }
-};
+  };
+  
 
 
   return (
