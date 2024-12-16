@@ -9,7 +9,6 @@ const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 const router = express.Router();
-const Concept = require('../models/Concept'); // Correct relative path
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/Concept');
