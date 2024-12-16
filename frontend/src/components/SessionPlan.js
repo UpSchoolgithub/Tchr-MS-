@@ -60,17 +60,18 @@ const SessionPlans = () => {
         if (response.data && Array.isArray(response.data.sessionPlans)) {
           const initialData = response.data.sessionPlans.reduce((acc, plan) => {
             const topics = plan.Topics || [];
-            const uniqueTopics = mergeTopics(topics); // Deduplicate topics
-            acc[plan.sessionNumber] = uniqueTopics.map((topic) => ({
-              name: topic.topicName,
-              concepts: topic.Concepts.map((concept) => concept.concept),
-              conceptDetailing: topic.Concepts.map((concept) => concept.conceptDetailing),
+            acc[plan.sessionNumber] = topics.map((topic) => ({
+              name: topic.topicName || "Unnamed Topic",
+              concepts: Array.isArray(topic.Concepts)
+                ? topic.Concepts.map((concept) => concept.concept)
+                : [],
+              conceptDetailing: Array.isArray(topic.Concepts)
+                ? topic.Concepts.map((concept) => concept.conceptDetailing)
+                : [],
               lessonPlan: "",
             }));
             return acc;
           }, {});
-          
-          
     
           setTopicsWithConcepts(initialData);
           setSessionPlans(response.data.sessionPlans);
