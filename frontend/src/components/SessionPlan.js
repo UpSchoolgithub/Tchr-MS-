@@ -59,20 +59,16 @@ const SessionPlans = () => {
         // Verify if the response is an object with `sessionPlans` as a key
         if (response.data && Array.isArray(response.data.sessionPlans)) {
           const initialData = response.data.sessionPlans.reduce((acc, plan) => {
-            acc[plan.sessionNumber] = plan.planDetails?.map((entry) => ({
-              name: entry.topic || "No Topic Name",
-              concepts: Array.isArray(entry.concept)
-                ? [...new Set(entry.concept)]
-                : entry.concept?.split(";").map((c) => c.trim()) || [],
-              conceptDetailing: Array.isArray(entry.conceptDetailing)
-                ? [...new Set(entry.conceptDetailing)]
-                : entry.conceptDetailing
-                    ?.split(";")
-                    .map((c) => c.trim()) || [],
-              lessonPlan: entry.lessonPlan || "",
-            })) || [];
+            const topics = plan.Topics || [];
+            acc[plan.sessionNumber] = topics.map((topic) => ({
+              name: topic.topicName,
+              concepts: topic.Concepts.map((concept) => concept.concept),
+              conceptDetailing: topic.Concepts.map((concept) => concept.conceptDetailing),
+              lessonPlan: "",
+            }));
             return acc;
           }, {});
+          
     
           setTopicsWithConcepts(initialData);
           setSessionPlans(response.data.sessionPlans);
