@@ -26,4 +26,5 @@ Topic.associate = (models) => {
   Topic.hasMany(models.Concept, { foreignKey: 'topicId', onDelete: 'CASCADE' });
 };
 
+
 module.exports = Topic;
