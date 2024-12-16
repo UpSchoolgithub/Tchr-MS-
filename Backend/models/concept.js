@@ -11,7 +11,7 @@ const Concept = sequelize.define('Concept', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Topics', // References the 'Topics' table
+      model: 'topics', // References the 'topics' table
       key: 'id',
     },
   },
@@ -27,7 +27,6 @@ const Concept = sequelize.define('Concept', {
 
 Concept.associate = (models) => {
   Concept.belongsTo(models.Topic, { foreignKey: 'topicId', onDelete: 'CASCADE' });
-  Concept.hasOne(models.LessonPlan, { foreignKey: 'conceptId', onDelete: 'CASCADE' });
 };
 
 module.exports = Concept;

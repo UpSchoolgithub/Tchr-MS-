@@ -11,7 +11,7 @@ const Topic = sequelize.define('Topic', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'SessionPlans', // References the 'SessionPlans' table
+      model: 'sessionPlans', // References the 'sessionPlans' table
       key: 'id',
     },
   },

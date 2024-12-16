@@ -9,7 +9,7 @@ const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 const router = express.Router();
-const Concept = require('../models/concept'); // Ensure proper casing
+const Concept = require('../models/Concept'); // Ensure proper casing
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 
@@ -256,12 +256,18 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
       where: { sessionId },
       include: [
         {
-          model: Concept,
-          include: [{ model: LessonPlan }], // Include LessonPlan if needed
+          model: Topic,
+          as: 'Topics',
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts',
+            },
+          ],
         },
       ],
     });
-
+    
     if (!sessionPlans.length) {
       return res.status(404).json({ message: 'No session plans found.' });
     }
