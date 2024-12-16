@@ -548,13 +548,13 @@ if (payloads.length === 0) {
                 </td>
               )}
 
-              {/* Render Concept */}
 {/* Render Concept */}
 <td>
   {Array.isArray(topic.concepts) && topic.concepts.length > 0
-    ? topic.concepts[cIndex] || "No Concept"
+    ? topic.concepts[cIndex]?.name || "No Concept"
     : "No Concept"}
 </td>
+
 
               {/* Render Concept Detailing */}
 <td>
