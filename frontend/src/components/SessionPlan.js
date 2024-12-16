@@ -53,24 +53,32 @@ const SessionPlans = () => {
         const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
     
         if (response.data && Array.isArray(response.data.sessionPlans)) {
-          const initialData = response.data.sessionPlans.reduce((acc, plan) => {
-            const topics = plan.Topics || [];
-            
-            // Deduplicate topics using mergeTopics
-            const deduplicatedTopics = mergeTopics(topics);
+          // Deduplicate session plans based on sessionNumber
+          const deduplicatedSessions = {};
+          response.data.sessionPlans.forEach((plan) => {
+            if (!deduplicatedSessions[plan.sessionNumber]) {
+              deduplicatedSessions[plan.sessionNumber] = { ...plan, Topics: [] };
+            }
+            // Merge topics for the session
+            if (Array.isArray(plan.Topics)) {
+              deduplicatedSessions[plan.sessionNumber].Topics.push(...plan.Topics);
+            }
+          });
     
-            acc[plan.sessionNumber] = deduplicatedTopics.map((topic) => ({
+          // Transform into the required format
+          const initialData = Object.values(deduplicatedSessions).reduce((acc, plan) => {
+            const topics = mergeTopics(plan.Topics || []);
+            acc[plan.sessionNumber] = topics.map((topic) => ({
               name: topic.name || "Unnamed Topic",
               concepts: topic.concepts || [],
               conceptDetailing: topic.conceptDetailing || [],
               lessonPlan: "",
             }));
-    
             return acc;
           }, {});
     
           setTopicsWithConcepts(initialData);
-          setSessionPlans(response.data.sessionPlans);
+          setSessionPlans(Object.values(deduplicatedSessions));
         } else {
           throw new Error("Invalid session plans format from API.");
         }
@@ -79,6 +87,7 @@ const SessionPlans = () => {
         setError("Failed to fetch session plans.");
       }
     };
+    
     
     
     
