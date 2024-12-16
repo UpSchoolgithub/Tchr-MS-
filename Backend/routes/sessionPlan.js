@@ -11,7 +11,7 @@ const Subject = require('../models/Subject');
 const router = express.Router();
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
-const Concept = require('../models/Concept');
+const Concept = require('../models/Concept'); // Correct the path if needed
 
 // Proportional Time Allocation
 const allocateDurations = (conceptDetails, totalDuration) => {

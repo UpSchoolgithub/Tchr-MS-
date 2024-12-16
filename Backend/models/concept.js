@@ -1,28 +1,28 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Adjust the path to your Sequelize instance
 
-const Concept = sequelize.define('Concept', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  topicId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'topics',
-      key: 'id',
+class Concept extends Model {}
+
+Concept.init(
+  {
+    topicId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    concept: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    conceptDetailing: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
-  concept: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  conceptDetailing: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-});
+  {
+    sequelize,
+    modelName: 'Concept',
+    tableName: 'concepts', // Ensure this matches your database table name
+  }
+);
 
 module.exports = Concept;
