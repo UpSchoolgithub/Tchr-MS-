@@ -173,19 +173,19 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     for (const topic of sessionPlan.Topics) {
       for (const concept of topic.Concepts) {
         try {
-          // Validate concept and concept detailing
+          // Validate concept and detailing
           if (!concept.concept || !concept.conceptDetailing) {
             console.warn(`Skipping concept with missing details: Concept ID ${concept.id}`);
             continue;
           }
-
-          // Prepare payload to call dynamic LP generation API
+    
+          // Prepare payload for API
           const payload = {
             board: req.body.board || "Board Not Specified",
             grade: req.body.grade || "Grade Not Specified",
             subject: req.body.subject || "Subject Not Specified",
             unit: req.body.unit || "Unit Not Specified",
-            chapter: topic.topicName, // Topic Name
+            chapter: topic.topicName,
             concepts: [
               {
                 concept: concept.concept,
@@ -193,38 +193,40 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
               },
             ],
           };
-
-          console.log(`Sending payload to LP generation API for Concept ID ${concept.id}:`, payload);
-
-          // Call dynamic LP generation API
+    
+          console.log(`Sending payload to LP API for Concept ID ${concept.id}:`, payload);
+    
+          // Call external LP generation service
           const response = await axios.post(
-            'https://dynamiclp.up.school/generate-lesson-plan',
+            "https://dynamiclp.up.school/generate-lesson-plan",
             payload
           );
-
-          console.log(`API Response for Concept ID ${concept.id}:`, response.data);
-
-          // Check or create the LessonPlan entry in the database
+    
+          // Ensure response is valid
+          const generatedLP = response.data.lesson_plan || "No Lesson Plan Generated";
+          console.log(`Generated LP for Concept ID ${concept.id}:`, generatedLP);
+    
+          // Fetch or create LessonPlan entry
           let lessonPlan = await LessonPlan.findOne({ where: { conceptId: concept.id } });
-
           if (!lessonPlan) {
-            // If no entry exists, create a new one
+            // Create a new LessonPlan entry
             lessonPlan = await LessonPlan.create({
               conceptId: concept.id,
-              generatedLP: response.data.lesson_plan || 'No Lesson Plan Generated',
+              generatedLP: generatedLP,
             });
-            console.log(`New LessonPlan created for Concept ID ${concept.id}`);
+            console.log(`Created new LessonPlan for Concept ID ${concept.id}`);
           } else {
             // Update existing entry
-            lessonPlan.generatedLP = response.data.lesson_plan || 'No Lesson Plan Generated';
+            lessonPlan.generatedLP = generatedLP;
             await lessonPlan.save();
-            console.log(`LessonPlan updated for Concept ID ${concept.id}`);
+            console.log(`Updated LessonPlan for Concept ID ${concept.id}`);
           }
         } catch (err) {
           console.error(`Error generating LP for Concept ID ${concept.id}:`, err.message);
         }
       }
     }
+    
 
     // Send success response after processing all topics and concepts
     res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
