@@ -1,16 +1,16 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust as needed
+const sequelize = require('../config/db');
 
-class Concept extends Model {
+class concept extends Model {
   static associate(models) {
-    this.hasOne(models.LessonPlan, {
-      foreignKey: 'conceptId',
-      as: 'LessonPlan', // Alias for the association
+    this.hasOne(models.LessonPlan, { 
+      foreignKey: 'conceptId', 
+      as: 'lessonPlan' // Alias for the relation
     });
   }
 }
 
-Concept.init(
+concept.init(
   {
     topicId: {
       type: DataTypes.INTEGER,
@@ -27,9 +27,9 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'concept', // Model name
-    tableName: 'Concepts', // Table name in the DB
+    modelName: 'concept', // Lowercase model name
+    tableName: 'Concepts', // Table name in DB
   }
 );
 
-module.exports = Concept;
+module.exports = concept;

@@ -1,12 +1,12 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust as needed
+const sequelize = require('../config/db');
 
 class LessonPlan extends Model {
   static associate(models) {
-    // Properly associating with Concept model
-    this.belongsTo(models.Concept, { 
+    // Reference the correct model name 'concept'
+    this.belongsTo(models.concept, { 
       foreignKey: 'conceptId', 
-      as: 'Concept' // Alias for the association
+      as: 'concept' // Alias matches the model name
     });
   }
 }
@@ -17,7 +17,7 @@ LessonPlan.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Concepts', // Table name in the database
+        model: 'Concepts', // Ensure it matches the table name
         key: 'id',
       },
     },
@@ -29,7 +29,7 @@ LessonPlan.init(
   {
     sequelize,
     modelName: 'LessonPlan',
-    tableName: 'LessonPlans', // Ensure table name matches DB
+    tableName: 'LessonPlans', // Table name in DB
   }
 );
 
