@@ -260,8 +260,8 @@ const SessionPlans = () => {
         unit: unitName,
         chapter: topic.name,
         concepts: topic.concepts.map((concept, index) => ({
-          concept,
-          detailing: topic.conceptDetailing[index] || "No detailing provided.",
+          concept: concept.name,
+          detailing: concept.detailing || "No detailing provided.",
         })),
         sessionType: "Theory",
         noOfSession: 1,
@@ -272,6 +272,7 @@ const SessionPlans = () => {
   
       const generatedLessonPlan = response.data.lesson_plan;
   
+      // Update state with generated lesson plan
       setTopicsWithConcepts((prev) => ({
         ...prev,
         [sessionNumber]: prev[sessionNumber].map((t, idx) =>
@@ -279,7 +280,11 @@ const SessionPlans = () => {
         ),
       }));
   
-      setSuccessMessage(`Lesson plan for topic "${topic.name}" generated successfully!`);
+      // Call save function to save the lesson plan
+      const conceptId = topic.concepts[0]?.id; // Assuming concept ID exists
+      await handleSaveLessonPlan(conceptId, generatedLessonPlan);
+  
+      setSuccessMessage(`Lesson plan for topic "${topic.name}" generated and saved successfully!`);
       setError("");
     } catch (error) {
       console.error("Error generating lesson plan:", error);
@@ -397,15 +402,27 @@ const SessionPlans = () => {
   
 
   // Save lesson plan to the database
-  // When saving a generated lesson plan
-const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent) => {
-  try {
-    await saveLessonPlan(sessionPlanId, conceptId, lessonPlanContent);
-    alert("Lesson plan saved successfully!");
-  } catch (error) {
-    console.error("Failed to save lesson plan:", error.message);
-  }
-};
+  const handleSaveLessonPlan = async (conceptId, generatedLessonPlan) => {
+    if (!conceptId || !generatedLessonPlan) {
+      console.error("Missing conceptId or lessonPlan content");
+      setError("Cannot save. Missing required data.");
+      return;
+    }
+  
+    try {
+      // Call backend to save the generated lesson plan
+      await axios.put(`https://tms.up.school/api/sessionPlans/${conceptId}/save`, {
+        lessonPlan: generatedLessonPlan,
+      });
+  
+      setSuccessMessage("Lesson plan saved successfully!");
+      setError("");
+    } catch (error) {
+      console.error("Error saving lesson plan:", error);
+      setError("Failed to save the lesson plan. Please try again.");
+    }
+  };
+  
   
 
 
