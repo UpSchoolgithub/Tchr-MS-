@@ -247,11 +247,14 @@ const SessionPlans = () => {
   
 
   // Generate lesson plan for a specific topic
-  const handleGenerateLessonPlan = async (sessionNumber, topicIndex) => {
+  const handleGenerateLessonPlan = async (sessionNumber, topicIndex, conceptIndex) => {
     try {
       const topic = topicsWithConcepts[sessionNumber][topicIndex];
-      if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
-        setError(`Topic "${topic.name || "Unnamed"}" is missing concepts or invalid.`);
+      const concept = topic.concepts[conceptIndex];
+      const detailing = topic.conceptDetailing[conceptIndex];
+  
+      if (!concept || !detailing) {
+        setError(`Missing concept or detailing for topic: ${topic.name}`);
         return;
       }
   
@@ -260,11 +263,13 @@ const SessionPlans = () => {
         grade: className,
         subject: subjectName,
         unit: unitName,
-        chapter: topic.name,
-        concepts: topic.concepts.map((concept, index) => ({
-          concept,
-          detailing: topic.conceptDetailing[index] || "No detailing provided.",
-        })),
+        chapter: topic.name, // Topic name
+        concepts: [
+          {
+            concept,
+            detailing,
+          },
+        ],
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
@@ -274,20 +279,21 @@ const SessionPlans = () => {
   
       const generatedLessonPlan = response.data.lesson_plan;
   
-      setTopicsWithConcepts((prev) => ({
-        ...prev,
-        [sessionNumber]: prev[sessionNumber].map((t, idx) =>
-          idx === topicIndex ? { ...t, lessonPlan: generatedLessonPlan } : t
-        ),
-      }));
+      // Update only the specific concept's lesson plan
+      setTopicsWithConcepts((prev) => {
+        const updatedTopics = [...prev[sessionNumber]];
+        updatedTopics[topicIndex].lessonPlan = generatedLessonPlan;
+        return { ...prev, [sessionNumber]: updatedTopics };
+      });
   
-      setSuccessMessage(`Lesson plan for topic "${topic.name}" generated successfully!`);
+      setSuccessMessage(`Lesson plan generated for concept "${concept}"`);
       setError("");
     } catch (error) {
       console.error("Error generating lesson plan:", error);
-      setError(`Failed to generate lesson plan for topic "${topicsWithConcepts[sessionNumber][topicIndex]?.name}".`);
+      setError(`Failed to generate lesson plan for concept "${concept}".`);
     }
   };
+  
   
   
   
