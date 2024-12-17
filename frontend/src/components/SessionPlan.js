@@ -305,23 +305,10 @@ const SessionPlans = () => {
         topics
           .filter((topic) => topic.name && Array.isArray(topic.concepts) && topic.concepts.length > 0)
           .map((topic) => {
-            const validConcepts = topic.concepts
-              .map((concept, index) => {
-                const conceptName = typeof concept === "string" ? concept.trim() : concept?.name?.trim() || "";
-                const detail = topic.conceptDetailing[index]?.trim();
-  
-                if (conceptName && detail) {
-                  return { concept: conceptName, detail: detail };
-                }
-                console.warn(`Invalid concept or detail in topic: ${topic.name}`, { concept, detail });
-                return null;
-              })
-              .filter(Boolean);
-  
-            if (validConcepts.length === 0) {
-              console.warn(`Skipping topic with no valid concepts: ${topic.name}`);
-              return null;
-            }
+            const formattedTopics = topic.concepts.map((concept, index) => ({
+              concept: concept.trim(),
+              detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
+            }));
   
             return {
               sessionNumber,
@@ -330,28 +317,15 @@ const SessionPlans = () => {
               subject: subjectName,
               unit: unitName,
               chapter: topic.name,
-              topics: [
-                {
-                  topic: topic.name, // Topic name
-                  concepts: validConcepts.map((c) => c.concept), // Fixed: only valid strings
-                  conceptDetails: validConcepts.map((c) => c.detail), // Valid details
-                },
-              ],
+              topics: formattedTopics, // Correctly formatted topics
               sessionType: "Theory",
               noOfSession: 1,
               duration: 45,
             };
           })
-          .filter(Boolean)
       );
   
-      if (payloads.length === 0) {
-        setError("No valid topics or concepts to generate lesson plans.");
-        setSaving(false);
-        return;
-      }
-  
-      console.log("Payloads for all topics:", JSON.stringify(payloads, null, 2));
+      console.log("Formatted Payloads for API:", JSON.stringify(payloads, null, 2));
   
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
@@ -359,25 +333,17 @@ const SessionPlans = () => {
   
       responses.forEach((response, index) => {
         if (response.status === "fulfilled") {
-          const { sessionNumber, chapter } = payloads[index];
-          const generatedLessonPlan = response.value.data.lesson_plan;
-  
-          setTopicsWithConcepts((prev) => ({
-            ...prev,
-            [sessionNumber]: prev[sessionNumber].map((topic) =>
-              topic.name === chapter ? { ...topic, lessonPlan: generatedLessonPlan } : topic
-            ),
-          }));
+          const { chapter } = payloads[index];
+          console.log(`Lesson plan for chapter "${chapter}" generated successfully!`);
         } else {
-          console.error(`Failed to generate LP for topic: ${payloads[index]?.chapter}`);
+          console.error(`Failed to generate LP for chapter: ${payloads[index]?.chapter}`);
         }
       });
   
       setSuccessMessage("All lesson plans generated successfully!");
-      setError("");
     } catch (error) {
       console.error("Error generating all lesson plans:", error);
-      setError("Failed to generate all lesson plans. Please try again.");
+      setError("Failed to generate lesson plans. Please try again.");
     } finally {
       setSaving(false);
     }
