@@ -305,45 +305,66 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
+      // Build the payloads array
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.map((topic) => {
-          if (!topic || !topic.name) {
+          if (!topic || !topic.name || !Array.isArray(topic.concepts)) {
             console.warn("Skipping invalid topic:", topic);
-            return null;
+            return null; // Skip invalid topics
           }
   
-          const formattedConcepts = topic.concepts.map((concept, index) => ({
-            concept: typeof concept === "string" ? concept.trim() : concept.name.trim(),
-            detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
-          }));
+          const concepts = topic.concepts
+            .map((conceptObj, index) => {
+              const concept =
+                typeof conceptObj === "string" ? conceptObj.trim() : conceptObj?.name?.trim();
+              const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
+  
+              // Validate concept and detailing
+              if (!concept || concept === "Unnamed Concept") {
+                console.warn("Skipping invalid concept:", conceptObj);
+                return null;
+              }
+              return { concept, detailing };
+            })
+            .filter(Boolean); // Remove invalid concepts
   
           return {
-            sessionNumber,
-            board,
-            grade: className,
-            subject: subjectName,
-            unit: unitName,
+            sessionNumber: sessionNumber.toString(),
+            board: board.trim(),
+            grade: className.trim(),
+            subject: subjectName.trim(),
+            unit: unitName.trim(),
             chapter: topic.name.trim(), // Topic name as chapter
-            topics: formattedConcepts,  // Valid array of concepts and details
+            topics: [
+              {
+                topic: topic.name.trim(), // Explicit topic field
+                concepts: concepts, // List of concepts with valid structure
+              },
+            ],
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
-        }).filter(Boolean)
-      );
+        })
+      ).filter(Boolean); // Remove null/invalid payloads
   
       console.log("Formatted Payloads:", JSON.stringify(payloads, null, 2));
   
+      // Send payloads to the backend
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
+      // Process responses
       responses.forEach((response, index) => {
         if (response.status === "fulfilled") {
           const { chapter } = payloads[index];
           console.log(`Lesson plan for chapter "${chapter}" generated successfully!`);
         } else {
-          console.error(`Failed to generate LP for chapter: ${payloads[index]?.chapter}`);
+          console.error(
+            `Failed to generate LP for chapter: ${payloads[index]?.chapter}`,
+            response.reason
+          );
         }
       });
   
