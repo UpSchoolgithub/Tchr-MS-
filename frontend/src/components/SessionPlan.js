@@ -108,33 +108,23 @@ const SessionPlans = () => {
     const topicMap = {};
   
     topics.forEach((topic) => {
-      if (!topic?.topicName || !Array.isArray(topic.Concepts)) {
-        console.warn("Invalid topic skipped:", topic);
-        return; // Skip invalid topics
-      }
+      if (!topic?.topicName || !Array.isArray(topic.Concepts)) return;
   
       if (!topicMap[topic.topicName]) {
-        topicMap[topic.topicName] = {
-          name: topic.topicName.trim(),
-          concepts: [],
-          conceptDetailing: [],
-        };
+        topicMap[topic.topicName] = { name: topic.topicName.trim(), concepts: [], conceptDetailing: [] };
       }
   
       topic.Concepts.forEach((concept) => {
         if (concept?.concept?.trim()) {
           topicMap[topic.topicName].concepts.push(concept.concept.trim());
-          topicMap[topic.topicName].conceptDetailing.push(
-            concept.conceptDetailing?.trim() || "No detailing provided"
-          );
-        } else {
-          console.warn("Invalid concept skipped:", concept);
+          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing?.trim() || "No detailing provided.");
         }
       });
     });
   
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
   };
+  
   
   
   
@@ -333,21 +323,20 @@ const SessionPlans = () => {
   
           return {
             sessionNumber: sessionNumber.toString(),
-            board: board.trim(),
-            grade: className.trim(),
-            subject: subjectName.trim(),
-            unit: unitName.trim(),
-            chapter: topic.name.trim(), // Topic name as chapter
-            topics: [
-              {
-                topic: topic.name.trim(),
-                concepts: concepts, // Properly flattened concepts
-              },
-            ],
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          };
+              board: board.trim(),
+              grade: className.trim(),
+              subject: subjectName.trim(),
+              unit: unitName.trim() || "Unit Not Specified",
+              chapter: topic.name.trim(),
+              concepts: topic.concepts.map((concept, index) => ({
+                concept: concept.trim(),
+                detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided.",
+              })),
+              sessionType: "Theory",
+              noOfSession: 1,
+              duration: 45,
+            };
+            
         })
       ).filter(Boolean); // Remove null/invalid payloads
   
@@ -543,10 +532,9 @@ const SessionPlans = () => {
 
 {/* Render Concept */}
 <td>
-  {Array.isArray(topic.concepts) && topic.concepts.length > 0
-    ? topic.concepts[cIndex]?.name || "No Concept"
-    : "No Concept"}
+  {topic.concepts[cIndex] || "No Concept"}
 </td>
+
 
 
               {/* Render Concept Detailing */}
