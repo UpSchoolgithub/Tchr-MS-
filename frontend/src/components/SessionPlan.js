@@ -305,36 +305,31 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      const payloads = Object.entries(topicsWithConcepts).flatMap(
-        ([sessionNumber, topics]) => {
-          return topics.map((topic) => {
-            if (!topic || !topic.name) {
-              console.warn("Skipping invalid topic:", topic);
-              return null;
-            }
+      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
+        topics.map((topic) => {
+          if (!topic || !topic.name) {
+            console.warn("Skipping invalid topic:", topic);
+            return null;
+          }
   
-            const formattedTopic = {
-              topic: topic.name.trim(),
-              concepts: topic.concepts.map((concept, index) => ({
-                concept: concept.trim(),
-                detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
-              })),
-            };
+          const formattedConcepts = topic.concepts.map((concept, index) => ({
+            concept: typeof concept === "string" ? concept.trim() : concept.name.trim(),
+            detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
+          }));
   
-            return {
-              sessionNumber,
-              board,
-              grade: className,
-              subject: subjectName,
-              unit: unitName,
-              chapter: chapterName,
-              topics: [formattedTopic],
-              sessionType: "Theory",
-              noOfSession: 1,
-              duration: 45,
-            };
-          }).filter(Boolean);
-        }
+          return {
+            sessionNumber,
+            board,
+            grade: className,
+            subject: subjectName,
+            unit: unitName,
+            chapter: topic.name.trim(), // Topic name as chapter
+            topics: formattedConcepts,  // Valid array of concepts and details
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          };
+        }).filter(Boolean)
       );
   
       console.log("Formatted Payloads:", JSON.stringify(payloads, null, 2));
