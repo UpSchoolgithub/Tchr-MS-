@@ -308,17 +308,17 @@ const SessionPlans = () => {
       // Validate and build payloads
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.flatMap((topic) => {
-          // Filter out invalid concepts or empty values
+          // Filter invalid or empty concepts
           const validConcepts = topic.concepts
             .map((concept, index) => ({
-              concept: concept?.trim(),
-              detailing: topic.conceptDetailing[index]?.trim(),
+              concept: concept?.trim() || null,
+              detailing: topic.conceptDetailing[index]?.trim() || null,
             }))
-            .filter((c) => c.concept && c.detailing); // Only keep valid data
+            .filter((c) => c.concept && c.detailing);
   
           if (validConcepts.length === 0) {
-            console.warn(`No valid concepts found for topic: ${topic.name}`);
-            return []; // Skip topics with no valid concepts
+            console.warn(`Skipping topic '${topic.name}' due to invalid concepts.`);
+            return [];
           }
   
           return {
@@ -336,7 +336,7 @@ const SessionPlans = () => {
         })
       );
   
-      console.log("Final Payloads to Send:", payloads);
+      console.log("Payloads to Send:", JSON.stringify(payloads, null, 2)); // Debug payload
   
       if (payloads.length === 0) {
         setError("No valid topics or concepts found to generate lesson plans.");
@@ -346,9 +346,7 @@ const SessionPlans = () => {
   
       // Send requests to the API
       const responses = await Promise.allSettled(
-        payloads.map((payload) =>
-          axios.post("https://tms.up.school/api/dynamicLP", payload)
-        )
+        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
       console.log("Lesson Plan Responses:", responses);
@@ -378,6 +376,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
