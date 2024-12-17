@@ -1,13 +1,22 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust path if needed
+const sequelize = require('../config/db');
 
-class Concept extends Model {}
+class concept extends Model {
+  static associate(models) {
+    concept.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'Topic' });
+    concept.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'LessonPlan' });
+  }
+}
 
-Concept.init(
+concept.init(
   {
     topicId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: 'Topics', // References the 'Topics' table
+        key: 'id',
+      },
     },
     concept: {
       type: DataTypes.STRING,
@@ -20,9 +29,10 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'concept', // Updated to 'Concept' (uppercase C)
-    tableName: 'Concepts', // Ensure matches DB table name
+    modelName: 'concept', // Model name 'concept' (lowercase)
+    tableName: 'Concepts', // Table name in DB
+    freezeTableName: true, // Prevents Sequelize from altering table name
   }
 );
 
-module.exports = Concept;
+module.exports = concept;

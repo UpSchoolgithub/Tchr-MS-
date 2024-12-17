@@ -1,31 +1,34 @@
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const Topic = sequelize.define('Topic', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  sessionPlanId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'sessionPlans', // References the 'sessionPlans' table
-      key: 'id',
+class Topic extends Model {
+  static associate(models) {
+    Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
+    Topic.hasMany(models.concept, { foreignKey: 'topicId', as: 'Concepts', onDelete: 'CASCADE' });
+  }
+}
+
+Topic.init(
+  {
+    sessionPlanId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'SessionPlans', // References 'SessionPlans' table
+        key: 'id',
+      },
+    },
+    topicName: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   },
-  topicName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-});
-
-Topic.associate = (models) => {
-  Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', onDelete: 'CASCADE' });
-  Topic.hasMany(models.Concept, { foreignKey: 'topicId', onDelete: 'CASCADE' });
-};
-
-
+  {
+    sequelize,
+    modelName: 'Topic',
+    tableName: 'Topics',
+    freezeTableName: true,
+  }
+);
 
 module.exports = Topic;

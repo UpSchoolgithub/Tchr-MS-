@@ -1,29 +1,33 @@
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const SessionPlan = sequelize.define('SessionPlan', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  sessionId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'sessions', // References the 'sessions' table
-      key: 'id',
+class SessionPlan extends Model {
+  static associate(models) {
+    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
+  }
+}
+
+SessionPlan.init(
+  {
+    sessionId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'sessions', // References the 'sessions' table
+        key: 'id',
+      },
+    },
+    sessionNumber: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
   },
-  sessionNumber: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-});
-
-SessionPlan.associate = (models) => {
-  SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', onDelete: 'CASCADE' });
-  SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', onDelete: 'CASCADE' });
-};
+  {
+    sequelize,
+    modelName: 'SessionPlan',
+    tableName: 'SessionPlans',
+    freezeTableName: true,
+  }
+);
 
 module.exports = SessionPlan;
