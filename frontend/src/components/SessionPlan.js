@@ -307,11 +307,11 @@ const SessionPlans = () => {
           .map((topic) => {
             const validConcepts = topic.concepts
               .map((concept, index) => {
-                const conceptName = typeof concept === "string" ? concept.trim() : concept.name || "";
-                const detail = topic.conceptDetailing[index];
+                const conceptName = typeof concept === "string" ? concept.trim() : concept?.name?.trim() || "";
+                const detail = topic.conceptDetailing[index]?.trim();
   
-                if (conceptName && typeof detail === "string") {
-                  return { concept: conceptName, detail: detail.trim() };
+                if (conceptName && detail) {
+                  return { concept: conceptName, detail: detail };
                 }
                 console.warn(`Invalid concept or detail in topic: ${topic.name}`, { concept, detail });
                 return null;
@@ -332,9 +332,9 @@ const SessionPlans = () => {
               chapter: topic.name,
               topics: [
                 {
-                  topic: topic.name, // Add valid topic name
-                  concepts: validConcepts.map((concept) => concept.concept), // Fixed concept structure
-                  conceptDetails: validConcepts.map((concept) => concept.detail),
+                  topic: topic.name, // Topic name
+                  concepts: validConcepts.map((c) => c.concept), // Fixed: only valid strings
+                  conceptDetails: validConcepts.map((c) => c.detail), // Valid details
                 },
               ],
               sessionType: "Theory",
