@@ -305,35 +305,41 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      // Build payloads after filtering invalid concepts
+      // Validate and build payloads
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.flatMap((topic, topicIndex) =>
-          topic.concepts.map((concept, conceptIndex) => {
-            const detailing = topic.conceptDetailing[conceptIndex]?.trim();
-            const conceptName = concept?.trim();
+        topics.flatMap((topic) => {
+          // Filter out invalid concepts or empty values
+          const validConcepts = topic.concepts
+            .map((concept, index) => ({
+              concept: concept?.trim(),
+              detailing: topic.conceptDetailing[index]?.trim(),
+            }))
+            .filter((c) => c.concept && c.detailing); // Only keep valid data
   
-            // Validate each entry
-            if (!conceptName || !detailing) {
-              console.warn(`Invalid concept skipped: Topic - "${topic.name}", Concept - "${conceptName}", Detailing - "${detailing}"`);
-              return null; // Skip invalid entries
-            }
+          if (validConcepts.length === 0) {
+            console.warn(`No valid concepts found for topic: ${topic.name}`);
+            return []; // Skip topics with no valid concepts
+          }
   
-            return {
-              sessionNumber,
-              topicIndex,
-              conceptIndex,
-              chapter: topic.name,
-              concept: conceptName,
-              detailing,
-            };
-          })
-        ).filter(Boolean) // Remove invalid/null entries
+          return {
+            sessionNumber,
+            board: board?.trim(),
+            grade: className?.trim(),
+            subject: subjectName?.trim(),
+            unit: unitName?.trim(),
+            chapter: topic.name?.trim(),
+            concepts: validConcepts,
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          };
+        })
       );
   
-      console.log("Validated Payloads to send:", payloads);
+      console.log("Final Payloads to Send:", payloads);
   
       if (payloads.length === 0) {
-        setError("No valid concepts found to generate lesson plans.");
+        setError("No valid topics or concepts found to generate lesson plans.");
         setSaving(false);
         return;
       }
@@ -341,17 +347,7 @@ const SessionPlans = () => {
       // Send requests to the API
       const responses = await Promise.allSettled(
         payloads.map((payload) =>
-          axios.post("https://tms.up.school/api/dynamicLP", {
-            board: board?.trim(),
-            grade: className?.trim(),
-            subject: subjectName?.trim(),
-            unit: unitName?.trim(),
-            chapter: payload.chapter?.trim(),
-            concepts: [{ concept: payload.concept, detailing: payload.detailing }],
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          })
+          axios.post("https://tms.up.school/api/dynamicLP", payload)
         )
       );
   
@@ -362,11 +358,11 @@ const SessionPlans = () => {
         const updated = { ...prev };
   
         responses.forEach((response, idx) => {
-          const { sessionNumber, topicIndex } = payloads[idx];
-  
+          const sessionNumber = payloads[idx].sessionNumber;
           if (response.status === "fulfilled" && response.value?.data?.lesson_plan) {
-            updated[sessionNumber][topicIndex].lessonPlan = response.value.data.lesson_plan;
-            console.log(`Lesson plan updated for Session ${sessionNumber}, Topic ${topicIndex}`);
+            updated[sessionNumber].forEach((topic) => {
+              topic.lessonPlan = response.value.data.lesson_plan;
+            });
           }
         });
   
@@ -377,7 +373,7 @@ const SessionPlans = () => {
       setError("");
     } catch (error) {
       console.error("Error generating lesson plans:", error);
-      setError("Failed to generate lesson plans. Check input data and try again.");
+      setError("Failed to generate lesson plans. Please check your input data.");
     } finally {
       setSaving(false);
     }
