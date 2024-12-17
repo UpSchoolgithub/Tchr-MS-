@@ -108,17 +108,14 @@ const SessionPlans = () => {
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
           name: topic.topicName.trim(),
-          concepts: [],
+          concepts: [], // Store full concept objects
           conceptDetailing: [],
         };
       }
   
       topic.Concepts.forEach((concept) => {
         if (concept?.concept?.trim()) {
-          topicMap[topic.topicName].concepts.push(concept.concept.trim());
-          topicMap[topic.topicName].conceptDetailing.push(
-            concept.conceptDetailing?.trim() || "No detailing provided"
-          );
+          topicMap[topic.topicName].concepts.push(concept); // Store the full concept object
         } else {
           console.warn("Invalid concept skipped:", concept);
         }
@@ -127,6 +124,7 @@ const SessionPlans = () => {
   
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
   };
+  
   
   
   
@@ -528,14 +526,15 @@ const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent)
 
               {/* Render Lesson Plan Button */}
               <td>
-  {topic.lessonPlan && topic.concepts[cIndex] ? (
-    <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)}>
+  {topic.lessonPlan && topic.concepts[cIndex]?.id ? (
+    <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex].id)}>
       View
     </button>
   ) : (
     "Not Generated"
   )}
 </td>
+
 
 
 
