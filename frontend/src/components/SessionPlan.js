@@ -308,31 +308,25 @@ const SessionPlans = () => {
       // Build payloads
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.map((topic) => {
-          // Validate topic and concepts
           if (!topic || !topic.name || !Array.isArray(topic.concepts)) {
             console.warn("Skipping invalid topic:", topic);
-            return null;
+            return null; // Skip invalid topics
           }
   
-          // Format topics: an array of { concept, detailing }
-          const formattedTopics = topic.concepts.map((concept, index) => {
-            const conceptName =
-              typeof concept === "string" ? concept.trim() : concept?.trim();
-            const detailing =
-              topic.conceptDetailing[index]?.trim() || "No detailing provided";
+          // Format and clean topics
+          const formattedTopics = topic.concepts
+            .map((concept, index) => {
+              const conceptName = concept?.trim();
+              const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
   
-            if (!conceptName) {
-              console.warn("Skipping empty concept:", concept);
-              return null;
-            }
+              if (!conceptName) {
+                console.warn("Skipping empty concept:", concept);
+                return null;
+              }
+              return { concept: conceptName, detailing };
+            })
+            .filter(Boolean);
   
-            return {
-              concept: conceptName,
-              detailing,
-            };
-          }).filter(Boolean); // Remove invalid entries
-  
-          // Skip if no valid topics are present
           if (formattedTopics.length === 0) {
             console.warn("No valid topics for chapter:", topic.name);
             return null;
@@ -340,45 +334,53 @@ const SessionPlans = () => {
   
           return {
             sessionNumber: sessionNumber.toString(),
-            board: board.trim(),
-            grade: className.trim(),
-            subject: subjectName.trim(),
-            unit: unitName.trim(),
-            chapter: topic.name.trim(), // Topic name becomes chapter name
-            topics: formattedTopics,    // Array of { concept, detailing }
+            board: board?.trim() || "Unknown Board",
+            grade: className?.trim() || "Unknown Grade",
+            subject: subjectName?.trim() || "Unknown Subject",
+            unit: unitName?.trim() || "Unknown Unit",
+            chapter: topic.name?.trim(),
+            topics: formattedTopics,
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         })
-      ).filter(Boolean); // Remove invalid payloads
+      ).filter(Boolean);
   
-      console.log("Final Payloads:", JSON.stringify(payloads, null, 2));
+      console.log("Payloads to send:", JSON.stringify(payloads, null, 2));
   
-      // Send to backend
+      // Send payloads and collect responses
       const responses = await Promise.allSettled(
-        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
+        payloads.map((payload, index) =>
+          axios.post("https://tms.up.school/api/dynamicLP", payload)
+            .then((res) => {
+              console.log(`Success for chapter: ${payload.chapter}`, res.data);
+              return { status: "success", chapter: payload.chapter, data: res.data };
+            })
+            .catch((err) => {
+              console.error(`Error for chapter: ${payload.chapter}`, err.response?.data || err.message);
+              return { status: "error", chapter: payload.chapter, error: err.response?.data || err.message };
+            })
+        )
       );
   
-      // Handle responses
-      responses.forEach((response, index) => {
-        if (response.status === "fulfilled") {
-          console.log(
-            `Lesson plan for chapter "${payloads[index]?.chapter}" generated successfully!`
-          );
-        } else {
-          console.error(
-            `Failed to generate LP for chapter: ${payloads[index]?.chapter}`,
-            response.reason
-          );
-        }
-      });
+      // Analyze responses
+      const successfulResponses = responses.filter((r) => r.value?.status === "success");
+      const failedResponses = responses.filter((r) => r.value?.status === "error");
   
-      setSuccessMessage("All lesson plans generated successfully!");
-      setError("");
+      console.log("Successful Responses:", successfulResponses);
+      console.log("Failed Responses:", failedResponses);
+  
+      if (failedResponses.length > 0) {
+        setError(
+          `Failed to generate lesson plans for ${failedResponses.length} chapters. Check logs for details.`
+        );
+      } else {
+        setSuccessMessage("All lesson plans generated successfully!");
+      }
     } catch (error) {
-      console.error("Error generating all lesson plans:", error);
-      setError("Failed to generate lesson plans. Please try again.");
+      console.error("Unexpected error during lesson plan generation:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setSaving(false);
     }
