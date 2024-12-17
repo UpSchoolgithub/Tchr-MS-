@@ -1,39 +1,32 @@
+const fs = require('fs');
+const path = require('path');
 const Sequelize = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Sequelize instance from db config
 
-// Import models explicitly
-const SessionPlan = require('./SessionPlan');
-const Topic = require('./Topic');
-const Concept = require('./concept');
-const LessonPlan = require('./LessonPlan');
-
-// Initialize the database object
 const db = {};
+const basename = path.basename(__filename);
 
-// Attach models to the db object
-db.SessionPlan = SessionPlan;
-db.Topic = Topic;
-db.Concept = Concept;
-db.LessonPlan = LessonPlan;
+// Read all model files in the directory
+fs.readdirSync(__dirname)
+  .filter((file) => {
+    return (
+      file.indexOf('.') !== 0 && // Ignore hidden files
+      file !== basename && // Ignore this index.js file
+      file.slice(-3) === '.js' // Only include .js files
+    );
+  })
+  .forEach((file) => {
+    // Import and initialize models
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
 
-// Set up model associations
-SessionPlan.associate = (models) => {
-  SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics' });
-};
-
-Topic.associate = (models) => {
-  Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
-  Topic.hasMany(models.Concept, { foreignKey: 'topicId', as: 'Concepts', onDelete: 'CASCADE' });
-};
-
-Concept.associate = (models) => {
-  Concept.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'Topic' });
-  Concept.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'LessonPlan' });
-};
-
-LessonPlan.associate = (models) => {
-  LessonPlan.belongsTo(models.Concept, { foreignKey: 'conceptId', as: 'Concept' });
-};
+// Call associate method for all models if defined
+Object.keys(db).forEach((modelName) => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db); // Pass all models for association
+  }
+});
 
 // Assign Sequelize instance to db
 db.sequelize = sequelize;
