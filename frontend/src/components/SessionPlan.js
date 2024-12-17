@@ -115,20 +115,19 @@ const SessionPlans = () => {
   
       topic.Concepts.forEach((concept) => {
         if (concept?.concept && typeof concept.concept === "string") {
-          topicMap[topic.topicName].concepts.push({
-            id: concept.id,
-            concept: concept.concept.trim(),
-            conceptDetailing: concept.conceptDetailing?.trim() || "No detailing provided",
-          });
+          topicMap[topic.topicName].concepts.push(concept.concept.trim());
+          topicMap[topic.topicName].conceptDetailing.push(
+            concept.conceptDetailing?.trim() || "No detailing provided"
+          );
         } else {
           console.warn("Invalid concept skipped:", concept);
         }
       });
-      
     });
   
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
   };
+  
   
   
   
