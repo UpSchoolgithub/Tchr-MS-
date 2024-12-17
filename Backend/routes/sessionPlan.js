@@ -249,6 +249,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     }
     
     
+    
 
     res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
   } catch (error) {

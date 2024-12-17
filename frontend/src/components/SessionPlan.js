@@ -282,9 +282,21 @@ const SessionPlans = () => {
       // Update only the specific concept's lesson plan
       setTopicsWithConcepts((prev) => {
         const updatedTopics = [...prev[sessionNumber]];
-        updatedTopics[topicIndex].lessonPlan = generatedLessonPlan;
+      
+        // Update the specific concept's lesson plan
+        const updatedConcepts = updatedTopics[topicIndex].concepts.map((c, idx) =>
+          idx === conceptIndex ? { ...c, lessonPlan: generatedLessonPlan } : c
+        );
+      
+        updatedTopics[topicIndex] = {
+          ...updatedTopics[topicIndex],
+          concepts: updatedConcepts,
+        };
+      
         return { ...prev, [sessionNumber]: updatedTopics };
       });
+      
+      
   
       setSuccessMessage(`Lesson plan generated for concept "${concept}"`);
       setError("");
