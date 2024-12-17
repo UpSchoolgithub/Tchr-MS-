@@ -160,8 +160,20 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
     // Fetch all session plans with topics and concepts
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId: id },
-      include: [{ model: Topic, include: [Concept] }],
+      include: [
+        {
+          model: Topic,
+          as: 'Topics', // Alias used in the Topic model
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts', // Alias used in the Concept model
+            },
+          ],
+        },
+      ],
     });
+    
 
     if (!sessionPlans || sessionPlans.length === 0) {
       return res.status(404).json({ message: 'Session plan not found' });
