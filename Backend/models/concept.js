@@ -1,9 +1,12 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Adjust as needed
 
 class Concept extends Model {
   static associate(models) {
-    this.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'LessonPlan' });
+    this.hasOne(models.LessonPlan, {
+      foreignKey: 'conceptId',
+      as: 'LessonPlan', // Alias for the association
+    });
   }
 }
 
@@ -24,8 +27,8 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'concept',
-    tableName: 'Concepts',
+    modelName: 'concept', // Model name
+    tableName: 'Concepts', // Table name in the DB
   }
 );
 
