@@ -503,10 +503,11 @@ const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent)
 {/* Render Concept */}
 <td>
   {Array.isArray(topic.concepts) && topic.concepts.length > cIndex
-    ? topic.concepts[cIndex]?.name || "No Concept"
+    ? typeof topic.concepts[cIndex] === "string"
+      ? topic.concepts[cIndex].trim()
+      : topic.concepts[cIndex]?.concept?.trim() || "No Concept"
     : "No Concept"}
 </td>
-
 
 
 
