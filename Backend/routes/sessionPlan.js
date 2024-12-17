@@ -200,20 +200,19 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             subject: req.body.subject || "Subject Not Specified",
             subSubject: "Civics", // Hardcoded
             unit: req.body.unit || "Unit Not Specified",
-            chapter: topic.topicName,
+            chapter: topic.topicName, // Keep the topic name for context
             sessionType: req.body.sessionType || "Default",
             noOfSession: req.body.noOfSession || 1,
             duration: req.body.duration || 45,
             topics: [
               {
-                topic: topic.topicName,
-                concepts: topic.Concepts.map(
-                  (concept) => `${concept.concept}: ${concept.conceptDetailing}`
-                ), // Concatenate concept and detailing
+                topic: topic.topicName, // Topic context
+                concepts: [
+                  `${concept.concept}: ${concept.conceptDetailing}`,
+                ], // Send only this concept
               },
             ],
           };
-          
     
           console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
     
@@ -248,6 +247,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
         }
       }
     }
+    
     
 
     res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
