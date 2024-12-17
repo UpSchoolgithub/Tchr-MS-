@@ -431,35 +431,15 @@ const SessionPlans = () => {
   
 
   // Save lesson plan to the database
-  const handleSaveLessonPlan = async () => {
-    if (!currentLessonPlan) {
-      setError("No lesson plan to save.");
-      return;
-    }
-  
-    try {
-      const payload = {
-        topicName: currentLessonPlan.topicName,
-        concept: currentLessonPlan.concept,
-        lessonPlan: currentLessonPlan.lessonPlan,
-      };
-  
-      const response = await axios.post(
-        `https://tms.up.school/api/sessionPlans/${currentSessionPlanId}/saveLessonPlan`,
-        payload
-      );
-  
-      if (response.status === 200) {
-        setSuccessMessage("Lesson plan saved successfully!");
-        setShowModal(false);
-      } else {
-        setError("Failed to save lesson plan.");
-      }
-    } catch (error) {
-      console.error("Error saving lesson plan:", error);
-      setError("An error occurred while saving the lesson plan.");
-    }
-  };
+  // When saving a generated lesson plan
+const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent) => {
+  try {
+    await saveLessonPlan(sessionPlanId, conceptId, lessonPlanContent);
+    alert("Lesson plan saved successfully!");
+  } catch (error) {
+    console.error("Failed to save lesson plan:", error.message);
+  }
+};
   
 
 
