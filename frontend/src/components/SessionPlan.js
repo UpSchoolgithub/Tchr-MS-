@@ -305,31 +305,29 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
+      // Build payloads after filtering invalid concepts
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.flatMap((topic, topicIndex) =>
-          topic.concepts
-            .map((concept, conceptIndex) => {
-              const detailing = topic.conceptDetailing[conceptIndex]?.trim();
-              const conceptName = concept?.trim();
+          topic.concepts.map((concept, conceptIndex) => {
+            const detailing = topic.conceptDetailing[conceptIndex]?.trim();
+            const conceptName = concept?.trim();
   
-              if (!conceptName || !detailing) {
-                console.warn(
-                  `Skipping invalid concept: Concept - "${conceptName}", Detailing - "${detailing}"`
-                );
-                return null; // Skip invalid entries
-              }
+            // Validate each entry
+            if (!conceptName || !detailing) {
+              console.warn(`Invalid concept skipped: Topic - "${topic.name}", Concept - "${conceptName}", Detailing - "${detailing}"`);
+              return null; // Skip invalid entries
+            }
   
-              return {
-                sessionNumber,
-                topicIndex,
-                conceptIndex,
-                chapter: topic.name,
-                concept: conceptName,
-                detailing,
-              };
-            })
-            .filter(Boolean) // Remove null entries
-        )
+            return {
+              sessionNumber,
+              topicIndex,
+              conceptIndex,
+              chapter: topic.name,
+              concept: conceptName,
+              detailing,
+            };
+          })
+        ).filter(Boolean) // Remove invalid/null entries
       );
   
       console.log("Validated Payloads to send:", payloads);
@@ -340,14 +338,15 @@ const SessionPlans = () => {
         return;
       }
   
+      // Send requests to the API
       const responses = await Promise.allSettled(
         payloads.map((payload) =>
           axios.post("https://tms.up.school/api/dynamicLP", {
-            board,
-            grade: className,
-            subject: subjectName,
-            unit: unitName,
-            chapter: payload.chapter,
+            board: board?.trim(),
+            grade: className?.trim(),
+            subject: subjectName?.trim(),
+            unit: unitName?.trim(),
+            chapter: payload.chapter?.trim(),
             concepts: [{ concept: payload.concept, detailing: payload.detailing }],
             sessionType: "Theory",
             noOfSession: 1,
@@ -358,30 +357,27 @@ const SessionPlans = () => {
   
       console.log("Lesson Plan Responses:", responses);
   
-      // Update state with generated lesson plans
+      // Update state with successful lesson plans
       setTopicsWithConcepts((prev) => {
         const updated = { ...prev };
   
         responses.forEach((response, idx) => {
-          const { sessionNumber, topicIndex, conceptIndex } = payloads[idx];
+          const { sessionNumber, topicIndex } = payloads[idx];
   
           if (response.status === "fulfilled" && response.value?.data?.lesson_plan) {
-            updated[sessionNumber][topicIndex].lessonPlan =
-              response.value.data.lesson_plan;
-            console.log(
-              `Lesson plan updated for session ${sessionNumber}, topic ${topicIndex}, concept ${conceptIndex}`
-            );
+            updated[sessionNumber][topicIndex].lessonPlan = response.value.data.lesson_plan;
+            console.log(`Lesson plan updated for Session ${sessionNumber}, Topic ${topicIndex}`);
           }
         });
   
         return updated;
       });
   
-      setSuccessMessage("All lesson plans generated and updated successfully!");
+      setSuccessMessage("All lesson plans generated successfully!");
       setError("");
     } catch (error) {
-      console.error("Error generating all lesson plans:", error);
-      setError("Failed to generate all lesson plans. Please try again.");
+      console.error("Error generating lesson plans:", error);
+      setError("Failed to generate lesson plans. Check input data and try again.");
     } finally {
       setSaving(false);
     }
