@@ -52,45 +52,37 @@ const SessionPlans = () => {
     const fetchSessionPlans = async () => {
       try {
         const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
-    
         if (response.data && Array.isArray(response.data.sessionPlans)) {
-          // Deduplicate session plans based on sessionNumber
           const deduplicatedSessions = {};
           response.data.sessionPlans.forEach((plan) => {
             if (!deduplicatedSessions[plan.sessionNumber]) {
               deduplicatedSessions[plan.sessionNumber] = { ...plan, Topics: [] };
             }
-            // Merge topics for the session
             if (Array.isArray(plan.Topics)) {
               deduplicatedSessions[plan.sessionNumber].Topics.push(...plan.Topics);
             }
           });
     
-          // Transform into the required format
           const initialData = Object.values(deduplicatedSessions).reduce((acc, plan) => {
             const topics = mergeTopics(plan.Topics || []);
-            console.log("Valid Topics:", topics); // Debug valid topics
-          
             acc[plan.sessionNumber] = topics.map((topic) => ({
               name: topic.name || "Unnamed Topic",
               concepts: topic.concepts || [],
               conceptDetailing: topic.conceptDetailing || [],
-              lessonPlan: "",
+              lessonPlan: topic.lessonPlan || "",
             }));
             return acc;
           }, {});
-          
     
           setTopicsWithConcepts(initialData);
           setSessionPlans(Object.values(deduplicatedSessions));
-        } else {
-          throw new Error("Invalid session plans format from API.");
         }
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
+    
     
     
     
@@ -305,38 +297,13 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      // Build payloads
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.map((topic) => {
-          if (!topic || !topic.name || !Array.isArray(topic.concepts)) {
-            console.warn("Skipping invalid topic:", topic);
-            return null; // Skip invalid topics
-          }
-  
-          // Format and clean topics
-          const formattedTopics = topic.concepts
-  .map((concept, index) => {
-    const conceptName = concept?.trim();
-    const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
-
-    if (!conceptName) {
-      console.warn("Skipping empty concept:", concept);
-      return null; // Skip empty concepts
-    }
-
-    return {
-      topic: topic.name.trim(), // Include the required 'topic' field
-      concept: conceptName,
-      detailing: detailing,
-    };
-  })
-  .filter(Boolean); // Remove invalid entries
-
-  
-          if (formattedTopics.length === 0) {
-            console.warn("No valid topics for chapter:", topic.name);
-            return null;
-          }
+          const formattedTopics = topic.concepts.map((concept, index) => ({
+            topic: topic.name.trim(),
+            concept: concept.trim(),
+            detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
+          }));
   
           return {
             sessionNumber: sessionNumber.toString(),
@@ -351,46 +318,40 @@ const SessionPlans = () => {
             duration: 45,
           };
         })
-      ).filter(Boolean);
+      );
   
-      console.log("Payloads to send:", JSON.stringify(payloads, null, 2));
-  
-      // Send payloads and collect responses
       const responses = await Promise.allSettled(
-        payloads.map((payload, index) =>
+        payloads.map((payload) =>
           axios.post("https://tms.up.school/api/dynamicLP", payload)
-            .then((res) => {
-              console.log(`Success for chapter: ${payload.chapter}`, res.data);
-              return { status: "success", chapter: payload.chapter, data: res.data };
-            })
-            .catch((err) => {
-              console.error(`Error for chapter: ${payload.chapter}`, err.response?.data || err.message);
-              return { status: "error", chapter: payload.chapter, error: err.response?.data || err.message };
-            })
         )
       );
   
-      // Analyze responses
-      const successfulResponses = responses.filter((r) => r.value?.status === "success");
-      const failedResponses = responses.filter((r) => r.value?.status === "error");
+      // Update topicsWithConcepts state with generated lesson plans
+      const updatedState = { ...topicsWithConcepts };
+      responses.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          const payload = payloads[index];
+          const sessionNumber = payload.sessionNumber;
   
-      console.log("Successful Responses:", successfulResponses);
-      console.log("Failed Responses:", failedResponses);
+          updatedState[sessionNumber] = updatedState[sessionNumber].map((topic) =>
+            topic.name === payload.chapter
+              ? { ...topic, lessonPlan: result.value.data.lesson_plan }
+              : topic
+          );
+        }
+      });
   
-      if (failedResponses.length > 0) {
-        setError(
-          `Failed to generate lesson plans for ${failedResponses.length} chapters. Check logs for details.`
-        );
-      } else {
-        setSuccessMessage("All lesson plans generated successfully!");
-      }
+      setTopicsWithConcepts(updatedState);
+  
+      setSuccessMessage("All lesson plans generated and updated successfully!");
     } catch (error) {
-      console.error("Unexpected error during lesson plan generation:", error);
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Error generating lesson plans:", error);
+      setError("Failed to generate all lesson plans.");
     } finally {
       setSaving(false);
     }
   };
+  
   
   
   
