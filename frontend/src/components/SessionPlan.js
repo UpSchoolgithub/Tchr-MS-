@@ -315,17 +315,23 @@ const SessionPlans = () => {
   
           // Format and clean topics
           const formattedTopics = topic.concepts
-            .map((concept, index) => {
-              const conceptName = concept?.trim();
-              const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
-  
-              if (!conceptName) {
-                console.warn("Skipping empty concept:", concept);
-                return null;
-              }
-              return { concept: conceptName, detailing };
-            })
-            .filter(Boolean);
+  .map((concept, index) => {
+    const conceptName = concept?.trim();
+    const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
+
+    if (!conceptName) {
+      console.warn("Skipping empty concept:", concept);
+      return null; // Skip empty concepts
+    }
+
+    return {
+      topic: topic.name.trim(), // Include the required 'topic' field
+      concept: conceptName,
+      detailing: detailing,
+    };
+  })
+  .filter(Boolean); // Remove invalid entries
+
   
           if (formattedTopics.length === 0) {
             console.warn("No valid topics for chapter:", topic.name);
