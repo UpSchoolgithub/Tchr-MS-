@@ -305,31 +305,38 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      // Build the payloads array
+      // Build payloads
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.map((topic) => {
+          // Validate topic and concepts
           if (!topic || !topic.name || !Array.isArray(topic.concepts)) {
             console.warn("Skipping invalid topic:", topic);
-            return null; // Skip invalid topics
+            return null;
           }
   
-          // Ensure concepts are flattened as strings with detailing
-          const concepts = topic.concepts
-            .map((concept, index) => {
-              const conceptText = typeof concept === "string" 
-                ? concept.trim() 
-                : concept?.name?.trim(); // Handle string or object case
-              
-              const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
+          // Format topics: an array of { concept, detailing }
+          const formattedTopics = topic.concepts.map((concept, index) => {
+            const conceptName =
+              typeof concept === "string" ? concept.trim() : concept?.trim();
+            const detailing =
+              topic.conceptDetailing[index]?.trim() || "No detailing provided";
   
-              if (!conceptText) {
-                console.warn("Skipping invalid concept:", concept);
-                return null;
-              }
+            if (!conceptName) {
+              console.warn("Skipping empty concept:", concept);
+              return null;
+            }
   
-              return { concept: conceptText, detailing };
-            })
-            .filter(Boolean); // Filter out invalid/null concepts
+            return {
+              concept: conceptName,
+              detailing,
+            };
+          }).filter(Boolean); // Remove invalid entries
+  
+          // Skip if no valid topics are present
+          if (formattedTopics.length === 0) {
+            console.warn("No valid topics for chapter:", topic.name);
+            return null;
+          }
   
           return {
             sessionNumber: sessionNumber.toString(),
@@ -337,26 +344,28 @@ const SessionPlans = () => {
             grade: className.trim(),
             subject: subjectName.trim(),
             unit: unitName.trim(),
-            chapter: topic.name.trim(), // Topic name is sent as chapter
-            topics: concepts, // Properly flattened concepts and detailing
+            chapter: topic.name.trim(), // Topic name becomes chapter name
+            topics: formattedTopics,    // Array of { concept, detailing }
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
         })
-      ).filter(Boolean); // Remove null/invalid payloads
+      ).filter(Boolean); // Remove invalid payloads
   
-      console.log("Formatted Payloads:", JSON.stringify(payloads, null, 2));
+      console.log("Final Payloads:", JSON.stringify(payloads, null, 2));
   
-      // Send payloads to the backend
+      // Send to backend
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
+      // Handle responses
       responses.forEach((response, index) => {
         if (response.status === "fulfilled") {
-          const { chapter } = payloads[index];
-          console.log(`Lesson plan for chapter "${chapter}" generated successfully!`);
+          console.log(
+            `Lesson plan for chapter "${payloads[index]?.chapter}" generated successfully!`
+          );
         } else {
           console.error(
             `Failed to generate LP for chapter: ${payloads[index]?.chapter}`,
@@ -366,6 +375,7 @@ const SessionPlans = () => {
       });
   
       setSuccessMessage("All lesson plans generated successfully!");
+      setError("");
     } catch (error) {
       console.error("Error generating all lesson plans:", error);
       setError("Failed to generate lesson plans. Please try again.");
