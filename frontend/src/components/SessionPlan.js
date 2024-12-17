@@ -594,13 +594,24 @@ console.log("Updated State after Generating Lesson Plan:", topicsWithConcepts);
 
 
               {/* Render Lesson Plan Button */}
-              <td>
+              {/* Render Lesson Plan Button */}
+<td>
   {topic.lessonPlan ? (
-    <button onClick={() => handleViewLessonPlan(concept.id)}>
+    <button
+      className="btn btn-primary"
+      onClick={() => handleViewLessonPlan(concept.id)}
+    >
       View
     </button>
   ) : (
-    "Not Generated"
+    <button
+      className="btn btn-success"
+      onClick={() =>
+        handleGenerateLessonPlan(plan.sessionNumber, tIndex, cIndex)
+      }
+    >
+      Generate
+    </button>
   )}
 </td>
 
@@ -608,20 +619,20 @@ console.log("Updated State after Generating Lesson Plan:", topicsWithConcepts);
               {/* Render Actions (Save Button) */}
               {tIndex === 0 && cIndex === 0 && (
                 <td
-                  rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
-                    (acc, t) => acc + t.concepts.length,
-                    0
-                  )}
+                rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
+                  (acc, t) => acc + t.concepts.length,
+                  0
+                )}
+              >
+                <button
+                  className="btn btn-warning"
+                  onClick={() => handleSaveSessionPlan(plan.id, plan.sessionNumber)}
+                  disabled={saving}
                 >
-                  <button
-                    onClick={() =>
-                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                    }
-                    disabled={saving}
-                  >
-                    {saving ? "Saving..." : "Save"}
-                  </button>
-                </td>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </td>
+              
               )}
             </tr>
           ))
