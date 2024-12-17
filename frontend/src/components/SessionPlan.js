@@ -302,38 +302,33 @@ const SessionPlans = () => {
       setSaving(true);
   
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics
-          .filter((topic) => topic.name && Array.isArray(topic.concepts) && topic.concepts.length > 0)
-          .map((topic) => {
-            const formattedTopics = topic.concepts.map((conceptObj, index) => {
-              // Ensure conceptObj is an object and extract the 'concept' value
-              const conceptName =
-                typeof conceptObj === "string" ? conceptObj : conceptObj.concept || "Unnamed Concept";
-              const detailing =
-                topic.conceptDetailing[index]?.trim() || "No detailing provided";
+        topics.map((topic) => {
+          if (!topic || !topic.name) {
+            console.warn("Skipping invalid topic:", topic);
+            return null;
+          }
   
-              return {
-                concept: conceptName.trim(),
-                detailing: detailing,
-              };
-            });
+          const formattedConcepts = topic.concepts.map((conceptObj, index) => ({
+            concept: typeof conceptObj === "string" ? conceptObj : conceptObj?.concept || "Unnamed Concept",
+            detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
+          }));
   
-            return {
-              sessionNumber,
-              board,
-              grade: className,
-              subject: subjectName,
-              unit: unitName,
-              chapter: topic.name,
-              topics: formattedTopics, // Correctly formatted topics
-              sessionType: "Theory",
-              noOfSession: 1,
-              duration: 45,
-            };
-          })
+          return {
+            sessionNumber,
+            board,
+            grade: className,
+            subject: subjectName,
+            unit: unitName,
+            chapter: topic.name, // Include topic name
+            topics: formattedConcepts,
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          };
+        }).filter((payload) => payload !== null) // Filter out invalid topics
       );
   
-      console.log("Formatted Payloads for API:", JSON.stringify(payloads, null, 2));
+      console.log("Formatted Payloads:", JSON.stringify(payloads, null, 2));
   
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
