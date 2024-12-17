@@ -596,6 +596,7 @@ if (payloads.length === 0) {
     }
   />
 </td>
+console.log("Updated State after Generating Lesson Plan:", topicsWithConcepts);
 
 
               {/* Render Lesson Plan Button */}
