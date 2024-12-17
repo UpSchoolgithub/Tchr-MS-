@@ -27,4 +27,5 @@ Topic.associate = (models) => {
 };
 
 
+
 module.exports = Topic;

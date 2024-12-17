@@ -20,7 +20,7 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'concept',
+    modelName: 'concept', // Updated to 'Concept' (uppercase C)
     tableName: 'Concepts', // Ensure matches DB table name
   }
 );
