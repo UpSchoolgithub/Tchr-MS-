@@ -224,10 +224,20 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             );
 
             // Save or update lesson plan using upsert
-            await LessonPlan.upsert({
-              conceptId: concept.id,
-              generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
-            });
+            try {
+              const [lessonPlan, created] = await LessonPlan.upsert({
+                conceptId: concept.id,
+                generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+              });
+            
+              console.log(
+                `LessonPlan upsert result for conceptId ${concept.id}:`,
+                created ? "Created" : "Updated"
+              );
+            } catch (error) {
+              console.error(`Failed to save lesson plan for conceptId ${concept.id}:`, error.message);
+            }
+            
 
             console.log(`Saved LP for concept ID: ${concept.id}`);
           } catch (error) {
@@ -318,7 +328,12 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
               model: Concept,
               as: 'Concepts',
               attributes: ["id", "concept", "conceptDetailing"],
-
+              include: [
+                {
+                  model: LessonPlan, // Include LessonPlan model
+                  attributes: ["generatedLP"],
+                },
+              ],
             },
           ],
         },
