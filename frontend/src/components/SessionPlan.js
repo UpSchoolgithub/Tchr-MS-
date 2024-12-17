@@ -534,9 +534,10 @@ const SessionPlans = () => {
 {/* Render Concept */}
 <td>
   {Array.isArray(topic.concepts) && topic.concepts.length > 0
-    ? topic.concepts[cIndex]?.name || "No Concept"
+    ? topic.concepts[cIndex]?.trim() || "No Concept"
     : "No Concept"}
 </td>
+
 
 
               {/* Render Concept Detailing */}
