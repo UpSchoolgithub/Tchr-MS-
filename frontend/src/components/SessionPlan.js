@@ -307,16 +307,13 @@ const SessionPlans = () => {
           .map((topic) => {
             const validConcepts = topic.concepts
               .map((concept, index) => {
-                const conceptName = typeof concept === "string" ? concept : concept.name || "";
+                const conceptName = typeof concept === "string" ? concept.trim() : concept.name || "";
                 const detail = topic.conceptDetailing[index];
   
-                if (conceptName.trim() && typeof detail === "string") {
-                  return { concept: conceptName.trim(), detail: detail.trim() };
+                if (conceptName && typeof detail === "string") {
+                  return { concept: conceptName, detail: detail.trim() };
                 }
-                console.warn(`Invalid concept or detail in topic: ${topic.name}`, {
-                  concept,
-                  detail,
-                });
+                console.warn(`Invalid concept or detail in topic: ${topic.name}`, { concept, detail });
                 return null;
               })
               .filter(Boolean);
@@ -332,11 +329,11 @@ const SessionPlans = () => {
               grade: className,
               subject: subjectName,
               unit: unitName,
-              chapter: topic.name, // Chapter context
+              chapter: topic.name,
               topics: [
                 {
-                  topic: topic.name, // Add the required topic field
-                  concepts: validConcepts.map((concept) => concept.concept),
+                  topic: topic.name, // Add valid topic name
+                  concepts: validConcepts.map((concept) => concept.concept), // Fixed concept structure
                   conceptDetails: validConcepts.map((concept) => concept.detail),
                 },
               ],
@@ -345,7 +342,7 @@ const SessionPlans = () => {
               duration: 45,
             };
           })
-          .filter(Boolean) // Remove null payloads
+          .filter(Boolean)
       );
   
       if (payloads.length === 0) {
