@@ -1,27 +1,41 @@
-const fs = require('fs');
-const path = require('path');
 const Sequelize = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path as needed
-const basename = path.basename(__filename);
+const sequelize = require('../config/db');
+
+// Import models explicitly
+const SessionPlan = require('./SessionPlan');
+const Topic = require('./Topic');
+const Concept = require('./concept');
+const LessonPlan = require('./LessonPlan');
+
+// Initialize the database object
 const db = {};
 
-// Import each model class
-fs.readdirSync(__dirname)
-  .filter(file => {
-    return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file));
-    db[model.name] = model;
-  });
+// Attach models to the db object
+db.SessionPlan = SessionPlan;
+db.Topic = Topic;
+db.Concept = Concept;
+db.LessonPlan = LessonPlan;
 
 // Set up model associations
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+SessionPlan.associate = (models) => {
+  SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics' });
+};
 
+Topic.associate = (models) => {
+  Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
+  Topic.hasMany(models.Concept, { foreignKey: 'topicId', as: 'Concepts', onDelete: 'CASCADE' });
+};
+
+Concept.associate = (models) => {
+  Concept.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'Topic' });
+  Concept.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'LessonPlan' });
+};
+
+LessonPlan.associate = (models) => {
+  LessonPlan.belongsTo(models.Concept, { foreignKey: 'conceptId', as: 'Concept' });
+};
+
+// Assign Sequelize instance to db
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
