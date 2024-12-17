@@ -315,18 +315,21 @@ const SessionPlans = () => {
   
           const concepts = topic.concepts
             .map((conceptObj, index) => {
+              // Ensure conceptObj is a string or extract the proper value
               const concept =
-                typeof conceptObj === "string" ? conceptObj.trim() : conceptObj?.name?.trim();
+                typeof conceptObj === "string"
+                  ? conceptObj.trim()
+                  : conceptObj?.name?.trim() || "";
               const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
   
-              // Validate concept and detailing
-              if (!concept || concept === "Unnamed Concept") {
+              // Validate to ensure proper structure
+              if (!concept) {
                 console.warn("Skipping invalid concept:", conceptObj);
                 return null;
               }
               return { concept, detailing };
             })
-            .filter(Boolean); // Remove invalid concepts
+            .filter(Boolean); // Remove null entries
   
           return {
             sessionNumber: sessionNumber.toString(),
@@ -337,8 +340,8 @@ const SessionPlans = () => {
             chapter: topic.name.trim(), // Topic name as chapter
             topics: [
               {
-                topic: topic.name.trim(), // Explicit topic field
-                concepts: concepts, // List of concepts with valid structure
+                topic: topic.name.trim(),
+                concepts: concepts, // Properly flattened concepts
               },
             ],
             sessionType: "Theory",
@@ -355,7 +358,6 @@ const SessionPlans = () => {
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
-      // Process responses
       responses.forEach((response, index) => {
         if (response.status === "fulfilled") {
           const { chapter } = payloads[index];
