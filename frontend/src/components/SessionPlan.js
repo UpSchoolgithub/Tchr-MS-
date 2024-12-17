@@ -114,12 +114,17 @@ const SessionPlans = () => {
       }
   
       topic.Concepts.forEach((concept) => {
-        if (concept?.concept?.trim()) {
-          topicMap[topic.topicName].concepts.push(concept); // Store the full concept object
+        if (concept?.concept && typeof concept.concept === "string") {
+          topicMap[topic.topicName].concepts.push({
+            id: concept.id,
+            concept: concept.concept.trim(),
+            conceptDetailing: concept.conceptDetailing?.trim() || "No detailing provided",
+          });
         } else {
           console.warn("Invalid concept skipped:", concept);
         }
       });
+      
     });
   
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
@@ -527,13 +532,14 @@ const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent)
               {/* Render Lesson Plan Button */}
               <td>
   {topic.lessonPlan && topic.concepts[cIndex]?.id ? (
-    <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex].id)}>
+    <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)}>
       View
     </button>
   ) : (
     "Not Generated"
   )}
 </td>
+
 
 
 
