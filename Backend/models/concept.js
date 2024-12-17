@@ -25,7 +25,7 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'Concept',
+    modelName: 'concept',
     tableName: 'Concepts',
   }
 );
