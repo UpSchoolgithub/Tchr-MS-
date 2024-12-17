@@ -307,7 +307,6 @@ const SessionPlans = () => {
           .map((topic) => {
             const validConcepts = topic.concepts
               .map((concept, index) => {
-                // Ensure concept is a string and extract `name` field if needed
                 const conceptName = typeof concept === "string" ? concept : concept.name || "";
                 const detail = topic.conceptDetailing[index];
   
@@ -320,7 +319,7 @@ const SessionPlans = () => {
                 });
                 return null;
               })
-              .filter(Boolean); // Remove invalid entries
+              .filter(Boolean);
   
             if (validConcepts.length === 0) {
               console.warn(`Skipping topic with no valid concepts: ${topic.name}`);
@@ -333,8 +332,14 @@ const SessionPlans = () => {
               grade: className,
               subject: subjectName,
               unit: unitName,
-              chapter: topic.name,
-              topics: validConcepts,
+              chapter: topic.name, // Chapter context
+              topics: [
+                {
+                  topic: topic.name, // Add the required topic field
+                  concepts: validConcepts.map((concept) => concept.concept),
+                  conceptDetails: validConcepts.map((concept) => concept.detail),
+                },
+              ],
               sessionType: "Theory",
               noOfSession: 1,
               duration: 45,
