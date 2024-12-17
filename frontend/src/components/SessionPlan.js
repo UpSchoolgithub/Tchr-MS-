@@ -305,10 +305,18 @@ const SessionPlans = () => {
         topics
           .filter((topic) => topic.name && Array.isArray(topic.concepts) && topic.concepts.length > 0)
           .map((topic) => {
-            const formattedTopics = topic.concepts.map((concept, index) => ({
-              concept: concept.trim(),
-              detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
-            }));
+            const formattedTopics = topic.concepts.map((conceptObj, index) => {
+              // Ensure conceptObj is an object and extract the 'concept' value
+              const conceptName =
+                typeof conceptObj === "string" ? conceptObj : conceptObj.concept || "Unnamed Concept";
+              const detailing =
+                topic.conceptDetailing[index]?.trim() || "No detailing provided";
+  
+              return {
+                concept: conceptName.trim(),
+                detailing: detailing,
+              };
+            });
   
             return {
               sessionNumber,
