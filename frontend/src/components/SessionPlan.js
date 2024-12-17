@@ -102,23 +102,23 @@ const SessionPlans = () => {
     topics.forEach((topic) => {
       if (!topic?.topicName || !Array.isArray(topic.Concepts)) {
         console.warn("Invalid topic skipped:", topic);
-        return; // Skip invalid topics
+        return;
       }
   
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
           name: topic.topicName.trim(),
           concepts: [], // Store full concept objects
-          conceptDetailing: [],
         };
       }
   
       topic.Concepts.forEach((concept) => {
-        if (concept?.concept && typeof concept.concept === "string") {
-          topicMap[topic.topicName].concepts.push(concept.concept.trim());
-          topicMap[topic.topicName].conceptDetailing.push(
-            concept.conceptDetailing?.trim() || "No detailing provided"
-          );
+        if (concept?.id && concept?.concept) {
+          topicMap[topic.topicName].concepts.push({
+            id: concept.id, // Include concept ID
+            name: concept.concept.trim(), // Concept name
+            detailing: concept.conceptDetailing?.trim() || "", // Concept detailing
+          });
         } else {
           console.warn("Invalid concept skipped:", concept);
         }
@@ -503,11 +503,10 @@ const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent)
 {/* Render Concept */}
 <td>
   {Array.isArray(topic.concepts) && topic.concepts.length > cIndex
-    ? typeof topic.concepts[cIndex] === "string"
-      ? topic.concepts[cIndex].trim()
-      : topic.concepts[cIndex]?.concept?.trim() || "No Concept"
+    ? topic.concepts[cIndex]?.name || "No Concept"
     : "No Concept"}
 </td>
+
 
 
 
