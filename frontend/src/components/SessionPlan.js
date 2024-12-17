@@ -248,56 +248,56 @@ const SessionPlans = () => {
 
   // Generate lesson plan for a specific topic
   const handleGenerateLessonPlan = async (sessionNumber, topicIndex, conceptIndex) => {
-    try {
-      const topic = topicsWithConcepts[sessionNumber][topicIndex];
-      const concept = topic.concepts[conceptIndex];
-      const detailing = topic.conceptDetailing[conceptIndex];
-  
-      if (!concept || !detailing) {
-        setError(`Missing concept or detailing for topic: ${topic.name}`);
-        return;
-      }
-  
-      const payload = {
-        board,
-        grade: className,
-        subject: subjectName,
-        unit: unitName,
-        chapter: topic.name,
-        concepts: [{ concept, detailing }],
-        sessionType: "Theory",
-        noOfSession: 1,
-        duration: 45,
-      };
-  
-      // Generate the lesson plan
-      const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
-      const generatedLessonPlan = response.data.lesson_plan;
-  
-      // Send the lesson plan to backend to save it permanently
-      await axios.post(`https://tms.up.school/api/sessionPlans/${concept.id}/saveLessonPlan`, {
-        conceptId: concept.id,
-        generatedLP: generatedLessonPlan,
-      });
-  
-      // Update the state after saving
-      setTopicsWithConcepts((prev) => {
-        const updatedTopics = [...prev[sessionNumber]];
-        updatedTopics[topicIndex].concepts[conceptIndex] = {
-          ...updatedTopics[topicIndex].concepts[conceptIndex],
-          lessonPlan: generatedLessonPlan,
-        };
-        return { ...prev, [sessionNumber]: updatedTopics };
-      });
-  
-      setSuccessMessage(`Lesson plan saved and updated for concept "${concept}"`);
-      setError("");
-    } catch (error) {
-      console.error("Error generating lesson plan:", error);
-      setError(`Failed to generate and save lesson plan for concept "${concept}".`);
+  try {
+    const topic = topicsWithConcepts[sessionNumber][topicIndex];
+    const concept = topic.concepts[conceptIndex];
+    const detailing = topic.conceptDetailing[conceptIndex];
+
+    if (!concept || !detailing) {
+      setError(`Missing concept or detailing for topic: ${topic.name}`);
+      return;
     }
-  };
-  
+
+    const payload = {
+      board,
+      grade: className,
+      subject: subjectName,
+      unit: unitName,
+      chapter: topic.name,
+      concepts: [{ concept, detailing }],
+      sessionType: "Theory",
+      noOfSession: 1,
+      duration: 45,
+    };
+
+    // Generate the lesson plan
+    const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
+    const generatedLessonPlan = response.data.lesson_plan;
+
+    // Send the lesson plan to backend to save it permanently
+    await axios.post(`https://tms.up.school/api/sessionPlans/${concept.id}/saveLessonPlan`, {
+      conceptId: concept.id,
+      generatedLP: generatedLessonPlan,
+    });
+
+    // Update the state after saving
+    setTopicsWithConcepts((prev) => {
+      const updatedTopics = [...prev[sessionNumber]];
+      updatedTopics[topicIndex].concepts[conceptIndex] = {
+        ...updatedTopics[topicIndex].concepts[conceptIndex],
+        lessonPlan: generatedLessonPlan,
+      };
+      return { ...prev, [sessionNumber]: updatedTopics };
+    });
+
+    setSuccessMessage(`Lesson plan saved and updated for concept "${concept}"`);
+    setError("");
+  } catch (error) {
+    console.error("Error generating lesson plan:", error);
+    setError(`Failed to generate and save lesson plan for concept "${concept}".`);
+  }
+};
+
   
   
   
@@ -314,84 +314,70 @@ const SessionPlans = () => {
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) => {
         return topics
           .map((topic) => {
-            if (
-              !topic.name ||
-              !Array.isArray(topic.concepts) ||
-              topic.concepts.length === 0
-            ) {
+            if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
               console.warn(`Skipping invalid topic: ${topic.name || "Unnamed Topic"}`);
               return null;
             }
-      
+  
             const validTopics = topic.concepts
               .map((concept, index) => {
                 const detailing = topic.conceptDetailing[index];
                 if (concept && detailing) {
                   return {
-                    topic: topic.name,
+                    sessionNumber,
+                    topicName: topic.name,
                     concept,
                     detailing,
                   };
                 }
                 return null;
               })
-              .filter(Boolean); // Remove invalid entries
-      
-            if (validTopics.length === 0) {
-              console.warn(`Skipping topic with no valid concepts: ${topic.name}`);
-              return null;
-            }
-      
-            return {
-              sessionNumber,
-              board,
-              grade: className,
-              subject: subjectName,
-              unit: unitName,
-              chapter: topic.name,
-              topics: validTopics, // Use only valid topics
-              sessionType: "Theory",
-              noOfSession: 1,
-              duration: 45,
-            };
+              .filter(Boolean);
+  
+            return validTopics.length > 0 ? validTopics : null;
           })
-          .filter(Boolean); // Remove null payloads
+          .filter(Boolean)
+          .flat();
       });
-      
+  
+      if (payloads.length === 0) {
+        setError("No valid topics to generate lesson plans.");
+        setSaving(false);
+        return;
+      }
   
       console.log("Payloads for Lesson Plan Generation:", payloads);
-if (payloads.length === 0) {
-  setError("No valid topics to generate lesson plans.");
-  setSaving(false);
-  return;
-}
-
   
-      console.log("Payloads for all topics:", payloads);
+      for (const item of payloads) {
+        try {
+          // Generate lesson plan
+          const generatePayload = {
+            board,
+            grade: className,
+            subject: subjectName,
+            unit: unitName,
+            chapter: item.topicName,
+            concepts: [{ concept: item.concept, detailing: item.detailing }],
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          };
   
-      const responses = await Promise.allSettled(
-        payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
-      );
+          const generateResponse = await axios.post("https://tms.up.school/api/dynamicLP", generatePayload);
   
-      // Update state with generated lesson plans
-      responses.forEach((response, index) => {
-        if (response.status === "fulfilled") {
-          const { sessionNumber, chapter } = payloads[index];
-          const generatedLessonPlan = response.value.data.lesson_plan;
-      
-          setTopicsWithConcepts((prev) => ({
-            ...prev,
-            [sessionNumber]: prev[sessionNumber].map((topic) =>
-              topic.name === chapter ? { ...topic, lessonPlan: generatedLessonPlan } : topic
-            ),
-          }));
-        } else {
-          console.error(`Failed to generate LP for topic: ${payloads[index].chapter}`);
+          // Save lesson plan to the backend
+          await axios.post(`https://tms.up.school/api/sessionPlans/${item.concept.id}/saveLessonPlan`, {
+            conceptId: item.concept.id,
+            generatedLP: generateResponse.data.lesson_plan,
+          });
+  
+          console.log(`Lesson plan saved for concept ID: ${item.concept.id}`);
+        } catch (error) {
+          console.error(`Failed to generate/save LP for concept "${item.concept}":`, error.message);
         }
-      });
-      
+      }
   
-      setSuccessMessage("All topics' LP generated successfully!");
+      setSuccessMessage("All lesson plans generated and saved successfully!");
       setError("");
     } catch (error) {
       console.error("Error generating all lesson plans:", error);
@@ -400,6 +386,7 @@ if (payloads.length === 0) {
       setSaving(false);
     }
   };
+  
   
   
   
