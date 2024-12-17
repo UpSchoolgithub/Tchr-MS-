@@ -363,18 +363,20 @@ const SessionPlans = () => {
 
   // View lesson plan
   const handleViewLessonPlan = async (conceptId) => {
+    console.log("Concept ID Passed:", conceptId); // Debugging
+  
     if (!conceptId) {
       setError("Concept ID is missing. Cannot fetch lesson plan.");
+      console.error("Concept ID is undefined or null.");
       return;
     }
   
-    console.log("Fetching lesson plan for Concept ID:", conceptId);
-  
+    // Proceed with API call
     try {
       const response = await axios.get(
         `https://tms.up.school/api/sessionPlans/${conceptId}/view`
       );
-      console.log("Lesson Plan API Response:", response.data);
+      console.log("Lesson Plan Fetched:", response.data);
   
       setLessonPlanContent(response.data.lessonPlan || "No Lesson Plan Found");
       setShowModal(true);
@@ -385,6 +387,7 @@ const SessionPlans = () => {
       setShowModal(true);
     }
   };
+  
   
   
   
@@ -525,14 +528,15 @@ const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent)
 
               {/* Render Lesson Plan Button */}
               <td>
-  {topic.lessonPlan ? (
-    <button onClick={() => handleViewLessonPlan(concept.id)}>
+  {topic.lessonPlan && topic.concepts[cIndex] ? (
+    <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)}>
       View
     </button>
   ) : (
     "Not Generated"
   )}
 </td>
+
 
 
               {/* Render Actions (Save Button) */}
