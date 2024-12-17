@@ -108,30 +108,46 @@ const SessionPlans = () => {
     const topicMap = {}; // To track unique topics by name
   
     topics.forEach((topic) => {
-      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) return; // Skip invalid topics
+      // Validate topic
+      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) {
+        console.warn("Invalid topic encountered:", topic);
+        return; // Skip invalid topics
+      }
   
+      // Initialize the topic in topicMap if it doesn't exist
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
-          name: topic.topicName,
+          name: topic.topicName.trim(),
           concepts: [],
           conceptDetailing: [],
         };
       }
   
-      // Merge valid concepts and details
+      // Process and validate each concept
       topic.Concepts.forEach((concept) => {
-        if (concept && concept.id && concept.concept) { // Include the concept id
+        if (concept?.id && concept.concept?.trim()) {
           topicMap[topic.topicName].concepts.push({
-            id: concept.id, // Add the ID
-            name: concept.concept,
+            id: concept.id,
+            name: concept.concept.trim(),
           });
-          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing || "");
+          topicMap[topic.topicName].conceptDetailing.push(
+            concept.conceptDetailing?.trim() || "No detailing provided"
+          );
+        } else {
+          console.warn(
+            `Invalid concept encountered in topic "${topic.topicName}":`,
+            concept
+          );
         }
       });
     });
   
-    return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
+    // Convert topicMap into an array of topics, ensuring only valid topics are returned
+    return Object.values(topicMap).filter(
+      (topic) => topic.concepts.length > 0
+    );
   };
+  
   
   
     
