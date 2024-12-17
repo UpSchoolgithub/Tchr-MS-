@@ -303,7 +303,7 @@ const SessionPlans = () => {
         topics.map((topic) => {
           const formattedTopics = topic.concepts.map((concept, index) => ({
             topic: topic.name.trim(),
-            concept: concept.trim(),
+            concept: typeof concept === "string" ? concept.trim() : "",
             detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
           }));
   
@@ -344,7 +344,6 @@ const SessionPlans = () => {
       });
   
       setTopicsWithConcepts(updatedState);
-  
       setSuccessMessage("All lesson plans generated and updated successfully!");
     } catch (error) {
       console.error("Error generating lesson plans:", error);
@@ -353,6 +352,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
