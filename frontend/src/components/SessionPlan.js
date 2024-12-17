@@ -307,12 +307,17 @@ const SessionPlans = () => {
           .map((topic) => {
             const validConcepts = topic.concepts
               .map((concept, index) => {
+                // Ensure concept is a string and extract `name` field if needed
+                const conceptName = typeof concept === "string" ? concept : concept.name || "";
                 const detail = topic.conceptDetailing[index];
-                // Ensure both concept and detail are valid strings
-                if (typeof concept === "string" && typeof detail === "string") {
-                  return { concept: concept.trim(), detail: detail.trim() };
+  
+                if (conceptName.trim() && typeof detail === "string") {
+                  return { concept: conceptName.trim(), detail: detail.trim() };
                 }
-                console.warn(`Invalid concept or detail in topic: ${topic.name}`, { concept, detail });
+                console.warn(`Invalid concept or detail in topic: ${topic.name}`, {
+                  concept,
+                  detail,
+                });
                 return null;
               })
               .filter(Boolean); // Remove invalid entries
@@ -344,7 +349,7 @@ const SessionPlans = () => {
         return;
       }
   
-      console.log("Payloads for all topics:", payloads);
+      console.log("Payloads for all topics:", JSON.stringify(payloads, null, 2));
   
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
