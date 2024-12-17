@@ -1,7 +1,11 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Adjust the path to your Sequelize instance
+const sequelize = require('../config/db');
 
-class Concept extends Model {}
+class Concept extends Model {
+  static associate(models) {
+    this.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'LessonPlan' });
+  }
+}
 
 Concept.init(
   {
@@ -20,8 +24,8 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'Concept',
-    tableName: 'Concepts', // Ensure this matches your database table name
+    modelName: 'concept',
+    tableName: 'Concepts',
   }
 );
 

@@ -1,28 +1,32 @@
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const LessonPlan = sequelize.define('LessonPlan', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  conceptId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Concepts', // References the 'Concepts' table
-      key: 'id',
+class LessonPlan extends Model {
+  static associate(models) {
+    this.belongsTo(models.Concept, { foreignKey: 'conceptId', as: 'Concept' });
+  }
+}
+
+LessonPlan.init(
+  {
+    conceptId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Concepts', // References Concepts table
+        key: 'id',
+      },
+    },
+    generatedLP: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
-  generatedLP: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-});
-
-LessonPlan.associate = (models) => {
-  LessonPlan.belongsTo(models.Concept, { foreignKey: 'conceptId', onDelete: 'CASCADE' });
-};
+  {
+    sequelize,
+    modelName: 'LessonPlan',
+    tableName: 'LessonPlans',
+  }
+);
 
 module.exports = LessonPlan;

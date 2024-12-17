@@ -327,30 +327,24 @@ router.get('/sessions/:sessionId/sessionPlans', async (req, res) => {
             {
               model: Concept,
               as: 'Concepts',
-              attributes: ["id", "concept", "conceptDetailing"],
               include: [
                 {
-                  model: LessonPlan, // Include LessonPlan model
-                  attributes: ["generatedLP"],
+                  model: LessonPlan,
+                  as: 'LessonPlan',
+                  attributes: ['generatedLP'],
                 },
               ],
+              attributes: ['id', 'concept', 'conceptDetailing'],
             },
           ],
         },
       ],
     });
 
-    if (!sessionPlans.length) {
-      return res.status(404).json({ message: 'No session plans found.' });
-    }
-
     res.json({ sessionPlans });
   } catch (error) {
-    console.error(`Error fetching session plans for sessionId ${sessionId}:`, error);
-    res.status(500).json({
-      message: 'Internal server error',
-      error: error.message,
-    });
+    console.error(`Error fetching session plans:`, error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
