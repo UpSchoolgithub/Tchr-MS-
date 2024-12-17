@@ -108,23 +108,33 @@ const SessionPlans = () => {
     const topicMap = {};
   
     topics.forEach((topic) => {
-      if (!topic?.topicName || !Array.isArray(topic.Concepts)) return;
+      if (!topic?.topicName || !Array.isArray(topic.Concepts)) {
+        console.warn("Invalid topic skipped:", topic);
+        return; // Skip invalid topics
+      }
   
       if (!topicMap[topic.topicName]) {
-        topicMap[topic.topicName] = { name: topic.topicName.trim(), concepts: [], conceptDetailing: [] };
+        topicMap[topic.topicName] = {
+          name: topic.topicName.trim(),
+          concepts: [],
+          conceptDetailing: [],
+        };
       }
   
       topic.Concepts.forEach((concept) => {
         if (concept?.concept?.trim()) {
           topicMap[topic.topicName].concepts.push(concept.concept.trim());
-          topicMap[topic.topicName].conceptDetailing.push(concept.conceptDetailing?.trim() || "No detailing provided.");
+          topicMap[topic.topicName].conceptDetailing.push(
+            concept.conceptDetailing?.trim() || "No detailing provided"
+          );
+        } else {
+          console.warn("Invalid concept skipped:", concept);
         }
       });
     });
   
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
   };
-  
   
   
   
@@ -303,40 +313,36 @@ const SessionPlans = () => {
             return null; // Skip invalid topics
           }
   
+          // Ensure concepts are flattened as strings with detailing
           const concepts = topic.concepts
-            .map((conceptObj, index) => {
-              // Ensure conceptObj is a string or extract the proper value
-              const concept =
-                typeof conceptObj === "string"
-                  ? conceptObj.trim()
-                  : conceptObj?.name?.trim() || "";
+            .map((concept, index) => {
+              const conceptText = typeof concept === "string" 
+                ? concept.trim() 
+                : concept?.name?.trim(); // Handle string or object case
+              
               const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
   
-              // Validate to ensure proper structure
-              if (!concept) {
-                console.warn("Skipping invalid concept:", conceptObj);
+              if (!conceptText) {
+                console.warn("Skipping invalid concept:", concept);
                 return null;
               }
-              return { concept, detailing };
+  
+              return { concept: conceptText, detailing };
             })
-            .filter(Boolean); // Remove null entries
+            .filter(Boolean); // Filter out invalid/null concepts
   
           return {
             sessionNumber: sessionNumber.toString(),
-              board: board.trim(),
-              grade: className.trim(),
-              subject: subjectName.trim(),
-              unit: unitName.trim() || "Unit Not Specified",
-              chapter: topic.name.trim(),
-              concepts: topic.concepts.map((concept, index) => ({
-                concept: concept.trim(),
-                detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided.",
-              })),
-              sessionType: "Theory",
-              noOfSession: 1,
-              duration: 45,
-            };
-            
+            board: board.trim(),
+            grade: className.trim(),
+            subject: subjectName.trim(),
+            unit: unitName.trim(),
+            chapter: topic.name.trim(), // Topic name is sent as chapter
+            topics: concepts, // Properly flattened concepts and detailing
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          };
         })
       ).filter(Boolean); // Remove null/invalid payloads
   
@@ -532,9 +538,10 @@ const SessionPlans = () => {
 
 {/* Render Concept */}
 <td>
-  {topic.concepts[cIndex] || "No Concept"}
+  {Array.isArray(topic.concepts) && topic.concepts.length > 0
+    ? topic.concepts[cIndex]?.name || "No Concept"
+    : "No Concept"}
 </td>
-
 
 
               {/* Render Concept Detailing */}
