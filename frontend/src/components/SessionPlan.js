@@ -108,7 +108,7 @@ const SessionPlans = () => {
     const topicMap = {};
   
     topics.forEach((topic) => {
-      if (!topic?.topicName || !Array.isArray(topic.Concepts)) {
+      if (!topic?.topicName) {
         console.warn("Invalid topic skipped:", topic);
         return; // Skip invalid topics
       }
@@ -121,20 +121,23 @@ const SessionPlans = () => {
         };
       }
   
-      topic.Concepts.forEach((concept) => {
-        if (concept?.concept?.trim()) {
-          topicMap[topic.topicName].concepts.push(concept.concept.trim());
-          topicMap[topic.topicName].conceptDetailing.push(
-            concept.conceptDetailing?.trim() || "No detailing provided"
-          );
-        } else {
-          console.warn("Invalid concept skipped:", concept);
-        }
-      });
-      
+      if (Array.isArray(topic.Concepts)) {
+        topic.Concepts.forEach((concept) => {
+          if (concept?.concept?.trim()) {
+            topicMap[topic.topicName].concepts.push(concept.concept.trim());
+            topicMap[topic.topicName].conceptDetailing.push(
+              concept.conceptDetailing?.trim() || "No detailing provided"
+            );
+          } else {
+            console.warn("Concept missing or invalid:", concept);
+          }
+        });
+      } else {
+        console.warn(`No Concepts found for topic: ${topic.topicName}`);
+      }
     });
   
-    return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
+    return Object.values(topicMap);
   };
   
   
