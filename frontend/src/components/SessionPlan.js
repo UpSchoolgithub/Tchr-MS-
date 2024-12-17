@@ -105,16 +105,14 @@ const SessionPlans = () => {
   
   // Utility to merge topics with the same name
   const mergeTopics = (topics) => {
-    const topicMap = {}; // To track unique topics by name
+    const topicMap = {};
   
     topics.forEach((topic) => {
-      // Validate topic
-      if (!topic || !topic.topicName || !Array.isArray(topic.Concepts)) {
-        console.warn("Invalid topic encountered:", topic);
+      if (!topic?.topicName || !Array.isArray(topic.Concepts)) {
+        console.warn("Invalid topic skipped:", topic);
         return; // Skip invalid topics
       }
   
-      // Initialize the topic in topicMap if it doesn't exist
       if (!topicMap[topic.topicName]) {
         topicMap[topic.topicName] = {
           name: topic.topicName.trim(),
@@ -123,29 +121,19 @@ const SessionPlans = () => {
         };
       }
   
-      // Process and validate each concept
       topic.Concepts.forEach((concept) => {
-        if (concept?.id && concept.concept?.trim()) {
-          topicMap[topic.topicName].concepts.push({
-            id: concept.id,
-            name: concept.concept.trim(),
-          });
+        if (concept?.concept?.trim()) {
+          topicMap[topic.topicName].concepts.push(concept.concept.trim());
           topicMap[topic.topicName].conceptDetailing.push(
             concept.conceptDetailing?.trim() || "No detailing provided"
           );
         } else {
-          console.warn(
-            `Invalid concept encountered in topic "${topic.topicName}":`,
-            concept
-          );
+          console.warn("Invalid concept skipped:", concept);
         }
       });
     });
   
-    // Convert topicMap into an array of topics, ensuring only valid topics are returned
-    return Object.values(topicMap).filter(
-      (topic) => topic.concepts.length > 0
-    );
+    return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
   };
   
   
@@ -317,31 +305,30 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.map((topic) => {
-          if (!topic || !topic.name) {
-            console.warn("Skipping invalid topic:", topic);
-            return null;
-          }
+      const payloads = Object.entries(topicsWithConcepts).flatMap(
+        ([sessionNumber, topics]) =>
+          topics.map((topic) => {
+            const formattedConcepts = topic.concepts
+              .map((concept, index) => ({
+                concept: concept?.trim() || null,
+                detailing:
+                  topic.conceptDetailing[index]?.trim() || "No detailing provided",
+              }))
+              .filter((item) => item.concept); // Exclude null/invalid concepts
   
-          const formattedConcepts = topic.concepts.map((conceptObj, index) => ({
-            concept: typeof conceptObj === "string" ? conceptObj : conceptObj?.concept || "Unnamed Concept",
-            detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
-          }));
-  
-          return {
-            sessionNumber,
-            board,
-            grade: className,
-            subject: subjectName,
-            unit: unitName,
-            chapter: topic.name, // Include topic name
-            topics: formattedConcepts,
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          };
-        }).filter((payload) => payload !== null) // Filter out invalid topics
+            return {
+              sessionNumber,
+              board,
+              grade: className,
+              subject: subjectName,
+              unit: unitName,
+              chapter: topic.name?.trim() || "Unnamed Chapter",
+              topics: formattedConcepts,
+              sessionType: "Theory",
+              noOfSession: 1,
+              duration: 45,
+            };
+          })
       );
   
       console.log("Formatted Payloads:", JSON.stringify(payloads, null, 2));
@@ -352,8 +339,7 @@ const SessionPlans = () => {
   
       responses.forEach((response, index) => {
         if (response.status === "fulfilled") {
-          const { chapter } = payloads[index];
-          console.log(`Lesson plan for chapter "${chapter}" generated successfully!`);
+          console.log(`Lesson plan for chapter "${payloads[index].chapter}" generated successfully!`);
         } else {
           console.error(`Failed to generate LP for chapter: ${payloads[index]?.chapter}`);
         }
@@ -367,6 +353,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
