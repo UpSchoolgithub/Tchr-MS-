@@ -507,6 +507,9 @@ const handleSaveLessonPlan = async (sessionPlanId, conceptId, lessonPlanContent)
     : "No Concept"}
 </td>
 
+<td>
+  {topic.concepts[cIndex]?.detailing || "No Detailing"}
+</td>
 
 
 
