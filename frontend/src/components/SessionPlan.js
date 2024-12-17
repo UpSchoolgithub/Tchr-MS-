@@ -570,12 +570,16 @@ const SessionPlans = () => {
     placeholder="Enter concept details"
     onChange={(e) =>
       setTopicsWithConcepts((prev) => {
-        const updatedTopics = { ...prev };
-        if (!updatedTopics[plan.sessionNumber]) return prev; // Ensure session exists
-        if (!updatedTopics[plan.sessionNumber][tIndex]) return prev; // Ensure topic exists
-        updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] =
-          e.target.value;
-        return updatedTopics;
+        const updated = { ...prev };
+        Object.entries(prev).forEach(([sessionNumber, topics], idx) => {
+          updated[sessionNumber] = topics.map((topic, tIndex) => ({
+            ...topic,
+            lessonPlan: responses[idx]?.value?.data?.lesson_plan || topic.lessonPlan,
+          }));
+        });
+        console.log("Updated Topics With Lesson Plans:", updated); // Debug the state
+        return updated;
+      
       })
     }
   />
@@ -584,14 +588,13 @@ const SessionPlans = () => {
 
               {/* Render Lesson Plan Button */}
               <td>
-  {topic.lessonPlan ? (
-    <button onClick={() => handleViewLessonPlan(concept.id)}>
-      View
-    </button>
+  {topic.lessonPlan && topic.lessonPlan.trim() ? (
+    <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
   ) : (
     "Not Generated"
   )}
 </td>
+
 
 
               {/* Render Actions (Save Button) */}
