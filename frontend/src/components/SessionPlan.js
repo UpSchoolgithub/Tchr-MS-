@@ -301,55 +301,60 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      // Collect payloads for all sessions and topics
-      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) => {
-        return topics.map((topic) => {
-          if (!topic.name || !Array.isArray(topic.concepts) || topic.concepts.length === 0) {
-            console.warn(`Skipping invalid topic: ${topic.name || "Unnamed Topic"}`);
-            return null;
-          }
+      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
+        topics
+          .filter((topic) => topic.name && Array.isArray(topic.concepts) && topic.concepts.length > 0)
+          .map((topic) => {
+            const validConcepts = topic.concepts
+              .map((concept, index) => {
+                const detail = topic.conceptDetailing[index];
+                // Ensure both concept and detail are valid strings
+                if (typeof concept === "string" && typeof detail === "string") {
+                  return { concept: concept.trim(), detail: detail.trim() };
+                }
+                console.warn(`Invalid concept or detail in topic: ${topic.name}`, { concept, detail });
+                return null;
+              })
+              .filter(Boolean); // Remove invalid entries
   
-          // Build payload with correct topic structure
-          return {
-            sessionNumber,
-            board,
-            grade: className,
-            subject: subjectName,
-            unit: unitName,
-            chapter: topic.name,
-            topics: [
-              {
-                concepts: topic.concepts.map((c) => c.name), // Separate array of concept names
-                conceptDetails: topic.conceptDetailing,     // Corresponding array of details
-              },
-            ],
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          };
-        }).filter(Boolean); // Remove invalid payloads
-      });
+            if (validConcepts.length === 0) {
+              console.warn(`Skipping topic with no valid concepts: ${topic.name}`);
+              return null;
+            }
+  
+            return {
+              sessionNumber,
+              board,
+              grade: className,
+              subject: subjectName,
+              unit: unitName,
+              chapter: topic.name,
+              topics: validConcepts,
+              sessionType: "Theory",
+              noOfSession: 1,
+              duration: 45,
+            };
+          })
+          .filter(Boolean) // Remove null payloads
+      );
   
       if (payloads.length === 0) {
-        setError("No valid topics found to generate lesson plans.");
+        setError("No valid topics or concepts to generate lesson plans.");
         setSaving(false);
         return;
       }
   
-      console.log("Payloads for generating all lesson plans:", payloads);
+      console.log("Payloads for all topics:", payloads);
   
-      // Send all payloads in parallel
       const responses = await Promise.allSettled(
         payloads.map((payload) => axios.post("https://tms.up.school/api/dynamicLP", payload))
       );
   
-      // Update the state with generated lesson plans
       responses.forEach((response, index) => {
-        const { sessionNumber, chapter } = payloads[index];
         if (response.status === "fulfilled") {
+          const { sessionNumber, chapter } = payloads[index];
           const generatedLessonPlan = response.value.data.lesson_plan;
   
-          // Update the specific topic with the generated lesson plan
           setTopicsWithConcepts((prev) => ({
             ...prev,
             [sessionNumber]: prev[sessionNumber].map((topic) =>
@@ -357,7 +362,7 @@ const SessionPlans = () => {
             ),
           }));
         } else {
-          console.error(`Failed to generate LP for topic: ${payloads[index].chapter}`);
+          console.error(`Failed to generate LP for topic: ${payloads[index]?.chapter}`);
         }
       });
   
@@ -370,7 +375,6 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
-  
   
   
   
