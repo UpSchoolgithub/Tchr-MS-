@@ -208,35 +208,32 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
               {
                 topic: topic.topicName, // Topic context
                 concepts: [
-                  `${concept.concept}: ${concept.conceptDetailing}`,
+                  `${concept.concept}: ${concept.conceptDetailing}`.trim(),
                 ], // Send only this concept
               },
             ],
           };
-    
+
           console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
-    
+
           try {
+            // Call external API to generate lesson plan
             const response = await axios.post(
               "https://dynamiclp.up.school/generate-lesson-plan",
               payload
             );
-    
-            // Save or update lesson plan
-            let lessonPlan = await LessonPlan.findOne({ where: { conceptId: concept.id } });
-            if (!lessonPlan) {
-              await LessonPlan.create({
-                conceptId: concept.id,
-                generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
-              });
-            } else {
-              lessonPlan.generatedLP = response.data.lesson_plan || "No Lesson Plan Generated";
-              await lessonPlan.save();
-            }
+
+            // Save or update lesson plan using upsert
+            await LessonPlan.upsert({
+              conceptId: concept.id,
+              generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+            });
+
             console.log(`Saved LP for concept ID: ${concept.id}`);
           } catch (error) {
             console.error(`Failed for concept ID ${concept.id}:`, error.message);
-    
+
+            // Log error response if available
             if (error.response) {
               console.error(
                 `Error details for concept ID ${concept.id}:`,
@@ -247,16 +244,15 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
         }
       }
     }
-    
-    
-    
 
+    // Success response
     res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
   } catch (error) {
     console.error('Error in generating lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
 });
+
 
 
 
