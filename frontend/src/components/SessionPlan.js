@@ -305,92 +305,75 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      // Build payloads
+      // Build the payloads array
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.map((topic) => {
-          if (!topic || !topic.name || !Array.isArray(topic.concepts)) {
-            console.warn("Skipping invalid topic:", topic);
-            return null; // Skip invalid topics
-          }
+        topics.flatMap((topic, topicIndex) => {
+          return topic.concepts.map((concept, conceptIndex) => ({
+            sessionNumber,
+            topicName: topic.name,
+            conceptIndex,
+            topicIndex,
+            concept,
+            detailing: topic.conceptDetailing[conceptIndex],
+          }));
+        })
+      );
   
-          // Format and clean topics
-          const formattedTopics = topic.concepts
-  .map((concept, index) => {
-    const conceptName = concept?.trim();
-    const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
-
-    if (!conceptName) {
-      console.warn("Skipping empty concept:", concept);
-      return null; // Skip empty concepts
-    }
-
-    return {
-      topic: topic.name.trim(), // Include the required 'topic' field
-      concept: conceptName,
-      detailing: detailing,
-    };
-  })
-  .filter(Boolean); // Remove invalid entries
-
+      console.log("Payloads for All Topics:", payloads);
   
-          if (formattedTopics.length === 0) {
-            console.warn("No valid topics for chapter:", topic.name);
-            return null;
-          }
+      for (const payload of payloads) {
+        const { sessionNumber, topicIndex, conceptIndex, topicName, concept, detailing } = payload;
   
-          return {
-            sessionNumber: sessionNumber.toString(),
-            board: board?.trim() || "Unknown Board",
-            grade: className?.trim() || "Unknown Grade",
-            subject: subjectName?.trim() || "Unknown Subject",
-            unit: unitName?.trim() || "Unknown Unit",
-            chapter: topic.name?.trim(),
-            topics: formattedTopics,
+        if (!concept || !detailing) {
+          console.warn(`Skipping invalid concept for topic: ${topicName}`);
+          continue;
+        }
+  
+        try {
+          // API call to generate the lesson plan
+          const generatePayload = {
+            board,
+            grade: className,
+            subject: subjectName,
+            unit: unitName,
+            chapter: topicName,
+            concepts: [{ concept, detailing }],
             sessionType: "Theory",
             noOfSession: 1,
             duration: 45,
           };
-        })
-      ).filter(Boolean);
   
-      console.log("Payloads to send:", JSON.stringify(payloads, null, 2));
+          const response = await axios.post("https://tms.up.school/api/dynamicLP", generatePayload);
   
-      // Send payloads and collect responses
-      const responses = await Promise.allSettled(
-        payloads.map((payload, index) =>
-          axios.post("https://tms.up.school/api/dynamicLP", payload)
-            .then((res) => {
-              console.log(`Success for chapter: ${payload.chapter}`, res.data);
-              return { status: "success", chapter: payload.chapter, data: res.data };
-            })
-            .catch((err) => {
-              console.error(`Error for chapter: ${payload.chapter}`, err.response?.data || err.message);
-              return { status: "error", chapter: payload.chapter, error: err.response?.data || err.message };
-            })
-        )
-      );
+          // Update the state with the generated lesson plan
+          const generatedLessonPlan = response.data.lesson_plan;
   
-      // Analyze responses
-      const successfulResponses = responses.filter((r) => r.value?.status === "success");
-      const failedResponses = responses.filter((r) => r.value?.status === "error");
+          setTopicsWithConcepts((prev) => {
+            const updatedTopics = { ...prev };
+            const updatedConcept = { ...updatedTopics[sessionNumber][topicIndex].concepts[conceptIndex] };
   
-      console.log("Successful Responses:", successfulResponses);
-      console.log("Failed Responses:", failedResponses);
+            updatedConcept.lessonPlan = generatedLessonPlan; // Add the generated lesson plan
   
-      if (failedResponses.length > 0) {
-        setError(
-          `Failed to generate lesson plans for ${failedResponses.length} chapters. Check logs for details.`
-        );
-      } else {
-        setSuccessMessage("All lesson plans generated successfully!");
+            updatedTopics[sessionNumber][topicIndex].concepts[conceptIndex] = updatedConcept;
+            return updatedTopics;
+          });
+  
+          console.log(`Lesson plan updated for concept: ${concept}`);
+        } catch (error) {
+          console.error(`Failed to generate lesson plan for concept: ${concept}`, error.message);
+        }
       }
+  
+      setSuccessMessage("All lesson plans generated and updated successfully!");
+      setError("");
     } catch (error) {
-      console.error("Unexpected error during lesson plan generation:", error);
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Error generating all lesson plans:", error);
+      setError("Failed to generate all lesson plans. Please try again.");
     } finally {
       setSaving(false);
     }
   };
+  
   
   
   
