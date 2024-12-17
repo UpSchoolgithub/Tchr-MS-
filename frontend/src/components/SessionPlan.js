@@ -305,88 +305,61 @@ const SessionPlans = () => {
     try {
       setSaving(true);
   
-      // Build payloads
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.map((topic) => {
-          if (!topic || !topic.name || !Array.isArray(topic.concepts)) {
-            console.warn("Skipping invalid topic:", topic);
-            return null; // Skip invalid topics
-          }
-  
-          // Format and clean topics
-          const formattedTopics = topic.concepts
-  .map((concept, index) => {
-    const conceptName = concept?.trim();
-    const detailing = topic.conceptDetailing[index]?.trim() || "No detailing provided";
-
-    if (!conceptName) {
-      console.warn("Skipping empty concept:", concept);
-      return null; // Skip empty concepts
-    }
-
-    return {
-      topic: topic.name.trim(), // Include the required 'topic' field
-      concept: conceptName,
-      detailing: detailing,
-    };
-  })
-  .filter(Boolean); // Remove invalid entries
-
-  
-          if (formattedTopics.length === 0) {
-            console.warn("No valid topics for chapter:", topic.name);
-            return null;
-          }
-  
-          return {
-            sessionNumber: sessionNumber.toString(),
-            board: board?.trim() || "Unknown Board",
-            grade: className?.trim() || "Unknown Grade",
-            subject: subjectName?.trim() || "Unknown Subject",
-            unit: unitName?.trim() || "Unknown Unit",
-            chapter: topic.name?.trim(),
-            topics: formattedTopics,
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          };
-        })
-      ).filter(Boolean);
-  
-      console.log("Payloads to send:", JSON.stringify(payloads, null, 2));
-  
-      // Send payloads and collect responses
-      const responses = await Promise.allSettled(
-        payloads.map((payload, index) =>
-          axios.post("https://tms.up.school/api/dynamicLP", payload)
-            .then((res) => {
-              console.log(`Success for chapter: ${payload.chapter}`, res.data);
-              return { status: "success", chapter: payload.chapter, data: res.data };
-            })
-            .catch((err) => {
-              console.error(`Error for chapter: ${payload.chapter}`, err.response?.data || err.message);
-              return { status: "error", chapter: payload.chapter, error: err.response?.data || err.message };
-            })
+        topics.flatMap((topic, topicIndex) =>
+          topic.concepts.map((concept, conceptIndex) => ({
+            sessionNumber,
+            topicIndex,
+            conceptIndex,
+            chapter: topic.name,
+            concept,
+            detailing: topic.conceptDetailing[conceptIndex],
+          }))
         )
       );
   
-      // Analyze responses
-      const successfulResponses = responses.filter((r) => r.value?.status === "success");
-      const failedResponses = responses.filter((r) => r.value?.status === "error");
+      console.log("Payloads to send:", payloads);
   
-      console.log("Successful Responses:", successfulResponses);
-      console.log("Failed Responses:", failedResponses);
+      const responses = await Promise.allSettled(
+        payloads.map((payload) =>
+          axios.post("https://tms.up.school/api/dynamicLP", {
+            board,
+            grade: className,
+            subject: subjectName,
+            unit: unitName,
+            chapter: payload.chapter,
+            concepts: [{ concept: payload.concept, detailing: payload.detailing }],
+            sessionType: "Theory",
+            noOfSession: 1,
+            duration: 45,
+          })
+        )
+      );
   
-      if (failedResponses.length > 0) {
-        setError(
-          `Failed to generate lesson plans for ${failedResponses.length} chapters. Check logs for details.`
-        );
-      } else {
-        setSuccessMessage("All lesson plans generated successfully!");
-      }
+      console.log("Lesson Plan Responses:", responses);
+  
+      // Update state with generated lesson plans
+      setTopicsWithConcepts((prev) => {
+        const updated = { ...prev };
+  
+        responses.forEach((response, idx) => {
+          const { sessionNumber, topicIndex, conceptIndex } = payloads[idx];
+  
+          if (response.status === "fulfilled" && response.value?.data?.lesson_plan) {
+            // Update the lesson plan for the specific concept
+            updated[sessionNumber][topicIndex].lessonPlan = response.value.data.lesson_plan;
+            console.log(`Lesson plan updated for session ${sessionNumber}, topic ${topicIndex}, concept ${conceptIndex}`);
+          }
+        });
+  
+        return updated;
+      });
+  
+      setSuccessMessage("All lesson plans generated and updated successfully!");
+      setError("");
     } catch (error) {
-      console.error("Unexpected error during lesson plan generation:", error);
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Error generating all lesson plans:", error);
+      setError("Failed to generate all lesson plans. Please try again.");
     } finally {
       setSaving(false);
     }
