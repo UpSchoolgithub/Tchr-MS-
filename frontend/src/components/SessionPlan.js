@@ -590,8 +590,6 @@ if (payloads.length === 0) {
     "Not Generated"
   )}
 </td>
-console.log("Concept ID being passed to View:", concept.id);
-
 
 
               {/* Render Actions (Save Button) */}
@@ -643,11 +641,8 @@ console.log("Concept ID being passed to View:", concept.id);
     <Modal.Title>Lesson Plan</Modal.Title>
   </Modal.Header>
   <Modal.Body>
-  <pre style={{ whiteSpace: "pre-wrap" }}>
-    {lessonPlanContent || "No Lesson Plan Found"}
-  </pre>
-</Modal.Body>
-
+    <pre>{lessonPlanContent}</pre>
+  </Modal.Body>
   <Modal.Footer>
     <Button variant="secondary" onClick={() => setShowModal(false)}>
       Close
