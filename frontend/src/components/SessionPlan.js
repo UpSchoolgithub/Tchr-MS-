@@ -307,18 +307,38 @@ const SessionPlans = () => {
   
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
         topics.flatMap((topic, topicIndex) =>
-          topic.concepts.map((concept, conceptIndex) => ({
-            sessionNumber,
-            topicIndex,
-            conceptIndex,
-            chapter: topic.name,
-            concept,
-            detailing: topic.conceptDetailing[conceptIndex],
-          }))
+          topic.concepts
+            .map((concept, conceptIndex) => {
+              const detailing = topic.conceptDetailing[conceptIndex]?.trim();
+              const conceptName = concept?.trim();
+  
+              if (!conceptName || !detailing) {
+                console.warn(
+                  `Skipping invalid concept: Concept - "${conceptName}", Detailing - "${detailing}"`
+                );
+                return null; // Skip invalid entries
+              }
+  
+              return {
+                sessionNumber,
+                topicIndex,
+                conceptIndex,
+                chapter: topic.name,
+                concept: conceptName,
+                detailing,
+              };
+            })
+            .filter(Boolean) // Remove null entries
         )
       );
   
-      console.log("Payloads to send:", payloads);
+      console.log("Validated Payloads to send:", payloads);
+  
+      if (payloads.length === 0) {
+        setError("No valid concepts found to generate lesson plans.");
+        setSaving(false);
+        return;
+      }
   
       const responses = await Promise.allSettled(
         payloads.map((payload) =>
@@ -346,9 +366,11 @@ const SessionPlans = () => {
           const { sessionNumber, topicIndex, conceptIndex } = payloads[idx];
   
           if (response.status === "fulfilled" && response.value?.data?.lesson_plan) {
-            // Update the lesson plan for the specific concept
-            updated[sessionNumber][topicIndex].lessonPlan = response.value.data.lesson_plan;
-            console.log(`Lesson plan updated for session ${sessionNumber}, topic ${topicIndex}, concept ${conceptIndex}`);
+            updated[sessionNumber][topicIndex].lessonPlan =
+              response.value.data.lesson_plan;
+            console.log(
+              `Lesson plan updated for session ${sessionNumber}, topic ${topicIndex}, concept ${conceptIndex}`
+            );
           }
         });
   
@@ -364,6 +386,7 @@ const SessionPlans = () => {
       setSaving(false);
     }
   };
+  
   
   
   
