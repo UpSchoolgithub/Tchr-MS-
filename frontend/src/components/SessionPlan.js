@@ -131,6 +131,7 @@ const SessionPlans = () => {
           console.warn("Invalid concept skipped:", concept);
         }
       });
+      
     });
   
     return Object.values(topicMap).filter((topic) => topic.concepts.length > 0);
