@@ -399,20 +399,21 @@ if (payloads.length === 0) {
   
 
   // View lesson plan
-  // View lesson plan
   const handleViewLessonPlan = async (conceptId) => {
     if (!conceptId) {
       setError("Concept ID is missing. Cannot fetch lesson plan.");
       return;
     }
   
+    console.log("Fetching lesson plan for Concept ID:", conceptId);
+  
     try {
       const response = await axios.get(
         `https://tms.up.school/api/sessionPlans/${conceptId}/view`
       );
-      console.log("API Response: ", response.data); // Debugging log
-      const lessonPlan = response.data?.lessonPlan || "No Lesson Plan Found";
-      setLessonPlanContent(lessonPlan);
+      console.log("Lesson Plan API Response:", response.data);
+  
+      setLessonPlanContent(response.data.lessonPlan || "No Lesson Plan Found");
       setShowModal(true);
       setError("");
     } catch (error) {
@@ -422,7 +423,6 @@ if (payloads.length === 0) {
     }
   };
   
-
   
   
   
@@ -583,11 +583,14 @@ if (payloads.length === 0) {
               {/* Render Lesson Plan Button */}
               <td>
   {topic.lessonPlan ? (
-    <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
+    <button onClick={() => handleViewLessonPlan(concept.id)}>
+      View
+    </button>
   ) : (
     "Not Generated"
   )}
 </td>
+console.log("Concept ID being passed to View:", concept.id);
 
 
 
@@ -640,15 +643,17 @@ if (payloads.length === 0) {
     <Modal.Title>Lesson Plan</Modal.Title>
   </Modal.Header>
   <Modal.Body>
-    <pre>{lessonPlanContent}</pre>
-  </Modal.Body>
+  <pre style={{ whiteSpace: "pre-wrap" }}>
+    {lessonPlanContent || "No Lesson Plan Found"}
+  </pre>
+</Modal.Body>
+
   <Modal.Footer>
     <Button variant="secondary" onClick={() => setShowModal(false)}>
       Close
     </Button>
-  </Modal.Footer>
-</Modal>
-
+    </Modal.Footer>
+</Modal>;
     </div>
   );
   
