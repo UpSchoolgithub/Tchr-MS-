@@ -263,46 +263,38 @@ const SessionPlans = () => {
         grade: className,
         subject: subjectName,
         unit: unitName,
-        chapter: topic.name, // Topic name
-        concepts: [
-          {
-            concept,
-            detailing,
-          },
-        ],
+        chapter: topic.name,
+        concepts: [{ concept, detailing }],
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
       };
   
+      // Generate the lesson plan
       const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
-  
       const generatedLessonPlan = response.data.lesson_plan;
   
-      // Update only the specific concept's lesson plan
+      // Send the lesson plan to backend to save it permanently
+      await axios.post(`https://tms.up.school/api/sessionPlans/${concept.id}/saveLessonPlan`, {
+        conceptId: concept.id,
+        generatedLP: generatedLessonPlan,
+      });
+  
+      // Update the state after saving
       setTopicsWithConcepts((prev) => {
         const updatedTopics = [...prev[sessionNumber]];
-      
-        // Update the specific concept's lesson plan
-        const updatedConcepts = updatedTopics[topicIndex].concepts.map((c, idx) =>
-          idx === conceptIndex ? { ...c, lessonPlan: generatedLessonPlan } : c
-        );
-      
-        updatedTopics[topicIndex] = {
-          ...updatedTopics[topicIndex],
-          concepts: updatedConcepts,
+        updatedTopics[topicIndex].concepts[conceptIndex] = {
+          ...updatedTopics[topicIndex].concepts[conceptIndex],
+          lessonPlan: generatedLessonPlan,
         };
-      
         return { ...prev, [sessionNumber]: updatedTopics };
       });
-      
-      
   
-      setSuccessMessage(`Lesson plan generated for concept "${concept}"`);
+      setSuccessMessage(`Lesson plan saved and updated for concept "${concept}"`);
       setError("");
     } catch (error) {
       console.error("Error generating lesson plan:", error);
-      setError(`Failed to generate lesson plan for concept "${concept}".`);
+      setError(`Failed to generate and save lesson plan for concept "${concept}".`);
     }
   };
   
