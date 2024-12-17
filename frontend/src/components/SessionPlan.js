@@ -306,15 +306,20 @@ const SessionPlans = () => {
       setSaving(true);
   
       const payloads = Object.entries(topicsWithConcepts).flatMap(
-        ([sessionNumber, topics]) =>
-          topics.map((topic) => {
-            const formattedConcepts = topic.concepts
-              .map((concept, index) => ({
-                concept: concept?.trim() || null,
-                detailing:
-                  topic.conceptDetailing[index]?.trim() || "No detailing provided",
-              }))
-              .filter((item) => item.concept); // Exclude null/invalid concepts
+        ([sessionNumber, topics]) => {
+          return topics.map((topic) => {
+            if (!topic || !topic.name) {
+              console.warn("Skipping invalid topic:", topic);
+              return null;
+            }
+  
+            const formattedTopic = {
+              topic: topic.name.trim(),
+              concepts: topic.concepts.map((concept, index) => ({
+                concept: concept.trim(),
+                detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
+              })),
+            };
   
             return {
               sessionNumber,
@@ -322,13 +327,14 @@ const SessionPlans = () => {
               grade: className,
               subject: subjectName,
               unit: unitName,
-              chapter: topic.name?.trim() || "Unnamed Chapter",
-              topics: formattedConcepts,
+              chapter: chapterName,
+              topics: [formattedTopic],
               sessionType: "Theory",
               noOfSession: 1,
               duration: 45,
             };
-          })
+          }).filter(Boolean);
+        }
       );
   
       console.log("Formatted Payloads:", JSON.stringify(payloads, null, 2));
@@ -339,7 +345,8 @@ const SessionPlans = () => {
   
       responses.forEach((response, index) => {
         if (response.status === "fulfilled") {
-          console.log(`Lesson plan for chapter "${payloads[index].chapter}" generated successfully!`);
+          const { chapter } = payloads[index];
+          console.log(`Lesson plan for chapter "${chapter}" generated successfully!`);
         } else {
           console.error(`Failed to generate LP for chapter: ${payloads[index]?.chapter}`);
         }
