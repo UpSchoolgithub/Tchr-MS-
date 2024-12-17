@@ -306,101 +306,101 @@ const SessionPlans = () => {
 
   // Generate lesson plans for all topics
   const handleGenerateAllLessonPlans = async () => {
-    try {
-      setSaving(true);
-  
-      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.map((topic) => {
-          const validTopics = topic.concepts.map((concept, index) => {
-            const detailing = topic.conceptDetailing[index];
-            if (concept?.name && detailing) {
-              return { concept: concept.name, detailing };
-            }
-            return null;
-          }).filter(Boolean);
-  
-          return validTopics.length > 0
-            ? {
-                sessionNumber,
-                board,
-                grade: className,
-                subject: subjectName,
-                unit: unitName,
-                chapter: topic.name,
-                topics: validTopics,
-                sessionType: "Theory",
-                noOfSession: 1,
-                duration: 45,
-              }
-            : null;
-        }).filter(Boolean)
-      );
-  
-      if (payloads.length === 0) {
-        setError("No valid topics to generate lesson plans.");
-        setSaving(false);
-        return;
-      }
-  
-      for (const payload of payloads) {
-        try {
-          console.log("Sending Payload:", JSON.stringify(payload, null, 2));
-          const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
-          console.log(`Lesson Plan Generated for Chapter: ${payload.chapter}`);
-  
-          // Save generated lesson plan to backend
-          for (const topic of payload.topics) {
-            const conceptId = findConceptId(payload.chapter, topic.concept);
-            if (conceptId) {
-              await axios.post(
-                `https://tms.up.school/api/sessionPlans/${conceptId}/saveLessonPlan`,
-                { conceptId, generatedLP: response.data.lesson_plan }
-              );
-            }
+  try {
+    setSaving(true);
+
+    const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
+      topics.map((topic) => {
+        const validTopics = topic.concepts.map((concept, index) => {
+          const detailing = topic.conceptDetailing[index];
+          if (concept?.name && detailing) {
+            return { concept: concept.name, detailing };
           }
-        } catch (error) {
-          console.error(`Failed to generate LP for chapter: ${payload.chapter}`, error.message);
-        }
-      }
-  
-      // Fetch updated session plans
-      const updatedSessionPlans = await axios.get(
-        `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
-      );
-      const fetchedTopics = updatedSessionPlans.data.sessionPlans.reduce((acc, plan) => {
-        acc[plan.sessionNumber] = plan.Topics.map((topic) => ({
-          name: topic.topicName,
-          concepts: topic.Concepts.map((c) => ({ id: c.id, name: c.concept })),
-          conceptDetailing: topic.Concepts.map((c) => c.conceptDetailing || ""),
-          lessonPlan: "", // Initialize empty
-        }));
-        return acc;
-      }, {});
-      setTopicsWithConcepts(fetchedTopics);
-  
-      setSuccessMessage("All lesson plans generated and saved successfully!");
-      setError("");
-    } catch (error) {
-      console.error("Error generating all lesson plans:", error);
-      setError("Failed to generate lesson plans. Please try again.");
-    } finally {
+          return null;
+        }).filter(Boolean);
+
+        return validTopics.length > 0
+          ? {
+              sessionNumber,
+              board,
+              grade: className,
+              subject: subjectName,
+              unit: unitName,
+              chapter: topic.name,
+              topics: validTopics,
+              sessionType: "Theory",
+              noOfSession: 1,
+              duration: 45,
+            }
+          : null;
+      }).filter(Boolean)
+    );
+
+    if (payloads.length === 0) {
+      setError("No valid topics to generate lesson plans.");
       setSaving(false);
+      return;
     }
-  };
-  
-  // Helper to find concept ID
-  const findConceptId = (chapterName, conceptName) => {
-    for (const sessionTopics of Object.values(topicsWithConcepts)) {
-      for (const topic of sessionTopics) {
-        if (topic.name === chapterName) {
-          const concept = topic.concepts.find((c) => c.name === conceptName);
-          return concept?.id;
+
+    for (const payload of payloads) {
+      try {
+        console.log("Sending Payload:", JSON.stringify(payload, null, 2));
+        const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
+        console.log(`Lesson Plan Generated for Chapter: ${payload.chapter}`);
+
+        // Save generated lesson plan to backend
+        for (const topic of payload.topics) {
+          const conceptId = findConceptId(payload.chapter, topic.concept);
+          if (conceptId) {
+            await axios.post(
+              `https://tms.up.school/api/sessionPlans/${conceptId}/saveLessonPlan`,
+              { conceptId, generatedLP: response.data.lesson_plan }
+            );
+          }
         }
+      } catch (error) {
+        console.error(`Failed to generate LP for chapter: ${payload.chapter}`, error.message);
       }
     }
-    return null;
-  };
-  
+
+    // Fetch updated session plans
+    const updatedSessionPlans = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
+    );
+    const fetchedTopics = updatedSessionPlans.data.sessionPlans.reduce((acc, plan) => {
+      acc[plan.sessionNumber] = plan.Topics.map((topic) => ({
+        name: topic.topicName,
+        concepts: topic.Concepts.map((c) => ({ id: c.id, name: c.concept })),
+        conceptDetailing: topic.Concepts.map((c) => c.conceptDetailing || ""),
+        lessonPlan: "", // Initialize empty
+      }));
+      return acc;
+    }, {});
+    setTopicsWithConcepts(fetchedTopics);
+
+    setSuccessMessage("All lesson plans generated and saved successfully!");
+    setError("");
+  } catch (error) {
+    console.error("Error generating all lesson plans:", error);
+    setError("Failed to generate lesson plans. Please try again.");
+  } finally {
+    setSaving(false);
+  }
+};
+
+// Helper to find concept ID
+const findConceptId = (chapterName, conceptName) => {
+  for (const sessionTopics of Object.values(topicsWithConcepts)) {
+    for (const topic of sessionTopics) {
+      if (topic.name === chapterName) {
+        const concept = topic.concepts.find((c) => c.name === conceptName);
+        return concept?.id;
+      }
+    }
+  }
+  return null;
+};
+
   
   
   
@@ -594,24 +594,13 @@ console.log("Updated State after Generating Lesson Plan:", topicsWithConcepts);
 
 
               {/* Render Lesson Plan Button */}
-              {/* Render Lesson Plan Button */}
-<td>
+              <td>
   {topic.lessonPlan ? (
-    <button
-      className="btn btn-primary"
-      onClick={() => handleViewLessonPlan(concept.id)}
-    >
+    <button onClick={() => handleViewLessonPlan(concept.id)}>
       View
     </button>
   ) : (
-    <button
-      className="btn btn-success"
-      onClick={() =>
-        handleGenerateLessonPlan(plan.sessionNumber, tIndex, cIndex)
-      }
-    >
-      Generate
-    </button>
+    "Not Generated"
   )}
 </td>
 
@@ -619,20 +608,20 @@ console.log("Updated State after Generating Lesson Plan:", topicsWithConcepts);
               {/* Render Actions (Save Button) */}
               {tIndex === 0 && cIndex === 0 && (
                 <td
-                rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
-                  (acc, t) => acc + t.concepts.length,
-                  0
-                )}
-              >
-                <button
-                  className="btn btn-warning"
-                  onClick={() => handleSaveSessionPlan(plan.id, plan.sessionNumber)}
-                  disabled={saving}
+                  rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
+                    (acc, t) => acc + t.concepts.length,
+                    0
+                  )}
                 >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-              </td>
-              
+                  <button
+                    onClick={() =>
+                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
+                    }
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                </td>
               )}
             </tr>
           ))
