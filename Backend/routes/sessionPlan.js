@@ -241,6 +241,7 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
                 conceptId: concept.id,
                 generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
               });
+              
             
               console.log(
                 `LessonPlan upsert result for conceptId ${concept.id}:`,
