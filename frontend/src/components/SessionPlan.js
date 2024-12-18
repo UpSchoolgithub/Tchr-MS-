@@ -458,7 +458,7 @@ const SessionPlans = () => {
       y += lineHeight;
       doc.text(`Session Type: Theory`, 10, y);
       y += lineHeight;
-      doc.text(`Number of Sessions: 1`, 10, y);
+      doc.text(`Number of Sessions: ${session.numberOfSessions || 1}`, 10, y);
       y += lineHeight;
       doc.text(`Duration per Session: 45 minutes`, 10, y);
       y += lineHeight * 2;
@@ -466,48 +466,123 @@ const SessionPlans = () => {
   
     addHeader();
   
-    // Add topics and concepts with boxes
+    // Add Objectives dynamically
+    if (session.objectives && session.objectives.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`Objective:`, 10, y);
+      y += lineHeight;
+      doc.setFont("helvetica", "normal");
+      session.objectives.forEach((objective) => {
+        if (y > pageHeight) {
+          doc.addPage();
+          y = 10;
+          addHeader();
+        }
+        doc.text(`- ${objective}`, 12, y);
+        y += lineHeight;
+      });
+      y += lineHeight;
+    }
+  
+    // Add Procedures dynamically
+    if (session.procedures && session.procedures.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`Procedures:`, 10, y);
+      y += lineHeight;
+      doc.setFont("helvetica", "normal");
+      session.procedures.forEach((step, index) => {
+        if (y > pageHeight) {
+          doc.addPage();
+          y = 10;
+          addHeader();
+        }
+        doc.text(`${index + 1}. ${step.title}`, 12, y);
+        y += lineHeight;
+        step.details.forEach((detail) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+            addHeader();
+          }
+          doc.text(`   - ${detail}`, 12, y);
+          y += lineHeight;
+        });
+      });
+      y += lineHeight;
+    }
+  
+    // Add Topics and Concepts with Boxes
     session.Topics.forEach((topic) => {
       if (y > pageHeight) {
         doc.addPage();
-        y = 10; // Reset y position for the new page
-        addHeader(); // Add the header on new pages
+        y = 10;
+        addHeader();
       }
   
-      // Add topic title
       doc.setFont("helvetica", "bold");
       doc.text(`Topic: ${topic.topicName}`, 10, y);
       y += lineHeight * 1.5;
   
       topic.Concepts.forEach((concept, index) => {
-        if (y + 30 > pageHeight) { // Check if space is sufficient for the box
+        if (y + 30 > pageHeight) {
           doc.addPage();
-          y = 10; // Reset y position for new page
+          y = 10;
           addHeader();
         }
   
-        // Draw box
-        const boxHeight = 25;
-        doc.rect(10, y, 190, boxHeight); // Rect(x, y, width, height)
-  
-        // Add concept content inside the box
+        // Draw Concept Box
+        doc.rect(10, y, 190, 20);
         doc.setFont("helvetica", "normal");
         doc.text(`Concept ${index + 1}: ${concept.concept || "Unnamed Concept"}`, 12, y + 6);
   
-        if (concept.conceptDetailing) {
-          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 186);
-          details.forEach((line, i) => {
-            doc.text(line, 12, y + 12 + i * lineHeight);
-          });
-        }
+        const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing || "No Details"}`, 186);
+        details.forEach((line, i) => {
+          doc.text(line, 12, y + 12 + i * lineHeight);
+        });
   
-        y += boxHeight + 5; // Move y down after each box
+        y += 25; // Move below the box
       });
   
-      y += lineHeight; // Add spacing after each topic
+      y += lineHeight;
     });
   
-    // Save the PDF file
+    // Add Materials Needed dynamically
+    if (session.materials && session.materials.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`Materials Needed:`, 10, y);
+      y += lineHeight;
+      doc.setFont("helvetica", "normal");
+      session.materials.forEach((material) => {
+        if (y > pageHeight) {
+          doc.addPage();
+          y = 10;
+          addHeader();
+        }
+        doc.text(`- ${material}`, 12, y);
+        y += lineHeight;
+      });
+      y += lineHeight;
+    }
+  
+    // Add Assessment dynamically
+    if (session.assessment && session.assessment.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`Assessment:`, 10, y);
+      y += lineHeight;
+      doc.setFont("helvetica", "normal");
+      session.assessment.forEach((assessment) => {
+        if (y > pageHeight) {
+          doc.addPage();
+          y = 10;
+          addHeader();
+        }
+        doc.text(`- ${assessment}`, 12, y);
+        y += lineHeight;
+      });
+      y += lineHeight;
+    }
+  
+    // Save the PDF
     doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
   
