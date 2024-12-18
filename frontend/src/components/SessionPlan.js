@@ -553,14 +553,11 @@ const SessionPlans = () => {
 
               {/* Render Lesson Plan Button */}
               <td>
-  {topic.lessonPlan && topic.concepts[cIndex]?.id ? (
-    <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)}>
-      View
-    </button>
-  ) : (
-    "Not Generated"
-  )}
+  <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)}>
+    View
+  </button>
 </td>
+
 
 
 
