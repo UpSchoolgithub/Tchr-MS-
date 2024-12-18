@@ -75,11 +75,19 @@ const MClassroom = () => {
       const response = await axiosInstance.get(`/classes/${classId}/sections`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSections(response.data.map((section) => ({ sectionName: section.sectionName, sectionId: section.id })));
+  
+      const sectionsData = response.data.map((section) => ({
+        sectionName: section.sectionName,
+        sectionId: section.id, // Ensure 'id' exists in response
+      }));
+  
+      setSections(sectionsData);
+      setSubjects([]); // Reset subjects on section change
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
   };
+  
 
   const fetchSubjects = async (sectionId) => {
     try {
@@ -148,13 +156,22 @@ const handleSchoolChange = async (e) => {
   const handleSectionChange = async (e) => {
     const sectionName = e.target.value;
     setSelectedSection(sectionName);
-
-    const sectionData = sections.find((section) => section.sectionName === sectionName);
-    if (sectionData) {
-      await fetchSubjects(sectionData.sectionId);
+  
+    // Fetch subjects based on the section ID
+    const section = sections.find((sec) => sec.sectionName === sectionName);
+    if (section) {
+      try {
+        const response = await axiosInstance.get(`/sections/${section.sectionId}/subjects`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSubjects(response.data);
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+        setSubjects([]);
+      }
     }
   };
-
+  
   const handleSectionSelect = () => {
     const sectionData = sections.find((section) => section.sectionName === selectedSection);
     if (selectedSchool && selectedClassId && sectionData) {
