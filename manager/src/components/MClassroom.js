@@ -78,16 +78,17 @@ const MClassroom = () => {
       });
       console.log('Sections API Response:', response.data);
   
+      // Correctly map API response
       const sectionsData = response.data.map((section) => ({
         sectionName: section.sectionName,
-        sectionId: section.id, // Correcting to match backend response
+        sectionId: section.id, // Use 'id' directly
       }));
   
       setSections(sectionsData);
       setSubjects([]); // Reset subjects
     } catch (error) {
       console.error('Error fetching sections:', error);
-      setSections([]); // Reset sections on failure
+      setSections([]); // Reset on failure
     }
   };
   
@@ -241,20 +242,20 @@ const handleSchoolChange = async (e) => {
         {/* Section Selection */}
         <div className="form-group">
   <label>Section:</label>
-  <select 
-  onChange={handleSectionChange} 
-  value={selectedSection || ''} 
-  disabled={!sections.length}
->
-  <option value="" disabled>Select Section</option>
-  {sections.map((section) => (
-    <option key={section.sectionId} value={section.sectionId}>
-      {section.sectionName}
-    </option>
-  ))}
-</select>
-
+  <select
+    onChange={handleSectionChange}
+    value={selectedSection || ''}
+    disabled={!sections.length}
+  >
+    <option value="" disabled>Select Section</option>
+    {sections.map((section) => (
+      <option key={section.sectionId} value={section.sectionId}>
+        {section.sectionName}
+      </option>
+    ))}
+  </select>
 </div>
+
 
 
 
