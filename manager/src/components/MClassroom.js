@@ -190,9 +190,16 @@ const handleSectionChange = async (e) => {
   
   
 const handleSectionSelect = () => {
-  sections.find((section) => String(section.sectionId) === String(selectedSection));
+  if (!sections || !sections.length) {
+    console.error("Sections data is empty. Cannot proceed.");
+    return;
+  }
 
-  if (selectedSchool && selectedClassId && sectionData) {
+  const sectionData = sections.find(
+    (section) => String(section.sectionId) === String(selectedSection)
+  );
+
+  if (sectionData) {
     console.log("Navigating with:", {
       selectedSchool,
       selectedClassId,
@@ -210,13 +217,10 @@ const handleSectionSelect = () => {
       }
     );
   } else {
-    console.error("Invalid data for navigation:", {
-      selectedSchool,
-      selectedClassId,
-      sectionData,
-    });
+    console.error("Section data not found for ID:", selectedSection);
   }
 };
+
 
   
   
