@@ -166,15 +166,32 @@ const completedConcepts = planDetails.reduce(
     </thead>
     <tbody>
   {filteredSessions.map((session, index) => {
+    // Default planDetails to an empty array if undefined
+    const planDetails = session.planDetails || [];
+
+    // Safely calculate total and completed concepts
+    const totalConcepts = planDetails.reduce(
+      (total, topic) => total + (topic.concepts ? topic.concepts.length : 0),
+      0
+    );
+
+    const completedConcepts = planDetails.reduce(
+      (total, topic) =>
+        total +
+        (topic.concepts
+          ? topic.concepts.filter((concept) => concept.status === 'complete').length
+          : 0),
+      0
+    );
+
     const progressPercentage =
-      session.totalTopics > 0 ? (session.completedTopics / session.totalTopics) * 100 : 0;
+      totalConcepts > 0 ? (completedConcepts / totalConcepts) * 100 : 0;
 
     return (
       <tr key={index}>
         <td>{session.schoolName}</td>
         <td>{session.className}</td>
         <td>{session.sectionName}</td>
-        <td>{session.sectionId}</td>
         <td>{session.day}</td>
         <td>{session.period}</td>
         <td>{session.subjectName}</td>
@@ -184,39 +201,37 @@ const completedConcepts = planDetails.reduce(
               <span style={{ width: `${progressPercentage}%` }}></span>
             </div>
             <small>
-              {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+              {completedConcepts}/{totalConcepts} concepts completed
             </small>
           </div>
         </td>
+        <td>{session.startTime || 'N/A'}</td>
+        <td>{session.endTime || 'N/A'}</td>
         <td>
-          {session.completed ? (
-            <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
-          ) : isToday(selectedDate) ? (
-            <button
-              onClick={() => handleStartSession(session)}
-              style={{ backgroundColor: '#dc3545', color: 'white' }}
-            >
-              Start Session
-            </button>
-          ) : (
-            <span>-</span>
-          )}
-        </td>
-        <td>{session.endTime}</td>
-        <td>
-          <button style={{ backgroundColor: 'green' }}>Update</button>
-          <button
-            style={{
-              backgroundColor: 'lightgreen',
-              marginLeft: '5px',
-            }}
-          >
-            Notify
-          </button>
+          {planDetails.map((topic, topicIndex) => (
+            <div key={topicIndex}>
+              <strong>{topic.name}</strong>
+              <ul>
+                {topic.concepts &&
+                  topic.concepts.map((concept, conceptIndex) => (
+                    <li
+                      key={conceptIndex}
+                      style={{
+                        color: concept.status === 'complete' ? 'green' : 'red',
+                        textDecoration:
+                          concept.status === 'complete' ? 'line-through' : 'none',
+                      }}
+                    >
+                      {concept.name}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
         </td>
         <td>
           <button
-            style={{ backgroundColor: 'white'}}
+            style={{ backgroundColor: 'white' }}
             onClick={() => {
               navigate(`/session-reports/${session.sessionId}`);
             }}
@@ -228,6 +243,7 @@ const completedConcepts = planDetails.reduce(
     );
   })}
 </tbody>
+
 
   </table>
 )}
