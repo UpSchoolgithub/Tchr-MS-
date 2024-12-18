@@ -72,25 +72,25 @@ const MClassroom = () => {
   
   const fetchSections = async (classId) => {
     try {
-      console.log('Fetching sections for classId:', classId); // Debugging
+      console.log('Fetching sections for classId:', classId);
       const response = await axiosInstance.get(`/classes/${classId}/sections`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
-      console.log('Sections API Response:', response.data); // Debugging the response
+      console.log('Sections API Response:', response.data);
   
       const sectionsData = response.data.map((section) => ({
         sectionName: section.sectionName,
-        sectionId: section.id, // Ensure this is the correct field in response
+        sectionId: section.id, // Correcting to match backend response
       }));
   
       setSections(sectionsData);
-      setSubjects([]); // Reset subjects when sections change
+      setSubjects([]); // Reset subjects
     } catch (error) {
       console.error('Error fetching sections:', error);
-      setSections([]);
+      setSections([]); // Reset sections on failure
     }
   };
+  
   
   
 
@@ -242,17 +242,18 @@ const handleSchoolChange = async (e) => {
         <div className="form-group">
   <label>Section:</label>
   <select 
-    onChange={handleSectionChange} 
-    value={selectedSection || ''} 
-    disabled={!sections.length}
-  >
-    <option value="" disabled>Select Section</option>
-    {sections.map((section) => (
-      <option key={section.sectionId} value={section.sectionId}>
-        {section.sectionName}
-      </option>
-    ))}
-  </select>
+  onChange={handleSectionChange} 
+  value={selectedSection || ''} 
+  disabled={!sections.length}
+>
+  <option value="" disabled>Select Section</option>
+  {sections.map((section) => (
+    <option key={section.sectionId} value={section.sectionId}>
+      {section.sectionName}
+    </option>
+  ))}
+</select>
+
 </div>
 
 
