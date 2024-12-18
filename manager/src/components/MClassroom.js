@@ -190,7 +190,7 @@ const handleSectionChange = async (e) => {
   
   
 const handleSectionSelect = () => {
-  const sectionData = sections.find((section) => section.sectionId === selectedSection);
+  sections.find((section) => String(section.sectionId) === String(selectedSection));
 
   if (selectedSchool && selectedClassId && sectionData) {
     console.log("Navigating with:", {
