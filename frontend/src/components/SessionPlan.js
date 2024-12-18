@@ -423,8 +423,38 @@ const SessionPlans = () => {
     }
   };
   
+  //generate and download the lesson plan
+  const handleDownloadSessionPlans = () => {
+    let downloadContent = `Chapter Name: ${chapterName || "Unknown Chapter"}\n`;
+    downloadContent += `Class: ${className || "Unknown Class"}\n`;
+    downloadContent += `Subject: Social\n\n`;
   
-
+    sessionPlans.forEach((session) => {
+      downloadContent += `Session ${session.sessionNumber}:\n\n`;
+  
+      session.Topics.forEach((topic) => {
+        downloadContent += `### Topic: ${topic.topicName}\n\n`;
+  
+        topic.Concepts.forEach((concept, index) => {
+          downloadContent += `- Concept ${index + 1}: ${concept.concept}\n`;
+          downloadContent += `  Details: ${concept.conceptDetailing || "No Details"}\n`;
+          downloadContent += `\nLesson Plan:\n${concept.LessonPlan?.generatedLP || "Not Generated"}\n\n`;
+          downloadContent += `-------------------------------------------------\n`;
+        });
+      });
+      downloadContent += `\n========================================\n`;
+    });
+  
+    // Create a Blob and trigger file download
+    const blob = new Blob([downloadContent], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Lesson_Plan_${chapterName || "Session"}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
 
   return (
     <div className="container">
@@ -480,6 +510,13 @@ const SessionPlans = () => {
       </div>
   
       <div className="table-container">
+      <button
+  onClick={handleDownloadSessionPlans}
+  className="btn btn-success"
+>
+  Download Lesson Plan (Session-wise)
+</button>
+
       <table>
   <thead>
     <tr>
