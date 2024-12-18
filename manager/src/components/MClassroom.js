@@ -70,27 +70,28 @@ const MClassroom = () => {
     }
   };
   
+  useEffect(() => {
+    if (selectedClassId) {
+      fetchSections(selectedClassId);
+    }
+  }, [selectedClassId]);
+  
   const fetchSections = async (classId) => {
     try {
-      console.log('Fetching sections for classId:', classId);
       const response = await axiosInstance.get(`/classes/${classId}/sections`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Sections API Response:', response.data);
-  
-      // Correctly map API response
-      const sectionsData = response.data.map((section) => ({
+      console.log("Fetched Sections:", response.data); // Log sections
+      const sections = response.data.map((section) => ({
         sectionName: section.sectionName,
-        sectionId: section.id, // Use 'id' directly
+        sectionId: section.id,
       }));
-  
-      setSections(sectionsData);
-      setSubjects([]); // Reset subjects
+      setSections(sections);
     } catch (error) {
-      console.error('Error fetching sections:', error);
-      setSections([]); // Reset on failure
+      console.error("Error fetching sections:", error);
     }
   };
+  
   
   
   
@@ -160,22 +161,32 @@ const handleClassChange = (e) => {
 };
 
 
-  const handleSectionChange = async (e) => {
-    const sectionId = e.target.value; // Get sectionId directly
-    setSelectedSection(sectionId);
-  
-    // Fetch subjects based on the selected sectionId
-    try {
-      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('Subjects Response:', response.data); // Debugging response
-      setSubjects(response.data);
-    } catch (error) {
-      console.error('Error fetching subjects:', error);
-      setSubjects([]);
-    }
-  };
+const handleSectionChange = (e) => {
+  const sectionId = e.target.value; // Expecting sectionId directly
+  setSelectedSection(sectionId);
+  localStorage.setItem("selectedSection", sectionId);
+};
+
+const handleSectionSelect = () => {
+  const sectionData = sections.find((section) => section.sectionId === selectedSection);
+
+  if (selectedSchool && selectedClassId && sectionData) {
+    navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
+      state: {
+        selectedSchool,
+        selectedClass: selectedClassId,
+        selectedSection: sectionData.sectionId,
+      },
+    });
+  } else {
+    console.error("Invalid data for navigation:", {
+      selectedSchool,
+      selectedClassId,
+      sectionData,
+    });
+  }
+};
+
   
   
   
