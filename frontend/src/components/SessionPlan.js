@@ -403,30 +403,6 @@ const SessionPlans = () => {
   
 
   // Save lesson plan to the database
-  const handleSaveLessonPlan = async (conceptId, generatedLessonPlan) => {
-    if (!conceptId || !generatedLessonPlan) {
-      console.error("Missing conceptId or lessonPlan content");
-      setError("Cannot save. Missing required data.");
-      return;
-    }
-  
-    try {
-      // Call backend to save the generated lesson plan
-      await axios.put(`https://tms.up.school/api/sessionPlans/${conceptId}/save`, {
-        lessonPlan: generatedLessonPlan,
-      });
-  
-      setSuccessMessage("Lesson plan saved successfully!");
-      setError("");
-    } catch (error) {
-      console.error("Error saving lesson plan:", error);
-      setError("Failed to save the lesson plan. Please try again.");
-    }
-  };
-  
-  //generate and download the lesson plan
-
-
   const handleDownloadSession = (sessionNumber) => {
     const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
   
@@ -437,60 +413,50 @@ const SessionPlans = () => {
   
     // Initialize jsPDF
     const doc = new jsPDF();
-    const lineHeight = 6; // Vertical spacing between lines
-    const boxPadding = 2; // Padding for content in the boxes
-    const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
-    let y = 20; // Starting vertical position
-
-    // Add a consistent header to all pages
-  const addHeader = () => {
-    doc.setFontSize(10);
-    doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10, { align: "left" });
-    doc.line(10, 12, 200, 12); // Horizontal line below the header
-  };
-
-  // Add the header to the first page
-  addHeader();
-
-  // Add first-page heading
-  doc.setFontSize(10);
-  doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
-  y += lineHeight;
-  doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
-  y += lineHeight * 2;
-  doc.text(`Session Type: Theory`, 10, y);
-  y += lineHeight;
-  doc.text(`Number of Sessions: 1`, 10, y);
-  y += lineHeight;
-  doc.text(`Duration per Session: 45 minutes`, 10, y);
-  y += lineHeight * 2;
+    const lineHeight = 6;
+    const pageHeight = doc.internal.pageSize.height - 20;
+    let y = 20;
   
-    // Add topics and concepts
+    // Add session header details
+    doc.setFont("helvetica", "bold");
+    doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Class Name: ${className || "N/A"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Subject Name: ${subjectName || "N/A"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Session Type: Theory`, 10, y);
+    y += lineHeight;
+    doc.text(`Number of Sessions: 1`, 10, y);
+    y += lineHeight;
+    doc.text(`Duration per Session: 45 minutes`, 10, y);
+    y += lineHeight * 2;
+  
+    // Add topics and concepts for the session
     session.Topics.forEach((topic) => {
-      // Add topic title
-      if (y > pageHeight) {
-        doc.addPage();
-        y = 10; // Reset y position for the new page
-      }
-  
+      // Topic Header
       doc.setFont("helvetica", "bold");
       doc.text(`Topic: ${topic.topicName}`, 10, y);
-      y += lineHeight * 1.5;
+      y += lineHeight;
   
+      // Concepts under the topic
       topic.Concepts.forEach((concept, index) => {
+        // Add page if required
         if (y > pageHeight) {
           doc.addPage();
           y = 10;
         }
   
-        // Add concept name
+        // Concept name
         doc.setFont("helvetica", "normal");
         doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
         y += lineHeight;
   
-        // Add concept detailing
+        // Concept detailing
         if (concept.conceptDetailing) {
-          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 180); // Wrap text
+          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 180);
           details.forEach((line) => {
             if (y > pageHeight) {
               doc.addPage();
@@ -501,10 +467,10 @@ const SessionPlans = () => {
           });
         }
   
-        // Add lesson plan without timings
+        // Lesson plan
         if (concept.LessonPlan?.generatedLP) {
-          const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, "");
-          const lessonPlanLines = doc.splitTextToSize(`Lesson Plan:\n${filteredLessonPlan}`, 180);
+          const lessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, ""); // Remove time mentions
+          const lessonPlanLines = doc.splitTextToSize(`Lesson Plan:\n${lessonPlan}`, 180);
   
           lessonPlanLines.forEach((line) => {
             if (y > pageHeight) {
@@ -522,7 +488,7 @@ const SessionPlans = () => {
       y += lineHeight; // Add spacing after each topic
     });
   
-    // Save the PDF file
+    // Save the PDF with the session number in the filename
     doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
   
