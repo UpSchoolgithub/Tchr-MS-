@@ -176,8 +176,9 @@ const handleSchoolChange = async (e) => {
   };
   
   
+  
   const handleSectionSelect = () => {
-    const sectionData = sections.find((section) => section.sectionName === selectedSection);
+    const sectionData = sections.find((section) => section.sectionId === selectedSection);
     if (selectedSchool && selectedClassId && sectionData) {
       navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
         state: {
@@ -186,8 +187,11 @@ const handleSchoolChange = async (e) => {
           selectedSection: sectionData.sectionId,
         },
       });
+    } else {
+      console.error("Section data not found.");
     }
   };
+  
 
   return (
     <div className="container">
@@ -238,17 +242,18 @@ const handleSchoolChange = async (e) => {
         <div className="form-group">
   <label>Section:</label>
   <select 
-    onChange={handleSectionChange} 
-    value={selectedSection || ''} 
-    disabled={!sections.length}
-  >
-    <option value="" disabled>Select Section</option>
-    {sections.map((section) => (
-      <option key={section.sectionId} value={section.sectionId}>
-        {section.sectionName}
-      </option>
-    ))}
-  </select>
+  onChange={handleSectionChange} 
+  value={selectedSection || ''} 
+  disabled={!sections.length}
+>
+  <option value="" disabled>Select Section</option>
+  {sections.map((section) => (
+    <option key={section.sectionId} value={section.sectionId}>
+      {section.sectionName}
+    </option>
+  ))}
+</select>
+
 </div>
 
 
