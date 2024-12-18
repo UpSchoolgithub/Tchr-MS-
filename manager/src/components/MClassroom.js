@@ -161,22 +161,28 @@ const handleClassChange = (e) => {
 };
 
 
-  const handleSectionChange = async (e) => {
-    const sectionId = e.target.value; // Get sectionId directly
-    setSelectedSection(sectionId);
-  
-    // Fetch subjects based on the selected sectionId
-    try {
-      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('Subjects Response:', response.data); // Debugging response
-      setSubjects(response.data);
-    } catch (error) {
-      console.error('Error fetching subjects:', error);
-      setSubjects([]);
-    }
-  };
+const handleSectionChange = async (e) => {
+  const sectionId = e.target.value;
+  setSelectedSection(sectionId);
+
+  if (!sectionId) {
+    console.error("Invalid section ID:", sectionId);
+    return;
+  }
+
+  try {
+    const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log("Subjects Response:", response.data);
+    setSubjects(response.data);
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    setSubjects([]);
+    alert("Failed to load subjects. Please try again.");
+  }
+};
+
   
   
   
@@ -184,11 +190,17 @@ const handleClassChange = (e) => {
     const sectionData = sections.find((section) => section.sectionId === selectedSection);
   
     if (selectedSchool && selectedClassId && sectionData) {
+      console.log("Navigating with:", {
+        selectedSchool,
+        selectedClassId,
+        sectionId: sectionData.sectionId,
+      });
+  
       navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
         state: {
           selectedSchool,
           selectedClass: selectedClassId,
-          selectedSection: sectionData.sectionId,
+          selectedSection: sectionData.sectionId, // Use section ID for navigation
         },
       });
     } else {
@@ -251,18 +263,15 @@ const handleClassChange = (e) => {
         {/* Section Selection */}
         <div className="form-group">
   <label>Section:</label>
-  <select
-    onChange={handleSectionChange}
-    value={selectedSection || ''}
-    disabled={!sections.length}
-  >
-    <option value="" disabled>Select Section</option>
-    {sections.map((section) => (
-      <option key={section.sectionId} value={section.sectionId}>
-        {section.sectionName}
-      </option>
-    ))}
-  </select>
+  <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClassId}>
+  <option value="" disabled>Select Section</option>
+  {sections.map((section) => (
+    <option key={section.sectionId} value={section.sectionId}>
+      {section.sectionName}
+    </option>
+  ))}
+</select>
+
 </div>
 
 
