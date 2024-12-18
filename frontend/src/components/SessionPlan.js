@@ -436,27 +436,26 @@ const SessionPlans = () => {
     }
   
     const doc = new jsPDF();
-    const lineHeight = 6; // Vertical spacing between lines
-    const boxPadding = 2; // Padding for content in the boxes
-    const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
-    let y = 20; // Starting vertical position
+    const lineHeight = 6;
+    const boxPadding = 2;
+    const pageHeight = doc.internal.pageSize.height - 20;
+    let y = 20;
   
-    // Add a consistent header to all pages
+    // Add header to all pages
     const addHeader = () => {
       doc.setFontSize(10);
-      doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10, { align: "left" });
-      doc.line(10, 12, 200, 12); // Horizontal line below the header
+      doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10);
+      doc.line(10, 12, 200, 12);
     };
   
-    // Add the header to the first page
+    // Add header and first-page details
     addHeader();
   
-    // Add first-page heading
     doc.setFontSize(10);
     doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
     y += lineHeight;
     doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
-    y += lineHeight * 2;
+    y += lineHeight;
     doc.text(`Session Type: Theory`, 10, y);
     y += lineHeight;
     doc.text(`Number of Sessions: 1`, 10, y);
@@ -464,7 +463,52 @@ const SessionPlans = () => {
     doc.text(`Duration per Session: 45 minutes`, 10, y);
     y += lineHeight * 2;
   
-    // Topics and Concepts
+    // Add Objectives
+    doc.setFont("helvetica", "bold");
+    doc.text(`Objective:`, 10, y);
+    y += lineHeight;
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `- To introduce students to the concept of revenue system in history and its significance.`,
+      12,
+      y
+    );
+    y += lineHeight * 2;
+  
+    // Add Topics to be covered
+    doc.setFont("helvetica", "bold");
+    doc.text(`Topics to be covered:`, 10, y);
+    y += lineHeight;
+    doc.setFont("helvetica", "normal");
+    doc.text(`- Introduction to Revenue System`, 12, y);
+    y += lineHeight * 2;
+  
+    // Add Procedures
+    doc.setFont("helvetica", "bold");
+    doc.text(`Procedures:`, 10, y);
+    y += lineHeight;
+    doc.setFont("helvetica", "normal");
+    const procedures = [
+      "1. Introduction",
+      "- Greet the students and introduce the topic of the day.",
+      "- Explain the importance of understanding revenue system in history.",
+      "2. What is Revenue System?",
+      "- Define revenue system as the means through which a government collects money.",
+      "- Explain the various sources of revenue in ancient times such as land revenue, taxes.",
+    ];
+    procedures.forEach((line) => {
+      if (y > pageHeight) {
+        doc.addPage();
+        addHeader();
+        y = 20;
+      }
+      doc.text(line, 12, y);
+      y += lineHeight;
+    });
+  
+    y += lineHeight * 2;
+  
+    // Topics and Concepts with Boxes
     session.Topics.forEach((topic, topicIndex) => {
       if (y > pageHeight) {
         doc.addPage();
@@ -477,32 +521,25 @@ const SessionPlans = () => {
       doc.text(`Topic: ${topic.topicName}`, 10, y);
       y += lineHeight;
   
-      // Draw a box for each concept
       topic.Concepts.forEach((concept, conceptIndex) => {
-        if (y + 30 > pageHeight) {
+        if (y + 20 > pageHeight) {
           doc.addPage();
           addHeader();
           y = 20;
         }
   
-        // Box for concept
-        const boxHeight = 20; // Fixed box height
+        // Concept Box
+        const boxHeight = 20;
         doc.rect(10, y, 180, boxHeight);
-  
-        // Inside the box
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
         doc.text(`Concept ${conceptIndex + 1}: ${concept.concept || "Unnamed"}`, 12, y + boxPadding + 4);
-        const details = doc.splitTextToSize(
-          `Details: ${concept.conceptDetailing || "No Details"}`,
-          176
-        );
+        const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing || "No Details"}`, 176);
   
         details.forEach((line, index) => {
           doc.text(line, 12, y + boxPadding + 10 + index * 4);
         });
   
-        y += boxHeight + 4; // Move to the next position
+        y += boxHeight + 4;
       });
   
       y += lineHeight;
