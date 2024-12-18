@@ -285,8 +285,11 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
 router.get('/sessionPlans/:id/view', async (req, res) => {
   const { id } = req.params;
   try {
-    const lessonPlan = await LessonPlan.findOne({ where: { conceptId: id } });
-    if (!lessonPlan || !lessonPlan.generatedLP) {
+    const lessonPlan = await LessonPlan.findOne({
+      where: { conceptId: id, generatedLP: { [Op.ne]: "" } }, // Exclude empty generatedLP
+      order: [['updatedAt', 'DESC']], // Fetch the latest updated row
+    });
+        if (!lessonPlan || !lessonPlan.generatedLP) {
       return res.status(404).json({ message: 'Lesson plan not found or not generated.' });
     }
     res.status(200).json({ lessonPlan: lessonPlan.generatedLP });
