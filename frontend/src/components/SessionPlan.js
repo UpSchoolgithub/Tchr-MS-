@@ -443,12 +443,12 @@ const SessionPlans = () => {
     let yPosition = 90; // Start Position for Topics
   
     // Loop through Topics and Concepts
-    session.Topics.forEach((topic, tIndex) => {
+    session.Topics.forEach((topic) => {
       if (yPosition > 270) {
         doc.addPage(); // Add new page if space runs out
-        yPosition = 10; // Reset Y position
+        yPosition = 10;
       }
-      
+  
       // Topic Name
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
@@ -456,7 +456,7 @@ const SessionPlans = () => {
       yPosition += 10;
   
       // List Concepts under the Topic
-      topic.Concepts.forEach((concept, cIndex) => {
+      topic.Concepts.forEach((concept, index) => {
         if (yPosition > 270) {
           doc.addPage();
           yPosition = 10;
@@ -464,15 +464,28 @@ const SessionPlans = () => {
   
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        doc.text(`${cIndex + 1}. ${concept.concept}`, 15, yPosition);
-        yPosition += 7;
+  
+        // Exclude Specific Concept Detailing
+        if (
+          concept.conceptDetailing &&
+          !concept.conceptDetailing.startsWith(
+            "It was an agreement between the company"
+          )
+        ) {
+          doc.text(`${index + 1}. ${concept.concept}`, 15, yPosition);
+          yPosition += 7;
+          doc.text(`   ${concept.conceptDetailing}`, 15, yPosition);
+          yPosition += 7;
+        } else {
+          doc.text(`${index + 1}. ${concept.concept}`, 15, yPosition);
+          yPosition += 7;
+        }
       });
     });
   
     // Save PDF
     doc.save(`Session_${session.sessionNumber}_LessonPlan.pdf`);
   };
-
   
   
   // downloading all sessions as a single file
