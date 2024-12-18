@@ -15,6 +15,7 @@ const MClassroom = () => {
   const [selectedClassName, setSelectedClassName] = useState(null); // State for selected class name
   const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || null);
   const navigate = useNavigate();
+  const [selectedBoard, setSelectedBoard] = useState('');
 
   useEffect(() => {
     if (!managerId || !token) {
@@ -53,13 +54,17 @@ const MClassroom = () => {
     }
   }, [selectedClassId]);
 
-  const fetchClasses = async (schoolId) => {
+  const fetchClasses = async (schoolId, selectedBoard) => {
     try {
-      const response = await axiosInstance.get(`/schools/${schoolId}/classes`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const response = await axiosInstance.get(
+        `/schools/${schoolId}/classes?board=${selectedBoard}`, // Pass board as query parameter
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         }
-      });
+      );
+  
       const classesGrouped = response.data.reduce((acc, curr) => {
         if (!acc[curr.className]) {
           acc[curr.className] = [];
@@ -67,16 +72,19 @@ const MClassroom = () => {
         acc[curr.className].push(curr);
         return acc;
       }, {});
-      const processedClasses = Object.keys(classesGrouped).map(className => ({
+  
+      const processedClasses = Object.keys(classesGrouped).map((className) => ({
         className,
         classInfo: classesGrouped[className],
-        count: classesGrouped[className].length
+        count: classesGrouped[className].length,
       }));
+  
       setClasses(processedClasses);
     } catch (error) {
       console.error('Error fetching classes:', error);
     }
   };
+  
 
   const fetchSections = async (classId) => {
     try {
@@ -113,14 +121,22 @@ const MClassroom = () => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
     localStorage.setItem('selectedSchool', schoolId);
+  
+    // Reset states
     setClasses([]);
     setSections([]);
-    setSubjects([]); // Clear subjects when changing school
+    setSubjects([]);
     setSelectedClassId(null);
     setSelectedSection(null);
     localStorage.removeItem('selectedClass');
     localStorage.removeItem('selectedSection');
+  
+    // Fetch classes if a board is already selected
+    if (selectedBoard) {
+      fetchClasses(schoolId, selectedBoard); // Pass the selected board
+    }
   };
+  
 
   const handleClassChange = (e) => {
     const className = e.target.value;
@@ -170,6 +186,16 @@ const MClassroom = () => {
 
   return (
     <div className="container">
+      <div className="form-group">
+  <label>Board:</label>
+  <select onChange={(e) => setSelectedBoard(e.target.value)} value={selectedBoard || ''}>
+    <option value="" disabled>Select Board</option>
+    <option value="ICSE">ICSE</option>
+    <option value="CBSE">CBSE</option>
+    <option value="STATE">STATE</option>
+  </select>
+</div>
+
       <div className="classroom-container">
         <h1>Select School, Class, and Section</h1>
         <div className="form-group">
