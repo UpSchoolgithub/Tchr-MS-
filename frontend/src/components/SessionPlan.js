@@ -535,17 +535,7 @@ const SessionPlans = () => {
                 </button>
               </td>
 
-              {/* Actions */}
-              {tIndex === 0 && cIndex === 0 && (
-                <td
-                  rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
-                    (acc, t) => acc + t.concepts.length,
-                    0
-                  )}
-                >
-                </td>
-              )}
-            </tr>
+                          </tr>
           ))
         )}
 
