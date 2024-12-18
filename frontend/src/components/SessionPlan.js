@@ -426,7 +426,6 @@ const SessionPlans = () => {
   
   //generate and download the lesson plan
 
-  import { jsPDF } from "jspdf";
 
   const handleDownloadSession = (sessionNumber) => {
     const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
