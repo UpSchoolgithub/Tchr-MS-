@@ -478,10 +478,10 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 // Save session details
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const { incompleteTopics, completedTopics, assignmentDetails, observations, absentees } = req.body;
+  const { incompleteConcepts, completedConcepts, assignmentDetails, observations, absentees } = req.body;
 
   try {
-    // Fetch the current session and its session plan
+    // Fetch current session and plan
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -490,26 +490,26 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       ],
     });
 
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found.' });
+    if (!session || !session.SessionPlan) {
+      return res.status(404).json({ error: 'Session or session plan not found.' });
     }
 
-    // Log session report for the current session
+    // Log session report
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
-      sessionId: session.id,
+      sessionId,
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
       absentStudents: JSON.stringify(absentees || []),
-      sessionsToComplete: JSON.stringify([...completedTopics, ...incompleteTopics]),
-      sessionsCompleted: JSON.stringify(completedTopics || []),
+      sessionsCompleted: JSON.stringify(completedConcepts || []),
+      sessionsToComplete: JSON.stringify(incompleteConcepts || []),
       assignmentDetails: assignmentDetails || null,
       observationDetails: observations || '',
     });
 
-    // Update the next session with incomplete topics
-    if (incompleteTopics && incompleteTopics.length > 0) {
+    // Carry forward incomplete concepts to the next session
+    if (incompleteConcepts && incompleteConcepts.length > 0) {
       const nextSession = await Session.findOne({
         where: {
           subjectId: session.Subject.id,
@@ -517,14 +517,14 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
           id: { [Op.gt]: sessionId }, // Get the next session by ID
         },
         include: [{ model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] }],
-        order: [['id', 'ASC']], // Ensure the next session is picked
+        order: [['id', 'ASC']],
       });
 
       if (nextSession && nextSession.SessionPlan) {
-        const currentPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
-        const updatedPlanDetails = [...incompleteTopics, ...currentPlanDetails];
+        const nextPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
+        const updatedPlanDetails = [...incompleteConcepts, ...nextPlanDetails];
 
-        // Update the next session's plan with new topics
+        // Update next session plan
         await SessionPlan.update(
           { planDetails: JSON.stringify(updatedPlanDetails) },
           { where: { id: nextSession.SessionPlan.id } }
@@ -532,10 +532,10 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       }
     }
 
-    res.json({ message: 'Session ended and next session updated successfully!' });
+    res.json({ message: 'Session ended, incomplete concepts carried forward to the next session.' });
   } catch (error) {
-    console.error('Error ending session and updating next session:', error);
-    res.status(500).json({ error: 'Failed to save session details and update next session.' });
+    console.error('Error ending session and carrying forward concepts:', error.message);
+    res.status(500).json({ error: 'Failed to process session details.' });
   }
 });
 
