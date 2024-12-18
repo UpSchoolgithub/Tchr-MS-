@@ -181,18 +181,31 @@ const handleClassChange = (e) => {
   
   const handleSectionSelect = () => {
     const sectionData = sections.find((section) => section.sectionId === selectedSection);
+  
     if (selectedSchool && selectedClassId && sectionData) {
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
+      console.log("Navigating with:", {
+        selectedSchool,
+        selectedClassId,
+        sectionId: sectionData.sectionId,
+      });
+  
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${selectedSectionInfo.sectionId}`, {
         state: {
           selectedSchool,
           selectedClass: selectedClassId,
-          selectedSection: sectionData.sectionId,
-        },
+          selectedSection: selectedSectionInfo.sectionId
+        }
       });
+      
     } else {
-      console.error("Section data not found.");
+      console.error("Invalid data for navigation:", {
+        selectedSchool,
+        selectedClassId,
+        sectionData,
+      });
     }
   };
+  
   
 
   return (
