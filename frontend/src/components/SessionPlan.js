@@ -442,81 +442,32 @@ const SessionPlans = () => {
     const lineHeight = 8; // Vertical spacing between lines
   
     // Add session-level header once
-    const addHeader = () => {
-      doc.setFontSize(14);
-      doc.text(`Lesson Plan`, 10, y);
-      y += lineHeight * 1.5;
+    doc.setFontSize(14);
+    doc.text(`Lesson Plan`, 10, y);
+    y += lineHeight * 1.5;
   
-      doc.setFontSize(12);
-      doc.text(`Grade: ${className || "8"}`, 10, y);
-      y += lineHeight;
-      doc.text(`Subject: ${subjectName || "Social Studies"}`, 10, y);
-      y += lineHeight;
-      doc.text(`Unit: ${unitName || "History"}`, 10, y);
-      y += lineHeight;
-      doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
-      y += lineHeight;
-      doc.text(`Session Type: Theory`, 10, y);
-      y += lineHeight;
-      doc.text(`Number of Sessions: ${session.numberOfSessions || 1}`, 10, y);
-      y += lineHeight;
-      doc.text(`Duration per Session: 45 minutes`, 10, y);
-      y += lineHeight * 2;
-    };
+    doc.setFontSize(12);
+    doc.text(`Grade: ${className || "8"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Subject: Social Studies`, 10, y);
+    y += lineHeight;
+    doc.text(`Unit: History`, 10, y);
+    y += lineHeight;
+    doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Session Type: Theory`, 10, y);
+    y += lineHeight;
+    doc.text(`Number of Sessions: 1`, 10, y);
+    y += lineHeight;
+    doc.text(`Duration per Session: 45 minutes`, 10, y);
+    y += lineHeight * 2;
   
-    addHeader();
-  
-    // Add Objectives dynamically
-    if (session.objectives && session.objectives.length > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Objective:`, 10, y);
-      y += lineHeight;
-      doc.setFont("helvetica", "normal");
-      session.objectives.forEach((objective) => {
-        if (y > pageHeight) {
-          doc.addPage();
-          y = 10;
-          addHeader();
-        }
-        doc.text(`- ${objective}`, 12, y);
-        y += lineHeight;
-      });
-      y += lineHeight;
-    }
-  
-    // Add Procedures dynamically
-    if (session.procedures && session.procedures.length > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Procedures:`, 10, y);
-      y += lineHeight;
-      doc.setFont("helvetica", "normal");
-      session.procedures.forEach((step, index) => {
-        if (y > pageHeight) {
-          doc.addPage();
-          y = 10;
-          addHeader();
-        }
-        doc.text(`${index + 1}. ${step.title}`, 12, y);
-        y += lineHeight;
-        step.details.forEach((detail) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-            addHeader();
-          }
-          doc.text(`   - ${detail}`, 12, y);
-          y += lineHeight;
-        });
-      });
-      y += lineHeight;
-    }
-  
-    // Add Topics and Concepts with Boxes
+    // Add topics and concepts
     session.Topics.forEach((topic) => {
+      // Add topic title
       if (y > pageHeight) {
         doc.addPage();
-        y = 10;
-        addHeader();
+        y = 10; // Reset y position for the new page
       }
   
       doc.setFont("helvetica", "bold");
@@ -524,65 +475,51 @@ const SessionPlans = () => {
       y += lineHeight * 1.5;
   
       topic.Concepts.forEach((concept, index) => {
-        if (y + 30 > pageHeight) {
+        if (y > pageHeight) {
           doc.addPage();
           y = 10;
-          addHeader();
         }
   
-        // Draw Concept Box
-        doc.rect(10, y, 190, 20);
+        // Add concept name
         doc.setFont("helvetica", "normal");
-        doc.text(`Concept ${index + 1}: ${concept.concept || "Unnamed Concept"}`, 12, y + 6);
+        doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
+        y += lineHeight;
   
-        const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing || "No Details"}`, 186);
-        details.forEach((line, i) => {
-          doc.text(line, 12, y + 12 + i * lineHeight);
-        });
+        // Add concept detailing
+        if (concept.conceptDetailing) {
+          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 180); // Wrap text
+          details.forEach((line) => {
+            if (y > pageHeight) {
+              doc.addPage();
+              y = 10;
+            }
+            doc.text(line, 10, y);
+            y += lineHeight;
+          });
+        }
   
-        y += 25; // Move below the box
+        // Add lesson plan without timings
+        if (concept.LessonPlan?.generatedLP) {
+          const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, "");
+          const lessonPlanLines = doc.splitTextToSize(`Lesson Plan:\n${filteredLessonPlan}`, 180);
+  
+          lessonPlanLines.forEach((line) => {
+            if (y > pageHeight) {
+              doc.addPage();
+              y = 10;
+            }
+            doc.text(line, 10, y);
+            y += lineHeight;
+          });
+        }
+  
+        y += lineHeight; // Add spacing after each concept
       });
   
-      y += lineHeight;
+      y += lineHeight; // Add spacing after each topic
     });
   
-    // Add Materials Needed dynamically
-    if (session.materials && session.materials.length > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Materials Needed:`, 10, y);
-      y += lineHeight;
-      doc.setFont("helvetica", "normal");
-      session.materials.forEach((material) => {
-        if (y > pageHeight) {
-          doc.addPage();
-          y = 10;
-          addHeader();
-        }
-        doc.text(`- ${material}`, 12, y);
-        y += lineHeight;
-      });
-      y += lineHeight;
-    }
-  
-    // Add Assessment dynamically
-    if (session.assessment && session.assessment.length > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Assessment:`, 10, y);
-      y += lineHeight;
-      doc.setFont("helvetica", "normal");
-      session.assessment.forEach((assessment) => {
-        if (y > pageHeight) {
-          doc.addPage();
-          y = 10;
-          addHeader();
-        }
-        doc.text(`- ${assessment}`, 12, y);
-        y += lineHeight;
-      });
-      y += lineHeight;
-    }
-  
-    // Save the PDF
+    // Save the PDF file
     doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
   
