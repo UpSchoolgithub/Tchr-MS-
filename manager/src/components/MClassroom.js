@@ -154,23 +154,22 @@ const handleSchoolChange = async (e) => {
   };
 
   const handleSectionChange = async (e) => {
-    const sectionName = e.target.value;
-    setSelectedSection(sectionName);
+    const sectionId = e.target.value; // Get sectionId directly
+    setSelectedSection(sectionId);
   
-    // Fetch subjects based on the section ID
-    const section = sections.find((sec) => sec.sectionName === sectionName);
-    if (section) {
-      try {
-        const response = await axiosInstance.get(`/sections/${section.sectionId}/subjects`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSubjects(response.data);
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-        setSubjects([]);
-      }
+    // Fetch subjects based on the selected sectionId
+    try {
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('Subjects Response:', response.data); // Debugging response
+      setSubjects(response.data);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      setSubjects([]);
     }
   };
+  
   
   const handleSectionSelect = () => {
     const sectionData = sections.find((section) => section.sectionName === selectedSection);
@@ -231,31 +230,35 @@ const handleSchoolChange = async (e) => {
 
 
         {/* Section Selection */}
-        <div className="form-group">
-          <label>Section:</label>
-          <select onChange={handleSectionChange} value={selectedSection || ''} disabled={!selectedClassId}>
-            <option value="" disabled>Select Section</option>
-            {sections.map((section) => (
-              <option key={section.sectionId} value={section.sectionName}>
-                {section.sectionName}
-              </option>
-            ))}
-          </select>
-        </div>
+<div className="form-group">
+  <label>Section:</label>
+  <select 
+    onChange={handleSectionChange} 
+    value={selectedSection || ''} 
+    disabled={!selectedClassId || sections.length === 0}
+  >
+    <option value="" disabled>Select Section</option>
+    {sections.map((section) => (
+      <option key={section.sectionId} value={section.sectionId}>
+        {section.sectionName}
+      </option>
+    ))}
+  </select>
+</div>
 
-        {/* Subjects */}
-        <div>
-          <h3>Subjects:</h3>
-          {subjects.length > 0 ? (
-            subjects.map((subject) => (
-              <div key={subject.id} className="subject-item">
-                {subject.subjectName}
-              </div>
-            ))
-          ) : (
-            <p>No subjects found for this section.</p>
-          )}
-        </div>
+{/* Subjects */}
+<div>
+  <h3>Subjects:</h3>
+  {subjects.length > 0 ? (
+    subjects.map((subject) => (
+      <div key={subject.id} className="subject-item">
+        {subject.subjectName || 'No Subject Name'}
+      </div>
+    ))
+  ) : (
+    <p>No subjects found for this section.</p>
+  )}
+</div>
 
         <button onClick={handleSectionSelect} disabled={!selectedSection} className="select-button">
           Select Section
