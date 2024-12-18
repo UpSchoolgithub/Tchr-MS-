@@ -435,26 +435,30 @@ const SessionPlans = () => {
       return;
     }
   
-    // Initialize jsPDF
     const doc = new jsPDF();
-    let y = 10; // Starting vertical position
+    let y = 20; // Starting vertical position for content
     const pageHeight = doc.internal.pageSize.height - 20; // Account for margins
     const lineHeight = 8; // Vertical spacing between lines
   
-    // Add session-level header once
-    doc.setFontSize(14);
-    doc.text(`Lesson Plan`, 10, y);
-    y += lineHeight * 1.5;
+    // Add a consistent header to all pages
+    const addHeader = () => {
+      doc.setFontSize(16);
+      doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10, { align: "left" });
+      doc.line(10, 12, 200, 12); // Horizontal line below the header
+    };
   
+    // Add the header to the first page
+    addHeader();
+  
+    // First Page Heading Section
+    doc.setFontSize(14);
+    doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
+    y += lineHeight * 2;
+  
+    // Session Details Section
     doc.setFontSize(12);
-    doc.text(`Grade: ${className || "8"}`, 10, y);
-    y += lineHeight;
-    doc.text(`Subject: Social Studies`, 10, y);
-    y += lineHeight;
-    doc.text(`Unit: History`, 10, y);
-    y += lineHeight;
-    doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
-    y += lineHeight;
     doc.text(`Session Type: Theory`, 10, y);
     y += lineHeight;
     doc.text(`Number of Sessions: 1`, 10, y);
@@ -462,58 +466,51 @@ const SessionPlans = () => {
     doc.text(`Duration per Session: 45 minutes`, 10, y);
     y += lineHeight * 2;
   
-    // Add topics and concepts
-    session.Topics.forEach((topic) => {
-      // Add topic title
+    // Topics and Concepts
+    session.Topics.forEach((topic, topicIndex) => {
       if (y > pageHeight) {
         doc.addPage();
-        y = 10; // Reset y position for the new page
+        addHeader(); // Add header to new page
+        y = 20; // Reset y position for new page
       }
   
+      // Add Topic Title
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
       doc.text(`Topic: ${topic.topicName}`, 10, y);
-      y += lineHeight * 1.5;
+      y += lineHeight;
   
-      topic.Concepts.forEach((concept, index) => {
-        if (y > pageHeight) {
+      // Draw a box for each concept
+      topic.Concepts.forEach((concept, conceptIndex) => {
+        if (y + 30 > pageHeight) {
           doc.addPage();
-          y = 10;
+          addHeader(); // Add header to new page
+          y = 20; // Reset y position for new page
         }
   
-        // Add concept name
+        // Box for concept
+        doc.rect(10, y, 180, 20); // Rect(x, y, width, height)
         doc.setFont("helvetica", "normal");
-        doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
-        y += lineHeight;
+        doc.text(`Concept ${conceptIndex + 1}: ${concept.concept || "Unnamed"}`, 15, y + 6);
   
-        // Add concept detailing
-        if (concept.conceptDetailing) {
-          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 180); // Wrap text
-          details.forEach((line) => {
-            if (y > pageHeight) {
-              doc.addPage();
-              y = 10;
-            }
-            doc.text(line, 10, y);
-            y += lineHeight;
-          });
-        }
+        // Details inside the box
+        const detailsText = doc.splitTextToSize(`Details: ${concept.conceptDetailing || "No Details"}`, 170);
+        detailsText.forEach((line, index) => {
+          doc.text(line, 15, y + 12 + index * lineHeight);
+        });
   
-        // Add lesson plan without timings
-        if (concept.LessonPlan?.generatedLP) {
-          const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, "");
-          const lessonPlanLines = doc.splitTextToSize(`Lesson Plan:\n${filteredLessonPlan}`, 180);
+        // Add lesson plan inside the box
+        const lessonPlan = concept.LessonPlan?.generatedLP?.replace(/\(\d+ minutes\)/g, "") || "No Lesson Plan Available";
+        const lessonPlanLines = doc.splitTextToSize(`Lesson Plan: ${lessonPlan}`, 170);
   
-          lessonPlanLines.forEach((line) => {
-            if (y > pageHeight) {
-              doc.addPage();
-              y = 10;
-            }
-            doc.text(line, 10, y);
-            y += lineHeight;
-          });
-        }
+        lessonPlanLines.forEach((line, index) => {
+          if (index === 0) {
+            y += lineHeight * 2; // Add spacing for "Lesson Plan" header
+          }
+          doc.text(line, 15, y + 12 + index * lineHeight);
+        });
   
-        y += lineHeight; // Add spacing after each concept
+        y += 30; // Move to the next box position
       });
   
       y += lineHeight; // Add spacing after each topic
