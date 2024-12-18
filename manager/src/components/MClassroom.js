@@ -242,19 +242,19 @@ const handleSchoolChange = async (e) => {
         <div className="form-group">
   <label>Section:</label>
   <select 
-  onChange={handleSectionChange} 
-  value={selectedSection || ''} 
-  disabled={!sections.length}
->
-  <option value="" disabled>Select Section</option>
-  {sections.map((section) => (
-    <option key={section.sectionId} value={section.sectionId}>
-      {section.sectionName}
-    </option>
-  ))}
-</select>
-
+    onChange={handleSectionChange} 
+    value={selectedSection || ''} 
+    disabled={!sections.length}
+  >
+    <option value="" disabled>Select Section</option>
+    {sections.map((section) => (
+      <option key={section.sectionId} value={section.sectionId}>
+        {section.sectionName}
+      </option>
+    ))}
+  </select>
 </div>
+
 
 
 {/* Subjects */}
