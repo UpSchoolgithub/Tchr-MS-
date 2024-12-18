@@ -161,32 +161,22 @@ const handleClassChange = (e) => {
 };
 
 
-const handleSectionChange = (e) => {
-  const sectionId = e.target.value; // Expecting sectionId directly
-  setSelectedSection(sectionId);
-  localStorage.setItem("selectedSection", sectionId);
-};
-
-const handleSectionSelect = () => {
-  const sectionData = sections.find((section) => section.sectionId === selectedSection);
-
-  if (selectedSchool && selectedClassId && sectionData) {
-    navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
-      state: {
-        selectedSchool,
-        selectedClass: selectedClassId,
-        selectedSection: sectionData.sectionId,
-      },
-    });
-  } else {
-    console.error("Invalid data for navigation:", {
-      selectedSchool,
-      selectedClassId,
-      sectionData,
-    });
-  }
-};
-
+  const handleSectionChange = async (e) => {
+    const sectionId = e.target.value; // Get sectionId directly
+    setSelectedSection(sectionId);
+  
+    // Fetch subjects based on the selected sectionId
+    try {
+      const response = await axiosInstance.get(`/sections/${sectionId}/subjects`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('Subjects Response:', response.data); // Debugging response
+      setSubjects(response.data);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      setSubjects([]);
+    }
+  };
   
   
   
@@ -194,20 +184,13 @@ const handleSectionSelect = () => {
     const sectionData = sections.find((section) => section.sectionId === selectedSection);
   
     if (selectedSchool && selectedClassId && sectionData) {
-      console.log("Navigating with:", {
-        selectedSchool,
-        selectedClassId,
-        sectionId: sectionData.sectionId,
-      });
-  
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${selectedSectionInfo.sectionId}`, {
+      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
         state: {
           selectedSchool,
           selectedClass: selectedClassId,
-          selectedSection: selectedSectionInfo.sectionId
-        }
+          selectedSection: sectionData.sectionId,
+        },
       });
-      
     } else {
       console.error("Invalid data for navigation:", {
         selectedSchool,
