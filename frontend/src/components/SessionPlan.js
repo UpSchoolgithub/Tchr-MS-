@@ -425,70 +425,104 @@ const SessionPlans = () => {
   };
   
   //generate and download the lesson plan
-  const handleDownloadSession = (sessionNumber) => {
-    const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
-  
-    if (!session) {
-      console.error(`Session ${sessionNumber} not found.`);
-      return;
+  import { jsPDF } from "jspdf";
+
+const handleDownloadSession = (sessionNumber) => {
+  const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
+
+  if (!session) {
+    console.error(`Session ${sessionNumber} not found.`);
+    return;
+  }
+
+  // Initialize jsPDF
+  const doc = new jsPDF();
+  let y = 10; // Starting vertical position
+  const pageHeight = doc.internal.pageSize.height - 20; // Account for margins
+  const lineHeight = 8; // Vertical spacing between lines
+
+  // Add session-level header once
+  doc.setFontSize(14);
+  doc.text(`Lesson Plan`, 10, y);
+  y += lineHeight * 1.5;
+
+  doc.setFontSize(12);
+  doc.text(`Grade: ${className || "8"}`, 10, y);
+  y += lineHeight;
+  doc.text(`Subject: Social Studies`, 10, y);
+  y += lineHeight;
+  doc.text(`Unit: History`, 10, y);
+  y += lineHeight;
+  doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
+  y += lineHeight;
+  doc.text(`Session Type: Theory`, 10, y);
+  y += lineHeight;
+  doc.text(`Number of Sessions: 1`, 10, y);
+  y += lineHeight;
+  doc.text(`Duration per Session: 45 minutes`, 10, y);
+  y += lineHeight * 2;
+
+  // Add topics and concepts
+  session.Topics.forEach((topic) => {
+    // Add topic title
+    if (y > pageHeight) {
+      doc.addPage();
+      y = 10; // Reset y position for the new page
     }
-  
-    // Initialize jsPDF
-    const doc = new jsPDF();
-    let y = 10; // Vertical position for writing text in PDF
-  
-    // Add session-level header once
-    doc.setFontSize(14);
-    doc.text(`Lesson Plan`, 10, y);
-    y += 10;
-  
-    doc.setFontSize(12);
-    doc.text(`Grade: ${className || "8"}`, 10, y);
-    y += 8;
-    doc.text(`Subject: Social Studies`, 10, y);
-    y += 8;
-    doc.text(`Unit: History`, 10, y);
-    y += 8;
-    doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
-    y += 8;
-    doc.text(`Session Type: Theory`, 10, y);
-    y += 8;
-    doc.text(`Number of Sessions: 1`, 10, y);
-    y += 8;
-    doc.text(`Duration per Session: 45 minutes`, 10, y);
-    y += 12;
-  
-    // Add topics and concepts
-    session.Topics.forEach((topic) => {
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Topic: ${topic.topicName}`, 10, y);
-      y += 8;
-  
-      topic.Concepts.forEach((concept, index) => {
-        doc.setFont("helvetica", "normal");
-        doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
-        y += 6;
-  
-        // Add concept detailing
-        if (concept.conceptDetailing) {
-          doc.text(`Details: ${concept.conceptDetailing}`, 10, y);
-          y += 6;
-        }
-  
-        // Add lesson plan without timings
-        if (concept.LessonPlan?.generatedLP) {
-          const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, ""); // Remove timings
-          doc.text(`Lesson Plan:\n${filteredLessonPlan}`, 10, y);
-          y += 12;
-        }
-      });
-      y += 5; // Space after each topic
+
+    doc.setFont("helvetica", "bold");
+    doc.text(`Topic: ${topic.topicName}`, 10, y);
+    y += lineHeight * 1.5;
+
+    topic.Concepts.forEach((concept, index) => {
+      if (y > pageHeight) {
+        doc.addPage();
+        y = 10;
+      }
+
+      // Add concept name
+      doc.setFont("helvetica", "normal");
+      doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
+      y += lineHeight;
+
+      // Add concept detailing
+      if (concept.conceptDetailing) {
+        const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 180); // Wrap text
+        details.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+      }
+
+      // Add lesson plan without timings
+      if (concept.LessonPlan?.generatedLP) {
+        const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, "");
+        const lessonPlanLines = doc.splitTextToSize(`Lesson Plan:\n${filteredLessonPlan}`, 180);
+
+        lessonPlanLines.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+      }
+
+      y += lineHeight; // Add spacing after each concept
     });
-  
-    // Save the PDF file
-    doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
-  };
+
+    y += lineHeight; // Add spacing after each topic
+  });
+
+  // Save the PDF file
+  doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
+};
+
   
   
   // downloading all sessions as a single file
