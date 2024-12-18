@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 import "../styles.css";
+import { jsPDF } from "jspdf";
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
@@ -432,30 +433,61 @@ const SessionPlans = () => {
       return;
     }
   
-    // Generate session-specific content
-    let content = `Chapter Name: ${chapterName}\nClass: ${className}\nSubject: Social\n\n`;
-    content += `=== Session ${session.sessionNumber} ===\n\n`;
+    // Initialize jsPDF
+    const doc = new jsPDF();
+    let y = 10; // Vertical position for writing text in PDF
   
+    // Add session-level header once
+    doc.setFontSize(14);
+    doc.text(`Lesson Plan`, 10, y);
+    y += 10;
+  
+    doc.setFontSize(12);
+    doc.text(`Grade: ${className || "8"}`, 10, y);
+    y += 8;
+    doc.text(`Subject: Social Studies`, 10, y);
+    y += 8;
+    doc.text(`Unit: History`, 10, y);
+    y += 8;
+    doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
+    y += 8;
+    doc.text(`Session Type: Theory`, 10, y);
+    y += 8;
+    doc.text(`Number of Sessions: 1`, 10, y);
+    y += 8;
+    doc.text(`Duration per Session: 45 minutes`, 10, y);
+    y += 12;
+  
+    // Add topics and concepts
     session.Topics.forEach((topic) => {
-      content += `Topic: ${topic.topicName}\n\n`;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Topic: ${topic.topicName}`, 10, y);
+      y += 8;
   
       topic.Concepts.forEach((concept, index) => {
-        content += `- Concept ${index + 1}: ${concept.concept}\n`;
-        content += `  Details: ${concept.conceptDetailing || "No Details"}\n`;
-        content += `  Lesson Plan:\n${concept.LessonPlan?.generatedLP || "Not Generated"}\n\n`;
-      });
+        doc.setFont("helvetica", "normal");
+        doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
+        y += 6;
   
-      content += "-------------------------------------------------\n";
+        // Add concept detailing
+        if (concept.conceptDetailing) {
+          doc.text(`Details: ${concept.conceptDetailing}`, 10, y);
+          y += 6;
+        }
+  
+        // Add lesson plan without timings
+        if (concept.LessonPlan?.generatedLP) {
+          const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, ""); // Remove timings
+          doc.text(`Lesson Plan:\n${filteredLessonPlan}`, 10, y);
+          y += 12;
+        }
+      });
+      y += 5; // Space after each topic
     });
   
-    // Trigger file download
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Session_${sessionNumber}_LessonPlan.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Save the PDF file
+    doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
   
   
@@ -574,12 +606,12 @@ const SessionPlans = () => {
   <td colSpan="5" style={{ textAlign: "left" }}>
     <strong>Session {plan.sessionNumber}</strong>
     <button
-      onClick={() => handleDownloadSession(plan.sessionNumber)}
-      className="btn btn-primary"
-      style={{ marginLeft: "10px" }}
-    >
-      Download Session {plan.sessionNumber} Plan
-    </button>
+  onClick={() => handleDownloadSession(plan.sessionNumber)}
+  className="btn btn-primary"
+>
+  Download Session {plan.sessionNumber} Plan
+</button>
+
   </td>
 </tr>
 
