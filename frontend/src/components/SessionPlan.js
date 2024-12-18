@@ -424,34 +424,34 @@ const SessionPlans = () => {
   };
   
   //generate and download the lesson plan
-  const handleDownloadSession = (sessionNumber) => {
-    const session = sessionPlans.find(
-      (plan) => plan.sessionNumber === sessionNumber
-    );
+  const handleDownloadSessionPlans = () => {
+    let downloadContent = `Chapter Name: ${chapterName || "Unknown Chapter"}\n`;
+    downloadContent += `Class: ${className || "Unknown Class"}\n`;
+    downloadContent += `Subject: Social\n\n`;
   
-    if (!session) return;
+    sessionPlans.forEach((session) => {
+      downloadContent += `Session ${session.sessionNumber}:\n\n`;
   
-    let content = `Chapter Name: ${chapterName}\nClass: ${className}\nSubject: Social\n\n`;
-    content += `Session ${session.sessionNumber}:\n\n`;
+      session.Topics.forEach((topic) => {
+        downloadContent += `### Topic: ${topic.topicName}\n\n`;
   
-    session.Topics.forEach((topic) => {
-      content += `### Topic: ${topic.topicName}\n\n`;
-  
-      topic.Concepts.forEach((concept, index) => {
-        content += `- Concept ${index + 1}: ${concept.concept}\n`;
-        content += `  Details: ${concept.conceptDetailing}\n`;
-        content += `  Lesson Plan:\n${
-          concept.LessonPlan?.generatedLP || "Not Generated"
-        }\n\n`;
+        topic.Concepts.forEach((concept, index) => {
+          downloadContent += `- Concept ${index + 1}: ${concept.concept}\n`;
+          downloadContent += `  Details: ${concept.conceptDetailing}\n`;
+          downloadContent += `  Lesson Plan:\n${
+            concept.LessonPlan?.generatedLP || "Not Generated"
+          }\n\n`;
+        });
+        downloadContent += "-------------------------------------------------\n";
       });
-      content += "-------------------------------------------------\n";
+      downloadContent += `\n========================================\n`;
     });
   
     // Trigger file download
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([downloadContent], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Session_${sessionNumber}_LessonPlan.txt`;
+    link.download = `Lesson_Plan_${chapterName || "Session"}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
