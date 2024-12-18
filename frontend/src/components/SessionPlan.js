@@ -435,116 +435,79 @@ const SessionPlans = () => {
       return;
     }
   
+    // Initialize jsPDF
     const doc = new jsPDF();
-    const lineHeight = 6;
-    const boxPadding = 2;
-    const pageHeight = doc.internal.pageSize.height - 20;
-    let y = 20;
+    let y = 10; // Starting vertical position
+    const pageHeight = doc.internal.pageSize.height - 20; // Account for margins
+    const lineHeight = 8; // Vertical spacing between lines
   
-    // Add header to all pages
+    // Add session-level header once
     const addHeader = () => {
-      doc.setFontSize(10);
-      doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10);
-      doc.line(10, 12, 200, 12);
+      doc.setFontSize(14);
+      doc.text(`Lesson Plan`, 10, y);
+      y += lineHeight * 1.5;
+  
+      doc.setFontSize(12);
+      doc.text(`Grade: ${className || "8"}`, 10, y);
+      y += lineHeight;
+      doc.text(`Subject: ${subjectName || "Social Studies"}`, 10, y);
+      y += lineHeight;
+      doc.text(`Unit: ${unitName || "History"}`, 10, y);
+      y += lineHeight;
+      doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
+      y += lineHeight;
+      doc.text(`Session Type: Theory`, 10, y);
+      y += lineHeight;
+      doc.text(`Number of Sessions: 1`, 10, y);
+      y += lineHeight;
+      doc.text(`Duration per Session: 45 minutes`, 10, y);
+      y += lineHeight * 2;
     };
   
-    // Add header and first-page details
     addHeader();
   
-    doc.setFontSize(10);
-    doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
-    y += lineHeight;
-    doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
-    y += lineHeight;
-    doc.text(`Session Type: Theory`, 10, y);
-    y += lineHeight;
-    doc.text(`Number of Sessions: 1`, 10, y);
-    y += lineHeight;
-    doc.text(`Duration per Session: 45 minutes`, 10, y);
-    y += lineHeight * 2;
-  
-    // Add Objectives
-    doc.setFont("helvetica", "bold");
-    doc.text(`Objective:`, 10, y);
-    y += lineHeight;
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      `- To introduce students to the concept of revenue system in history and its significance.`,
-      12,
-      y
-    );
-    y += lineHeight * 2;
-  
-    // Add Topics to be covered
-    doc.setFont("helvetica", "bold");
-    doc.text(`Topics to be covered:`, 10, y);
-    y += lineHeight;
-    doc.setFont("helvetica", "normal");
-    doc.text(`- Introduction to Revenue System`, 12, y);
-    y += lineHeight * 2;
-  
-    // Add Procedures
-    doc.setFont("helvetica", "bold");
-    doc.text(`Procedures:`, 10, y);
-    y += lineHeight;
-    doc.setFont("helvetica", "normal");
-    const procedures = [
-      "1. Introduction",
-      "- Greet the students and introduce the topic of the day.",
-      "- Explain the importance of understanding revenue system in history.",
-      "2. What is Revenue System?",
-      "- Define revenue system as the means through which a government collects money.",
-      "- Explain the various sources of revenue in ancient times such as land revenue, taxes.",
-    ];
-    procedures.forEach((line) => {
+    // Add topics and concepts with boxes
+    session.Topics.forEach((topic) => {
       if (y > pageHeight) {
         doc.addPage();
-        addHeader();
-        y = 20;
-      }
-      doc.text(line, 12, y);
-      y += lineHeight;
-    });
-  
-    y += lineHeight * 2;
-  
-    // Topics and Concepts with Boxes
-    session.Topics.forEach((topic, topicIndex) => {
-      if (y > pageHeight) {
-        doc.addPage();
-        addHeader();
-        y = 20;
+        y = 10; // Reset y position for the new page
+        addHeader(); // Add the header on new pages
       }
   
-      // Add Topic Title
+      // Add topic title
       doc.setFont("helvetica", "bold");
       doc.text(`Topic: ${topic.topicName}`, 10, y);
-      y += lineHeight;
+      y += lineHeight * 1.5;
   
-      topic.Concepts.forEach((concept, conceptIndex) => {
-        if (y + 20 > pageHeight) {
+      topic.Concepts.forEach((concept, index) => {
+        if (y + 30 > pageHeight) { // Check if space is sufficient for the box
           doc.addPage();
+          y = 10; // Reset y position for new page
           addHeader();
-          y = 20;
         }
   
-        // Concept Box
-        const boxHeight = 20;
-        doc.rect(10, y, 180, boxHeight);
+        // Draw box
+        const boxHeight = 25;
+        doc.rect(10, y, 190, boxHeight); // Rect(x, y, width, height)
+  
+        // Add concept content inside the box
         doc.setFont("helvetica", "normal");
-        doc.text(`Concept ${conceptIndex + 1}: ${concept.concept || "Unnamed"}`, 12, y + boxPadding + 4);
-        const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing || "No Details"}`, 176);
+        doc.text(`Concept ${index + 1}: ${concept.concept || "Unnamed Concept"}`, 12, y + 6);
   
-        details.forEach((line, index) => {
-          doc.text(line, 12, y + boxPadding + 10 + index * 4);
-        });
+        if (concept.conceptDetailing) {
+          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 186);
+          details.forEach((line, i) => {
+            doc.text(line, 12, y + 12 + i * lineHeight);
+          });
+        }
   
-        y += boxHeight + 4;
+        y += boxHeight + 5; // Move y down after each box
       });
   
-      y += lineHeight;
+      y += lineHeight; // Add spacing after each topic
     });
   
+    // Save the PDF file
     doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
   
