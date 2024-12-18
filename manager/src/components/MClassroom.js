@@ -10,7 +10,7 @@ const MClassroom = () => {
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
   const [subjects, setSubjects] = useState([]);
-
+  const [availableBoards, setAvailableBoards] = useState([]);
   const [selectedBoard, setSelectedBoard] = useState('');
   const [selectedSchool, setSelectedSchool] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -49,22 +49,27 @@ const MClassroom = () => {
       const response = await axiosInstance.get(`/schools/${schoolId}/classes?board=${board}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+  
+      // Group classes by name
       const classesGrouped = response.data.reduce((acc, curr) => {
         if (!acc[curr.className]) acc[curr.className] = [];
         acc[curr.className].push(curr);
         return acc;
       }, {});
+  
+      // Process grouped classes
       const processedClasses = Object.keys(classesGrouped).map((className) => ({
         className,
         classInfo: classesGrouped[className],
         count: classesGrouped[className].length,
       }));
+  
       setClasses(processedClasses);
     } catch (error) {
       console.error('Error fetching classes:', error);
     }
   };
-
+  
   const fetchSections = async (classId) => {
     try {
       const response = await axiosInstance.get(`/classes/${classId}/sections`, {
@@ -91,31 +96,43 @@ const MClassroom = () => {
   const handleBoardChange = (e) => {
     const board = e.target.value;
     setSelectedBoard(board);
-
-    // Reset dependent dropdowns
-    setClasses([]);
-    setSections([]);
-    setSubjects([]);
-    setSelectedClassId('');
-    setSelectedSection('');
-
+  
+    // Fetch classes for the selected school and board
     if (selectedSchool) {
       fetchClasses(selectedSchool, board);
     }
   };
+  
+  
 
-  const handleSchoolChange = (e) => {
-    const schoolId = e.target.value;
-    setSelectedSchool(schoolId);
 
-    // Reset dependent dropdowns
-    setClasses([]);
-    setSections([]);
-    setSubjects([]);
-    setSelectedBoard('');
-    setSelectedClassId('');
-    setSelectedSection('');
-  };
+const handleSchoolChange = async (e) => {
+  const schoolId = e.target.value;
+  setSelectedSchool(schoolId);
+
+  // Reset dependent states
+  setClasses([]);
+  setAvailableBoards([]);
+  setSections([]);
+  setSubjects([]);
+  setSelectedClassId('');
+  setSelectedSection('');
+  setSelectedBoard('');
+
+  try {
+    const response = await axiosInstance.get(`/schools/${schoolId}/classes`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Extract unique boards for the selected school
+    const uniqueBoards = [...new Set(response.data.map((cls) => cls.board))];
+    setAvailableBoards(uniqueBoards);
+  } catch (error) {
+    console.error('Error fetching boards:', error);
+  }
+};
+
+  
 
   const handleClassChange = (e) => {
     const className = e.target.value;
@@ -156,42 +173,45 @@ const MClassroom = () => {
       <div className="classroom-container">
         <h1>Select Board, School, Class, and Section</h1>
 
-        {/* Board Selection */}
-        <div className="form-group">
-          <label>Board:</label>
-          <select onChange={handleBoardChange} value={selectedBoard || ''}>
-            <option value="" disabled>Select Board</option>
-            <option value="ICSE">ICSE</option>
-            <option value="CBSE">CBSE</option>
-            <option value="STATE">STATE</option>
-          </select>
-        </div>
+        
 
         {/* School Selection */}
         <div className="form-group">
-          <label>School:</label>
-          <select onChange={handleSchoolChange} value={selectedSchool || ''} disabled={!selectedBoard}>
-            <option value="" disabled>Select School</option>
-            {schools.map((school) => (
-              <option key={school.id} value={school.id}>
-                {school.name}
-              </option>
-            ))}
-          </select>
-        </div>
+  <label>School:</label>
+  <select onChange={handleSchoolChange} value={selectedSchool || ''}>
+    <option value="" disabled>Select School</option>
+    {schools.map((school) => (
+      <option key={school.id} value={school.id}>
+        {school.name}
+      </option>
+    ))}
+  </select>
+</div>
 
-        {/* Class Selection */}
-        <div className="form-group">
-          <label>Class:</label>
-          <select onChange={handleClassChange} value={selectedClassName || ''} disabled={!selectedSchool}>
-            <option value="" disabled>Select Class</option>
-            {classes.map((cls) => (
-              <option key={cls.className} value={cls.className}>
-                {cls.className} ({cls.count})
-              </option>
-            ))}
-          </select>
-        </div>
+<div className="form-group">
+  <label>Board:</label>
+  <select onChange={handleBoardChange} value={selectedBoard || ''} disabled={!availableBoards.length}>
+    <option value="" disabled>Select Board</option>
+    {availableBoards.map((board) => (
+      <option key={board} value={board}>
+        {board}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="form-group">
+  <label>Class:</label>
+  <select onChange={handleClassChange} value={selectedClassId || ''} disabled={!selectedBoard}>
+    <option value="" disabled>Select Class</option>
+    {classes.map((cls) => (
+      <option key={cls.classInfo[0]?.id} value={cls.classInfo[0]?.id}>
+        {cls.className} ({cls.count})
+      </option>
+    ))}
+  </select>
+</div>
+
 
         {/* Section Selection */}
         <div className="form-group">
