@@ -437,30 +437,33 @@ const SessionPlans = () => {
   
     // Initialize jsPDF
     const doc = new jsPDF();
-    let y = 10; // Starting vertical position
-    const pageHeight = doc.internal.pageSize.height - 20; // Account for margins
-    const lineHeight = 8; // Vertical spacing between lines
-  
-    // Add session-level header once
-    doc.setFontSize(14);
-    doc.text(`Lesson Plan`, 10, y);
-    y += lineHeight * 1.5;
-  
-    doc.setFontSize(12);
-    doc.text(`Grade: ${className || "8"}`, 10, y);
-    y += lineHeight;
-    doc.text(`Subject: Social Studies`, 10, y);
-    y += lineHeight;
-    doc.text(`Unit: History`, 10, y);
-    y += lineHeight;
-    doc.text(`Chapter: ${chapterName || "Introduction to Revenue System"}`, 10, y);
-    y += lineHeight;
-    doc.text(`Session Type: Theory`, 10, y);
-    y += lineHeight;
-    doc.text(`Number of Sessions: 1`, 10, y);
-    y += lineHeight;
-    doc.text(`Duration per Session: 45 minutes`, 10, y);
-    y += lineHeight * 2;
+    const lineHeight = 6; // Vertical spacing between lines
+    const boxPadding = 2; // Padding for content in the boxes
+    const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
+    let y = 20; // Starting vertical position
+
+    // Add a consistent header to all pages
+  const addHeader = () => {
+    doc.setFontSize(10);
+    doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10, { align: "left" });
+    doc.line(10, 12, 200, 12); // Horizontal line below the header
+  };
+
+  // Add the header to the first page
+  addHeader();
+
+  // Add first-page heading
+  doc.setFontSize(10);
+  doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
+  y += lineHeight;
+  doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
+  y += lineHeight * 2;
+  doc.text(`Session Type: Theory`, 10, y);
+  y += lineHeight;
+  doc.text(`Number of Sessions: 1`, 10, y);
+  y += lineHeight;
+  doc.text(`Duration per Session: 45 minutes`, 10, y);
+  y += lineHeight * 2;
   
     // Add topics and concepts
     session.Topics.forEach((topic) => {
