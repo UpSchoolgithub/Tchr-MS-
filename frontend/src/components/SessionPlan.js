@@ -517,53 +517,26 @@ const SessionPlans = () => {
                 </td>
               )}
 
-{/* Render Concept */}
-<td>
-  {Array.isArray(topic.concepts) && topic.concepts.length > cIndex
-    ? topic.concepts[cIndex]?.name || "No Concept"
-    : "No Concept"}
-</td>
-
-<td>
-  {topic.concepts[cIndex]?.detailing || "No Detailing"}
-</td>
-
-
-
+              {/* Render Concept */}
+              <td>
+                {concept.name || "No Concept"}
+              </td>
 
               {/* Render Concept Detailing */}
-<td>
-  <input
-    type="text"
-    value={topic.conceptDetailing[cIndex] || ""}
-    placeholder="Enter concept details"
-    onChange={(e) =>
-      setTopicsWithConcepts((prev) => {
-        const updatedTopics = { ...prev };
-        if (!updatedTopics[plan.sessionNumber]) return prev; // Ensure session exists
-        if (!updatedTopics[plan.sessionNumber][tIndex]) return prev; // Ensure topic exists
-        updatedTopics[plan.sessionNumber][tIndex].conceptDetailing[cIndex] =
-          e.target.value;
-        return updatedTopics;
-      })
-    }
-  />
-</td>
-
-
-              {/* Render Lesson Plan Button */}
               <td>
-  <button onClick={() => handleViewLessonPlan(topic.concepts[cIndex]?.id)}>
-    View
-  </button>
-</td>
+                {concept.detailing || "No Detailing"}
+              </td>
 
+              {/* Updated Lesson Plan Column */}
+              <td>
+                <button
+                  onClick={() => handleViewLessonPlan(concept.id)}
+                >
+                  View
+                </button>
+              </td>
 
-
-
-
-
-              {/* Render Actions (Save Button) */}
+              {/* Actions */}
               {tIndex === 0 && cIndex === 0 && (
                 <td
                   rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
@@ -571,36 +544,21 @@ const SessionPlans = () => {
                     0
                   )}
                 >
-                  <button
-                    onClick={() =>
-                      handleSaveSessionPlan(plan.id, plan.sessionNumber)
-                    }
-                    disabled={saving}
-                  >
-                    {saving ? "Saving..." : "Save"}
-                  </button>
                 </td>
               )}
             </tr>
           ))
         )}
-        <tr>
-          <td colSpan="6">
-            <button onClick={() => handleAddTopic(plan.sessionNumber)}>
-              + Add Topic
-            </button>
-          </td>
-        </tr>
+
       </React.Fragment>
     ))
   ) : (
     <tr>
-      <td colSpan="6">
-        No session plans available. Please upload or create a new one.
-      </td>
+      <td colSpan="6">No session plans available. Please upload or create a new one.</td>
     </tr>
   )}
 </tbody>
+
 
 
 </table>
