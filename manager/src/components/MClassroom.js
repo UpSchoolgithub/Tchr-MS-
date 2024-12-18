@@ -148,16 +148,17 @@ const handleSchoolChange = async (e) => {
 
   
 
-  const handleClassChange = (e) => {
-    const className = e.target.value;
-    const classData = classes.find((cls) => cls.className === className);
-    if (classData) {
-      const classId = classData.classInfo.length > 0 ? classData.classInfo[0].id : null;
-      setSelectedClassId(classId);
-      setSelectedClassName(className);
-      fetchSections(classId);
-    }
-  };
+const handleClassChange = (e) => {
+  const classId = e.target.value; // Use class ID directly from the value
+  const classData = classes.find((cls) => cls.classInfo.some((info) => info.id === parseInt(classId)));
+
+  if (classData) {
+    setSelectedClassId(classId);
+    setSelectedClassName(classData.className);
+    fetchSections(classId); // Fetch sections using classId
+  }
+};
+
 
   const handleSectionChange = async (e) => {
     const sectionId = e.target.value; // Get sectionId directly
@@ -229,13 +230,14 @@ const handleSchoolChange = async (e) => {
 <div className="form-group">
   <label>Class:</label>
   <select onChange={handleClassChange} value={selectedClassId || ''} disabled={!selectedBoard}>
-    <option value="" disabled>Select Class</option>
-    {classes.map((cls) => (
-      <option key={cls.classInfo[0]?.id} value={cls.classInfo[0]?.id}>
-        {cls.className} ({cls.count})
-      </option>
-    ))}
-  </select>
+  <option value="" disabled>Select Class</option>
+  {classes.map((cls) => (
+    <option key={cls.classInfo[0]?.id} value={cls.classInfo[0]?.id}>
+      {cls.className} ({cls.count})
+    </option>
+  ))}
+</select>
+
 </div>
 
 
