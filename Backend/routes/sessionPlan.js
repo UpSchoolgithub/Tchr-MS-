@@ -284,23 +284,17 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
 
 router.get('/sessionPlans/:id/view', async (req, res) => {
   const { id } = req.params;
-
-  console.log(`Fetching LessonPlan for Concept ID: ${id}`); // Debugging log
-
   try {
     const lessonPlan = await LessonPlan.findOne({ where: { conceptId: id } });
-
     if (!lessonPlan || !lessonPlan.generatedLP) {
-      console.log(`Lesson plan not found for Concept ID: ${id}`); // Debugging
       return res.status(404).json({ message: 'Lesson plan not found or not generated.' });
     }
-
     res.status(200).json({ lessonPlan: lessonPlan.generatedLP });
   } catch (error) {
-    console.error('Error fetching lesson plan:', error.message);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 // Save Lesson Plan
