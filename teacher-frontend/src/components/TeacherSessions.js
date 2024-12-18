@@ -166,7 +166,13 @@ const completedConcepts = planDetails.reduce(
     </thead>
     <tbody>
   {filteredSessions.map((session, index) => {
-    // Default planDetails to an empty array if undefined
+    // Safeguard against undefined session
+    if (!session) {
+      console.warn(`Invalid session at index ${index}:`, session);
+      return null; // Skip rendering for this row
+    }
+
+    // Safely extract planDetails
     const planDetails = session.planDetails || [];
 
     // Safely calculate total and completed concepts
@@ -189,12 +195,12 @@ const completedConcepts = planDetails.reduce(
 
     return (
       <tr key={index}>
-        <td>{session.schoolName}</td>
-        <td>{session.className}</td>
-        <td>{session.sectionName}</td>
-        <td>{session.day}</td>
-        <td>{session.period}</td>
-        <td>{session.subjectName}</td>
+        <td>{session.schoolName || 'N/A'}</td>
+        <td>{session.className || 'N/A'}</td>
+        <td>{session.sectionName || 'N/A'}</td>
+        <td>{session.day || 'N/A'}</td>
+        <td>{session.period || 'N/A'}</td>
+        <td>{session.subjectName || 'N/A'}</td>
         <td>
           <div className="progress-container">
             <div className="progress-bar">
