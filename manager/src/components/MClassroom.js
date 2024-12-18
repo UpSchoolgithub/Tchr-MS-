@@ -151,7 +151,9 @@ const handleSchoolChange = async (e) => {
 
 const handleClassChange = (e) => {
   const classId = e.target.value; // Use class ID directly from the value
-  const classData = classes.find((cls) => cls.classInfo.some((info) => info.id === parseInt(classId)));
+  const classData = classes.find((cls) =>
+    cls.classInfo.some((info) => info.id === parseInt(classId))
+  );
 
   if (classData) {
     setSelectedClassId(classId);
@@ -159,6 +161,7 @@ const handleClassChange = (e) => {
     fetchSections(classId); // Fetch sections using classId
   }
 };
+
 
 
 const handleSectionChange = async (e) => {
@@ -186,31 +189,35 @@ const handleSectionChange = async (e) => {
   
   
   
-  const handleSectionSelect = () => {
-    const sectionData = sections.find((section) => section.sectionId === selectedSection);
-  
-    if (selectedSchool && selectedClassId && sectionData) {
-      console.log("Navigating with:", {
-        selectedSchool,
-        selectedClassId,
-        sectionId: sectionData.sectionId,
-      });
-  
-      navigate(`/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`, {
+const handleSectionSelect = () => {
+  const sectionData = sections.find((section) => section.sectionId === selectedSection);
+
+  if (selectedSchool && selectedClassId && sectionData) {
+    console.log("Navigating with:", {
+      selectedSchool,
+      selectedClassId,
+      sectionId: sectionData.sectionId,
+    });
+
+    navigate(
+      `/dashboard/school/${selectedSchool}/class/${selectedClassId}/section/${sectionData.sectionId}`,
+      {
         state: {
           selectedSchool,
           selectedClass: selectedClassId,
-          selectedSection: sectionData.sectionId, // Use section ID for navigation
+          selectedSection: sectionData.sectionId,
         },
-      });
-    } else {
-      console.error("Invalid data for navigation:", {
-        selectedSchool,
-        selectedClassId,
-        sectionData,
-      });
-    }
-  };
+      }
+    );
+  } else {
+    console.error("Invalid data for navigation:", {
+      selectedSchool,
+      selectedClassId,
+      sectionData,
+    });
+  }
+};
+
   
   
 
