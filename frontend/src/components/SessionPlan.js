@@ -428,22 +428,23 @@ const SessionPlans = () => {
     const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
   
     if (!session) {
-      console.error(`Session ${sessionNumber} not found`);
+      console.error(`Session ${sessionNumber} not found.`);
       return;
     }
   
     // Generate session-specific content
     let content = `Chapter Name: ${chapterName}\nClass: ${className}\nSubject: Social\n\n`;
-    content += `Session ${session.sessionNumber} Plan:\n\n`;
+    content += `=== Session ${session.sessionNumber} ===\n\n`;
   
     session.Topics.forEach((topic) => {
-      content += `### Topic: ${topic.topicName}\n\n`;
+      content += `Topic: ${topic.topicName}\n\n`;
   
       topic.Concepts.forEach((concept, index) => {
         content += `- Concept ${index + 1}: ${concept.concept}\n`;
         content += `  Details: ${concept.conceptDetailing || "No Details"}\n`;
         content += `  Lesson Plan:\n${concept.LessonPlan?.generatedLP || "Not Generated"}\n\n`;
       });
+  
       content += "-------------------------------------------------\n";
     });
   
@@ -452,6 +453,40 @@ const SessionPlans = () => {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `Session_${sessionNumber}_LessonPlan.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  
+  // downloading all sessions as a single file
+  const handleDownloadSessionPlans = () => {
+    let downloadContent = `Chapter Name: ${chapterName}\nClass: ${className}\nSubject: Social\n\n`;
+  
+    // Iterate through all sessions and generate content
+    sessionPlans.forEach((session) => {
+      downloadContent += `=== Session ${session.sessionNumber} ===\n\n`;
+  
+      session.Topics.forEach((topic) => {
+        downloadContent += `Topic: ${topic.topicName}\n\n`;
+  
+        topic.Concepts.forEach((concept, index) => {
+          downloadContent += `- Concept ${index + 1}: ${concept.concept}\n`;
+          downloadContent += `  Details: ${concept.conceptDetailing || "No Details"}\n`;
+          downloadContent += `  Lesson Plan:\n${concept.LessonPlan?.generatedLP || "Not Generated"}\n\n`;
+        });
+  
+        downloadContent += `-------------------------------------------------\n`;
+      });
+  
+      downloadContent += `========================================\n\n`;
+    });
+  
+    // Trigger file download
+    const blob = new Blob([downloadContent], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Lesson_Plan_${chapterName || "Session"}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -516,8 +551,9 @@ const SessionPlans = () => {
   onClick={handleDownloadSessionPlans}
   className="btn btn-success"
 >
-  Download Lesson Plan (Session-wise)
+  Download All Session Plans
 </button>
+
 
       <table>
   <thead>
@@ -546,6 +582,7 @@ const SessionPlans = () => {
     </button>
   </td>
 </tr>
+
 
 
         {/* Topics and Concepts Row */}
