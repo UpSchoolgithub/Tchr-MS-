@@ -426,6 +426,7 @@ const SessionPlans = () => {
   
   //generate and download the lesson plan
 
+
   const handleDownloadSession = (session) => {
     const doc = new jsPDF();
   
@@ -465,19 +466,17 @@ const SessionPlans = () => {
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
   
-        // Exclude Specific Concept Detailing
-        if (
-          concept.conceptDetailing &&
-          !concept.conceptDetailing.startsWith(
-            "It was an agreement between the company"
-          )
-        ) {
-          doc.text(`${index + 1}. ${concept.concept}`, 15, yPosition);
-          yPosition += 7;
-          doc.text(`   ${concept.conceptDetailing}`, 15, yPosition);
-          yPosition += 7;
-        } else {
-          doc.text(`${index + 1}. ${concept.concept}`, 15, yPosition);
+        // Concept Name and Filtered Content
+        doc.text(`${index + 1}. ${concept.concept}`, 15, yPosition);
+        yPosition += 7;
+  
+        // Exclude the repetitive "Lesson Plan" lines
+        const filteredDetailing = concept.conceptDetailing
+          ?.replace(/Lesson Plan:.*?Duration:.*?minutes/gis, "")
+          .trim();
+  
+        if (filteredDetailing) {
+          doc.text(`   ${filteredDetailing}`, 15, yPosition);
           yPosition += 7;
         }
       });
@@ -486,6 +485,7 @@ const SessionPlans = () => {
     // Save PDF
     doc.save(`Session_${session.sessionNumber}_LessonPlan.pdf`);
   };
+  
   
   
   // downloading all sessions as a single file
