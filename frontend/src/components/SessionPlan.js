@@ -488,7 +488,6 @@ const SessionPlans = () => {
       <th>Concept</th>
       <th>Concept Detailing</th>
       <th>Lesson Plan</th>
-      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
