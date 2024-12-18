@@ -424,34 +424,34 @@ const SessionPlans = () => {
   };
   
   //generate and download the lesson plan
-  const handleDownloadSessionPlans = () => {
-    let downloadContent = `Chapter Name: ${chapterName || "Unknown Chapter"}\n`;
-    downloadContent += `Class: ${className || "Unknown Class"}\n`;
-    downloadContent += `Subject: Social\n\n`;
+  const handleDownloadSession = (sessionNumber) => {
+    const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
   
-    sessionPlans.forEach((session) => {
-      downloadContent += `Session ${session.sessionNumber}:\n\n`;
+    if (!session) {
+      console.error(`Session ${sessionNumber} not found`);
+      return;
+    }
   
-      session.Topics.forEach((topic) => {
-        downloadContent += `### Topic: ${topic.topicName}\n\n`;
+    // Generate session-specific content
+    let content = `Chapter Name: ${chapterName}\nClass: ${className}\nSubject: Social\n\n`;
+    content += `Session ${session.sessionNumber} Plan:\n\n`;
   
-        topic.Concepts.forEach((concept, index) => {
-          downloadContent += `- Concept ${index + 1}: ${concept.concept}\n`;
-          downloadContent += `  Details: ${concept.conceptDetailing}\n`;
-          downloadContent += `  Lesson Plan:\n${
-            concept.LessonPlan?.generatedLP || "Not Generated"
-          }\n\n`;
-        });
-        downloadContent += "-------------------------------------------------\n";
+    session.Topics.forEach((topic) => {
+      content += `### Topic: ${topic.topicName}\n\n`;
+  
+      topic.Concepts.forEach((concept, index) => {
+        content += `- Concept ${index + 1}: ${concept.concept}\n`;
+        content += `  Details: ${concept.conceptDetailing || "No Details"}\n`;
+        content += `  Lesson Plan:\n${concept.LessonPlan?.generatedLP || "Not Generated"}\n\n`;
       });
-      downloadContent += `\n========================================\n`;
+      content += "-------------------------------------------------\n";
     });
   
     // Trigger file download
-    const blob = new Blob([downloadContent], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Lesson_Plan_${chapterName || "Session"}.txt`;
+    link.download = `Session_${sessionNumber}_LessonPlan.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -535,17 +535,18 @@ const SessionPlans = () => {
       <React.Fragment key={plan.id}>
         {/* Download Button Row for the Session */}
         <tr>
-          <td colSpan="5" style={{ textAlign: "left" }}>
-            <strong>Session {plan.sessionNumber}</strong>
-            <button
-              onClick={() => handleDownloadSession(plan.sessionNumber)}
-              className="btn btn-primary"
-              style={{ marginLeft: "10px" }}
-            >
-              Download Session {plan.sessionNumber}
-            </button>
-          </td>
-        </tr>
+  <td colSpan="5" style={{ textAlign: "left" }}>
+    <strong>Session {plan.sessionNumber}</strong>
+    <button
+      onClick={() => handleDownloadSession(plan.sessionNumber)}
+      className="btn btn-primary"
+      style={{ marginLeft: "10px" }}
+    >
+      Download Session {plan.sessionNumber} Plan
+    </button>
+  </td>
+</tr>
+
 
         {/* Topics and Concepts Row */}
         {(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex) =>
