@@ -302,30 +302,29 @@ const SessionDetails = () => {
         </div>
 
         <div className="session-notes-section">
-          <h3>Session Notes and Details:</h3>
-          {sessionDetails ? (
-            <div className="session-item">
-              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-              <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
-              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-              <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-              <h4>Topics to Cover:</h4>
-<ul>
-  {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx}>
-      <input type="checkbox" id={`topic-${idx}`} />
-      <label htmlFor={`topic-${idx}`}>{topic}</label>
-    </li>
-  ))}
-</ul>
-
-              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
-              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
-              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
-            </div>
-          ) : (
-            <p>No session details available for today.</p>
-          )}
+  <h3>Session Notes and Details:</h3>
+  {loadingSession ? (
+    <p>Loading session details...</p>
+  ) : sessionError ? (
+    <p className="error-message">{sessionError}</p>
+  ) : sessionDetails ? (
+    <div className="session-item">
+      <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+      <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
+      <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+      <h4>Topics to Cover:</h4>
+      <ul>
+        {sessionDetails.topics.map((topic, idx) => (
+          <li key={idx}>
+            <input type="checkbox" id={`topic-${idx}`} />
+            <label htmlFor={`topic-${idx}`}>{topic}</label>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : (
+    <p>No session details available for today.</p>
+  )}
 
 
           <h4>Assignments:</h4>
