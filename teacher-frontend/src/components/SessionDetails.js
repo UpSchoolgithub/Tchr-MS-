@@ -249,9 +249,9 @@ const allTopicsCompleted =
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
-
+  
       <h2>Welcome, Teacher Name!</h2>
-
+  
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         {loading ? (
@@ -276,77 +276,89 @@ const allTopicsCompleted =
             </button>
           </>
         )}
-
-<div className="session-notes-section">
-  <h3>Session Notes and Details:</h3>
-  {sessionDetails && sessionDetails.length > 0 ? (
-    sessionDetails.map((session, index) => (
-      <div key={index} className="session-item">
-        <p>
-          <strong>Session ID:</strong> {session.sessionId || 'N/A'}
-        </p>
-        <p>
-          <strong>Chapter Name:</strong> {session.chapterName || 'N/A'}
-        </p>
-        <div className="topics-container">
-  <h4>Topics to Cover:</h4>
-  {sessionDetails && sessionDetails.topics && sessionDetails.topics.length > 0 ? (
-    <ul className="topics-list">
-      {/* Grouping Topics by Name */}
-      {Object.entries(
-        sessionDetails.topics.reduce((acc, topic) => {
-          // Group topics by their name
-          if (!acc[topic.name]) acc[topic.name] = [];
-          acc[topic.name].push({ concept: topic.concept, detailing: topic.detailing });
-          return acc;
-        }, {})
-      ).map(([topicName, concepts], idx) => (
-        <li key={idx} className="topic-item">
-          <div className="topic-container">
-            <input
-              type="checkbox"
-              id={`topic-${idx}`}
-              checked={completedTopics.includes(topicName)}
-              onChange={() => handleTopicChange(topicName)}
-            />
-            <label htmlFor={`topic-${idx}`} className="topic-name">
-              {idx + 1}. {topicName}
-            </label>
-            <button
-              onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-              className="view-lp-button"
-            >
-              {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-            </button>
-          </div>
-          {expandedTopic === idx && (
-            <div className="lesson-plan-container">
-              <div className="lesson-plan-content">
-                {concepts.map((concept, conceptIdx) => (
-                  <div key={conceptIdx} className="concept-container">
-                    <h5>
-                      <strong>Concept:</strong> {concept.concept || "N/A"}
-                    </h5>
-                    <p>
-                      <strong>Detailing:</strong> {concept.detailing || "N/A"}
-                    </p>
-                  </div>
-                ))}
+      </div>
+  
+      <div className="session-notes-section">
+        <h3>Session Notes and Details:</h3>
+        {sessionDetails && sessionDetails.length > 0 ? (
+          sessionDetails.map((session, index) => (
+            <div key={index} className="session-item">
+              <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+              <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+              <div className="topics-container">
+                <h4>Topics to Cover:</h4>
+                {session.topics && session.topics.length > 0 ? (
+                  <ul className="topics-list">
+                    {Object.entries(
+                      session.topics.reduce((acc, topic) => {
+                        if (!acc[topic.name]) acc[topic.name] = [];
+                        acc[topic.name].push({ concept: topic.concept, detailing: topic.detailing });
+                        return acc;
+                      }, {})
+                    ).map(([topicName, concepts], idx) => (
+                      <li key={idx} className="topic-item">
+                        <div className="topic-container">
+                          <input
+                            type="checkbox"
+                            id={`topic-${idx}`}
+                            checked={completedTopics.includes(topicName)}
+                            onChange={() => handleTopicChange(topicName)}
+                          />
+                          <label htmlFor={`topic-${idx}`} className="topic-name">
+                            {idx + 1}. {topicName}
+                          </label>
+                          <button
+                            onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+                            className="view-lp-button"
+                          >
+                            {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+                          </button>
+                        </div>
+                        {expandedTopic === idx && (
+                          <div className="lesson-plan-container">
+                            <div className="lesson-plan-content">
+                              {concepts.map((concept, conceptIdx) => (
+                                <div key={conceptIdx} className="concept-container">
+                                  <h5><strong>Concept:</strong> {concept.concept || "N/A"}</h5>
+                                  <p><strong>Detailing:</strong> {concept.detailing || "N/A"}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No topics available for this session.</p>
+                )}
               </div>
             </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p>No topics available for this session.</p>
-  )}
-</div>
-
-
+          ))
+        ) : (
+          <p>No session details available for today.</p>
+        )}
+      </div>
+  
+      <div className="observations-section">
+        <h4>Observations:</h4>
+        <textarea
+          value={observations}
+          onChange={(e) => setObservations(e.target.value)}
+          className="observations-textarea"
+          placeholder="Add observations of the class here..."
+        ></textarea>
+        <button onClick={handleSaveObservations} className="save-observations-button">
+          Save Observations
+        </button>
+      </div>
+  
+      <div className="end-session">
+        <button onClick={handleEndSession} className="end-session-button">
+          End Session
+        </button>
       </div>
     </div>
   );
-};
-
+}; 
 export default SessionDetails;
