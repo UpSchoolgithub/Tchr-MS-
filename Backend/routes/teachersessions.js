@@ -252,7 +252,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
               sessions.sectionId = timetable_entries.sectionId
           )
       JOIN
-          `SessionPlans` sp ON sp.sessionId = sessions.id
+          SessionPlans sp ON sp.sessionId = sessions.id
       JOIN
           schools ON timetable_entries.schoolId = schools.id
       JOIN
