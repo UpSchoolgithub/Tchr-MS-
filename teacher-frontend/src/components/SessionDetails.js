@@ -66,11 +66,18 @@ const SessionDetails = () => {
             concepts: topic.details.map((detail) => ({
               name: detail.concept,
               detailing: detail.conceptDetailing,
-              lessonPlans: detail.lessonPlans || [],
+              lessonPlans: detail.lessonPlans.map((plan) => {
+                // Extract only the content starting from "Objectives"
+                const objectivesIndex = plan.indexOf("Objectives");
+                return objectivesIndex !== -1
+                  ? plan.substring(objectivesIndex)
+                  : plan; // If "Objectives" is not found, return the plan as is
+              }),
               completed: false,
             })),
           })),
         }));
+  
         setSessionDetails(sessions);
       } catch (err) {
         setError('Failed to fetch session details.');
