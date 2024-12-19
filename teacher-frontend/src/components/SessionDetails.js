@@ -60,8 +60,18 @@ useEffect(() => {
         `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
       );
       console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessions || null); // Adjust key if needed
-    } catch (error) {
+      setSessionDetails(
+        response.data.sessions.map((session) => ({
+          ...session,
+          topics: session.topics.map((topic) => ({
+            name: topic.name,
+            concept: topic.concept,
+            detailing: topic.detailing,
+            lessonPlan: topic.lessonPlan, // Include lessonPlan
+          })),
+        }))
+      );
+          } catch (error) {
       console.error('Error fetching session details:', error);
       setError('Failed to fetch session details.');
     }
@@ -242,6 +252,7 @@ const allTopicsCompleted =
 
   return (
     <div className="session-details-container">
+      {/* Header Section */}
       <div className="session-details-header">
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
@@ -250,8 +261,10 @@ const allTopicsCompleted =
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
   
+      {/* Welcome Message */}
       <h2>Welcome, Teacher Name!</h2>
   
+      {/* Attendance Section */}
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         {loading ? (
@@ -278,6 +291,7 @@ const allTopicsCompleted =
         )}
       </div>
   
+      {/* Session Notes Section */}
       <div className="session-notes-section">
         <h3>Session Notes and Details:</h3>
         {sessionDetails && sessionDetails.length > 0 ? (
@@ -292,7 +306,11 @@ const allTopicsCompleted =
                     {Object.entries(
                       session.topics.reduce((acc, topic) => {
                         if (!acc[topic.name]) acc[topic.name] = [];
-                        acc[topic.name].push({ concept: topic.concept, detailing: topic.detailing });
+                        acc[topic.name].push({
+                          concept: topic.concept,
+                          detailing: topic.detailing,
+                          lessonPlan: topic.lessonPlan, // Include lesson plan
+                        });
                         return acc;
                       }, {})
                     ).map(([topicName, concepts], idx) => (
@@ -321,6 +339,12 @@ const allTopicsCompleted =
                                 <div key={conceptIdx} className="concept-container">
                                   <h5><strong>Concept:</strong> {concept.concept || "N/A"}</h5>
                                   <p><strong>Detailing:</strong> {concept.detailing || "N/A"}</p>
+                                  {concept.lessonPlan && (
+                                    <div className="lesson-plan">
+                                      <h5><strong>Lesson Plan:</strong></h5>
+                                      <pre className="lesson-plan-text">{concept.lessonPlan}</pre>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -340,6 +364,7 @@ const allTopicsCompleted =
         )}
       </div>
   
+      {/* Observations Section */}
       <div className="observations-section">
         <h4>Observations:</h4>
         <textarea
@@ -353,6 +378,7 @@ const allTopicsCompleted =
         </button>
       </div>
   
+      {/* End Session Button */}
       <div className="end-session">
         <button onClick={handleEndSession} className="end-session-button">
           End Session
@@ -360,5 +386,6 @@ const allTopicsCompleted =
       </div>
     </div>
   );
+  
 }; 
 export default SessionDetails;
