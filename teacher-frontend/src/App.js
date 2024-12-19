@@ -11,7 +11,7 @@ import ViewActivities from './components/ViewActivities';
 import TeacherAuthProvider, { useTeacherAuth } from './context/TeacherAuthContext';
 import { WebSocketProvider } from './WebSocketContext';
 import TeacherSessions from './components/TeacherSessions';
-import SessionDetails from './components/SessionDetails'; // Import the SessionDetails component
+import SessionDetails from './components/SessionDetails';
 import SessionReport from './components/SessionReport';
 import LessonPlanForm from './components/LessonPlanForm';
 
@@ -33,7 +33,7 @@ function InnerApp() {
             <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login />} />
 
-            {/* Protected routes that require login */}
+            {/* Protected routes */}
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/classroom" element={<PrivateRoute><Classroom /></PrivateRoute>} />
             <Route path="/school-calendar" element={<PrivateRoute><SchoolCalendar /></PrivateRoute>} />
@@ -41,18 +41,14 @@ function InnerApp() {
             <Route path="/view-activities" element={<PrivateRoute><ViewActivities /></PrivateRoute>} />
             <Route path="/session" element={<PrivateRoute><Session /></PrivateRoute>} />
 
-            {/* Dynamic route for a teacher's specific sessions - teacherportal routes */}
+            {/* Dynamic teacher portal routes */}
             <Route path="/teacherportal/:teacherId/session" element={<PrivateRoute><Session /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
+            <Route path="/teacherportal/:teacherId/session-details" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
+            <Route path="/teacherportal/:teacherId/session-report" element={<PrivateRoute><SessionReport /></PrivateRoute>} />
 
-            {/* Corrected session details route order */}
-            <Route path="/teacherportal/:teacherId/sessions" element={<TeacherSessions />} />
-            <Route path="/teacherportal/:teacherId/session-details" element={<SessionDetails />} />
-            <Route path="/teacherportal/:teacherId/session-report" element={<SessionReport />} />
-          
-          {/* New Lesson Plan Form Route */}
-          <Route path="/lesson-plan" element={<PrivateRoute><LessonPlanForm /></PrivateRoute>} />
-
+            {/* General Lesson Plan Route */}
+            <Route path="/lesson-plan" element={<PrivateRoute><LessonPlanForm /></PrivateRoute>} />
           </Routes>
         </div>
       </Router>
