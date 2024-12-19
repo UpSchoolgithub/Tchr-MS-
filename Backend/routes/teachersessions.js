@@ -211,11 +211,14 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
+const { Op } = require('sequelize');
+
+// Fetch sessions with concept, detailing, and lesson plan
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-    // Run the query to fetch all sessions with concept and detailing
+    // Run the query to fetch all sessions with concept, detailing, and lesson plan
     const sessions = await sequelize.query(
       `
       SELECT
@@ -230,6 +233,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           topics.topicName AS topicName,
           concepts.concept AS mainConcept,
           concepts.conceptDetailing AS conceptDetailing,
+          lessonplans.generatedLP AS lessonPlan, -- Include lesson plan
           sessions.priorityNumber,
           DATE_ADD(
               subjects.academicStartDate,
@@ -252,6 +256,8 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           Topics topics ON sp.id = topics.sessionPlanId
       LEFT JOIN
           Concepts concepts ON topics.id = concepts.topicId
+      LEFT JOIN
+          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId -- Join with LessonPlans table
       JOIN
           schools ON timetable_entries.schoolId = schools.id
       JOIN
@@ -290,6 +296,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           name: session.topicName,
           concept: session.mainConcept,
           detailing: session.conceptDetailing,
+          lessonPlan: session.lessonPlan, // Include lesson plan in response
         },
       ].filter((topic) => topic.name), // Filter out null or undefined topics
       priorityNumber: session.priorityNumber,
@@ -305,8 +312,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   }
 });
 
-
-
+// Fetch sessions and session plan details for start
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
 
@@ -318,10 +324,21 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           model: SessionPlan,
           attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
           as: 'SessionPlan',
+          include: [
+            {
+              model: Topics,
+              include: [
+                {
+                  model: Concepts,
+                  include: [{ model: LessonPlans, attributes: ['generatedLP'], as: 'LessonPlan' }], // Fetch lesson plans
+                },
+              ],
+            },
+          ],
         },
         {
           model: TimetableEntry,
-          as: 'TimetableEntry', // Use the alias defined in the association
+          as: 'TimetableEntry',
           where: {
             teacherId,
             sectionId,
@@ -359,12 +376,17 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
         chapterName: session.chapterName,
         startTime: session.TimetableEntry?.startTime || 'N/A',
         endTime: session.TimetableEntry?.endTime || 'N/A',
-        sessionPlanId: session.SessionPlan?.id || 'N/A', // Include SessionPlan ID
+        sessionPlanId: session.SessionPlan?.id || 'N/A',
         sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
-        planDetails: session.SessionPlan?.planDetails ? JSON.parse(session.SessionPlan.planDetails) : [],
+        planDetails: session.SessionPlan?.planDetails
+          ? JSON.parse(session.SessionPlan.planDetails).map((detail) => ({
+              ...detail,
+              lessonPlan: detail.Concept?.LessonPlan?.generatedLP || 'N/A', // Include lesson plan
+            }))
+          : [],
         subjectName: session.Subject?.subjectName || 'N/A',
         sectionName: session.Section?.sectionName || 'N/A',
-        academicDay, // Include academic day
+        academicDay,
       };
     });
 
@@ -374,6 +396,8 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch session details and plans' });
   }
 });
+
+
 
 
 
