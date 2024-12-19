@@ -14,23 +14,16 @@ const SessionDetails = () => {
     sectionId,
     subjectId,
     schoolId,
-    sessionDetails: initialSessionDetails, // Include sessionDetails from location.state
   } = location.state || {};
-  
- 
-  const [expandedTopic, setExpandedTopic] = useState(null);
 
+  const [expandedTopic, setExpandedTopic] = useState(null);
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sessionDetails, setSessionDetails] = useState(null);
+  const [sessionDetails, setSessionDetails] = useState([]);
   const [observations, setObservations] = useState('');
-  const [assignmentsEnabled, setAssignmentsEnabled] = useState(false);
-  const [assignmentDetails, setAssignmentDetails] = useState('');
-  const [existingFile, setExistingFile] = useState(null);
-  const [file, setFile] = useState(null); // File state
-  const [successMessage, setSuccessMessage] = useState('');
+  const [completedTopics, setCompletedTopics] = useState([]);
 
   // Fetch students for attendance
   useEffect(() => {
@@ -53,70 +46,44 @@ const SessionDetails = () => {
   }, [teacherId, sectionId]);
 
   // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(
-        response.data.sessions.map((session) => ({
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+
+        const transformedSessions = response.data.sessions.map((session) => ({
           ...session,
           topics: session.topics.map((topic) => ({
             name: topic.name,
-            concept: topic.concept,
-            detailing: topic.detailing,
-            lessonPlan: topic.lessonPlan, // Include lessonPlan
+            concepts: topic.concepts.map((concept) => ({
+              concept: concept.concept,
+              detailing: concept.detailing,
+              lessonPlan: concept.lessonPlan,
+            })),
           })),
-        }))
-      );
-          } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
+        }));
 
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
-
-  
-  // Track completed topics
-const [completedTopics, setCompletedTopics] = useState([]);
-
-// Handle checkbox change
-const handleTopicChange = (topicName) => {
-  setCompletedTopics((prev) => {
-    const isCompleted = prev.includes(topicName);
-    if (isCompleted) {
-      return prev.filter((t) => t !== topicName);
-    } else {
-      return [...prev, topicName];
-    }
-  });
-};
-
-// Check if all topics are completed
-const allTopicsCompleted =
-  sessionDetails?.topics &&
-  sessionDetails.topics.every((topic) => completedTopics.includes(topic.name));
-
-  // Fetch assignment details
-  useEffect(() => {
-    const fetchAssignmentDetails = async () => {
-      try {
-        if (sessionDetails?.sessionPlanId) {
-          const response = await axiosInstance.get(`/assignments/${sessionDetails.sessionPlanId}`);
-          setAssignmentDetails(response.data.assignmentDetails || '');
-          setExistingFile(response.data.assignmentFileUrl || null);
-        }
+        setSessionDetails(transformedSessions);
       } catch (error) {
-        console.error('Error fetching assignment details:', error);
+        setError('Failed to fetch session details. Please try again.');
       }
     };
 
-    if (sessionDetails?.sessionPlanId) fetchAssignmentDetails();
-  }, [sessionDetails?.sessionPlanId]);
+    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+  }, [teacherId, sectionId, subjectId]);
+
+  // Track completed topics
+  const handleTopicChange = (topicName) => {
+    setCompletedTopics((prev) => {
+      if (prev.includes(topicName)) {
+        return prev.filter((name) => name !== topicName);
+      } else {
+        return [...prev, topicName];
+      }
+    });
+  };
 
   const handleAbsenteeChange = (selectedOptions) => {
     const selectedIds = selectedOptions?.map((option) => option.value) || [];
@@ -127,7 +94,7 @@ const allTopicsCompleted =
     const attendanceData = students.map((student) => ({
       studentId: student.id,
       date: new Date().toISOString().split('T')[0],
-      status: absentees.includes(student.rollNumber) ? 'A' : 'P',
+      status: absentees.includes(student.id) ? 'A' : 'P',
     }));
 
     try {
@@ -137,118 +104,56 @@ const allTopicsCompleted =
       );
       alert('Attendance saved successfully!');
     } catch (error) {
-      alert('Failed to save attendance.');
+      alert('Failed to save attendance. Please try again.');
     }
   };
-
-  const handleAssignmentChange = (e) => {
-    setAssignmentsEnabled(e.target.value === 'Yes');
-  };
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]); // Update the file state
-  };
-
-  const handleSaveAssignment = async () => {
-    try {
-        const formData = new FormData();
-        formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Include sessionPlanId
-        formData.append('assignmentDetails', assignmentDetails); // Include assignment details
-        if (file) {
-            formData.append('file', file); // Optional: Include the file only if selected
-        }
-
-        const response = await axiosInstance.post('/api/assignments', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-
-        alert('Assignment saved successfully!');
-        setSuccessMessage(response.data.message);
-    } catch (error) {
-        console.error('Error saving assignment:', error);
-        alert('Failed to save assignment.');
-    }
-};
-
-  
-  
 
   const handleSaveObservations = async () => {
     try {
-      const response = await axiosInstance.post('/api/observations', {
+      await axiosInstance.post('/api/observations', {
         sessionPlanId: sessionDetails?.sessionPlanId,
         observations,
       });
       alert('Observations saved successfully!');
     } catch (error) {
-      console.error('Error saving observations:', error);
       alert('Failed to save observations.');
     }
   };
 
   const handleEndSession = async () => {
-    if (!sessionDetails || !sessionDetails.sessionPlanId) {
-      alert('Session Plan ID is missing. Cannot end the session.');
+    if (!sessionDetails || sessionDetails.length === 0) {
+      alert('No session details available to end the session.');
       return;
     }
-  
-    // Collect completed and incomplete topics based on checkbox states
-    const completedTopics = [];
-    const incompleteTopics = [];
-  
-    sessionDetails.topics.forEach((topic, idx) => {
-      const isChecked = document.getElementById(`topic-${idx}`).checked;
-      if (isChecked) {
-        completedTopics.push(topic);
-      } else {
-        incompleteTopics.push(topic);
-      }
-    });
-  
-    // Ensure at least one topic is completed
-    if (completedTopics.length === 0) {
-      alert('Please mark at least one topic as completed.');
-      return;
-    }
-  
+
+    const completedTopicsPayload = sessionDetails.flatMap((session) =>
+      session.topics.filter((topic) => completedTopics.includes(topic.name))
+    );
+
     try {
       const payload = {
-        sessionPlanId: sessionDetails.sessionPlanId,
-        completedTopics,
-        incompleteTopics,
+        sessionPlanId: sessionDetails[0].sessionPlanId,
+        completedTopics: completedTopicsPayload,
         observations,
         absentees,
-        completed: true,
       };
-  
-      const response = await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
+
+      await axiosInstance.post(
+        `/teachers/${teacherId}/sessions/${sessionDetails[0].sessionId}/end`,
         payload
       );
-  
-      alert(response.data.message || 'Session ended successfully!');
+
+      alert('Session ended successfully!');
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
-      console.error('Error ending session:', error);
-      alert('Failed to end the session.');
+      alert('Failed to end the session. Please try again.');
     }
   };
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  const studentOptions = students.map((student) => ({
-    value: student.rollNumber,
-    label: student.studentName,
-  }));
 
+  const studentOptions = students.map((student) => ({
+    value: student.id,
+    label: `${student.studentName} (${student.rollNumber})`,
+  }));
 
   return (
     <div className="session-details-container">
@@ -259,9 +164,9 @@ const allTopicsCompleted =
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
-  
-      <h2>Welcome, Teacher Name!</h2>
-  
+
+      <h2>Welcome, Teacher!</h2>
+
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         {loading ? (
@@ -287,98 +192,60 @@ const allTopicsCompleted =
           </>
         )}
       </div>
-  
+
       <div className="session-notes-section">
         <h3>Session Notes and Details:</h3>
-        {sessionDetails && sessionDetails.length > 0 ? (
-          sessionDetails.map((session, index) => (
-            <div key={index} className="session-item">
-              <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
-              <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-              <div className="topics-container">
-                <h4>Topics to Cover:</h4>
-                {session.topics && session.topics.length > 0 ? (
-                  <ul className="topics-list">
-                    {Object.entries(
-                      session.topics.reduce((acc, topic) => {
-                        if (!acc[topic.name]) acc[topic.name] = [];
-                        acc[topic.name].push({
-                          concept: topic.concept,
-                          detailing: topic.detailing,
-                          lessonPlan: topic.lessonPlan,
-                        });
-                        return acc;
-                      }, {})
-                    ).map(([topicName, concepts], idx) => (
-                      <li key={idx} className="topic-item">
-                        <div className="topic-container">
-                          <input
-                            type="checkbox"
-                            id={`topic-${index}-${idx}`}
-                            checked={completedTopics.includes(topicName)}
-                            onChange={() => handleTopicChange(topicName)}
-                          />
-                          <label htmlFor={`topic-${index}-${idx}`} className="topic-name">
-                            {idx + 1}. {topicName}
-                          </label>
-                          <button
-                            onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-                            className="view-lp-button"
-                          >
-                            {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-                          </button>
-                        </div>
-                        {expandedTopic === idx && (
-                          <div className="lesson-plan-container">
-                            <div className="lesson-plan-content">
-                              {concepts.map((concept, conceptIdx) => (
-                                <div key={conceptIdx} className="concept-container">
-                                  <h5><strong>Concept:</strong> {concept.concept || "N/A"}</h5>
-                                  <p><strong>Detailing:</strong> {concept.detailing || "N/A"}</p>
-                                  {concept.lessonPlan && (
-                                    <pre className="lesson-plan">
-                                      <strong>Lesson Plan:</strong> {concept.lessonPlan}
-                                    </pre>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No topics available for this session.</p>
-                )}
-              </div>
+        {sessionDetails.length > 0 ? (
+          sessionDetails.map((session, sessionIdx) => (
+            <div key={sessionIdx} className="session-item">
+              <p><strong>Session ID:</strong> {session.sessionId}</p>
+              <p><strong>Chapter Name:</strong> {session.chapterName}</p>
+              <ul className="topics-list">
+                {session.topics.map((topic, topicIdx) => (
+                  <li key={topicIdx} className="topic-item">
+                    <input
+                      type="checkbox"
+                      id={`topic-${sessionIdx}-${topicIdx}`}
+                      checked={completedTopics.includes(topic.name)}
+                      onChange={() => handleTopicChange(topic.name)}
+                    />
+                    <label htmlFor={`topic-${sessionIdx}-${topicIdx}`}>{topic.name}</label>
+                    <ul className="concepts-list">
+                      {topic.concepts.map((concept, conceptIdx) => (
+                        <li key={conceptIdx} className="concept-item">
+                          <p><strong>Concept:</strong> {concept.concept}</p>
+                          <p><strong>Detailing:</strong> {concept.detailing}</p>
+                          {concept.lessonPlan && (
+                            <pre><strong>Lesson Plan:</strong> {concept.lessonPlan}</pre>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))
         ) : (
-          <p>No session details available for today.</p>
+          <p>No session details available.</p>
         )}
       </div>
-  
+
       <div className="observations-section">
         <h4>Observations:</h4>
         <textarea
           value={observations}
           onChange={(e) => setObservations(e.target.value)}
-          className="observations-textarea"
-          placeholder="Add observations of the class here..."
-        ></textarea>
-        <button onClick={handleSaveObservations} className="save-observations-button">
-          Save Observations
-        </button>
+          placeholder="Add observations here..."
+        />
+        <button onClick={handleSaveObservations}>Save Observations</button>
       </div>
-  
+
       <div className="end-session">
-        <button onClick={handleEndSession} className="end-session-button">
-          End Session
-        </button>
+        <button onClick={handleEndSession}>End Session</button>
       </div>
     </div>
   );
-  
-}; 
+};
+
 export default SessionDetails;
