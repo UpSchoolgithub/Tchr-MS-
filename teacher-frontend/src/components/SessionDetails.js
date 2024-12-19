@@ -65,10 +65,11 @@ useEffect(() => {
           ...session,
           topics: session.topics.map((topic) => ({
             name: topic.name,
-            concept: topic.concept,
-            detailing: topic.detailing,
-            lessonPlan: topic.lessonPlan, // Include lessonPlan
+            concept: topic.concept || "N/A",
+            detailing: topic.detailing || "N/A",
+            lessonPlan: topic.lessonPlan,
           })),
+          
         }))
       );
           } catch (error) {
