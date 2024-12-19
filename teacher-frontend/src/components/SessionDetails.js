@@ -53,58 +53,48 @@ const SessionDetails = () => {
   }, [teacherId, sectionId]);
 
   // Fetch session details
-  useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-  
-        console.log("Fetched session details:", response.data);
-  
-        // Transform the response data
-        const transformedSessions = response.data.sessions.map((session) => ({
+useEffect(() => {
+  const fetchSessionDetails = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+      );
+      console.log('Fetched session details:', response.data);
+      setSessionDetails(
+        response.data.sessions.map((session) => ({
           ...session,
           topics: session.topics.map((topic) => ({
             name: topic.name,
-            concepts: topic.concepts.map((concept) => ({
-              concept: concept.concept,
-              detailing: concept.detailing,
-              lessonPlan: concept.lessonPlan,
-            })),
+            concept: topic.concept,
+            detailing: topic.detailing,
+            lessonPlan: topic.lessonPlan, // Include lessonPlan
           })),
-        }));
-        
-  
-        setSessionDetails(transformedSessions);
-      } catch (error) {
-        console.error("Error fetching session details:", error);
-        setError("Failed to fetch session details. Please try again.");
-      }
-    };
-  
-    // Fetch data only if all required IDs are available
-    if (teacherId && sectionId && subjectId) {
-      fetchSessionDetails();
+        }))
+      );
+          } catch (error) {
+      console.error('Error fetching session details:', error);
+      setError('Failed to fetch session details.');
     }
-  }, [teacherId, sectionId, subjectId]);
-  
+  };
+
+  if (teacherId && sectionId && subjectId) fetchSessionDetails();
+}, [teacherId, sectionId, subjectId]);
+
   
   // Track completed topics
 const [completedTopics, setCompletedTopics] = useState([]);
 
-// Handle topic checkbox change
+// Handle checkbox change
 const handleTopicChange = (topicName) => {
-  if (!topicName) return; // Prevent null/undefined values
   setCompletedTopics((prev) => {
-    if (prev.includes(topicName)) {
-      return prev.filter((name) => name !== topicName);
+    const isCompleted = prev.includes(topicName);
+    if (isCompleted) {
+      return prev.filter((t) => t !== topicName);
     } else {
       return [...prev, topicName];
     }
   });
 };
-
 
 // Check if all topics are completed
 const allTopicsCompleted =
@@ -203,18 +193,8 @@ const allTopicsCompleted =
     }
   
     // Collect completed and incomplete topics based on checkbox states
-    const completedTopics = sessionDetails.topics.flatMap((topic) =>
-      document.getElementById(`topic-${topic.name}`).checked
-        ? { topicName: topic.name, concepts: topic.concepts }
-        : []
-    );
-    
-    const incompleteTopics = sessionDetails.topics.flatMap((topic) =>
-      !document.getElementById(`topic-${topic.name}`).checked
-        ? { topicName: topic.name, concepts: topic.concepts }
-        : []
-    );
-    
+    const completedTopics = [];
+    const incompleteTopics = [];
   
     sessionDetails.topics.forEach((topic, idx) => {
       const isChecked = document.getElementById(`topic-${idx}`).checked;
@@ -351,25 +331,17 @@ const allTopicsCompleted =
                         {expandedTopic === idx && (
                           <div className="lesson-plan-container">
                             <div className="lesson-plan-content">
-                            {concepts.map((concept, conceptIdx) => (
-  <div key={conceptIdx} className="concept-container">
-    <input
-      type="checkbox"
-      id={`concept-${conceptIdx}`}
-      onChange={() => handleConceptChange(conceptIdx)}
-    />
-    <label htmlFor={`concept-${conceptIdx}`}>
-      <strong>Concept:</strong> {concept.concept || "N/A"}
-    </label>
-    <p><strong>Detailing:</strong> {concept.detailing || "N/A"}</p>
-    {concept.lessonPlan && (
-      <pre className="lesson-plan">
-        <strong>Lesson Plan:</strong> {concept.lessonPlan}
-      </pre>
-    )}
-  </div>
-))}
-
+                              {concepts.map((concept, conceptIdx) => (
+                                <div key={conceptIdx} className="concept-container">
+                                  <h5><strong>Concept:</strong> {concept.concept || "N/A"}</h5>
+                                  <p><strong>Detailing:</strong> {concept.detailing || "N/A"}</p>
+                                  {concept.lessonPlan && (
+                                    <pre className="lesson-plan">
+                                      <strong>Lesson Plan:</strong> {concept.lessonPlan}
+                                    </pre>
+                                  )}
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
