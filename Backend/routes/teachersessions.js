@@ -279,12 +279,12 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
-    // Consolidate data to remove duplicates
+    // Consolidate session data
     const sessionMap = new Map();
 
     sessions.forEach((session) => {
       if (!sessionMap.has(session.sessionId)) {
-        // Add a new session if it doesn't exist
+        // Initialize a session entry
         sessionMap.set(session.sessionId, {
           sessionId: session.sessionId,
           schoolName: session.schoolName,
@@ -294,42 +294,39 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           chapterName: session.chapterName,
           sessionPlanId: session.sessionPlanId,
           sessionNumber: session.sessionNumber,
-          topics: session.topicName ? [{ name: session.topicName }] : [],
-          mainConcepts: session.mainConcept ? [session.mainConcept] : [],
-          conceptDetailing: session.conceptDetailing ? [session.conceptDetailing] : [],
-          lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+          topics: [],
           priorityNumber: session.priorityNumber,
           sessionDate: session.sessionDate,
           startTime: session.startTime,
           endTime: session.endTime,
         });
+      }
+
+      const currentSession = sessionMap.get(session.sessionId);
+
+      // Group topics and their details
+      const existingTopic = currentSession.topics.find((t) => t.name === session.topicName);
+      if (!existingTopic) {
+        currentSession.topics.push({
+          name: session.topicName,
+          concepts: session.mainConcept ? [session.mainConcept] : [],
+          conceptDetailing: session.conceptDetailing ? [session.conceptDetailing] : [],
+          lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+        });
       } else {
-        // Update the existing session entry
-        const existingSession = sessionMap.get(session.sessionId);
-
-        // Add topics
-        if (session.topicName && !existingSession.topics.find((t) => t.name === session.topicName)) {
-          existingSession.topics.push({ name: session.topicName });
+        if (session.mainConcept && !existingTopic.concepts.includes(session.mainConcept)) {
+          existingTopic.concepts.push(session.mainConcept);
         }
-
-        // Add concepts
-        if (session.mainConcept && !existingSession.mainConcepts.includes(session.mainConcept)) {
-          existingSession.mainConcepts.push(session.mainConcept);
+        if (session.conceptDetailing && !existingTopic.conceptDetailing.includes(session.conceptDetailing)) {
+          existingTopic.conceptDetailing.push(session.conceptDetailing);
         }
-
-        // Add concept details
-        if (session.conceptDetailing && !existingSession.conceptDetailing.includes(session.conceptDetailing)) {
-          existingSession.conceptDetailing.push(session.conceptDetailing);
-        }
-
-        // Add lesson plans
-        if (session.lessonPlan && !existingSession.lessonPlans.includes(session.lessonPlan)) {
-          existingSession.lessonPlans.push(session.lessonPlan);
+        if (session.lessonPlan && !existingTopic.lessonPlans.includes(session.lessonPlan)) {
+          existingTopic.lessonPlans.push(session.lessonPlan);
         }
       }
     });
 
-    // Convert Map to an array for response
+    // Convert the sessionMap to an array for the response
     const formattedSessions = Array.from(sessionMap.values());
 
     res.status(200).json({ sessions: formattedSessions });
