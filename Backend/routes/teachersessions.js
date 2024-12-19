@@ -217,7 +217,6 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-    // Run the query to fetch all sessions with concept, detailing, and lesson plan
     const sessions = await sequelize.query(
       `
       SELECT
@@ -230,9 +229,13 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           sp.id AS sessionPlanId,
           sp.sessionNumber,
           topics.topicName AS topicName,
-          concepts.concept AS mainConcept,
-          concepts.conceptDetailing AS conceptDetailing,
-          lessonplans.generatedLP AS lessonPlan, -- Include lesson plan
+          JSON_ARRAYAGG(
+              JSON_OBJECT(
+                  'concept', concepts.concept,
+                  'detailing', concepts.conceptDetailing,
+                  'lessonPlan', lessonplans.generatedLP
+              )
+          ) AS topicDetails, -- Aggregate concepts and lesson plans into a JSON array
           sessions.priorityNumber,
           DATE_ADD(
               subjects.academicStartDate,
@@ -256,7 +259,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       LEFT JOIN
           Concepts concepts ON topics.id = concepts.topicId
       LEFT JOIN
-          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId -- Join with LessonPlans table
+          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
       JOIN
           schools ON timetable_entries.schoolId = schools.id
       JOIN
@@ -267,42 +270,51 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           timetable_entries.teacherId = :teacherId
           AND timetable_entries.sectionId = :sectionId
           AND timetable_entries.subjectId = :subjectId
+      GROUP BY
+          sessions.id, topics.topicName
       ORDER BY
           sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
       `,
       {
-        replacements: {
-          teacherId,
-          sectionId,
-          subjectId,
-        },
+        replacements: { teacherId, sectionId, subjectId },
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
     // Format the response
-    const formattedSessions = sessions.map((session) => ({
-      sessionId: session.sessionId,
-      schoolName: session.schoolName,
-      className: session.className,
-      sectionName: session.sectionName,
-      subjectName: session.subjectName,
-      chapterName: session.chapterName,
-      sessionPlanId: session.sessionPlanId,
-      sessionNumber: session.sessionNumber,
-      topics: [
-        {
+    const formattedSessions = sessions.reduce((acc, session) => {
+      // Find existing session entry
+      let sessionEntry = acc.find((s) => s.sessionId === session.sessionId);
+
+      if (!sessionEntry) {
+        sessionEntry = {
+          sessionId: session.sessionId,
+          schoolName: session.schoolName,
+          className: session.className,
+          sectionName: session.sectionName,
+          subjectName: session.subjectName,
+          chapterName: session.chapterName,
+          sessionPlanId: session.sessionPlanId,
+          sessionNumber: session.sessionNumber,
+          topics: [],
+          priorityNumber: session.priorityNumber,
+          sessionDate: session.sessionDate,
+          startTime: session.startTime,
+          endTime: session.endTime,
+        };
+        acc.push(sessionEntry);
+      }
+
+      // Append topic details
+      if (session.topicName) {
+        sessionEntry.topics.push({
           name: session.topicName,
-          concept: session.mainConcept,
-          detailing: session.conceptDetailing,
-          lessonPlan: session.lessonPlan, // Include lesson plan in response
-        },
-      ].filter((topic) => topic.name), // Filter out null or undefined topics
-      priorityNumber: session.priorityNumber,
-      sessionDate: session.sessionDate,
-      startTime: session.startTime,
-      endTime: session.endTime,
-    }));
+          details: JSON.parse(session.topicDetails),
+        });
+      }
+
+      return acc;
+    }, []);
 
     res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
@@ -310,6 +322,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 // Fetch sessions and session plan details for start
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
