@@ -252,7 +252,6 @@ const allTopicsCompleted =
 
   return (
     <div className="session-details-container">
-      {/* Header Section */}
       <div className="session-details-header">
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
@@ -261,10 +260,8 @@ const allTopicsCompleted =
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
   
-      {/* Welcome Message */}
       <h2>Welcome, Teacher Name!</h2>
   
-      {/* Attendance Section */}
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         {loading ? (
@@ -291,7 +288,6 @@ const allTopicsCompleted =
         )}
       </div>
   
-      {/* Session Notes Section */}
       <div className="session-notes-section">
         <h3>Session Notes and Details:</h3>
         {sessionDetails && sessionDetails.length > 0 ? (
@@ -309,7 +305,7 @@ const allTopicsCompleted =
                         acc[topic.name].push({
                           concept: topic.concept,
                           detailing: topic.detailing,
-                          lessonPlan: topic.lessonPlan, // Include lesson plan
+                          lessonPlan: topic.lessonPlan,
                         });
                         return acc;
                       }, {})
@@ -318,11 +314,11 @@ const allTopicsCompleted =
                         <div className="topic-container">
                           <input
                             type="checkbox"
-                            id={`topic-${idx}`}
+                            id={`topic-${index}-${idx}`}
                             checked={completedTopics.includes(topicName)}
                             onChange={() => handleTopicChange(topicName)}
                           />
-                          <label htmlFor={`topic-${idx}`} className="topic-name">
+                          <label htmlFor={`topic-${index}-${idx}`} className="topic-name">
                             {idx + 1}. {topicName}
                           </label>
                           <button
@@ -340,10 +336,9 @@ const allTopicsCompleted =
                                   <h5><strong>Concept:</strong> {concept.concept || "N/A"}</h5>
                                   <p><strong>Detailing:</strong> {concept.detailing || "N/A"}</p>
                                   {concept.lessonPlan && (
-                                    <div className="lesson-plan">
-                                      <h5><strong>Lesson Plan:</strong></h5>
-                                      <pre className="lesson-plan-text">{concept.lessonPlan}</pre>
-                                    </div>
+                                    <pre className="lesson-plan">
+                                      <strong>Lesson Plan:</strong> {concept.lessonPlan}
+                                    </pre>
                                   )}
                                 </div>
                               ))}
@@ -364,7 +359,6 @@ const allTopicsCompleted =
         )}
       </div>
   
-      {/* Observations Section */}
       <div className="observations-section">
         <h4>Observations:</h4>
         <textarea
@@ -378,7 +372,6 @@ const allTopicsCompleted =
         </button>
       </div>
   
-      {/* End Session Button */}
       <div className="end-session">
         <button onClick={handleEndSession} className="end-session-button">
           End Session
