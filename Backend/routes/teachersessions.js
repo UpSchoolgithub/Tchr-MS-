@@ -215,86 +215,96 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-      // Query to fetch sessions, topics, and associated concepts
-      const [sessions] = await sequelize.query(`
-          SELECT
-              SP.id AS SessionPlanID,
-              SP.sessionNumber AS SessionNumber,
-              T.id AS TopicID,
-              T.name AS TopicName,
-              C.id AS ConceptID,
-              C.concept AS ConceptName,
-              C.conceptDetailing AS ConceptDetailing
-          FROM
-              SessionPlans SP
-          JOIN
-              Topics T ON SP.topicId = T.id
-          JOIN
-              Concepts C ON T.id = C.topicId
-          JOIN
-              teachers TS ON TS.id = ${teacherId}
-          JOIN
-              teacher_schools TS_S ON TS.id = TS_S.teacherId
-          JOIN
-              schools S ON TS_S.schoolId = S.id
-          WHERE
-              SP.sectionId = ${sectionId}
-              AND SP.subjectId = ${subjectId};
-      `);
+    // Run the query to fetch all sessions with concept and detailing
+    const sessions = await sequelize.query(
+      `
+      SELECT
+          sessions.id AS sessionId,
+          schools.name AS schoolName,
+          classinfos.className AS className,
+          sections.sectionName AS sectionName,
+          subjects.subjectName AS subjectName,
+          sessions.chapterName,
+          sp.id AS sessionPlanId,
+          sp.sessionNumber,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0].name')) AS topic1Name,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0].concept')) AS topic1Concept,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1].name')) AS topic2Name,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1].concept')) AS topic2Concept,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2].name')) AS topic3Name,
+          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2].concept')) AS topic3Concept,
+          concepts.concept AS mainConcept,
+          concepts.conceptDetailing AS conceptDetailing,
+          sessions.priorityNumber,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS sessionDate,
+          timetable_entries.startTime,
+          timetable_entries.endTime
+      FROM
+          timetable_entries
+      JOIN
+          subjects ON timetable_entries.subjectId = subjects.id
+      JOIN
+          sessions ON (
+              sessions.subjectId = timetable_entries.subjectId AND
+              sessions.sectionId = timetable_entries.sectionId
+          )
+      JOIN
+          `SessionPlans` sp ON sp.sessionId = sessions.id
+      JOIN
+          schools ON timetable_entries.schoolId = schools.id
+      JOIN
+          classinfos ON timetable_entries.classId = classinfos.id
+      JOIN
+          sections ON timetable_entries.sectionId = sections.id
+      LEFT JOIN
+          concepts ON sp.id = concepts.topicId -- Assuming SessionPlans and Concepts are linked via topicId
+      WHERE
+          timetable_entries.teacherId = :teacherId
+          AND timetable_entries.sectionId = :sectionId
+          AND timetable_entries.subjectId = :subjectId
+      ORDER BY
+          sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
+      `,
+      {
+        replacements: {
+          teacherId,
+          sectionId,
+          subjectId,
+        },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
-      // Format the response to group by sessions
-      const response = sessions.reduce((acc, session) => {
-          const existingSession = acc.find(s => s.SessionPlanID === session.SessionPlanID);
+    // Format the response
+    const formattedSessions = sessions.map((session) => ({
+      sessionId: session.sessionId,
+      schoolName: session.schoolName,
+      className: session.className,
+      sectionName: session.sectionName,
+      subjectName: session.subjectName,
+      chapterName: session.chapterName,
+      sessionPlanId: session.sessionPlanId,
+      sessionNumber: session.sessionNumber,
+      topics: [
+        { name: session.topic1Name, concept: session.topic1Concept },
+        { name: session.topic2Name, concept: session.topic2Concept },
+        { name: session.topic3Name, concept: session.topic3Concept },
+      ].filter((topic) => topic.name), // Filter out null or undefined topics
+      mainConcept: session.mainConcept,
+      conceptDetailing: session.conceptDetailing,
+      priorityNumber: session.priorityNumber,
+      sessionDate: session.sessionDate,
+      startTime: session.startTime,
+      endTime: session.endTime,
+    }));
 
-          if (!existingSession) {
-              acc.push({
-                  SessionPlanID: session.SessionPlanID,
-                  SessionNumber: session.SessionNumber,
-                  Topics: [
-                      {
-                          TopicID: session.TopicID,
-                          TopicName: session.TopicName,
-                          Concepts: [
-                              {
-                                  ConceptID: session.ConceptID,
-                                  ConceptName: session.ConceptName,
-                                  ConceptDetailing: session.ConceptDetailing,
-                              },
-                          ],
-                      },
-                  ],
-              });
-          } else {
-              const existingTopic = existingSession.Topics.find(t => t.TopicID === session.TopicID);
-
-              if (!existingTopic) {
-                  existingSession.Topics.push({
-                      TopicID: session.TopicID,
-                      TopicName: session.TopicName,
-                      Concepts: [
-                          {
-                              ConceptID: session.ConceptID,
-                              ConceptName: session.ConceptName,
-                              ConceptDetailing: session.ConceptDetailing,
-                          },
-                      ],
-                  });
-              } else {
-                  existingTopic.Concepts.push({
-                      ConceptID: session.ConceptID,
-                      ConceptName: session.ConceptName,
-                      ConceptDetailing: session.ConceptDetailing,
-                  });
-              }
-          }
-
-          return acc;
-      }, []);
-
-      res.status(200).json(response);
+    res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'An error occurred while fetching session data.' });
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
 
