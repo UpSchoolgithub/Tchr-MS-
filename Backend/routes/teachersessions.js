@@ -215,7 +215,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-    // Run the query to fetch all sessions with concept and detailing
+    // Run the query to fetch all sessions with concepts and details
     const sessions = await sequelize.query(
       `
       SELECT
@@ -275,28 +275,36 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
-    // Format the response
-    const formattedSessions = sessions.map((session) => ({
-      sessionId: session.sessionId,
-      schoolName: session.schoolName,
-      className: session.className,
-      sectionName: session.sectionName,
-      subjectName: session.subjectName,
-      chapterName: session.chapterName,
-      sessionPlanId: session.sessionPlanId,
-      sessionNumber: session.sessionNumber,
-      topics: [
-        {
-          name: session.topicName,
-          concept: session.mainConcept,
-          detailing: session.conceptDetailing,
-        },
-      ].filter((topic) => topic.name), // Filter out null or undefined topics
-      priorityNumber: session.priorityNumber,
-      sessionDate: session.sessionDate,
-      startTime: session.startTime,
-      endTime: session.endTime,
-    }));
+    // Group sessions by `sessionId`
+    const groupedSessions = sessions.reduce((acc, session) => {
+      const sessionKey = session.sessionId;
+      if (!acc[sessionKey]) {
+        acc[sessionKey] = {
+          sessionId: session.sessionId,
+          schoolName: session.schoolName,
+          className: session.className,
+          sectionName: session.sectionName,
+          subjectName: session.subjectName,
+          chapterName: session.chapterName,
+          sessionPlanId: session.sessionPlanId,
+          sessionNumber: session.sessionNumber,
+          topics: [],
+          priorityNumber: session.priorityNumber,
+          sessionDate: session.sessionDate,
+          startTime: session.startTime,
+          endTime: session.endTime,
+        };
+      }
+      acc[sessionKey].topics.push({
+        name: session.topicName,
+        concept: session.mainConcept,
+        detailing: session.conceptDetailing,
+      });
+      return acc;
+    }, {});
+
+    // Format the grouped sessions into an array
+    const formattedSessions = Object.values(groupedSessions);
 
     res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
@@ -305,75 +313,6 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   }
 });
 
-
-
-router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
-  const { teacherId, sectionId, subjectId } = req.params;
-
-  try {
-    // Fetch sessions based on teacherId, sectionId, and subjectId
-    const sessions = await Session.findAll({
-      include: [
-        {
-          model: SessionPlan,
-          attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
-          as: 'SessionPlan',
-        },
-        {
-          model: TimetableEntry,
-          as: 'TimetableEntry', // Use the alias defined in the association
-          where: {
-            teacherId,
-            sectionId,
-            subjectId,
-          },
-          attributes: ['startTime', 'endTime'], // Fetch timetable details
-          required: true,
-        },
-        { model: Subject, attributes: ['subjectName', 'academicStartDate'] }, // Fetch subject details
-        { model: Section, attributes: ['sectionName'] }, // Fetch section details
-        { model: School, attributes: ['name'] }, // Fetch school details
-        { model: ClassInfo, attributes: ['className'] }, // Fetch class details
-      ],
-      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Fetch session details
-    });
-
-    if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found for the specified criteria' });
-    }
-
-    // Prepare response with session and session plan details
-    const sessionDetails = sessions.map((session) => {
-      const academicStartDate = session.Subject?.academicStartDate || 'N/A';
-
-      // Calculate academic day
-      const startDate = new Date(academicStartDate);
-      const currentDate = new Date();
-      const differenceInDays = Math.floor(
-        (currentDate - startDate) / (1000 * 60 * 60 * 24)
-      );
-      const academicDay = differenceInDays + 1;
-
-      return {
-        sessionId: session.id,
-        chapterName: session.chapterName,
-        startTime: session.TimetableEntry?.startTime || 'N/A',
-        endTime: session.TimetableEntry?.endTime || 'N/A',
-        sessionPlanId: session.SessionPlan?.id || 'N/A', // Include SessionPlan ID
-        sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
-        planDetails: session.SessionPlan?.planDetails ? JSON.parse(session.SessionPlan.planDetails) : [],
-        subjectName: session.Subject?.subjectName || 'N/A',
-        sectionName: session.Section?.sectionName || 'N/A',
-        academicDay, // Include academic day
-      };
-    });
-
-    res.json({ sessionDetails });
-  } catch (error) {
-    console.error('Error fetching session and session plan details:', error);
-    res.status(500).json({ error: 'Failed to fetch session details and plans' });
-  }
-});
 
 
 
@@ -480,15 +419,22 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 // Save session details
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
   const { teacherId, sessionId } = req.params;
-  const { incompleteConcepts, completedConcepts, assignmentDetails, observations, absentees } = req.body;
+  const { incompleteConcepts, completedConcepts } = req.body;
 
   try {
-    // Fetch current session and plan
+    // Fetch the current session and its plan
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
-        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] },
-        { model: Subject, attributes: ['id'] },
+        {
+          model: SessionPlan,
+          as: 'SessionPlan',
+          attributes: ['id', 'sessionNumber'],
+        },
+        {
+          model: Subject,
+          attributes: ['id'],
+        },
       ],
     });
 
@@ -496,51 +442,57 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       return res.status(404).json({ error: 'Session or session plan not found.' });
     }
 
-    // Log session report
+    // Save session report (optional)
     await sequelize.models.SessionReports.create({
       sessionPlanId: session.SessionPlan.id,
       sessionId,
-      date: new Date().toISOString().split('T')[0],
-      day: new Date().toLocaleString('en-US', { weekday: 'long' }),
       teacherId,
-      absentStudents: JSON.stringify(absentees || []),
+      date: new Date().toISOString().split('T')[0],
       sessionsCompleted: JSON.stringify(completedConcepts || []),
       sessionsToComplete: JSON.stringify(incompleteConcepts || []),
-      assignmentDetails: assignmentDetails || null,
-      observationDetails: observations || '',
     });
 
-    // Carry forward incomplete concepts to the next session
+    // If there are incomplete concepts, push them to the next session
     if (incompleteConcepts && incompleteConcepts.length > 0) {
       const nextSession = await Session.findOne({
         where: {
+          id: { [Op.gt]: sessionId }, // Find the next session in sequence
           subjectId: session.Subject.id,
           sectionId: session.sectionId,
-          id: { [Op.gt]: sessionId }, // Get the next session by ID
         },
-        include: [{ model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'planDetails'] }],
-        order: [['id', 'ASC']],
+        include: [
+          {
+            model: SessionPlan,
+            as: 'SessionPlan',
+            attributes: ['id'],
+          },
+        ],
+        order: [['id', 'ASC']], // Ensure correct ordering
       });
 
       if (nextSession && nextSession.SessionPlan) {
-        const nextPlanDetails = JSON.parse(nextSession.SessionPlan.planDetails || '[]');
-        const updatedPlanDetails = [...incompleteConcepts, ...nextPlanDetails];
+        // Update the next session's plan with incomplete concepts
+        const updatedConcepts = [...(incompleteConcepts || [])];
 
-        // Update next session plan
-        await SessionPlan.update(
-          { planDetails: JSON.stringify(updatedPlanDetails) },
-          { where: { id: nextSession.SessionPlan.id } }
+        // Save the updated concepts to the next session plan
+        await sequelize.models.Concepts.bulkCreate(
+          updatedConcepts.map((concept) => ({
+            topicId: nextSession.SessionPlan.id, // Link to next session's plan
+            concept: concept.name,
+            conceptDetailing: concept.detailing,
+          }))
         );
       }
     }
 
-    res.json({ message: 'Session ended, incomplete concepts carried forward to the next session.' });
+    res.json({
+      message: 'Session ended successfully, incomplete concepts pushed to the next session.',
+    });
   } catch (error) {
-    console.error('Error ending session and carrying forward concepts:', error.message);
+    console.error('Error ending session:', error.message);
     res.status(500).json({ error: 'Failed to process session details.' });
   }
 });
-
 
 
 
