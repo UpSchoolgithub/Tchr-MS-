@@ -53,7 +53,6 @@ const SessionDetails = () => {
   }, [teacherId, sectionId]);
 
   // Fetch session details
-  // Fetch session details
 useEffect(() => {
   const fetchSessionDetails = async () => {
     try {
@@ -61,7 +60,7 @@ useEffect(() => {
         `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
       );
       console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
+      setSessionDetails(response.data.sessions || null); // Adjust key if needed
     } catch (error) {
       console.error('Error fetching session details:', error);
       setError('Failed to fetch session details.');
@@ -72,7 +71,26 @@ useEffect(() => {
 }, [teacherId, sectionId, subjectId]);
 
   
-  
+  // Track completed topics
+const [completedTopics, setCompletedTopics] = useState([]);
+
+// Handle checkbox change
+const handleTopicChange = (topicName) => {
+  setCompletedTopics((prev) => {
+    const isCompleted = prev.includes(topicName);
+    if (isCompleted) {
+      return prev.filter((t) => t !== topicName);
+    } else {
+      return [...prev, topicName];
+    }
+  });
+};
+
+// Check if all topics are completed
+const allTopicsCompleted =
+  sessionDetails?.topics &&
+  sessionDetails.topics.every((topic) => completedTopics.includes(topic.name));
+
   // Fetch assignment details
   useEffect(() => {
     const fetchAssignmentDetails = async () => {
