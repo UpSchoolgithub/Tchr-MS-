@@ -227,12 +227,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           sessions.chapterName,
           sp.id AS sessionPlanId,
           sp.sessionNumber,
-          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0].name')) AS topic1Name,
-          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[0].concept')) AS topic1Concept,
-          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1].name')) AS topic2Name,
-          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[1].concept')) AS topic2Concept,
-          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2].name')) AS topic3Name,
-          JSON_UNQUOTE(JSON_EXTRACT(sp.planDetails, '$[2].concept')) AS topic3Concept,
+          topics.topicName AS topicName,
           concepts.concept AS mainConcept,
           concepts.conceptDetailing AS conceptDetailing,
           sessions.priorityNumber,
@@ -254,13 +249,15 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       JOIN
           SessionPlans sp ON sp.sessionId = sessions.id
       JOIN
+          Topics topics ON sp.id = topics.sessionPlanId
+      LEFT JOIN
+          Concepts concepts ON topics.id = concepts.topicId
+      JOIN
           schools ON timetable_entries.schoolId = schools.id
       JOIN
           classinfos ON timetable_entries.classId = classinfos.id
       JOIN
           sections ON timetable_entries.sectionId = sections.id
-      LEFT JOIN
-          concepts ON sp.id = concepts.topicId -- Assuming SessionPlans and Concepts are linked via topicId
       WHERE
           timetable_entries.teacherId = :teacherId
           AND timetable_entries.sectionId = :sectionId
@@ -289,12 +286,12 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       sessionPlanId: session.sessionPlanId,
       sessionNumber: session.sessionNumber,
       topics: [
-        { name: session.topic1Name, concept: session.topic1Concept },
-        { name: session.topic2Name, concept: session.topic2Concept },
-        { name: session.topic3Name, concept: session.topic3Concept },
+        {
+          name: session.topicName,
+          concept: session.mainConcept,
+          detailing: session.conceptDetailing,
+        },
       ].filter((topic) => topic.name), // Filter out null or undefined topics
-      mainConcept: session.mainConcept,
-      conceptDetailing: session.conceptDetailing,
       priorityNumber: session.priorityNumber,
       sessionDate: session.sessionDate,
       startTime: session.startTime,
