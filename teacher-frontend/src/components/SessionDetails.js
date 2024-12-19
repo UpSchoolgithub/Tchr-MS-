@@ -57,13 +57,16 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
+  
         const sessions = response.data.sessions.map((session) => ({
           ...session,
           topics: session.topics.map((topic) => ({
             ...topic,
             completed: false,
             concepts: topic.details.map((detail) => ({
-              ...detail,
+              name: detail.concept,
+              detailing: detail.conceptDetailing,
+              lessonPlans: detail.lessonPlans || [],
               completed: false,
             })),
           })),
@@ -74,9 +77,10 @@ const SessionDetails = () => {
         console.error(err);
       }
     };
-
+  
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
 
   // Track completed topics
   const [completedTopics, setCompletedTopics] = useState([]);
@@ -264,74 +268,61 @@ return (
     <div className="session-notes-section">
       <h3>Session Notes and Details:</h3>
       {sessionDetails?.length > 0 ? (
-        sessionDetails.map((session, sessionIndex) => (
-          <div key={sessionIndex} className="session-item">
-            <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
-            <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+  sessionDetails.map((session, sessionIndex) => (
+    <div key={sessionIndex} className="session-item">
+      <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+      <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+      <h4>Topics to Cover:</h4>
+      <ul className="topics-list">
+        {session.topics.map((topic, topicIndex) => (
+          <li key={topicIndex}>
+            <div className="topic-header">
+              <input
+                type="checkbox"
+                id={`topic-${sessionIndex}-${topicIndex}`}
+                checked={topic.completed}
+                onChange={() => handleTopicChange(topic.name)}
+              />
+              <label>{topic.name}</label>
+              <button
+                onClick={() => handleTopicExpand(topicIndex)}
+                className="view-lp-button"
+              >
+                {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+              </button>
+            </div>
 
-            <div className="topics-container">
-              <h4>Topics to Cover:</h4>
-              <ul className="topics-list">
-                {session.topics.map((topic, topicIndex) => (
-                  <li key={topicIndex} className="topic-item">
-                    <div className="topic-header">
+            {expandedTopic === topicIndex && (
+              <ul className="concepts-list">
+                {topic.concepts.map((concept, conceptIndex) => (
+                  <li key={conceptIndex}>
+                    <div className="concept-header">
                       <input
                         type="checkbox"
-                        id={`topic-${sessionIndex}-${topicIndex}`}
-                        checked={topic.completed}
-                        readOnly
+                        id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+                        checked={concept.completed}
+                        onChange={() => handleConceptChange(topicIndex, conceptIndex)}
                       />
-                      <label
-                        htmlFor={`topic-${sessionIndex}-${topicIndex}`}
-                        className="topic-name"
-                      >
-                        {topicIndex + 1}. {topic.name}
-                      </label>
-                      <button
-                        onClick={() => handleTopicExpand(topicIndex)}
-                        className="view-lp-button"
-                      >
-                        {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-                      </button>
+                      <label>{concept.name}</label>
                     </div>
-
-                    {expandedTopic === topicIndex && (
-                      <ul className="concepts-list">
-                        {topic.concepts.map((concept, conceptIndex) => (
-                          <li key={conceptIndex} className="concept-item">
-                            <div className="concept-header">
-                              <input
-                                type="checkbox"
-                                id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                                checked={concept.completed}
-                                onChange={() => handleConceptChange(topicIndex, conceptIndex)}
-                              />
-                              <label
-                                htmlFor={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                              >
-                                {conceptIndex + 1}. {concept.name}
-                              </label>
-                            </div>
-                            <p><strong>Detailing:</strong> {concept.detailing || 'N/A'}</p>
-                            {concept.lessonPlan && (
-                              <pre className="lesson-plan">
-                                <strong>Lesson Plan:</strong> {concept.lessonPlan}
-                              </pre>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <p>{concept.detailing || 'N/A'}</p>
+                    {concept.lessonPlans?.map((plan, planIndex) => (
+                      <pre key={planIndex}>{plan}</pre>
+                    ))}
                   </li>
                 ))}
               </ul>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p>No session details available for today.</p>
-      )}
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
+  ))
+) : (
+  <p>No session details available.</p>
+)}
+    </div>
+
 
     <div className="observations-section">
       <h4>Observations:</h4>
