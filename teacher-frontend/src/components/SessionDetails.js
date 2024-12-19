@@ -18,6 +18,7 @@ const SessionDetails = () => {
   } = location.state || {};
   
  
+  const [loadingSession, setLoadingSession] = useState(true);
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
