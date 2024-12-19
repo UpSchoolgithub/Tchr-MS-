@@ -211,7 +211,6 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
-const { Op } = require('sequelize');
 
 // Fetch sessions with concept, detailing, and lesson plan
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
