@@ -6,12 +6,14 @@ import './SessionDetails.css';
 
 const SessionDetails = ({ location }) => {
   const {
-    teacherId,
-    classId,
-    sectionId,
-    subjectId,
-    schoolId,
+    teacherId = null,
+    classId = null,
+    sectionId = null,
+    subjectId = null,
+    schoolId = null,
+    sessionDetails: initialSessionDetails = [],
   } = location.state || {};
+  
 
    const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
