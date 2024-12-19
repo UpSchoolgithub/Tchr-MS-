@@ -13,7 +13,7 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Filtering options
+  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Add filtering options
   const maxRetries = 3;
   let retryCount = 0;
 
@@ -41,7 +41,7 @@ const TeacherSessions = () => {
     } finally {
       setLoading(false);
     }
-  }, [teacherId]);
+  }, [teacherId, retryCount]);
 
   useEffect(() => {
     fetchSessions();
@@ -78,20 +78,39 @@ const TeacherSessions = () => {
       alert('Unable to start session: Section ID is missing.');
       return;
     }
-
+  
     navigate(`/teacherportal/${teacherId}/session-details`, {
       state: {
         teacherId,
-        classId: session.classId,
+        classId: session.classId, // Pass classId
         sectionId: session.sectionId,
-        subjectId: session.subjectId,
-        schoolId: session.schoolId,
+        subjectId: session.subjectId, // Pass subjectId
+        schoolId: session.schoolId, // Pass schoolId
         day: session.day,
         period: session.period,
       },
     });
   };
+  
+  // Default planDetails to an empty array if undefined
+const planDetails = session.planDetails || [];
 
+// Calculate total and completed concepts safely
+const totalConcepts = planDetails.reduce(
+  (total, topic) => total + (topic.concepts ? topic.concepts.length : 0),
+  0
+);
+
+const completedConcepts = planDetails.reduce(
+  (total, topic) =>
+    total +
+    (topic.concepts
+      ? topic.concepts.filter((concept) => concept.status === 'complete').length
+      : 0),
+  0
+);
+
+  
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
   if (loading) return <p>Loading...</p>;
@@ -127,108 +146,92 @@ const TeacherSessions = () => {
       </div>
 
       {filteredSessions.length === 0 ? (
-        <p className="no-sessions-message">No sessions found for {getDayName(selectedDate)}.</p>
-      ) : (
-        <table className="sessions-table">
-          <thead>
-            <tr>
-              <th>School</th>
-              <th>Class</th>
-              <th>Section</th>
-              <th>Day</th>
-              <th>Period</th>
-              <th>Subject</th>
-              <th>Progress</th>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Assignments</th>
-              <th>Session Report</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSessions.map((session, index) => {
-              if (!session) {
-                console.warn(`Invalid session at index ${index}:`, session);
-                return null;
-              }
+  <p className="no-sessions-message">No sessions found for {getDayName(selectedDate)}.</p>
+) : (
+  <table className="sessions-table">
+    <thead>
+      <tr>
+        <th>School</th>
+        <th>Class</th>
+        <th>Section</th>
+        <th>Day</th>
+        <th>Period</th>
+        <th>Subject</th>
+        <th>Progress</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Assignments</th>
+        <th>Session Report</th>
+      </tr>
+    </thead>
+    <tbody>
+  {filteredSessions.map((session, index) => {
+    const progressPercentage =
+      session.totalTopics > 0 ? (session.completedTopics / session.totalTopics) * 100 : 0;
 
-              const planDetails = session.planDetails || [];
+    return (
+      <tr key={index}>
+        <td>{session.schoolName}</td>
+        <td>{session.className}</td>
+        <td>{session.sectionName}</td>
+        <td>{session.sectionId}</td>
+        <td>{session.day}</td>
+        <td>{session.period}</td>
+        <td>{session.subjectName}</td>
+        <td>
+          <div className="progress-container">
+            <div className="progress-bar">
+              <span style={{ width: `${progressPercentage}%` }}></span>
+            </div>
+            <small>
+              {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+            </small>
+          </div>
+        </td>
+        <td>
+          {session.completed ? (
+            <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
+          ) : isToday(selectedDate) ? (
+            <button
+              onClick={() => handleStartSession(session)}
+              style={{ backgroundColor: '#dc3545', color: 'white' }}
+            >
+              Start Session
+            </button>
+          ) : (
+            <span>-</span>
+          )}
+        </td>
+        <td>{session.endTime}</td>
+        <td>
+          <button style={{ backgroundColor: 'green' }}>Update</button>
+          <button
+            style={{
+              backgroundColor: 'lightgreen',
+              marginLeft: '5px',
+            }}
+          >
+            Notify
+          </button>
+        </td>
+        <td>
+          <button
+            style={{ backgroundColor: 'white'}}
+            onClick={() => {
+              navigate(`/session-reports/${session.sessionId}`);
+            }}
+          >
+            Session Report
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
 
-              const totalConcepts = planDetails.reduce(
-                (total, topic) => total + (topic.concepts ? topic.concepts.length : 0),
-                0
-              );
+  </table>
+)}
 
-              const completedConcepts = planDetails.reduce(
-                (total, topic) =>
-                  total +
-                  (topic.concepts
-                    ? topic.concepts.filter((concept) => concept.status === 'complete').length
-                    : 0),
-                0
-              );
-
-              const progressPercentage =
-                totalConcepts > 0 ? (completedConcepts / totalConcepts) * 100 : 0;
-
-              return (
-                <tr key={index}>
-                  <td>{session.schoolName || 'N/A'}</td>
-                  <td>{session.className || 'N/A'}</td>
-                  <td>{session.sectionName || 'N/A'}</td>
-                  <td>{session.day || 'N/A'}</td>
-                  <td>{session.period || 'N/A'}</td>
-                  <td>{session.subjectName || 'N/A'}</td>
-                  <td>
-                    <div className="progress-container">
-                      <div className="progress-bar">
-                        <span style={{ width: `${progressPercentage}%` }}></span>
-                      </div>
-                      <small>
-                        {completedConcepts}/{totalConcepts} concepts completed
-                      </small>
-                    </div>
-                  </td>
-                  <td>{session.startTime || 'N/A'}</td>
-                  <td>{session.endTime || 'N/A'}</td>
-                  <td>
-                    {planDetails.map((topic, topicIndex) => (
-                      <div key={topicIndex}>
-                        <strong>{topic.name}</strong>
-                        <ul>
-                          {topic.concepts &&
-                            topic.concepts.map((concept, conceptIndex) => (
-                              <li
-                                key={conceptIndex}
-                                style={{
-                                  color: concept.status === 'complete' ? 'green' : 'red',
-                                  textDecoration:
-                                    concept.status === 'complete' ? 'line-through' : 'none',
-                                }}
-                              >
-                                {concept.name}
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </td>
-                  <td>
-                    <button
-                      style={{ backgroundColor: 'white' }}
-                      onClick={() => {
-                        navigate(`/session-reports/${session.sessionId}`);
-                      }}
-                    >
-                      Session Report
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
     </div>
   );
 };
