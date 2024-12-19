@@ -277,81 +277,77 @@ const allTopicsCompleted =
           </>
         )}
 
-        <div className="session-notes-section">
-          <h3>Session Notes and Details:</h3>
-          {sessionDetails ? (
-            <div className="session-item">
-              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-              <div className="topics-container">
-                <h4>Topics to Cover:</h4>
-                {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
-                  <>
-                    <div className="mark-all-container">
-                      <input
-                        type="checkbox"
-                        id="mark-all"
-                        checked={
-                          sessionDetails.topics.length > 0 &&
-                          completedTopics.length === sessionDetails.topics.length
-                        }
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setCompletedTopics(sessionDetails.topics.map((topic) => topic.name));
-                          } else {
-                            setCompletedTopics([]);
-                          }
-                        }}
-                      />
-                      <label htmlFor="mark-all">Mark All as Completed</label>
+<div className="session-notes-section">
+  <h3>Session Notes and Details:</h3>
+  {sessionDetails && sessionDetails.length > 0 ? (
+    sessionDetails.map((session, index) => (
+      <div key={index} className="session-item">
+        <p>
+          <strong>Session ID:</strong> {session.sessionId || 'N/A'}
+        </p>
+        <p>
+          <strong>Chapter Name:</strong> {session.chapterName || 'N/A'}
+        </p>
+        <div className="topics-container">
+          <h4>Topics to Cover:</h4>
+          {session.topics && session.topics.length > 0 ? (
+            <ul className="topics-list">
+              {session.topics.map((topic, idx) => (
+                <li key={idx} className="topic-item">
+                  <div className="topic-container">
+                    <input
+                      type="checkbox"
+                      id={`topic-${index}-${idx}`}
+                      checked={completedTopics.includes(topic.name)}
+                      onChange={() => handleTopicChange(topic.name)}
+                    />
+                    <label htmlFor={`topic-${index}-${idx}`} className="topic-name">
+                      {idx + 1}. {topic.name}
+                    </label>
+                    <button
+                      onClick={() =>
+                        setExpandedTopic(expandedTopic === idx ? null : idx)
+                      }
+                      className="view-lp-button"
+                    >
+                      {expandedTopic === idx ? 'HIDE LP' : 'VIEW LP'}
+                    </button>
+                  </div>
+                  {expandedTopic === idx && (
+                    <div className="lesson-plan-container">
+                      <div className="lesson-plan-content">
+                        <h5>
+                          <strong>Concept:</strong> {topic.concept || 'N/A'}
+                        </h5>
+                        <p>
+                          <strong>Detailing:</strong> {topic.detailing || 'N/A'}
+                        </p>
+                      </div>
                     </div>
-                    <ul className="topics-list">
-                      {sessionDetails.topics.map((topic, idx) => (
-                        <li key={idx} className="topic-item">
-                          <div className="topic-container">
-                            <input
-                              type="checkbox"
-                              id={`topic-${idx}`}
-                              checked={completedTopics.includes(topic.name)}
-                              onChange={() => handleTopicChange(topic.name)}
-                            />
-                            <label htmlFor={`topic-${idx}`} className="topic-name">
-                              {idx + 1}. {topic.name}
-                            </label>
-                            <button
-                              onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-                              className="view-lp-button"
-                            >
-                              {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-                            </button>
-                          </div>
-                          {expandedTopic === idx && (
-                            <div className="lesson-plan-container">
-                              <div className="lesson-plan-content">
-                                <h5><strong>Concept:</strong> {topic.concept || "N/A"}</h5>
-                                <p><strong>Detailing:</strong> {topic.detailing || "N/A"}</p>
-                              </div>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <p>No topics available for this session.</p>
-                )}
-              </div>
-              <button onClick={handleSaveObservations} className="save-observations-button">
-                Save Observations
-              </button>
-              <button onClick={handleEndSession} className="end-session-button">
-                End Session
-              </button>
-            </div>
+                  )}
+                </li>
+              ))}
+            </ul>
           ) : (
-            <p>No session details available for today.</p>
+            <p>No topics available for this session.</p>
           )}
         </div>
+        <p>
+          <strong>Start Time:</strong> {session.startTime || 'N/A'}
+        </p>
+        <p>
+          <strong>End Time:</strong> {session.endTime || 'N/A'}
+        </p>
+        <p>
+          <strong>Session Date:</strong> {session.sessionDate || 'N/A'}
+        </p>
+      </div>
+    ))
+  ) : (
+    <p>No sessions available for this section.</p>
+  )}
+</div>
+
       </div>
     </div>
   );
