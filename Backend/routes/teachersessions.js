@@ -217,69 +217,99 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-      // Fetch all sessions with associated details
-      const sessions = await sequelize.query(
-          `
-          SELECT
-              sessions.id AS sessionId,
-              classinfos.className AS className,
-              sections.sectionName AS sectionName,
-              schools.name AS schoolName,
-              subjects.subjectName AS subjectName,
-              sessions.chapterName,
-              sp.id AS sessionPlanId,
-              sp.sessionNumber,
-              GROUP_CONCAT(DISTINCT topics.topicName SEPARATOR ', ') AS topicNames,
-              GROUP_CONCAT(DISTINCT concepts.concept SEPARATOR ', ') AS concepts,
-              GROUP_CONCAT(DISTINCT concepts.conceptDetailing SEPARATOR ', ') AS conceptDetails,
-              GROUP_CONCAT(DISTINCT lessonplans.generatedLP SEPARATOR ', ') AS lessonPlans,
-              sessions.priorityNumber,
-              DATE_ADD(
-                  subjects.academicStartDate,
-                  INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
-              ) AS sessionDate,
-              timetable_entries.startTime,
-              timetable_entries.endTime
-          FROM
-              timetable_entries
-          JOIN subjects ON timetable_entries.subjectId = subjects.id
-          JOIN sessions ON (
+    // Run the query to fetch all sessions with concept, detailing, and lesson plan
+    const sessions = await sequelize.query(
+      `
+      SELECT
+          sessions.id AS sessionId,
+          schools.name AS schoolName,
+          classinfos.className AS className,
+          sections.sectionName AS sectionName,
+          subjects.subjectName AS subjectName,
+          sessions.chapterName,
+          sp.id AS sessionPlanId,
+          sp.sessionNumber,
+          topics.topicName AS topicName,
+          concepts.concept AS mainConcept,
+          concepts.conceptDetailing AS conceptDetailing,
+          lessonplans.generatedLP AS lessonPlan, -- Include lesson plan
+          sessions.priorityNumber,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS sessionDate,
+          timetable_entries.startTime,
+          timetable_entries.endTime
+      FROM
+          timetable_entries
+      JOIN
+          subjects ON timetable_entries.subjectId = subjects.id
+      JOIN
+          sessions ON (
               sessions.subjectId = timetable_entries.subjectId AND
               sessions.sectionId = timetable_entries.sectionId
           )
-          JOIN SessionPlans sp ON sp.sessionId = sessions.id
-          LEFT JOIN Topics topics ON sp.id = topics.sessionPlanId
-          LEFT JOIN Concepts concepts ON topics.id = concepts.topicId
-          LEFT JOIN LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
-          JOIN schools ON timetable_entries.schoolId = schools.id
-          JOIN classinfos ON timetable_entries.classId = classinfos.id
-          JOIN sections ON timetable_entries.sectionId = sections.id
-          WHERE
-              timetable_entries.teacherId = :teacherId
-              AND timetable_entries.sectionId = :sectionId
-              AND timetable_entries.subjectId = :subjectId
-          GROUP BY
-              sessions.id, sp.id
-          ORDER BY
-              sessionDate ASC, timetable_entries.startTime ASC;
-          `,
-          {
-              replacements: {
-                  teacherId,
-                  sectionId,
-                  subjectId,
-              },
-              type: sequelize.QueryTypes.SELECT,
-          }
-      );
+      JOIN
+          SessionPlans sp ON sp.sessionId = sessions.id
+      JOIN
+          Topics topics ON sp.id = topics.sessionPlanId
+      LEFT JOIN
+          Concepts concepts ON topics.id = concepts.topicId
+      LEFT JOIN
+          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId -- Join with LessonPlans table
+      JOIN
+          schools ON timetable_entries.schoolId = schools.id
+      JOIN
+          classinfos ON timetable_entries.classId = classinfos.id
+      JOIN
+          sections ON timetable_entries.sectionId = sections.id
+      WHERE
+          timetable_entries.teacherId = :teacherId
+          AND timetable_entries.sectionId = :sectionId
+          AND timetable_entries.subjectId = :subjectId
+      ORDER BY
+          sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
+      `,
+      {
+        replacements: {
+          teacherId,
+          sectionId,
+          subjectId,
+        },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
-      res.status(200).json({ sessions });
+    // Format the response
+    const formattedSessions = sessions.map((session) => ({
+      sessionId: session.sessionId,
+      schoolName: session.schoolName,
+      className: session.className,
+      sectionName: session.sectionName,
+      subjectName: session.subjectName,
+      chapterName: session.chapterName,
+      sessionPlanId: session.sessionPlanId,
+      sessionNumber: session.sessionNumber,
+      topics: [
+        {
+          name: session.topicName,
+          concept: session.mainConcept,
+          detailing: session.conceptDetailing,
+          lessonPlan: session.lessonPlan, // Include lesson plan in response
+        },
+      ].filter((topic) => topic.name), // Filter out null or undefined topics
+      priorityNumber: session.priorityNumber,
+      sessionDate: session.sessionDate,
+      startTime: session.startTime,
+      endTime: session.endTime,
+    }));
+
+    res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
-      console.error('Error fetching sessions:', error.message);
-      res.status(500).json({ error: 'Failed to fetch sessions.' });
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
-
 
 // Fetch sessions and session plan details for start
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
