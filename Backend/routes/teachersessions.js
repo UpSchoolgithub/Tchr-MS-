@@ -212,7 +212,6 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 
-// Fetch sessions with concept, detailing, and lesson plan
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
 
@@ -279,12 +278,10 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
-    // Consolidate session data
     const sessionMap = new Map();
 
     sessions.forEach((session) => {
       if (!sessionMap.has(session.sessionId)) {
-        // Initialize a session entry
         sessionMap.set(session.sessionId, {
           sessionId: session.sessionId,
           schoolName: session.schoolName,
@@ -304,29 +301,35 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
 
       const currentSession = sessionMap.get(session.sessionId);
 
-      // Group topics and their details
-      const existingTopic = currentSession.topics.find((t) => t.name === session.topicName);
-      if (!existingTopic) {
+      const topicIndex = currentSession.topics.findIndex((t) => t.name === session.topicName);
+
+      if (topicIndex === -1) {
         currentSession.topics.push({
           name: session.topicName,
-          concepts: session.mainConcept ? [session.mainConcept] : [],
-          conceptDetailing: session.conceptDetailing ? [session.conceptDetailing] : [],
-          lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+          details: [
+            {
+              concept: session.mainConcept,
+              conceptDetailing: session.conceptDetailing,
+              lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+            },
+          ],
         });
       } else {
-        if (session.mainConcept && !existingTopic.concepts.includes(session.mainConcept)) {
-          existingTopic.concepts.push(session.mainConcept);
-        }
-        if (session.conceptDetailing && !existingTopic.conceptDetailing.includes(session.conceptDetailing)) {
-          existingTopic.conceptDetailing.push(session.conceptDetailing);
-        }
-        if (session.lessonPlan && !existingTopic.lessonPlans.includes(session.lessonPlan)) {
-          existingTopic.lessonPlans.push(session.lessonPlan);
+        const topic = currentSession.topics[topicIndex];
+        const existingConcept = topic.details.find((d) => d.concept === session.mainConcept);
+
+        if (!existingConcept) {
+          topic.details.push({
+            concept: session.mainConcept,
+            conceptDetailing: session.conceptDetailing,
+            lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+          });
+        } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
+          existingConcept.lessonPlans.push(session.lessonPlan);
         }
       }
     });
 
-    // Convert the sessionMap to an array for the response
     const formattedSessions = Array.from(sessionMap.values());
 
     res.status(200).json({ sessions: formattedSessions });
