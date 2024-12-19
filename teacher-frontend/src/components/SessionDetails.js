@@ -242,7 +242,6 @@ const allTopicsCompleted =
 
   return (
     <div className="session-details-container">
-      {/* Header Section */}
       <div className="session-details-header">
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
@@ -250,11 +249,9 @@ const allTopicsCompleted =
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
-  
-      {/* Welcome Message */}
+
       <h2>Welcome, Teacher Name!</h2>
-  
-      {/* Attendance Section */}
+
       <div className="attendance-section">
         <h3>Mark Attendance</h3>
         {loading ? (
@@ -279,175 +276,81 @@ const allTopicsCompleted =
             </button>
           </>
         )}
-  
-        {/* Session Notes */}
+
         <div className="session-notes-section">
-      <h3>Session Notes and Details:</h3>
-      {sessionDetails ? (
-        <div className="session-item">
-          <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-          <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
-          <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-          <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-          <div className="topics-container">
-          <h4>Topics to Cover:</h4>
-<ul className="topics-list">
-  {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx} className="topic-item">
-      <div className="topic-container">
-        <input
-          type="checkbox"
-          id={`topic-${idx}`}
-          style={{ marginRight: "10px" }}
-        />
-        <label htmlFor={`topic-${idx}`} className="topic-name">
-          {idx + 1}. {topic}
-        </label>
-        <button
-          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-          className="view-lp-button"
-        >
-          {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-        </button>
-      </div>
-      {expandedTopic === idx && (
-        <div className="lesson-plan-container">
-          <div className="lesson-plan-content">
-            <div className="section-box">
-              <h5><strong>Objectives:</strong></h5>
-                          <ul>
-                            <li>Understand the concept of resistors connected in parallel.</li>
-                            <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-                            <li>Understand how current flows in resistors connected in parallel.</li>
-                          </ul>
-                        </div>
-                        <div className="section-box">
-                          <h5><strong>Teaching Aids:</strong></h5>
-                          <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-                        </div>
-                        <div className="section-box">
-              <h5><strong>Content:</strong></h5>
-                <ol>
-                  <li>
-                    <strong>Introduction to resistors in parallel:</strong>
-                    <ul>
-                      <li>Definition and explanation of resistors connected in parallel.</li>
-                      <li>Differences between series and parallel connections of resistors.</li>
+          <h3>Session Notes and Details:</h3>
+          {sessionDetails ? (
+            <div className="session-item">
+              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+              <div className="topics-container">
+                <h4>Topics to Cover:</h4>
+                {sessionDetails.topics && sessionDetails.topics.length > 0 ? (
+                  <>
+                    <div className="mark-all-container">
+                      <input
+                        type="checkbox"
+                        id="mark-all"
+                        checked={
+                          sessionDetails.topics.length > 0 &&
+                          completedTopics.length === sessionDetails.topics.length
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setCompletedTopics(sessionDetails.topics.map((topic) => topic.name));
+                          } else {
+                            setCompletedTopics([]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="mark-all">Mark All as Completed</label>
+                    </div>
+                    <ul className="topics-list">
+                      {sessionDetails.topics.map((topic, idx) => (
+                        <li key={idx} className="topic-item">
+                          <div className="topic-container">
+                            <input
+                              type="checkbox"
+                              id={`topic-${idx}`}
+                              checked={completedTopics.includes(topic.name)}
+                              onChange={() => handleTopicChange(topic.name)}
+                            />
+                            <label htmlFor={`topic-${idx}`} className="topic-name">
+                              {idx + 1}. {topic.name}
+                            </label>
+                            <button
+                              onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+                              className="view-lp-button"
+                            >
+                              {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+                            </button>
+                          </div>
+                          {expandedTopic === idx && (
+                            <div className="lesson-plan-container">
+                              <div className="lesson-plan-content">
+                                <h5><strong>Concept:</strong> {topic.concept || "N/A"}</h5>
+                                <p><strong>Detailing:</strong> {topic.detailing || "N/A"}</p>
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      ))}
                     </ul>
-                  </li>
-                  <li>
-                    <strong>Equivalent resistance in parallel:</strong>
-                    <ul>
-                      <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                      <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                      <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>Current flow in resistors in parallel:</strong>
-                    <ul>
-                      <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                      <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                    </ul>
-                  </li>
-                </ol>
+                  </>
+                ) : (
+                  <p>No topics available for this session.</p>
+                )}
               </div>
-
-              <div className="section-box">
-              <h5><strong>Activities:</strong></h5>
-                <ol>
-                  <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
-                  <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-                  <li>Discuss real-life examples of parallel circuits and their applications.</li>
-                </ol>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Summary:</strong></h5>
-                <p>
-                  Recap the key points discussed during the session. Emphasize the differences between series and
-                  parallel connections of resistors. Highlight the significance of understanding resistors in parallel
-                  in practical applications.
-                </p>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Homework:</strong></h5>
-                <ul>
-                  <li>Solve additional practice problems on resistors in parallel.</li>
-                  <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
-</div>
-
-
-
-              <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
-              <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
-              <p><strong>Session Date:</strong> {sessionDetails.sessionDate || 'N/A'}</p>
+              <button onClick={handleSaveObservations} className="save-observations-button">
+                Save Observations
+              </button>
+              <button onClick={handleEndSession} className="end-session-button">
+                End Session
+              </button>
             </div>
           ) : (
             <p>No session details available for today.</p>
           )}
-
-
-          <h4>Assignments:</h4>
-          {assignmentDetails && (
-            <div>
-              <p>Existing Assignment: {assignmentDetails}</p>
-              {existingFile && (
-                <p>
-                  <a href={existingFile} target="_blank" rel="noopener noreferrer">
-                    View Uploaded File
-                  </a>
-                </p>
-              )}
-            </div>
-          )}
-          <select onChange={handleAssignmentChange}>
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-          {assignmentsEnabled && (
-            <div className="assignment-input">
-            <textarea
-              value={assignmentDetails}
-              onChange={(e) => setAssignmentDetails(e.target.value)}
-              placeholder="Enter assignment details here..."
-            ></textarea>
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files[0])}
-              accept=".pdf,.doc,.docx,.jpg,.png" // Optional: Restrict file types
-            />
-            <button onClick={handleSaveAssignment}>Save</button>
-          </div>
-          
-          )}
-
-          <h4>Observations:</h4>
-          <textarea
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-            className="observations-textarea"
-            placeholder="Add observations of the class here..."
-          ></textarea>
-          <button onClick={handleSaveObservations} className="save-observations-button">
-            Save Observations
-          </button>
-          <div className="end-session">
-            <button onClick={handleEndSession} className="end-session-button">
-              End Session
-            </button>
-          </div>
-
-                   
         </div>
       </div>
     </div>
