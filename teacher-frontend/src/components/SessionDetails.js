@@ -289,64 +289,60 @@ const allTopicsCompleted =
           <strong>Chapter Name:</strong> {session.chapterName || 'N/A'}
         </p>
         <div className="topics-container">
-          <h4>Topics to Cover:</h4>
-          {session.topics && session.topics.length > 0 ? (
-            <ul className="topics-list">
-              {session.topics.map((topic, idx) => (
-                <li key={idx} className="topic-item">
-                  <div className="topic-container">
-                    <input
-                      type="checkbox"
-                      id={`topic-${index}-${idx}`}
-                      checked={completedTopics.includes(topic.name)}
-                      onChange={() => handleTopicChange(topic.name)}
-                    />
-                    <label htmlFor={`topic-${index}-${idx}`} className="topic-name">
-                      {idx + 1}. {topic.name}
-                    </label>
-                    <button
-                      onClick={() =>
-                        setExpandedTopic(expandedTopic === idx ? null : idx)
-                      }
-                      className="view-lp-button"
-                    >
-                      {expandedTopic === idx ? 'HIDE LP' : 'VIEW LP'}
-                    </button>
+  <h4>Topics to Cover:</h4>
+  {sessionDetails && sessionDetails.topics && sessionDetails.topics.length > 0 ? (
+    <ul className="topics-list">
+      {/* Grouping Topics by Name */}
+      {Object.entries(
+        sessionDetails.topics.reduce((acc, topic) => {
+          // Group topics by their name
+          if (!acc[topic.name]) acc[topic.name] = [];
+          acc[topic.name].push({ concept: topic.concept, detailing: topic.detailing });
+          return acc;
+        }, {})
+      ).map(([topicName, concepts], idx) => (
+        <li key={idx} className="topic-item">
+          <div className="topic-container">
+            <input
+              type="checkbox"
+              id={`topic-${idx}`}
+              checked={completedTopics.includes(topicName)}
+              onChange={() => handleTopicChange(topicName)}
+            />
+            <label htmlFor={`topic-${idx}`} className="topic-name">
+              {idx + 1}. {topicName}
+            </label>
+            <button
+              onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
+              className="view-lp-button"
+            >
+              {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
+            </button>
+          </div>
+          {expandedTopic === idx && (
+            <div className="lesson-plan-container">
+              <div className="lesson-plan-content">
+                {concepts.map((concept, conceptIdx) => (
+                  <div key={conceptIdx} className="concept-container">
+                    <h5>
+                      <strong>Concept:</strong> {concept.concept || "N/A"}
+                    </h5>
+                    <p>
+                      <strong>Detailing:</strong> {concept.detailing || "N/A"}
+                    </p>
                   </div>
-                  {expandedTopic === idx && (
-                    <div className="lesson-plan-container">
-                      <div className="lesson-plan-content">
-                        <h5>
-                          <strong>Concept:</strong> {topic.concept || 'N/A'}
-                        </h5>
-                        <p>
-                          <strong>Detailing:</strong> {topic.detailing || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No topics available for this session.</p>
+                ))}
+              </div>
+            </div>
           )}
-        </div>
-        <p>
-          <strong>Start Time:</strong> {session.startTime || 'N/A'}
-        </p>
-        <p>
-          <strong>End Time:</strong> {session.endTime || 'N/A'}
-        </p>
-        <p>
-          <strong>Session Date:</strong> {session.sessionDate || 'N/A'}
-        </p>
-      </div>
-    ))
+        </li>
+      ))}
+    </ul>
   ) : (
-    <p>No sessions available for this section.</p>
+    <p>No topics available for this session.</p>
   )}
 </div>
+
 
       </div>
     </div>
