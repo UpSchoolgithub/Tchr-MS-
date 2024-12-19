@@ -67,13 +67,11 @@ const SessionDetails = () => {
               name: detail.concept,
               detailing: detail.conceptDetailing,
               lessonPlans: detail.lessonPlans.map((plan) => {
-                // Remove "Session 1:" or similar prefixes
-                let cleanedPlan = plan.replace(/^Session \d+:.*\nDuration:.*\n?/i, '');
-  
-                // Remove time durations in headings like "Introduction (5 minutes):"
-                cleanedPlan = cleanedPlan.replace(/\((\d+ minutes)\):/gi, ':');
-  
-                return cleanedPlan;
+                // Extract only the content starting from "Objectives"
+                const objectivesIndex = plan.indexOf("Objectives");
+                return objectivesIndex !== -1
+                  ? plan.substring(objectivesIndex)
+                  : plan; // If "Objectives" is not found, return the plan as is
               }),
               completed: false,
             })),
