@@ -18,7 +18,6 @@ const SessionDetails = () => {
   } = location.state || {};
   
  
-  const [expandedTopic, setExpandedTopic] = useState(null);
 
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
@@ -54,23 +53,50 @@ const SessionDetails = () => {
 
   // Fetch session details
   // Fetch session details
-useEffect(() => {
-  const fetchSessionDetails = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-      );
-      console.log('Fetched session details:', response.data);
-      setSessionDetails(response.data.sessionDetails || null);
-    } catch (error) {
-      console.error('Error fetching session details:', error);
-      setError('Failed to fetch session details.');
-    }
-  };
-
-  if (teacherId && sectionId && subjectId) fetchSessionDetails();
-}, [teacherId, sectionId, subjectId]);
-
+  useEffect(() => {
+    const fetchSessionDetails = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+  
+        if (response.data?.sessionDetails) {
+          const previousIncompleteTopics = response.data.sessionDetails.previousIncompleteTopics || [];
+          const currentTopics = response.data.sessionDetails.topics || [];
+  
+          // If no topics remain, fetch next chapter
+          if (previousIncompleteTopics.length === 0 && currentTopics.length === 0) {
+            const nextChapterResponse = await axiosInstance.get(
+              `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter`
+            );
+  
+            if (nextChapterResponse.data) {
+              const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
+              setSessionDetails({
+                ...response.data.sessionDetails,
+                chapterName: nextChapterResponse.data.nextChapter.name,
+                topics: nextChapterTopics,
+              });
+            } else {
+              alert('No more chapters available.');
+            }
+          } else {
+            setSessionDetails({
+              ...response.data.sessionDetails,
+              topics: [...previousIncompleteTopics, ...currentTopics],
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+        setError('Failed to fetch session details.');
+      }
+    };
+  
+    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+  }, [teacherId, sectionId, subjectId]);
+  
+  
   
   
   // Fetch assignment details
@@ -164,26 +190,19 @@ useEffect(() => {
       return;
     }
   
-    // Collect completed and incomplete topics based on checkbox states
-    const completedTopics = [];
-    const incompleteTopics = [];
-  
-    sessionDetails.topics.forEach((topic, idx) => {
-      const isChecked = document.getElementById(`topic-${idx}`).checked;
-      if (isChecked) {
-        completedTopics.push(topic);
-      } else {
-        incompleteTopics.push(topic);
-      }
-    });
-  
-    // Ensure at least one topic is completed
-    if (completedTopics.length === 0) {
-      alert('Please mark at least one topic as completed.');
-      return;
-    }
-  
     try {
+      const completedTopics = [];
+      const incompleteTopics = [];
+  
+      sessionDetails.topics.forEach((topic, idx) => {
+        const isChecked = document.getElementById(`topic-${idx}`).checked;
+        if (isChecked) {
+          completedTopics.push(topic);
+        } else {
+          incompleteTopics.push(topic);
+        }
+      });
+  
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
@@ -199,12 +218,33 @@ useEffect(() => {
       );
   
       alert(response.data.message || 'Session ended successfully!');
+  
+      if (incompleteTopics.length === 0) {
+        // Mark the chapter as completed and move to the next chapter
+        const nextChapterResponse = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/next-chapter`
+        );
+  
+        if (nextChapterResponse.data) {
+          const nextChapterTopics = nextChapterResponse.data.topics.map(topic => topic.name);
+          setSessionDetails({
+            chapterName: nextChapterResponse.data.nextChapter.name,
+            topics: nextChapterTopics,
+          });
+        } else {
+          alert('No more chapters available.');
+        }
+      }
+  
+      // Redirect or refresh page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
+  
   
   
   
@@ -224,7 +264,6 @@ useEffect(() => {
 
   return (
     <div className="session-details-container">
-      {/* Header Section */}
       <div className="session-details-header">
         <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
         <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
@@ -232,143 +271,53 @@ useEffect(() => {
         <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
         <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
-  
-      {/* Welcome Message */}
+
       <h2>Welcome, Teacher Name!</h2>
-  
-      {/* Attendance Section */}
-      <div className="attendance-section">
-        <h3>Mark Attendance</h3>
-        {loading ? (
-          <p>Loading students...</p>
-        ) : error ? (
-          <p className="error-message">{error}</p>
-        ) : students.length === 0 ? (
-          <p>No students found for this section.</p>
-        ) : (
-          <>
-            <Select
-              isMulti
-              options={studentOptions}
-              onChange={handleAbsenteeChange}
-              placeholder="Choose Absentees"
-              value={studentOptions.filter((option) => absentees.includes(option.value))}
-              className="multi-select-dropdown"
-              closeMenuOnSelect={false}
-            />
-            <button onClick={handleSaveAttendance} className="save-attendance-button">
-              Save Attendance
-            </button>
-          </>
-        )}
-  
-        {/* Session Notes */}
+
+      <div className="attendance-and-notes">
+        <div className="attendance-section">
+          <h3>Mark Attendance</h3>
+          {loading ? (
+            <p>Loading students...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : students.length === 0 ? (
+            <p>No students found for this section.</p>
+          ) : (
+            <>
+              <Select
+                isMulti
+                options={studentOptions}
+                onChange={handleAbsenteeChange}
+                placeholder="Choose Absentees"
+                value={studentOptions.filter((option) => absentees.includes(option.value))}
+                className="multi-select-dropdown"
+                closeMenuOnSelect={false}
+              />
+              <button onClick={handleSaveAttendance} className="save-attendance-button">
+                Save Attendance
+              </button>
+            </>
+          )}
+        </div>
+
         <div className="session-notes-section">
-      <h3>Session Notes and Details:</h3>
-      {sessionDetails ? (
-        <div className="session-item">
-          <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
-          <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
-          <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
-          <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
-          <div className="topics-container">
-          <h4>Topics to Cover:</h4>
-<ul className="topics-list">
+          <h3>Session Notes and Details:</h3>
+          {sessionDetails ? (
+            <div className="session-item">
+              <p><strong>Session ID:</strong> {sessionDetails.sessionId || 'N/A'}</p>
+              <p><strong>Session Plan ID:</strong> {sessionDetails.sessionPlanId || 'N/A'}</p>
+              <p><strong>Chapter Name:</strong> {sessionDetails.chapterName || 'N/A'}</p>
+              <p><strong>Session Number:</strong> {sessionDetails.sessionNumber || 'N/A'}</p>
+              <h4>Topics to Cover:</h4>
+<ul>
   {sessionDetails.topics.map((topic, idx) => (
-    <li key={idx} className="topic-item">
-      <div className="topic-container">
-        <input
-          type="checkbox"
-          id={`topic-${idx}`}
-          style={{ marginRight: "10px" }}
-        />
-        <label htmlFor={`topic-${idx}`} className="topic-name">
-          {idx + 1}. {topic}
-        </label>
-        <button
-          onClick={() => setExpandedTopic(expandedTopic === idx ? null : idx)}
-          className="view-lp-button"
-        >
-          {expandedTopic === idx ? "HIDE LP" : "VIEW LP"}
-        </button>
-      </div>
-      {expandedTopic === idx && (
-        <div className="lesson-plan-container">
-          <div className="lesson-plan-content">
-            <div className="section-box">
-              <h5><strong>Objectives:</strong></h5>
-                          <ul>
-                            <li>Understand the concept of resistors connected in parallel.</li>
-                            <li>Learn about the equivalent resistance formula for resistors in parallel.</li>
-                            <li>Understand how current flows in resistors connected in parallel.</li>
-                          </ul>
-                        </div>
-                        <div className="section-box">
-                          <h5><strong>Teaching Aids:</strong></h5>
-                          <p>Whiteboard, Markers, Visual aids (diagrams)</p>
-                        </div>
-                        <div className="section-box">
-              <h5><strong>Content:</strong></h5>
-                <ol>
-                  <li>
-                    <strong>Introduction to resistors in parallel:</strong>
-                    <ul>
-                      <li>Definition and explanation of resistors connected in parallel.</li>
-                      <li>Differences between series and parallel connections of resistors.</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>Equivalent resistance in parallel:</strong>
-                    <ul>
-                      <li>Explanation of how to calculate the total resistance in a parallel circuit.</li>
-                      <li>Formula for calculating equivalent resistance in a parallel circuit.</li>
-                      <li>Example problems demonstrating the calculation of equivalent resistance.</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>Current flow in resistors in parallel:</strong>
-                    <ul>
-                      <li>Explanation of how current is distributed in resistors connected in parallel.</li>
-                      <li>Illustration using diagrams to show the flow of current in parallel resistors.</li>
-                    </ul>
-                  </li>
-                </ol>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Activities:</strong></h5>
-                <ol>
-                  <li>Solve example problems related to calculating equivalent resistance in parallel circuits.</li>
-                  <li>Draw diagrams showing the flow of current in parallel resistors.</li>
-                  <li>Discuss real-life examples of parallel circuits and their applications.</li>
-                </ol>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Summary:</strong></h5>
-                <p>
-                  Recap the key points discussed during the session. Emphasize the differences between series and
-                  parallel connections of resistors. Highlight the significance of understanding resistors in parallel
-                  in practical applications.
-                </p>
-              </div>
-
-              <div className="section-box">
-              <h5><strong>Homework:</strong></h5>
-                <ul>
-                  <li>Solve additional practice problems on resistors in parallel.</li>
-                  <li>Research and list examples of everyday devices that use parallel resistor configurations.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
-</div>
-
-
+    <li key={idx}>
+      <input type="checkbox" id={`topic-${idx}`} />
+      <label htmlFor={`topic-${idx}`}>{topic}</label>
+    </li>
+  ))}
+</ul>
 
               <p><strong>Start Time:</strong> {sessionDetails.startTime || 'N/A'}</p>
               <p><strong>End Time:</strong> {sessionDetails.endTime || 'N/A'}</p>
@@ -429,7 +378,6 @@ useEffect(() => {
             </button>
           </div>
 
-                   
         </div>
       </div>
     </div>

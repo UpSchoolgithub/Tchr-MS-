@@ -137,13 +137,12 @@ const TeacherSessions = () => {
         <th>School</th>
         <th>Class</th>
         <th>Section</th>
-        <th>Section ID</th>
         <th>Day</th>
         <th>Period</th>
         <th>Subject</th>
         <th>Progress</th>
-        <th>Start</th>
-        <th>End</th>
+        <th>Start Time</th>
+        <th>End Time</th>
         <th>Assignments</th>
         <th>Session Report</th>
       </tr>
