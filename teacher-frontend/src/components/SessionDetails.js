@@ -3,9 +3,11 @@ import Select from 'react-select';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
-const location = useLocation();
 
-const SessionDetails = ({ location }) => {
+const SessionDetails = () => {
+  const location = useLocation(); // Correctly use useLocation
+  const navigate = useNavigate();
+
   const {
     teacherId = null,
     classId = null,
@@ -14,7 +16,7 @@ const SessionDetails = ({ location }) => {
     schoolId = null,
     sessionDetails: initialSessionDetails = [],
   } = location.state || {};
-  
+
   const [expandedTopic, setExpandedTopic] = useState(null);
   const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
@@ -25,7 +27,7 @@ const SessionDetails = ({ location }) => {
   const [assignmentsEnabled, setAssignmentsEnabled] = useState(false);
   const [assignmentDetails, setAssignmentDetails] = useState('');
   const [existingFile, setExistingFile] = useState(null);
-  const [file, setFile] = useState(null); // File state
+  const [file, setFile] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
 
   // Fetch students for attendance
@@ -75,44 +77,43 @@ const SessionDetails = ({ location }) => {
 
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
-  
+
   // Track completed topics
-const [completedTopics, setCompletedTopics] = useState([]);
+  const [completedTopics, setCompletedTopics] = useState([]);
 
-// Handle checkbox change
-const handleTopicChange = (topicName) => {
-  setCompletedTopics((prev) => {
-    const isCompleted = prev.includes(topicName);
-    if (isCompleted) {
-      return prev.filter((t) => t !== topicName);
-    } else {
-      return [...prev, topicName];
-    }
-  });
-};
+  // Handle checkbox change
+  const handleTopicChange = (topicName) => {
+    setCompletedTopics((prev) => {
+      const isCompleted = prev.includes(topicName);
+      if (isCompleted) {
+        return prev.filter((t) => t !== topicName);
+      } else {
+        return [...prev, topicName];
+      }
+    });
+  };
 
-const handleConceptChange = (topicIndex, conceptIndex) => {
-  setSessionDetails((prevDetails) => {
-    const updatedDetails = [...prevDetails];
-    const topic = updatedDetails[0]?.topics[topicIndex];
-    const concept = topic.concepts[conceptIndex];
+  const handleConceptChange = (topicIndex, conceptIndex) => {
+    setSessionDetails((prevDetails) => {
+      const updatedDetails = [...prevDetails];
+      const topic = updatedDetails[0]?.topics[topicIndex];
+      const concept = topic.concepts[conceptIndex];
 
-    concept.completed = !concept.completed;
-    topic.completed = topic.concepts.every((c) => c.completed); // Mark topic as completed if all concepts are completed.
+      concept.completed = !concept.completed;
+      topic.completed = topic.concepts.every((c) => c.completed);
 
-    return updatedDetails;
-  });
-};
+      return updatedDetails;
+    });
+  };
 
+  const handleTopicExpand = (index) => {
+    setExpandedTopic((prev) => (prev === index ? null : index));
+  };
 
-const handleTopicExpand = (index) => {
-  setExpandedTopic((prev) => (prev === index ? null : index));
-};
-
-// Check if all topics are completed
-const allTopicsCompleted =
-  sessionDetails?.topics &&
-  sessionDetails.topics.every((topic) => completedTopics.includes(topic.name));
+  // Check if all topics are completed
+  const allTopicsCompleted =
+    sessionDetails?.topics &&
+    sessionDetails.topics.every((topic) => completedTopics.includes(topic.name));
 
   // Fetch assignment details
   useEffect(() => {
@@ -159,32 +160,29 @@ const allTopicsCompleted =
   };
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]); // Update the file state
+    setFile(e.target.files[0]);
   };
 
   const handleSaveAssignment = async () => {
     try {
-        const formData = new FormData();
-        formData.append('sessionPlanId', sessionDetails?.sessionPlanId); // Include sessionPlanId
-        formData.append('assignmentDetails', assignmentDetails); // Include assignment details
-        if (file) {
-            formData.append('file', file); // Optional: Include the file only if selected
-        }
+      const formData = new FormData();
+      formData.append('sessionPlanId', sessionDetails?.sessionPlanId);
+      formData.append('assignmentDetails', assignmentDetails);
+      if (file) {
+        formData.append('file', file);
+      }
 
-        const response = await axiosInstance.post('/api/assignments', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+      const response = await axiosInstance.post('/api/assignments', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
-        alert('Assignment saved successfully!');
-        setSuccessMessage(response.data.message);
+      alert('Assignment saved successfully!');
+      setSuccessMessage(response.data.message);
     } catch (error) {
-        console.error('Error saving assignment:', error);
-        alert('Failed to save assignment.');
+      console.error('Error saving assignment:', error);
+      alert('Failed to save assignment.');
     }
-};
-
-  
-  
+  };
 
   const handleSaveObservations = async () => {
     try {
@@ -204,11 +202,10 @@ const allTopicsCompleted =
       alert('Session Plan ID is missing. Cannot end the session.');
       return;
     }
-  
-    // Collect completed and incomplete topics based on checkbox states
+
     const completedTopics = [];
     const incompleteTopics = [];
-  
+
     sessionDetails.topics.forEach((topic, idx) => {
       const isChecked = document.getElementById(`topic-${idx}`).checked;
       if (isChecked) {
@@ -217,13 +214,12 @@ const allTopicsCompleted =
         incompleteTopics.push(topic);
       }
     });
-  
-    // Ensure at least one topic is completed
+
     if (completedTopics.length === 0) {
       alert('Please mark at least one topic as completed.');
       return;
     }
-  
+
     try {
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
@@ -233,12 +229,12 @@ const allTopicsCompleted =
         absentees,
         completed: true,
       };
-  
+
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
-  
+
       alert(response.data.message || 'Session ended successfully!');
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
@@ -246,127 +242,118 @@ const allTopicsCompleted =
       alert('Failed to end the session.');
     }
   };
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
     label: student.studentName,
   }));
 
 
-  return (
-    <div className="session-details-container">
-      <div className="session-details-header">
-        <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
-        <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
-        <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
-        <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
-        <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
-      </div>
-  
-      <h2>Welcome, Teacher Name!</h2>
-  
-      <div className="session-notes-section">
-        <h3>Session Notes and Details:</h3>
-        {sessionDetails.length > 0 ? (
-          sessionDetails.map((session, sessionIndex) => (
-            <div key={sessionIndex} className="session-item">
-              <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
-              <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-  
-              <div className="topics-container">
-                <h4>Topics to Cover:</h4>
-                <ul className="topics-list">
-                  {session.topics.map((topic, topicIndex) => (
-                    <li key={topicIndex} className="topic-item">
-                      <div className="topic-header">
-                        <input
-                          type="checkbox"
-                          id={`topic-${sessionIndex}-${topicIndex}`}
-                          checked={topic.completed}
-                          readOnly
-                        />
-                        <label
-                          htmlFor={`topic-${sessionIndex}-${topicIndex}`}
-                          className="topic-name"
-                        >
-                          {topicIndex + 1}. {topic.name}
-                        </label>
-                        <button
-                          onClick={() => handleTopicExpand(topicIndex)}
-                          className="view-lp-button"
-                        >
-                          {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-                        </button>
-                      </div>
-  
-                      {expandedTopic === topicIndex && (
-                        <ul className="concepts-list">
-                          {topic.concepts.map((concept, conceptIndex) => (
-                            <li key={conceptIndex} className="concept-item">
-                              <div className="concept-header">
-                              <input
-  type="checkbox"
-  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-  checked={concept.completed}
-  onChange={() => handleConceptChange(topicIndex, conceptIndex)}
-/>
-
-                                <label
-                                  htmlFor={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                                >
-                                  {conceptIndex + 1}. {concept}
-                                </label>
-                              </div>
-                              <p><strong>Detailing:</strong> {topic.conceptDetailing[conceptIndex]}</p>
-                              {topic.lessonPlans[conceptIndex] && (
-                                <pre className="lesson-plan">
-                                  <strong>Lesson Plan:</strong> {topic.lessonPlans[conceptIndex]}
-                                </pre>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p>No session details available for today.</p>
-        )}
-      </div>
-  
-      <div className="observations-section">
-        <h4>Observations:</h4>
-        <textarea
-          value={observations}
-          onChange={(e) => setObservations(e.target.value)}
-          className="observations-textarea"
-          placeholder="Add observations of the class here..."
-        ></textarea>
-        <button onClick={handleSaveObservations} className="save-observations-button">
-          Save Observations
-        </button>
-      </div>
-  
-      <div className="end-session">
-        <button onClick={handleEndSession} className="end-session-button">
-          End Session
-        </button>
-      </div>
+return (
+  <div className="session-details-container">
+    <div className="session-details-header">
+      <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
+      <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
+      <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
+      <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
+      <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
     </div>
+
+    <h2>Welcome, Teacher Name!</h2>
+
+    <div className="session-notes-section">
+      <h3>Session Notes and Details:</h3>
+      {sessionDetails?.length > 0 ? (
+        sessionDetails.map((session, sessionIndex) => (
+          <div key={sessionIndex} className="session-item">
+            <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+            <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+
+            <div className="topics-container">
+              <h4>Topics to Cover:</h4>
+              <ul className="topics-list">
+                {session.topics.map((topic, topicIndex) => (
+                  <li key={topicIndex} className="topic-item">
+                    <div className="topic-header">
+                      <input
+                        type="checkbox"
+                        id={`topic-${sessionIndex}-${topicIndex}`}
+                        checked={topic.completed}
+                        readOnly
+                      />
+                      <label
+                        htmlFor={`topic-${sessionIndex}-${topicIndex}`}
+                        className="topic-name"
+                      >
+                        {topicIndex + 1}. {topic.name}
+                      </label>
+                      <button
+                        onClick={() => handleTopicExpand(topicIndex)}
+                        className="view-lp-button"
+                      >
+                        {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+                      </button>
+                    </div>
+
+                    {expandedTopic === topicIndex && (
+                      <ul className="concepts-list">
+                        {topic.concepts.map((concept, conceptIndex) => (
+                          <li key={conceptIndex} className="concept-item">
+                            <div className="concept-header">
+                              <input
+                                type="checkbox"
+                                id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+                                checked={concept.completed}
+                                onChange={() => handleConceptChange(topicIndex, conceptIndex)}
+                              />
+                              <label
+                                htmlFor={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+                              >
+                                {conceptIndex + 1}. {concept.name}
+                              </label>
+                            </div>
+                            <p><strong>Detailing:</strong> {concept.detailing || 'N/A'}</p>
+                            {concept.lessonPlan && (
+                              <pre className="lesson-plan">
+                                <strong>Lesson Plan:</strong> {concept.lessonPlan}
+                              </pre>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p>No session details available for today.</p>
+      )}
+    </div>
+
+    <div className="observations-section">
+      <h4>Observations:</h4>
+      <textarea
+        value={observations}
+        onChange={(e) => setObservations(e.target.value)}
+        className="observations-textarea"
+        placeholder="Add observations of the class here..."
+      ></textarea>
+      <button onClick={handleSaveObservations} className="save-observations-button">
+        Save Observations
+      </button>
+    </div>
+
+    <div className="end-session">
+      <button onClick={handleEndSession} className="end-session-button">
+        End Session
+      </button>
+    </div>
+  </div>
+  
   );
 };  
+
 export default SessionDetails;
