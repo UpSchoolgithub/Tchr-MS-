@@ -221,54 +221,57 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     const sessions = await sequelize.query(
       `
       SELECT
-          sessions.id AS sessionId,
-          schools.name AS schoolName,
-          classinfos.className AS className,
-          sections.sectionName AS sectionName,
-          subjects.subjectName AS subjectName,
-          sessions.chapterName,
-          sp.id AS sessionPlanId,
-          sp.sessionNumber,
-          topics.topicName AS topicName,
-          concepts.concept AS mainConcept,
-          concepts.conceptDetailing AS conceptDetailing,
-          lessonplans.generatedLP AS lessonPlan, -- Include lesson plan
-          sessions.priorityNumber,
-          DATE_ADD(
-              subjects.academicStartDate,
-              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
-          ) AS sessionDate,
-          timetable_entries.startTime,
-          timetable_entries.endTime
-      FROM
-          timetable_entries
-      JOIN
-          subjects ON timetable_entries.subjectId = subjects.id
-      JOIN
-          sessions ON (
-              sessions.subjectId = timetable_entries.subjectId AND
-              sessions.sectionId = timetable_entries.sectionId
-          )
-      JOIN
-          SessionPlans sp ON sp.sessionId = sessions.id
-      JOIN
-          Topics topics ON sp.id = topics.sessionPlanId
-      LEFT JOIN
-          Concepts concepts ON topics.id = concepts.topicId
-      LEFT JOIN
-          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId -- Join with LessonPlans table
-      JOIN
-          schools ON timetable_entries.schoolId = schools.id
-      JOIN
-          classinfos ON timetable_entries.classId = classinfos.id
-      JOIN
-          sections ON timetable_entries.sectionId = sections.id
-      WHERE
-          timetable_entries.teacherId = :teacherId
-          AND timetable_entries.sectionId = :sectionId
-          AND timetable_entries.subjectId = :subjectId
-      ORDER BY
-          sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
+    sessions.id AS sessionId,
+    schools.name AS schoolName,
+    classinfos.className AS className,
+    sections.sectionName AS sectionName,
+    subjects.subjectName AS subjectName,
+    sessions.chapterName,
+    sp.id AS sessionPlanId,
+    sp.sessionNumber,
+    GROUP_CONCAT(DISTINCT topics.topicName) AS topics, -- Concatenate topics
+    GROUP_CONCAT(DISTINCT concepts.concept) AS mainConcepts, -- Concatenate concepts
+    GROUP_CONCAT(DISTINCT concepts.conceptDetailing) AS conceptDetailing, -- Concatenate concept details
+    GROUP_CONCAT(DISTINCT lessonplans.generatedLP) AS lessonPlans, -- Concatenate lesson plans
+    sessions.priorityNumber,
+    DATE_ADD(
+        subjects.academicStartDate,
+        INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+    ) AS sessionDate,
+    timetable_entries.startTime,
+    timetable_entries.endTime
+FROM
+    timetable_entries
+JOIN
+    subjects ON timetable_entries.subjectId = subjects.id
+JOIN
+    sessions ON (
+        sessions.subjectId = timetable_entries.subjectId AND
+        sessions.sectionId = timetable_entries.sectionId
+    )
+JOIN
+    SessionPlans sp ON sp.sessionId = sessions.id
+LEFT JOIN
+    Topics topics ON sp.id = topics.sessionPlanId
+LEFT JOIN
+    Concepts concepts ON topics.id = concepts.topicId
+LEFT JOIN
+    LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
+JOIN
+    schools ON timetable_entries.schoolId = schools.id
+JOIN
+    classinfos ON timetable_entries.classId = classinfos.id
+JOIN
+    sections ON timetable_entries.sectionId = sections.id
+WHERE
+    timetable_entries.teacherId = :teacherId
+    AND timetable_entries.sectionId = :sectionId
+    AND timetable_entries.subjectId = :subjectId
+GROUP BY
+    sessions.id, sp.id, timetable_entries.startTime, timetable_entries.endTime
+ORDER BY
+    sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
+
       `,
       {
         replacements: {
@@ -290,21 +293,19 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       chapterName: session.chapterName,
       sessionPlanId: session.sessionPlanId,
       sessionNumber: session.sessionNumber,
-      topics: [
-        {
-          name: session.topicName,
-          concept: session.mainConcept,
-          detailing: session.conceptDetailing,
-          lessonPlan: session.lessonPlan, // Include lesson plan in response
-        },
-      ].filter((topic) => topic.name), // Filter out null or undefined topics
+      topics: session.topics ? session.topics.split(',').map((topic) => ({ name: topic })) : [],
+      mainConcepts: session.mainConcepts ? session.mainConcepts.split(',') : [],
+      conceptDetailing: session.conceptDetailing ? session.conceptDetailing.split(',') : [],
+      lessonPlans: session.lessonPlans ? session.lessonPlans.split(',') : [],
       priorityNumber: session.priorityNumber,
       sessionDate: session.sessionDate,
       startTime: session.startTime,
       endTime: session.endTime,
     }));
-
+    
     res.status(200).json({ sessions: formattedSessions });
+    
+
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
