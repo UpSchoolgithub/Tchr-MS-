@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
+const location = useLocation();
 
 const SessionDetails = ({ location }) => {
   const {
@@ -14,8 +15,8 @@ const SessionDetails = ({ location }) => {
     sessionDetails: initialSessionDetails = [],
   } = location.state || {};
   
-
-   const [students, setStudents] = useState([]);
+  const [expandedTopic, setExpandedTopic] = useState(null);
+  const [students, setStudents] = useState([]);
   const [absentees, setAbsentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,15 +94,16 @@ const handleTopicChange = (topicName) => {
 const handleConceptChange = (topicIndex, conceptIndex) => {
   setSessionDetails((prevDetails) => {
     const updatedDetails = [...prevDetails];
-    const topic = updatedDetails[0]?.topics[topicIndex]; // Assuming one session at a time
+    const topic = updatedDetails[0]?.topics[topicIndex];
     const concept = topic.concepts[conceptIndex];
 
     concept.completed = !concept.completed;
-    topic.completed = topic.concepts.every((c) => c.completed); // Mark topic completed if all concepts are checked
+    topic.completed = topic.concepts.every((c) => c.completed); // Mark topic as completed if all concepts are completed.
 
     return updatedDetails;
   });
 };
+
 
 const handleTopicExpand = (index) => {
   setExpandedTopic((prev) => (prev === index ? null : index));
@@ -312,14 +314,13 @@ const allTopicsCompleted =
                           {topic.concepts.map((concept, conceptIndex) => (
                             <li key={conceptIndex} className="concept-item">
                               <div className="concept-header">
-                                <input
-                                  type="checkbox"
-                                  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                                  checked={concept.completed}
-                                  onChange={() =>
-                                    handleConceptChange(topicIndex, conceptIndex)
-                                  }
-                                />
+                              <input
+  type="checkbox"
+  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+  checked={concept.completed}
+  onChange={() => handleConceptChange(topicIndex, conceptIndex)}
+/>
+
                                 <label
                                   htmlFor={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
                                 >
