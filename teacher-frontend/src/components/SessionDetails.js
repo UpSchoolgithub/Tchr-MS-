@@ -53,58 +53,64 @@ const SessionDetails = () => {
 
   // Fetch session details
   useEffect(() => {
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-    
-        console.log('API Response:', response.data); // Log the raw API response
-    
-        const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-        console.log('Today Date:', todayDate);
-    
-        const sessions = response.data.sessions.filter((session) => {
-          const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0]; // Parse sessionDate and convert to YYYY-MM-DD
-          console.log('Session Date:', sessionDate, 'Today Date:', todayDate, 'Match:', sessionDate === todayDate);
-          return sessionDate === todayDate;
-        });
-    
-        if (sessions.length === 0) {
-          setError('No sessions found for today.');
-          console.log('No sessions found for today.');
-          return;
-        }
-    
-        console.log('Filtered Sessions:', sessions);
-    
-        const processedSessions = sessions.map((session) => ({
-          ...session,
-          topics: (session.topics || []).map((topic) => ({
-            ...topic,
-            completed: false,
-            concepts: (topic.details || []).map((detail) => ({
-              name: detail.concept,
-              detailing: detail.conceptDetailing,
-              lessonPlans: (detail.lessonPlans || []).map((plan) => {
-                const objectivesIndex = plan.indexOf("Objectives");
-                return objectivesIndex !== -1
-                  ? plan.substring(objectivesIndex)
-                  : plan;
-              }),
-              completed: false,
-            })),
-          })),
-        }));
-    
-        setSessionDetails(processedSessions);
-        console.log('Processed Session Details:', processedSessions);
-      } catch (err) {
-        setError('Failed to fetch session details.');
-        console.error('Error Fetching Sessions:', err);
-      }
-    };
-    
+    // Adjust the filtering logic to handle missing sessions for today
+const fetchSessionDetails = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+    );
+
+    console.log('API Response:', response.data); // Log the raw API response
+
+    const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    console.log('Today Date:', todayDate);
+
+    // Filter sessions for today
+    let sessions = response.data.sessions.filter((session) => {
+      const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0]; // Convert sessionDate to YYYY-MM-DD
+      console.log('Session Date:', sessionDate, 'Today Date:', todayDate, 'Match:', sessionDate === todayDate);
+      return sessionDate === todayDate;
+    });
+
+    // Fallback to show the latest session if no session is found for today
+    if (sessions.length === 0 && response.data.sessions.length > 0) {
+      console.warn('No sessions found for today. Falling back to the most recent session.');
+      sessions = [response.data.sessions[0]]; // Fallback to the first session
+    }
+
+    if (sessions.length === 0) {
+      setError('No sessions found.');
+      console.log('No sessions found.');
+      return;
+    }
+
+    console.log('Filtered Sessions:', sessions);
+
+    const processedSessions = sessions.map((session) => ({
+      ...session,
+      topics: (session.topics || []).map((topic) => ({
+        ...topic,
+        completed: false,
+        concepts: (topic.details || []).map((detail) => ({
+          name: detail.concept,
+          detailing: detail.conceptDetailing,
+          lessonPlans: (detail.lessonPlans || []).map((plan) => {
+            const objectivesIndex = plan.indexOf('Objectives');
+            return objectivesIndex !== -1 ? plan.substring(objectivesIndex) : plan;
+          }),
+          completed: false,
+        })),
+      })),
+    }));
+
+    setSessionDetails(processedSessions);
+    console.log('Processed Session Details:', processedSessions);
+  } catch (err) {
+    setError('Failed to fetch session details.');
+    console.error('Error Fetching Sessions:', err);
+  }
+};
+
     
   
     if (teacherId && sectionId && subjectId) {
@@ -297,12 +303,12 @@ return (
     <h2>Welcome, Teacher Name!</h2>
 
     <div className="session-notes-section">
-      <h3>Session Notes and Details:</h3>
-      {sessionDetails?.length > 0 ? (
-  sessionDetails.map((session, sessionIndex) => (
-    <div key={sessionIndex} className="session-item">
-      <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
-      <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+  <h3>Session Notes and Details:</h3>
+  {sessionDetails && sessionDetails.length > 0 ? (
+    sessionDetails.map((session, sessionIndex) => (
+      <div key={sessionIndex} className="session-item">
+        <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+        <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
         {session.topics.map((topic, topicIndex) => (
