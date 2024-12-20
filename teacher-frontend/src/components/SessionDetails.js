@@ -124,14 +124,24 @@ const fetchSessionDetails = async () => {
   const [completedTopics, setCompletedTopics] = useState([]);
 
   // Handle checkbox change
-  const handleTopicChange = (topicIndex) => {
+  const handleTopicChange = (sessionIndex, topicIndex) => {
     setSessionDetails((prevDetails) => {
-      const updatedDetails = [...prevDetails];
-      const topic = updatedDetails[0]?.topics[topicIndex];
-      topic.completed = !topic.completed;
+      const updatedDetails = prevDetails.map((session, idx) =>
+        idx === sessionIndex
+          ? {
+              ...session,
+              topics: session.topics.map((topic, tIdx) =>
+                tIdx === topicIndex
+                  ? { ...topic, completed: !topic.completed }
+                  : topic
+              ),
+            }
+          : session
+      );
       return updatedDetails;
     });
   };
+  
   
 
   const handleConceptChange = (sessionIndex, topicIndex, conceptIndex) => {
@@ -315,12 +325,15 @@ return (
   {session.topics.map((topic, topicIndex) => (
     <li key={topicIndex}>
       <div className="topic-header">
-        <input
-          type="checkbox"
-          id={`topic-${sessionIndex}-${topicIndex}`}
-          checked={topic.completed}
-          onChange={() => handleTopicChange(topicIndex)}
-        />
+      <input
+  type="checkbox"
+  id={`topic-${sessionIndex}-${topicIndex}`}
+  checked={topic.completed}
+  onChange={() => handleTopicChange(sessionIndex, topicIndex)}
+  disabled={false} // Ensure this is not dynamically set to true
+
+/>
+
         <label>{topic.name}</label>
         <button
           onClick={() => handleTopicExpand(topicIndex)}
