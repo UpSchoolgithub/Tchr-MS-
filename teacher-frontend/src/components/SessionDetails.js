@@ -61,11 +61,11 @@ const SessionDetails = () => {
     
         console.log('API Response:', response.data); // Log the raw API response
     
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
         console.log('Today Date:', todayDate);
     
         const sessions = response.data.sessions.filter((session) => {
-          const sessionDate = session.sessionDate; // Assuming sessionDate is in YYYY-MM-DD format
+          const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0]; // Parse sessionDate and convert to YYYY-MM-DD
           console.log('Session Date:', sessionDate, 'Today Date:', todayDate, 'Match:', sessionDate === todayDate);
           return sessionDate === todayDate;
         });
