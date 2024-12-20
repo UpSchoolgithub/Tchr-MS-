@@ -589,56 +589,147 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 });
 
 // Save session details
-router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
+router.post('/teachers/:teacherId/sessions/:sessionId/add-topics', async (req, res) => {
   const { sessionId } = req.params;
-  const { incompleteConcepts, completedConcepts } = req.body;
+  const { incompleteTopics } = req.body;
 
   try {
-    // Fetch the current session
-    const session = await Session.findByPk(sessionId, {
-      include: [{ model: SessionPlan, as: 'SessionPlan' }],
-    });
-
-    if (!session || !session.SessionPlan) {
-      return res.status(404).json({ error: 'Session or Session Plan not found.' });
+    const session = await Session.findByPk(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
     }
 
-    // Save completed concepts
-    await SessionReport.create({
-      sessionPlanId: session.SessionPlan.id,
-      completedConcepts: JSON.stringify(completedConcepts),
-      incompleteConcepts: JSON.stringify(incompleteConcepts),
+    const updatedTopics = [
+      ...session.topics, // Existing topics
+      ...incompleteTopics, // Add incomplete topics
+    ];
+
+    session.topics = updatedTopics;
+    await session.save();
+
+    res.status(200).json({ message: 'Topics added to the session successfully!' });
+  } catch (error) {
+    console.error('Error adding topics:', error);
+    res.status(500).json({ error: 'Failed to add topics to the session.' });
+  }
+});
+
+
+// Update session, topics, concepts, and unit/chapter status
+const updateCompletionStatus = async (sessionId) => {
+  try {
+    // Check if all topics and concepts for the session are completed
+    const topics = await sequelize.models.Topic.findAll({
+      where: { sessionPlanId: sessionId },
+      include: [
+        {
+          model: sequelize.models.Concept,
+          as: 'Concepts',
+        },
+      ],
     });
 
-    // Push incomplete concepts to the next session
-    if (incompleteConcepts.length > 0) {
-      const nextSession = await Session.findOne({
-        where: { id: { [Op.gt]: sessionId }, sectionId: session.sectionId },
-        include: [{ model: SessionPlan, as: 'SessionPlan' }],
-      });
+    let allTopicsCompleted = true;
 
-      if (nextSession && nextSession.SessionPlan) {
-        // Update the next session plan
-        await Concepts.bulkCreate(
-          incompleteConcepts.map((concept) => ({
-            topicId: nextSession.SessionPlan.id,
-            concept: concept.name,
-            conceptDetailing: concept.detailing,
-          }))
-        );
+    for (const topic of topics) {
+      const allConceptsCompleted = topic.Concepts.every((concept) => concept.completed);
+
+      if (!allConceptsCompleted) {
+        allTopicsCompleted = false;
+        break;
+      }
+
+      // Mark topic as complete if all its concepts are complete
+      if (allConceptsCompleted && !topic.completed) {
+        await topic.update({ completed: true });
       }
     }
 
-    res.json({ message: 'Session ended successfully!' });
+    // Mark session as complete if all topics are completed
+    if (allTopicsCompleted) {
+      await sequelize.models.SessionPlan.update(
+        { completed: true },
+        { where: { id: sessionId } }
+      );
+
+      // Get the associated session and update the chapter and unit
+      const session = await sequelize.models.Session.findOne({
+        where: { id: sessionId },
+        include: ['SessionPlan'],
+      });
+
+      if (session) {
+        const allSessionsInChapter = await sequelize.models.Session.findAll({
+          where: {
+            chapterName: session.chapterName,
+          },
+        });
+
+        const allSessionsCompleted = allSessionsInChapter.every(
+          (s) => s.SessionPlan?.completed
+        );
+
+        // Mark chapter as complete if all sessions are completed
+        if (allSessionsCompleted) {
+          await sequelize.models.Session.update(
+            { chapterCompleted: true },
+            { where: { chapterName: session.chapterName } }
+          );
+
+          // Mark the unit as complete if all chapters in the unit are complete
+          const allChaptersInUnit = await sequelize.models.Session.findAll({
+            where: { unitName: session.unitName },
+          });
+
+          const allChaptersCompleted = allChaptersInUnit.every(
+            (chapter) => chapter.chapterCompleted
+          );
+
+          if (allChaptersCompleted) {
+            await sequelize.models.Session.update(
+              { unitCompleted: true },
+              { where: { unitName: session.unitName } }
+            );
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error updating completion status:', error);
+    throw new Error('Failed to update completion status.');
+  }
+};
+
+// Add this logic to the End Session API
+router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
+  const { sessionId } = req.params;
+  const { completedConcepts, incompleteConcepts } = req.body;
+
+  try {
+    // Save completed and incomplete concepts
+    for (const concept of completedConcepts) {
+      await sequelize.models.Concept.update(
+        { completed: true },
+        { where: { id: concept.id } }
+      );
+    }
+
+    for (const concept of incompleteConcepts) {
+      await sequelize.models.Concept.update(
+        { completed: false },
+        { where: { id: concept.id } }
+      );
+    }
+
+    // Update completion status
+    await updateCompletionStatus(sessionId);
+
+    res.json({ message: 'Session ended successfully and completion statuses updated!' });
   } catch (error) {
     console.error('Error ending session:', error);
     res.status(500).json({ error: 'Failed to end the session.' });
   }
 });
-
-
-
-
 
 
 

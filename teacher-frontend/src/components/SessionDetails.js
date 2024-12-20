@@ -143,8 +143,6 @@ const fetchSessionDetails = async () => {
     });
   };
   
-  
-
   const handleConceptChange = (sessionIndex, topicIndex, conceptIndex) => {
     setSessionDetails((prevDetails) => {
       const updatedDetails = prevDetails.map((session, sIdx) =>
@@ -277,8 +275,7 @@ const fetchSessionDetails = async () => {
       return;
     }
   
-  
-    // Separate completed and incomplete concepts
+    // Separate completed and incomplete topics
     const completedTopics = [];
     const incompleteTopics = [];
   
@@ -304,10 +301,32 @@ const fetchSessionDetails = async () => {
         incompleteConcepts: incompleteTopics,
       };
   
+      // Save completed and incomplete concepts to the current session
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
+  
+      // Push incomplete topics to the next session
+      if (incompleteTopics.length > 0) {
+        const nextSessionResponse = await axiosInstance.get(
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+        );
+  
+        const nextSession = nextSessionResponse.data.sessions.find(
+          (session) => session.sessionId !== sessionDetails.sessionId
+        );
+  
+        if (nextSession && nextSession.sessionPlanId) {
+          await axiosInstance.post(
+            `/teachers/${teacherId}/sessions/${nextSession.sessionId}/add-topics`,
+            { incompleteTopics }
+          );
+          alert('Incomplete topics carried over to the next session.');
+        } else {
+          alert('No next session found to carry over topics.');
+        }
+      }
   
       alert(response.data.message || 'Session ended successfully!');
       navigate(`/teacher-sessions/${teacherId}`);
@@ -316,6 +335,7 @@ const fetchSessionDetails = async () => {
       alert('Failed to end the session.');
     }
   };
+  
   
 
   const studentOptions = students.map((student) => ({
@@ -344,6 +364,8 @@ return (
         <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
         <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+        <p><strong>Status:</strong> {session.completed ? 'Completed' : 'Incomplete'}</p>
+
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
   {session.topics.map((topic, topicIndex) => (

@@ -22,6 +22,11 @@ Concept.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    completed: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false, // Default to false (not completed)
+    },
   },
   {
     sequelize,

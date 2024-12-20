@@ -23,6 +23,7 @@ Topic.init(
       allowNull: false,
     },
   },
+  
   {
     sequelize,
     modelName: 'Topic',

@@ -4,6 +4,7 @@ const sequelize = require('../config/db');
 class SessionPlan extends Model {
   static associate(models) {
     SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
+    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
   }
 }
 
@@ -19,6 +20,11 @@ SessionPlan.init(
     },
     sessionNumber: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    completed: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Default to false
       allowNull: false,
     },
   },

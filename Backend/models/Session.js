@@ -51,7 +51,7 @@ Session.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    unitName: { // New field for Unit Name
+    unitName: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -105,6 +105,11 @@ Session.init(
         model: 'timetable_entries',
         key: 'id',
       },
+    },
+    completed: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Default to false
+      allowNull: false,
     },
   },
   {
