@@ -311,55 +311,51 @@ return (
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
-        {session.topics.map((topic, topicIndex) => (
-          <li key={topicIndex}>
-            <div className="topic-header">
-            <input
-  type="checkbox"
-  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-  checked={concept.completed}
-  onChange={() =>
-    handleConceptChange(sessionIndex, topicIndex, conceptIndex)
-  }
-/>
+  {session.topics.map((topic, topicIndex) => (
+    <li key={topicIndex}>
+      <div className="topic-header">
+        <input
+          type="checkbox"
+          id={`topic-${sessionIndex}-${topicIndex}`}
+          checked={topic.completed}
+          onChange={() => handleTopicChange(topicIndex)}
+        />
+        <label>{topic.name}</label>
+        <button
+          onClick={() => handleTopicExpand(topicIndex)}
+          className="view-lp-button"
+        >
+          {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+        </button>
+      </div>
 
-
-              <label>{topic.name}</label>
-              <button
-                onClick={() => handleTopicExpand(topicIndex)}
-                className="view-lp-button"
-              >
-                {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-              </button>
-            </div>
-
-            {expandedTopic === topicIndex && (
-              <ul className="concepts-list">
-              {topic.concepts.map((concept, conceptIndex) => (
-                <li key={conceptIndex}>
-                  <div className="concept-header">
-                    <input
-                      type="checkbox"
-                      id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                      checked={concept.completed}
-                      onChange={() =>
-                        handleConceptChange(sessionIndex, topicIndex, conceptIndex)
-                      }
-                    />
-                    <label>{concept.name}</label>
-                  </div>
-                  <p>{concept.detailing || 'N/A'}</p>
-                  {concept.lessonPlans?.map((plan, planIndex) => (
-                    <pre key={planIndex}>{plan}</pre>
-                  ))}
-                </li>
+      {expandedTopic === topicIndex && (
+        <ul className="concepts-list">
+          {topic.concepts.map((concept, conceptIndex) => (
+            <li key={conceptIndex}>
+              <div className="concept-header">
+                <input
+                  type="checkbox"
+                  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+                  checked={concept.completed}
+                  onChange={() =>
+                    handleConceptChange(sessionIndex, topicIndex, conceptIndex)
+                  }
+                />
+                <label>{concept.name}</label>
+              </div>
+              <p>{concept.detailing || 'N/A'}</p>
+              {concept.lessonPlans?.map((plan, planIndex) => (
+                <pre key={planIndex}>{plan}</pre>
               ))}
-            </ul>
-            
-            )}
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  ))}
+</ul>
+
     </div>
   ))
 ) : (
