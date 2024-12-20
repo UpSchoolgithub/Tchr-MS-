@@ -17,6 +17,27 @@ const TeacherSessions = () => {
   const maxRetries = 3;
   let retryCount = 0;
 
+  const fetchSessionPlansForToday = async (teacherId, sectionId, subjectId) => {
+    try {
+      const response = await axiosInstance.get(
+        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+      );
+  
+      const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+  
+      // Filter sessions for today
+      const sessionsForToday = response.data.sessions.filter((session) => {
+        const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0];
+        return sessionDate === todayDate;
+      });
+  
+      return sessionsForToday.length > 0 ? sessionsForToday : [];
+    } catch (error) {
+      console.error('Error fetching session plans for today:', error);
+      return [];
+    }
+  };
+  
   //viewing session plans
   const handleViewPlan = (sessionPlans) => {
     if (!sessionPlans || sessionPlans.length === 0) {
@@ -39,21 +60,18 @@ const TeacherSessions = () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+  
       const sessionsWithPlans = await Promise.all(
         response.data.map(async (session) => {
-          try {
-            const planResponse = await axiosInstance.get(
-              `/sessions/${session.sessionId}/sessionPlans`
-            );
-            console.log("Session Plans:", planResponse.data);
-            return { ...session, sessionPlans: planResponse.data.sessionPlans };
-          } catch (error) {
-            console.error("Error fetching session plans for session:", session.sessionId, error);
-            return { ...session, sessionPlans: [] };
-          }
+          const sessionPlansForToday = await fetchSessionPlansForToday(
+            teacherId,
+            session.sectionId,
+            session.subjectId
+          );
+          return { ...session, sessionPlansForToday };
         })
       );
-      
+  
       setSessions(sessionsWithPlans);
       setError(null);
     } catch (err) {
@@ -62,6 +80,7 @@ const TeacherSessions = () => {
       setLoading(false);
     }
   }, [teacherId]);
+  
   
   useEffect(() => {
     fetchSessions();
@@ -164,7 +183,7 @@ const TeacherSessions = () => {
         <th>Start Time</th>
         <th>End Time</th>
         <th>Assignments</th>
-        <th>Session Plan</th>
+        <th>Today's Session Plan</th>
 
         <th>Session Report</th>
       </tr>
@@ -220,10 +239,17 @@ const TeacherSessions = () => {
           </button>
         </td>
         <td>
-  <button onClick={() => handleViewPlan(session.sessionPlans)}>
-    View Plan
-  </button>
+  {session.sessionPlansForToday && session.sessionPlansForToday.length > 0 ? (
+    <button
+      onClick={() => navigate(`/session-plans`, { state: { sessionPlans: session.sessionPlansForToday } })}
+    >
+      View Plan
+    </button>
+  ) : (
+    <span>No Plan</span>
+  )}
 </td>
+
 
         <td>
           <button
