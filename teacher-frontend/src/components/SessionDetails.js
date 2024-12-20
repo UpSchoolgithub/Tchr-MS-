@@ -59,17 +59,20 @@ const SessionDetails = () => {
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
     
+        console.log('API Response:', response.data); // Log the raw API response
+    
         const todayDate = new Date().toISOString().split('T')[0];
         console.log('Today Date:', todayDate);
     
         const sessions = response.data.sessions.filter((session) => {
-          console.log('Session Date:', session.sessionDate, 'Matches Today:', session.sessionDate === todayDate);
-          return session.sessionDate === todayDate;
+          const sessionDate = session.sessionDate; // Assuming sessionDate is in YYYY-MM-DD format
+          console.log('Session Date:', sessionDate, 'Today Date:', todayDate, 'Match:', sessionDate === todayDate);
+          return sessionDate === todayDate;
         });
     
         if (sessions.length === 0) {
           setError('No sessions found for today.');
-          console.log('No sessions for today.');
+          console.log('No sessions found for today.');
           return;
         }
     
