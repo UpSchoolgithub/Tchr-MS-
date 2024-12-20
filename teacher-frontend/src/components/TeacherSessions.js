@@ -17,6 +17,15 @@ const TeacherSessions = () => {
   const maxRetries = 3;
   let retryCount = 0;
 
+  //viewing session plans
+  const handleViewPlan = (sessionPlans) => {
+    if (!sessionPlans || sessionPlans.length === 0) {
+      alert('No session plan available for this session.');
+      return;
+    }
+    navigate(`/session-plans`, { state: { sessionPlans } });
+  };
+  
   // Utility function to get the day name
   const getDayName = (date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -28,21 +37,27 @@ const TeacherSessions = () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      setSessions(response.data);
+      const sessionsWithPlans = await Promise.all(
+        response.data.map(async (session) => {
+          try {
+            const planResponse = await axiosInstance.get(
+              `/sessions/${session.sessionId}/sessionPlans`
+            );
+            return { ...session, sessionPlans: planResponse.data.sessionPlans };
+          } catch {
+            return { ...session, sessionPlans: [] };
+          }
+        })
+      );
+      setSessions(sessionsWithPlans);
       setError(null);
     } catch (err) {
-      console.error('Error fetching sessions:', err);
-      if (retryCount < maxRetries) {
-        retryCount += 1;
-        fetchSessions(); // Retry fetching sessions
-      } else {
-        setError(`Failed to load sessions: ${err.message}. Please try again later.`);
-      }
+      setError(`Failed to load sessions: ${err.message}. Please try again later.`);
     } finally {
       setLoading(false);
     }
-  }, [teacherId, retryCount]);
-
+  }, [teacherId]);
+  
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
@@ -144,6 +159,8 @@ const TeacherSessions = () => {
         <th>Start Time</th>
         <th>End Time</th>
         <th>Assignments</th>
+        <th>Session Plan</th>
+
         <th>Session Report</th>
       </tr>
     </thead>
@@ -197,6 +214,12 @@ const TeacherSessions = () => {
             Notify
           </button>
         </td>
+        <td>
+  <button onClick={() => handleViewPlan(session.sessionPlans)}>
+    View Plan
+  </button>
+</td>
+
         <td>
           <button
             style={{ backgroundColor: 'white'}}
