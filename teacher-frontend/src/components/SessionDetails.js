@@ -146,16 +146,35 @@ const fetchSessionDetails = async () => {
 
   const handleConceptChange = (sessionIndex, topicIndex, conceptIndex) => {
     setSessionDetails((prevDetails) => {
-      const updatedDetails = [...prevDetails];
-      const topic = updatedDetails[sessionIndex]?.topics[topicIndex];
-      const concept = topic.concepts[conceptIndex];
-  
-      concept.completed = !concept.completed;
-      topic.completed = topic.concepts.every((c) => c.completed);
-  
+      const updatedDetails = prevDetails.map((session, sIdx) =>
+        sIdx === sessionIndex
+          ? {
+              ...session,
+              topics: session.topics.map((topic, tIdx) =>
+                tIdx === topicIndex
+                  ? {
+                      ...topic,
+                      concepts: topic.concepts.map((concept, cIdx) =>
+                        cIdx === conceptIndex
+                          ? { ...concept, completed: !concept.completed }
+                          : concept
+                      ),
+                      completed: topic.concepts.every(
+                        (concept, cIdx) =>
+                          cIdx === conceptIndex
+                            ? !concept.completed // Toggle current concept
+                            : concept.completed
+                      ),
+                    }
+                  : topic
+              ),
+            }
+          : session
+      );
       return updatedDetails;
     });
   };
+  
   
 
   const handleTopicExpand = (index) => {
@@ -330,9 +349,8 @@ return (
   id={`topic-${sessionIndex}-${topicIndex}`}
   checked={topic.completed}
   onChange={() => handleTopicChange(sessionIndex, topicIndex)}
-  disabled={false} // Ensure this is not dynamically set to true
-
 />
+
 
         <label>{topic.name}</label>
         <button
@@ -348,14 +366,13 @@ return (
           {topic.concepts.map((concept, conceptIndex) => (
             <li key={conceptIndex}>
               <div className="concept-header">
-                <input
-                  type="checkbox"
-                  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                  checked={concept.completed}
-                  onChange={() =>
-                    handleConceptChange(sessionIndex, topicIndex, conceptIndex)
-                  }
-                />
+              <input
+  type="checkbox"
+  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+  checked={concept.completed}
+  onChange={() => handleConceptChange(sessionIndex, topicIndex, conceptIndex)}
+/>
+
                 <label>{concept.name}</label>
               </div>
               <p>{concept.detailing || 'N/A'}</p>
