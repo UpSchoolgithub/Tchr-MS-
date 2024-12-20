@@ -214,39 +214,29 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
+  const { date } = req.query; // Optional date filter
 
   try {
     const sessions = await sequelize.query(
       `
       SELECT
           sessions.id AS sessionId,
-          schools.name AS schoolName,
-          classinfos.className AS className,
-          sections.sectionName AS sectionName,
-          subjects.subjectName AS subjectName,
-          sessions.chapterName,
+          sessions.chapterName AS chapterName,
           sp.id AS sessionPlanId,
-          sp.sessionNumber,
+          sp.sessionNumber AS sessionNumber,
           topics.topicName AS topicName,
-          concepts.concept AS mainConcept,
+          concepts.concept AS concept,
           concepts.conceptDetailing AS conceptDetailing,
           lessonplans.generatedLP AS lessonPlan,
-          sessions.priorityNumber,
+          sessions.priorityNumber AS priorityNumber,
           DATE_ADD(
               subjects.academicStartDate,
               INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
-          ) AS sessionDate,
-          timetable_entries.startTime,
-          timetable_entries.endTime
+          ) AS sessionDate
       FROM
-          timetable_entries
+          sessions
       JOIN
-          subjects ON timetable_entries.subjectId = subjects.id
-      JOIN
-          sessions ON (
-              sessions.subjectId = timetable_entries.subjectId AND
-              sessions.sectionId = timetable_entries.sectionId
-          )
+          subjects ON sessions.subjectId = subjects.id
       JOIN
           SessionPlans sp ON sp.sessionId = sessions.id
       LEFT JOIN
@@ -255,89 +245,89 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           Concepts concepts ON topics.id = concepts.topicId
       LEFT JOIN
           LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
-      JOIN
-          schools ON timetable_entries.schoolId = schools.id
-      JOIN
-          classinfos ON timetable_entries.classId = classinfos.id
-      JOIN
-          sections ON timetable_entries.sectionId = sections.id
       WHERE
-          timetable_entries.teacherId = :teacherId
-          AND timetable_entries.sectionId = :sectionId
-          AND timetable_entries.subjectId = :subjectId
+          sessions.sectionId = :sectionId
+          AND sessions.subjectId = :subjectId
+          AND EXISTS (
+              SELECT 1 FROM timetable_entries
+              WHERE timetable_entries.teacherId = :teacherId
+              AND timetable_entries.sectionId = :sectionId
+              AND timetable_entries.subjectId = :subjectId
+          )
+          ${date ? 'AND DATE_ADD(subjects.academicStartDate, INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY) = :date' : ''}
       ORDER BY
-          sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
+          sessionDate ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
       `,
       {
         replacements: {
           teacherId,
           sectionId,
           subjectId,
+          date,
         },
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
-    const sessionMap = new Map();
+    if (!sessions.length) {
+      return res.status(404).json({ error: 'No sessions found for the specified criteria.' });
+    }
 
+    // Organize session details
+    const sessionDetails = {};
     sessions.forEach((session) => {
-      if (!sessionMap.has(session.sessionId)) {
-        sessionMap.set(session.sessionId, {
+      if (!sessionDetails[session.sessionId]) {
+        sessionDetails[session.sessionId] = {
           sessionId: session.sessionId,
-          schoolName: session.schoolName,
-          className: session.className,
-          sectionName: session.sectionName,
-          subjectName: session.subjectName,
           chapterName: session.chapterName,
           sessionPlanId: session.sessionPlanId,
           sessionNumber: session.sessionNumber,
-          topics: [],
-          priorityNumber: session.priorityNumber,
           sessionDate: session.sessionDate,
-          startTime: session.startTime,
-          endTime: session.endTime,
-        });
+          priorityNumber: session.priorityNumber,
+          topics: [],
+        };
       }
 
-      const currentSession = sessionMap.get(session.sessionId);
+      if (session.topicName) {
+        const topicIndex = sessionDetails[session.sessionId].topics.findIndex(
+          (t) => t.name === session.topicName
+        );
 
-      const topicIndex = currentSession.topics.findIndex((t) => t.name === session.topicName);
+        if (topicIndex === -1) {
+          sessionDetails[session.sessionId].topics.push({
+            name: session.topicName,
+            details: [
+              {
+                concept: session.concept,
+                conceptDetailing: session.conceptDetailing,
+                lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+              },
+            ],
+          });
+        } else {
+          const topic = sessionDetails[session.sessionId].topics[topicIndex];
+          const existingConcept = topic.details.find((d) => d.concept === session.concept);
 
-      if (topicIndex === -1) {
-        currentSession.topics.push({
-          name: session.topicName,
-          details: [
-            {
-              concept: session.mainConcept,
+          if (!existingConcept) {
+            topic.details.push({
+              concept: session.concept,
               conceptDetailing: session.conceptDetailing,
               lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
-            },
-          ],
-        });
-      } else {
-        const topic = currentSession.topics[topicIndex];
-        const existingConcept = topic.details.find((d) => d.concept === session.mainConcept);
-
-        if (!existingConcept) {
-          topic.details.push({
-            concept: session.mainConcept,
-            conceptDetailing: session.conceptDetailing,
-            lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
-          });
-        } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
-          existingConcept.lessonPlans.push(session.lessonPlan);
+            });
+          } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
+            existingConcept.lessonPlans.push(session.lessonPlan);
+          }
         }
       }
     });
 
-    const formattedSessions = Array.from(sessionMap.values());
-
-    res.status(200).json({ sessions: formattedSessions });
+    res.status(200).json({ sessions: Object.values(sessionDetails) });
   } catch (error) {
-    console.error('Error fetching sessions:', error);
-    res.status(500).json({ error: 'Failed to fetch sessions.' });
+    console.error('Error fetching session details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details.' });
   }
 });
+
 
 
 // Fetch sessions and session plan details for start
