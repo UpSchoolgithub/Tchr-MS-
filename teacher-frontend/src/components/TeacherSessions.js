@@ -21,10 +21,12 @@ const TeacherSessions = () => {
   const handleViewPlan = (sessionPlans) => {
     if (!sessionPlans || sessionPlans.length === 0) {
       alert('No session plan available for this session.');
+      console.log("No session plans found:", sessionPlans);
       return;
     }
     navigate(`/session-plans`, { state: { sessionPlans } });
   };
+  
   
   // Utility function to get the day name
   const getDayName = (date) => {
@@ -43,12 +45,15 @@ const TeacherSessions = () => {
             const planResponse = await axiosInstance.get(
               `/sessions/${session.sessionId}/sessionPlans`
             );
+            console.log("Session Plans:", planResponse.data);
             return { ...session, sessionPlans: planResponse.data.sessionPlans };
-          } catch {
+          } catch (error) {
+            console.error("Error fetching session plans for session:", session.sessionId, error);
             return { ...session, sessionPlans: [] };
           }
         })
       );
+      
       setSessions(sessionsWithPlans);
       setError(null);
     } catch (err) {
