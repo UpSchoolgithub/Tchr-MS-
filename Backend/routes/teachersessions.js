@@ -418,6 +418,9 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
+    // Debugging: Log the raw sessions data
+    console.log('Raw Sessions Response:', sessions);
+
     const sessionMap = new Map();
 
     sessions.forEach((session) => {
@@ -472,13 +475,15 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
 
     const formattedSessions = Array.from(sessionMap.values());
 
+    // Debugging: Log the formatted sessions before sending the response
+    console.log('Formatted Sessions Response:', formattedSessions);
+
     res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
-
 
 
 
