@@ -55,51 +55,62 @@ const SessionDetails = () => {
   // Fetch session details
   useEffect(() => {
     // Adjust the filtering logic to handle missing sessions for today
-    const fetchSessionDetails = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-    
-        const todayDate = new Date().toISOString().split('T')[0];
-    
-        let sessions = response.data.sessions.filter((session) => {
-          const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0];
-          return sessionDate === todayDate;
-        });
-    
-        if (sessions.length === 0 && response.data.sessions.length > 0) {
-          sessions = [response.data.sessions[0]];
-        }
-    
-        if (sessions.length === 0) {
-          setError('No sessions found.');
-          return;
-        }
-    
-        const processedSessions = sessions.map((session) => ({
-          ...session,
-          topics: session.topics.map((topic) => ({
-            ...topic,
-            completed: false,
-            concepts: topic.details.map((detail) => ({
-              name: detail.name || 'Unnamed Concept', // Fallback if `name` is missing
-              detailing: detail.conceptDetailing || 'No details provided',
-              completed: false,
-            })),
-          })),
-        }));
-    
-        console.log('Processed Session Details:', processedSessions);
-    
-        setSessionDetails(processedSessions);
-      } catch (err) {
-        setError('Failed to fetch session details.');
-        console.error('Error Fetching Sessions:', err);
-      }
-    };
-    
-    
+const fetchSessionDetails = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+    );
+
+    console.log('API Response:', response.data); // Log the raw API response
+
+    const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    console.log('Today Date:', todayDate);
+
+    // Filter sessions for today
+    let sessions = response.data.sessions.filter((session) => {
+      const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0]; // Convert sessionDate to YYYY-MM-DD
+      console.log('Session Date:', sessionDate, 'Today Date:', todayDate, 'Match:', sessionDate === todayDate);
+      return sessionDate === todayDate;
+    });
+
+    // Fallback to show the latest session if no session is found for today
+    if (sessions.length === 0 && response.data.sessions.length > 0) {
+      console.warn('No sessions found for today. Falling back to the most recent session.');
+      sessions = [response.data.sessions[0]]; // Fallback to the first session
+    }
+
+    if (sessions.length === 0) {
+      setError('No sessions found.');
+      console.log('No sessions found.');
+      return;
+    }
+
+    console.log('Filtered Sessions:', sessions);
+
+    const processedSessions = sessions.map((session) => ({
+      ...session,
+      topics: (session.topics || []).map((topic) => ({
+        ...topic,
+        completed: false,
+        concepts: (topic.details || []).map((detail) => ({
+          name: detail.concept,
+          detailing: detail.conceptDetailing,
+          lessonPlans: (detail.lessonPlans || []).map((plan) => {
+            const objectivesIndex = plan.indexOf('Objectives');
+            return objectivesIndex !== -1 ? plan.substring(objectivesIndex) : plan;
+          }),
+          completed: false,
+        })),
+      })),
+    }));
+
+    setSessionDetails(processedSessions);
+    console.log('Processed Session Details:', processedSessions);
+  } catch (err) {
+    setError('Failed to fetch session details.');
+    console.error('Error Fetching Sessions:', err);
+  }
+};
 
     
   
@@ -258,77 +269,50 @@ const SessionDetails = () => {
   };
 
   const handleEndSession = async () => {
-    if (!sessionDetails || !sessionDetails[0]?.sessionPlanId) {
+    if (!sessionDetails || !sessionDetails.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
       return;
     }
-  
+
     const completedTopics = [];
     const incompleteTopics = [];
-  
-    sessionDetails[0].topics.forEach((topic) => {
-      const completedConcepts = topic.concepts.filter((concept) => concept.completed);
-      const incompleteConcepts = topic.concepts.filter((concept) => !concept.completed);
-  
-      if (completedConcepts.length === topic.concepts.length) {
-        completedTopics.push({ ...topic, completed: true });
+
+    sessionDetails.topics.forEach((topic, idx) => {
+      const isChecked = document.getElementById(`topic-${idx}`).checked;
+      if (isChecked) {
+        completedTopics.push(topic);
       } else {
-        incompleteTopics.push({ ...topic, concepts: incompleteConcepts, completed: false });
+        incompleteTopics.push(topic);
       }
     });
-  
+
     if (completedTopics.length === 0) {
-      alert('Please mark at least one topic or concept as completed.');
+      alert('Please mark at least one topic as completed.');
       return;
     }
-  
+
     try {
       const payload = {
-        sessionPlanId: sessionDetails[0].sessionPlanId,
+        sessionPlanId: sessionDetails.sessionPlanId,
         completedTopics,
         incompleteTopics,
         observations,
         absentees,
         completed: true,
       };
-  
-      await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails[0].sessionId}/end`,
+
+      const response = await axiosInstance.post(
+        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
-  
-      alert('Session ended successfully!');
+
+      alert(response.data.message || 'Session ended successfully!');
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
-  
-//Carryover of Incomplete Concepts 
-const carryOverIncompleteConcepts = (incompleteTopics, nextSession) => {
-  const updatedTopics = [...(nextSession?.topics || [])];
-
-  incompleteTopics.forEach((incompleteTopic) => {
-    const topicIndex = updatedTopics.findIndex(
-      (topic) => topic.name === incompleteTopic.name
-    );
-
-    if (topicIndex !== -1) {
-      updatedTopics[topicIndex].concepts = [
-        ...updatedTopics[topicIndex].concepts,
-        ...incompleteTopic.concepts,
-      ];
-    } else {
-      updatedTopics.push(incompleteTopic);
-    }
-  });
-
-  return updatedTopics;
-};
-
-
-
 
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
@@ -379,25 +363,25 @@ return (
 
       {expandedTopic === topicIndex && (
         <ul className="concepts-list">
-        {topic.concepts.map((concept, conceptIndex) => (
-          <li key={conceptIndex}>
-            <div className="concept-header">
+          {topic.concepts.map((concept, conceptIndex) => (
+            <li key={conceptIndex}>
+              <div className="concept-header">
               <input
-                type="checkbox"
-                id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                checked={concept.completed}
-                onChange={() => handleConceptChange(sessionIndex, topicIndex, conceptIndex)}
-              />
-              <label>{concept.name || 'Unnamed Concept'}</label>
-            </div>
-            <p>{concept.detailing || 'No details provided'}</p>
-            {concept.lessonPlans?.map((plan, planIndex) => (
-              <pre key={planIndex}>{plan}</pre>
-            ))}
-          </li>
-        ))}
-      </ul>
-      
+  type="checkbox"
+  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+  checked={concept.completed}
+  onChange={() => handleConceptChange(sessionIndex, topicIndex, conceptIndex)}
+/>
+
+                <label>{concept.name}</label>
+              </div>
+              <p>{concept.detailing || 'N/A'}</p>
+              {concept.lessonPlans?.map((plan, planIndex) => (
+                <pre key={planIndex}>{plan}</pre>
+              ))}
+            </li>
+          ))}
+        </ul>
       )}
     </li>
   ))}
