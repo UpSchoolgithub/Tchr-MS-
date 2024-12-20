@@ -59,20 +59,18 @@ const SessionDetails = () => {
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
   
-        const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD
-  
-        // Filter sessions for today's date based on academicStartDate
+        const todayDate = new Date().toISOString().split('T')[0];
         const sessions = response.data.sessions
-          .filter((session) => session.academicStartDate === todayDate)
+          .filter((session) => session.sessionDate === todayDate)
           .map((session) => ({
             ...session,
-            topics: session.topics.map((topic) => ({
+            topics: (session.topics || []).map((topic) => ({
               ...topic,
               completed: false,
-              concepts: topic.details.map((detail) => ({
+              concepts: (topic.details || []).map((detail) => ({
                 name: detail.concept,
                 detailing: detail.conceptDetailing,
-                lessonPlans: detail.lessonPlans.map((plan) => {
+                lessonPlans: (detail.lessonPlans || []).map((plan) => {
                   const objectivesIndex = plan.indexOf("Objectives");
                   return objectivesIndex !== -1
                     ? plan.substring(objectivesIndex)
@@ -83,6 +81,11 @@ const SessionDetails = () => {
             })),
           }));
   
+        if (sessions.length === 0) {
+          setError('No sessions found for today.');
+          return;
+        }
+  
         setSessionDetails(sessions);
       } catch (err) {
         setError('Failed to fetch session details.');
@@ -90,38 +93,39 @@ const SessionDetails = () => {
       }
     };
   
-    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+    if (teacherId && sectionId && subjectId) {
+      fetchSessionDetails();
+    }
   }, [teacherId, sectionId, subjectId]);
-  
   
 
   // Track completed topics
   const [completedTopics, setCompletedTopics] = useState([]);
 
   // Handle checkbox change
-  const handleTopicChange = (topicName) => {
-    setCompletedTopics((prev) => {
-      const isCompleted = prev.includes(topicName);
-      if (isCompleted) {
-        return prev.filter((t) => t !== topicName);
-      } else {
-        return [...prev, topicName];
-      }
-    });
-  };
-
-  const handleConceptChange = (topicIndex, conceptIndex) => {
+  const handleTopicChange = (topicIndex) => {
     setSessionDetails((prevDetails) => {
       const updatedDetails = [...prevDetails];
       const topic = updatedDetails[0]?.topics[topicIndex];
-      const concept = topic.concepts[conceptIndex];
-
-      concept.completed = !concept.completed;
-      topic.completed = topic.concepts.every((c) => c.completed);
-
+      topic.completed = !topic.completed;
       return updatedDetails;
     });
   };
+  
+
+  const handleConceptChange = (sessionIndex, topicIndex, conceptIndex) => {
+    setSessionDetails((prevDetails) => {
+      const updatedDetails = [...prevDetails];
+      const topic = updatedDetails[sessionIndex]?.topics[topicIndex];
+      const concept = topic.concepts[conceptIndex];
+  
+      concept.completed = !concept.completed;
+      topic.completed = topic.concepts.every((c) => c.completed);
+  
+      return updatedDetails;
+    });
+  };
+  
 
   const handleTopicExpand = (index) => {
     setExpandedTopic((prev) => (prev === index ? null : index));
@@ -290,12 +294,15 @@ return (
         {session.topics.map((topic, topicIndex) => (
           <li key={topicIndex}>
             <div className="topic-header">
-              <input
-                type="checkbox"
-                id={`topic-${sessionIndex}-${topicIndex}`}
-                checked={topic.completed}
-                onChange={() => handleTopicChange(topic.name)}
-              />
+            <input
+  type="checkbox"
+  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+  checked={concept.completed}
+  onChange={() =>
+    handleConceptChange(sessionIndex, topicIndex, conceptIndex)
+  }
+/>
+
               <label>{topic.name}</label>
               <button
                 onClick={() => handleTopicExpand(topicIndex)}
