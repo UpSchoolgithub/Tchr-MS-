@@ -703,81 +703,71 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { completedConcepts, incompleteConcepts } = req.body;
 
   try {
+    const sessionPlan = await SessionPlan.findByPk(sessionId);
+    if (!sessionPlan) {
+      return res.status(404).json({ error: 'SessionPlan not found.' });
+    }
+
     // Update completed concepts
     for (const concept of completedConcepts) {
-      await sequelize.models.Concept.update(
-        { completed: true },
-        { where: { id: concept.id } }
-      );
+      const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
+      if (conceptInstance) {
+        await conceptInstance.update({ completed: true });
+      } else {
+        console.error(`Concept not found for id: ${concept.id}`);
+      }
     }
 
     // Update incomplete concepts
     for (const concept of incompleteConcepts) {
-      await sequelize.models.Concept.update(
-        { completed: false },
-        { where: { id: concept.id } }
-      );
+      const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
+      if (conceptInstance) {
+        await conceptInstance.update({ completed: false });
+      } else {
+        console.error(`Concept not found for id: ${concept.id}`);
+      }
     }
 
-    // Update the completion status of session, topics, etc.
+    // Update the completion status
     await updateCompletionStatus(sessionId);
 
-    // Fetch the next session
-    const currentSession = await sequelize.models.Session.findByPk(sessionId);
-    const nextSession = await sequelize.models.Session.findOne({
+    // Fetch next session
+    const currentSession = await Session.findByPk(sessionId);
+    const nextSession = await Session.findOne({
       where: {
         subjectId: currentSession.subjectId,
         sectionId: currentSession.sectionId,
-        priorityNumber: currentSession.priorityNumber + 1, // Find the next session by priority
+        priorityNumber: currentSession.priorityNumber + 1,
       },
     });
 
-    if (!nextSession) {
-      console.log('No next session found. Skipping carry-over.');
-    } else {
-      // Add incomplete concepts to the next session
+    if (nextSession) {
       for (const topic of incompleteConcepts) {
         const existingTopic = await sequelize.models.Topic.findOne({
-          where: {
-            sessionPlanId: nextSession.sessionPlanId,
-            topicName: topic.name,
-          },
+          where: { sessionPlanId: nextSession.sessionPlanId, topicName: topic.name },
         });
 
         if (existingTopic) {
-          // Append concepts to the existing topic
-          const existingConcepts = await sequelize.models.Concept.findAll({
-            where: { topicId: existingTopic.id },
-          });
-
-          const newConcepts = topic.details.filter(
-            (concept) =>
-              !existingConcepts.some(
-                (existingConcept) => existingConcept.concept === concept.name
-              )
-          );
-
-          for (const newConcept of newConcepts) {
+          for (const detail of topic.details) {
             await sequelize.models.Concept.create({
               topicId: existingTopic.id,
-              concept: newConcept.concept,
-              conceptDetailing: newConcept.detailing,
+              concept: detail.concept,
+              conceptDetailing: detail.detailing,
               completed: false,
             });
           }
         } else {
-          // Create a new topic and add incomplete concepts
           const newTopic = await sequelize.models.Topic.create({
             sessionPlanId: nextSession.sessionPlanId,
             topicName: topic.name,
             completed: false,
           });
 
-          for (const concept of topic.details) {
+          for (const detail of topic.details) {
             await sequelize.models.Concept.create({
               topicId: newTopic.id,
-              concept: concept.concept,
-              conceptDetailing: concept.detailing,
+              concept: detail.concept,
+              conceptDetailing: detail.detailing,
               completed: false,
             });
           }
