@@ -52,41 +52,41 @@ const SessionDetails = () => {
 
   // Fetch session details
   useEffect(() => {
-    const fetchSessionDetails = async () => {
+    const fetchTodaySessionDetails = async () => {
       try {
         const response = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
+          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions/today`
         );
   
-        const sessions = response.data.sessions.map((session) => ({
-          ...session,
-          topics: session.topics.map((topic) => ({
+        const session = response.data.sessionDetails.map((s) => ({
+          ...s,
+          topics: s.topics.map((topic) => ({
             ...topic,
             completed: false,
             concepts: topic.details.map((detail) => ({
               name: detail.concept,
               detailing: detail.conceptDetailing,
               lessonPlans: detail.lessonPlans.map((plan) => {
-                // Extract only the content starting from "Objectives"
-                const objectivesIndex = plan.indexOf("Objectives");
+                const objectivesIndex = plan.indexOf('Objectives');
                 return objectivesIndex !== -1
                   ? plan.substring(objectivesIndex)
-                  : plan; // If "Objectives" is not found, return the plan as is
+                  : plan;
               }),
               completed: false,
             })),
           })),
         }));
   
-        setSessionDetails(sessions);
+        setSessionDetails(session);
       } catch (err) {
-        setError('Failed to fetch session details.');
+        setError('Failed to fetch session details for today.');
         console.error(err);
       }
     };
   
-    if (teacherId && sectionId && subjectId) fetchSessionDetails();
+    if (teacherId && sectionId && subjectId) fetchTodaySessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
   
 
   // Track completed topics
@@ -298,20 +298,17 @@ return (
                 {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
               </button>
             </div>
-
             {expandedTopic === topicIndex && (
               <ul className="concepts-list">
                 {topic.concepts.map((concept, conceptIndex) => (
                   <li key={conceptIndex}>
-                    <div className="concept-header">
-                      <input
-                        type="checkbox"
-                        id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                        checked={concept.completed}
-                        onChange={() => handleConceptChange(topicIndex, conceptIndex)}
-                      />
-                      <label>{concept.name}</label>
-                    </div>
+                    <input
+                      type="checkbox"
+                      checked={concept.completed}
+                      onChange={() =>
+                        handleConceptChange(topicIndex, conceptIndex)
+                      }
+                    />
                     <p>{concept.detailing || 'N/A'}</p>
                     {concept.lessonPlans?.map((plan, planIndex) => (
                       <pre key={planIndex}>{plan}</pre>
@@ -326,9 +323,10 @@ return (
     </div>
   ))
 ) : (
-  <p>No session details available.</p>
+  <p>No session details available for today.</p>
 )}
-    </div>
+
+</div>
 
 
     <div className="observations-section">

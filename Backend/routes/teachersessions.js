@@ -331,87 +331,97 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
 
 
 // Fetch sessions and session plan details for start
-router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
+router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/today', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-    // Fetch sessions based on teacherId, sectionId, and subjectId
-    const sessions = await Session.findAll({
-      include: [
+    const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD
+
+    const session = await sequelize.query(
+      `
+      SELECT
+          sessions.id AS sessionId,
+          sessions.chapterName AS chapterName,
+          sp.id AS sessionPlanId,
+          sp.sessionNumber AS sessionNumber,
+          topics.topicName AS topicName,
+          concepts.concept AS concept,
+          concepts.conceptDetailing AS conceptDetailing,
+          lessonplans.generatedLP AS lessonPlan,
+          sessions.priorityNumber AS priorityNumber,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS sessionDate
+      FROM
+          sessions
+      JOIN
+          subjects ON sessions.subjectId = subjects.id
+      JOIN
+          SessionPlans sp ON sp.sessionId = sessions.id
+      LEFT JOIN
+          Topics topics ON sp.id = topics.sessionPlanId
+      LEFT JOIN
+          Concepts concepts ON topics.id = concepts.topicId
+      LEFT JOIN
+          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
+      WHERE
+          sessions.sectionId = :sectionId
+          AND sessions.subjectId = :subjectId
+          AND EXISTS (
+              SELECT 1 FROM timetable_entries
+              WHERE timetable_entries.teacherId = :teacherId
+              AND timetable_entries.sectionId = :sectionId
+              AND timetable_entries.subjectId = :subjectId
+          )
+          AND DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) = :today
+      ORDER BY
+          sessionDate ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
+      `,
+      {
+        replacements: {
+          teacherId,
+          sectionId,
+          subjectId,
+          today,
+        },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!session.length) {
+      return res.status(404).json({ error: 'No session found for today.' });
+    }
+
+    // Organize session details
+    const sessionDetails = session.map((s) => ({
+      sessionId: s.sessionId,
+      chapterName: s.chapterName,
+      sessionPlanId: s.sessionPlanId,
+      sessionNumber: s.sessionNumber,
+      sessionDate: s.sessionDate,
+      priorityNumber: s.priorityNumber,
+      topics: [
         {
-          model: SessionPlan,
-          attributes: ['id', 'sessionNumber', 'planDetails'], // Fetch session plan details
-          as: 'SessionPlan',
-          include: [
+          name: s.topicName,
+          details: [
             {
-              model: Topics,
-              include: [
-                {
-                  model: Concepts,
-                  include: [{ model: LessonPlans, attributes: ['generatedLP'], as: 'LessonPlan' }], // Fetch lesson plans
-                },
-              ],
+              concept: s.concept,
+              conceptDetailing: s.conceptDetailing,
+              lessonPlans: s.lessonPlan ? [s.lessonPlan] : [],
             },
           ],
         },
-        {
-          model: TimetableEntry,
-          as: 'TimetableEntry',
-          where: {
-            teacherId,
-            sectionId,
-            subjectId,
-          },
-          attributes: ['startTime', 'endTime'], // Fetch timetable details
-          required: true,
-        },
-        { model: Subject, attributes: ['subjectName', 'academicStartDate'] }, // Fetch subject details
-        { model: Section, attributes: ['sectionName'] }, // Fetch section details
-        { model: School, attributes: ['name'] }, // Fetch school details
-        { model: ClassInfo, attributes: ['className'] }, // Fetch class details
       ],
-      attributes: ['id', 'chapterName', 'numberOfSessions', 'priorityNumber'], // Fetch session details
-    });
+    }));
 
-    if (!sessions.length) {
-      return res.status(404).json({ error: 'No sessions found for the specified criteria' });
-    }
-
-    // Prepare response with session and session plan details
-    const sessionDetails = sessions.map((session) => {
-      const academicStartDate = session.Subject?.academicStartDate || 'N/A';
-
-      // Calculate academic day
-      const startDate = new Date(academicStartDate);
-      const currentDate = new Date();
-      const differenceInDays = Math.floor(
-        (currentDate - startDate) / (1000 * 60 * 60 * 24)
-      );
-      const academicDay = differenceInDays + 1;
-
-      return {
-        sessionId: session.id,
-        chapterName: session.chapterName,
-        startTime: session.TimetableEntry?.startTime || 'N/A',
-        endTime: session.TimetableEntry?.endTime || 'N/A',
-        sessionPlanId: session.SessionPlan?.id || 'N/A',
-        sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
-        planDetails: session.SessionPlan?.planDetails
-          ? JSON.parse(session.SessionPlan.planDetails).map((detail) => ({
-              ...detail,
-              lessonPlan: detail.Concept?.LessonPlan?.generatedLP || 'N/A', // Include lesson plan
-            }))
-          : [],
-        subjectName: session.Subject?.subjectName || 'N/A',
-        sectionName: session.Section?.sectionName || 'N/A',
-        academicDay,
-      };
-    });
-
-    res.json({ sessionDetails });
+    res.status(200).json({ sessionDetails });
   } catch (error) {
-    console.error('Error fetching session and session plan details:', error);
-    res.status(500).json({ error: 'Failed to fetch session details and plans' });
+    console.error('Error fetching session details for today:', error);
+    res.status(500).json({ error: 'Failed to fetch session details for today.' });
   }
 });
 
