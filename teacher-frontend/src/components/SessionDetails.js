@@ -58,10 +58,15 @@ const SessionDetails = () => {
         const response = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
-  
+    
         const todayDate = new Date().toISOString().split('T')[0];
+        console.log('Today Date:', todayDate);
+    
         const sessions = response.data.sessions
-          .filter((session) => session.sessionDate === todayDate)
+          .filter((session) => {
+            const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0];
+            return sessionDate === todayDate;
+             })
           .map((session) => ({
             ...session,
             topics: (session.topics || []).map((topic) => ({
@@ -80,18 +85,21 @@ const SessionDetails = () => {
               })),
             })),
           }));
-  
+    
+        console.log('Filtered Sessions:', sessions);
+    
         if (sessions.length === 0) {
           setError('No sessions found for today.');
           return;
         }
-  
+    
         setSessionDetails(sessions);
       } catch (err) {
         setError('Failed to fetch session details.');
-        console.error(err);
+        console.error('Fetch Error:', err);
       }
     };
+    
   
     if (teacherId && sectionId && subjectId) {
       fetchSessionDetails();
