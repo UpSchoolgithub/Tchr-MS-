@@ -212,66 +212,61 @@ router.get('/teachers/:teacherId/sessions/:sessionId', async (req, res) => {
 
 // Fetch sessions and associated session plans for a specific teacher, section, and subject
 
-// Fetch sessions with concept, detailing, and lesson plan
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
   const { teacherId, sectionId, subjectId } = req.params;
 
   try {
-    // Run the query to fetch all sessions with concept, detailing, and lesson plan
     const sessions = await sequelize.query(
       `
       SELECT
-    sessions.id AS sessionId,
-    schools.name AS schoolName,
-    classinfos.className AS className,
-    sections.sectionName AS sectionName,
-    subjects.subjectName AS subjectName,
-    sessions.chapterName,
-    sp.id AS sessionPlanId,
-    sp.sessionNumber,
-    GROUP_CONCAT(DISTINCT topics.topicName) AS topics, -- Concatenate topics
-    GROUP_CONCAT(DISTINCT concepts.concept) AS mainConcepts, -- Concatenate concepts
-    GROUP_CONCAT(DISTINCT concepts.conceptDetailing) AS conceptDetailing, -- Concatenate concept details
-    GROUP_CONCAT(DISTINCT lessonplans.generatedLP) AS lessonPlans, -- Concatenate lesson plans
-    sessions.priorityNumber,
-    DATE_ADD(
-        subjects.academicStartDate,
-        INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
-    ) AS sessionDate,
-    timetable_entries.startTime,
-    timetable_entries.endTime
-FROM
-    timetable_entries
-JOIN
-    subjects ON timetable_entries.subjectId = subjects.id
-JOIN
-    sessions ON (
-        sessions.subjectId = timetable_entries.subjectId AND
-        sessions.sectionId = timetable_entries.sectionId
-    )
-JOIN
-    SessionPlans sp ON sp.sessionId = sessions.id
-LEFT JOIN
-    Topics topics ON sp.id = topics.sessionPlanId
-LEFT JOIN
-    Concepts concepts ON topics.id = concepts.topicId
-LEFT JOIN
-    LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
-JOIN
-    schools ON timetable_entries.schoolId = schools.id
-JOIN
-    classinfos ON timetable_entries.classId = classinfos.id
-JOIN
-    sections ON timetable_entries.sectionId = sections.id
-WHERE
-    timetable_entries.teacherId = :teacherId
-    AND timetable_entries.sectionId = :sectionId
-    AND timetable_entries.subjectId = :subjectId
-GROUP BY
-    sessions.id, sp.id, timetable_entries.startTime, timetable_entries.endTime
-ORDER BY
-    sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
-
+          sessions.id AS sessionId,
+          schools.name AS schoolName,
+          classinfos.className AS className,
+          sections.sectionName AS sectionName,
+          subjects.subjectName AS subjectName,
+          sessions.chapterName,
+          sp.id AS sessionPlanId,
+          sp.sessionNumber,
+          topics.topicName AS topicName,
+          concepts.concept AS mainConcept,
+          concepts.conceptDetailing AS conceptDetailing,
+          lessonplans.generatedLP AS lessonPlan,
+          sessions.priorityNumber,
+          DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) AS sessionDate,
+          timetable_entries.startTime,
+          timetable_entries.endTime
+      FROM
+          timetable_entries
+      JOIN
+          subjects ON timetable_entries.subjectId = subjects.id
+      JOIN
+          sessions ON (
+              sessions.subjectId = timetable_entries.subjectId AND
+              sessions.sectionId = timetable_entries.sectionId
+          )
+      JOIN
+          SessionPlans sp ON sp.sessionId = sessions.id
+      LEFT JOIN
+          Topics topics ON sp.id = topics.sessionPlanId
+      LEFT JOIN
+          Concepts concepts ON topics.id = concepts.topicId
+      LEFT JOIN
+          LessonPlans lessonplans ON concepts.id = lessonplans.conceptId
+      JOIN
+          schools ON timetable_entries.schoolId = schools.id
+      JOIN
+          classinfos ON timetable_entries.classId = classinfos.id
+      JOIN
+          sections ON timetable_entries.sectionId = sections.id
+      WHERE
+          timetable_entries.teacherId = :teacherId
+          AND timetable_entries.sectionId = :sectionId
+          AND timetable_entries.subjectId = :subjectId
+      ORDER BY
+          sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
       `,
       {
         replacements: {
@@ -283,34 +278,67 @@ ORDER BY
       }
     );
 
-    // Format the response
-    const formattedSessions = sessions.map((session) => ({
-      sessionId: session.sessionId,
-      schoolName: session.schoolName,
-      className: session.className,
-      sectionName: session.sectionName,
-      subjectName: session.subjectName,
-      chapterName: session.chapterName,
-      sessionPlanId: session.sessionPlanId,
-      sessionNumber: session.sessionNumber,
-      topics: session.topics ? session.topics.split(',').map((topic) => ({ name: topic })) : [],
-      mainConcepts: session.mainConcepts ? session.mainConcepts.split(',') : [],
-      conceptDetailing: session.conceptDetailing ? session.conceptDetailing.split(',') : [],
-      lessonPlans: session.lessonPlans ? session.lessonPlans.split(',') : [],
-      priorityNumber: session.priorityNumber,
-      sessionDate: session.sessionDate,
-      startTime: session.startTime,
-      endTime: session.endTime,
-    }));
-    
-    res.status(200).json({ sessions: formattedSessions });
-    
+    const sessionMap = new Map();
 
+    sessions.forEach((session) => {
+      if (!sessionMap.has(session.sessionId)) {
+        sessionMap.set(session.sessionId, {
+          sessionId: session.sessionId,
+          schoolName: session.schoolName,
+          className: session.className,
+          sectionName: session.sectionName,
+          subjectName: session.subjectName,
+          chapterName: session.chapterName,
+          sessionPlanId: session.sessionPlanId,
+          sessionNumber: session.sessionNumber,
+          topics: [],
+          priorityNumber: session.priorityNumber,
+          sessionDate: session.sessionDate,
+          startTime: session.startTime,
+          endTime: session.endTime,
+        });
+      }
+
+      const currentSession = sessionMap.get(session.sessionId);
+
+      const topicIndex = currentSession.topics.findIndex((t) => t.name === session.topicName);
+
+      if (topicIndex === -1) {
+        currentSession.topics.push({
+          name: session.topicName,
+          details: [
+            {
+              concept: session.mainConcept,
+              conceptDetailing: session.conceptDetailing,
+              lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+            },
+          ],
+        });
+      } else {
+        const topic = currentSession.topics[topicIndex];
+        const existingConcept = topic.details.find((d) => d.concept === session.mainConcept);
+
+        if (!existingConcept) {
+          topic.details.push({
+            concept: session.mainConcept,
+            conceptDetailing: session.conceptDetailing,
+            lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+          });
+        } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
+          existingConcept.lessonPlans.push(session.lessonPlan);
+        }
+      }
+    });
+
+    const formattedSessions = Array.from(sessionMap.values());
+
+    res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 // Fetch sessions and session plan details for start
 router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/sessions/start', async (req, res) => {
