@@ -335,27 +335,27 @@ return (
 
             {expandedTopic === topicIndex && (
               <ul className="concepts-list">
-                {topic.concepts.map((concept, conceptIndex) => (
-  <li key={conceptIndex}>
-    <div className="concept-header">
-      <input
-        type="checkbox"
-        id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-        checked={concept.completed}
-        onChange={() =>
-          handleConceptChange(sessionIndex, topicIndex, conceptIndex)
-        }
-      />
-      <label>{concept.name}</label>
-    </div>
-    <p>{concept.detailing || 'N/A'}</p>
-    {concept.lessonPlans?.map((plan, planIndex) => (
-      <pre key={planIndex}>{plan}</pre>
-    ))}
-  </li>
-))}
-
-              </ul>
+              {topic.concepts.map((concept, conceptIndex) => (
+                <li key={conceptIndex}>
+                  <div className="concept-header">
+                    <input
+                      type="checkbox"
+                      id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+                      checked={concept.completed}
+                      onChange={() =>
+                        handleConceptChange(sessionIndex, topicIndex, conceptIndex)
+                      }
+                    />
+                    <label>{concept.name}</label>
+                  </div>
+                  <p>{concept.detailing || 'N/A'}</p>
+                  {concept.lessonPlans?.map((plan, planIndex) => (
+                    <pre key={planIndex}>{plan}</pre>
+                  ))}
+                </li>
+              ))}
+            </ul>
+            
             )}
           </li>
         ))}
