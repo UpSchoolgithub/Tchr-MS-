@@ -59,7 +59,7 @@ const SessionDetails = () => {
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
   
-        const todayDate = moment().format('YYYY-MM-DD'); // Get today's date
+        const todayDate = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD
   
         // Filter sessions for today's date based on academicStartDate
         const sessions = response.data.sessions
