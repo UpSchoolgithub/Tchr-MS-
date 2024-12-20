@@ -89,6 +89,7 @@ const fetchSessionDetails = async () => {
 
     const processedSessions = sessions.map((session) => ({
       ...session,
+      sessionPlanId: session.sessionPlanId, // Ensure this is included
       topics: (session.topics || []).map((topic) => ({
         ...topic,
         completed: false,
@@ -269,10 +270,13 @@ const fetchSessionDetails = async () => {
   };
 
   const handleEndSession = async () => {
+    console.log('Session Details on End Session:', sessionDetails); // Debug log
+  
     if (!sessionDetails || !sessionDetails.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
       return;
     }
+  
   
     // Separate completed and incomplete concepts
     const completedTopics = [];
@@ -338,6 +342,7 @@ return (
     sessionDetails.map((session, sessionIndex) => (
       <div key={sessionIndex} className="session-item">
         <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
