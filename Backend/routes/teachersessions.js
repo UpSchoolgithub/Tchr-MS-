@@ -220,6 +220,8 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       `
       SELECT
           sessions.id AS sessionId,
+              sp.id AS sessionPlanId, -- Ensure this column is fetched
+
           schools.name AS schoolName,
           classinfos.className AS className,
           sections.sectionName AS sectionName,
@@ -583,66 +585,38 @@ router.get('/teachers/:teacherId/sessions/find', async (req, res) => {
 
 // Save session details
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
-  const { teacherId, sessionId } = req.params;
+  const { sessionId } = req.params;
   const { incompleteConcepts, completedConcepts } = req.body;
 
   try {
-    // Fetch the current session and its plan
-    const session = await Session.findOne({
-      where: { id: sessionId },
-      include: [
-        {
-          model: SessionPlan,
-          as: 'SessionPlan',
-          attributes: ['id', 'sessionNumber'],
-        },
-        {
-          model: Subject,
-          attributes: ['id'],
-        },
-      ],
+    // Fetch the current session
+    const session = await Session.findByPk(sessionId, {
+      include: [{ model: SessionPlan, as: 'SessionPlan' }],
     });
 
     if (!session || !session.SessionPlan) {
-      return res.status(404).json({ error: 'Session or session plan not found.' });
+      return res.status(404).json({ error: 'Session or Session Plan not found.' });
     }
 
-    // Save session report (optional)
-    await sequelize.models.SessionReports.create({
+    // Save completed concepts
+    await SessionReport.create({
       sessionPlanId: session.SessionPlan.id,
-      sessionId,
-      teacherId,
-      date: new Date().toISOString().split('T')[0],
-      sessionsCompleted: JSON.stringify(completedConcepts || []),
-      sessionsToComplete: JSON.stringify(incompleteConcepts || []),
+      completedConcepts: JSON.stringify(completedConcepts),
+      incompleteConcepts: JSON.stringify(incompleteConcepts),
     });
 
-    // If there are incomplete concepts, push them to the next session
-    if (incompleteConcepts && incompleteConcepts.length > 0) {
+    // Push incomplete concepts to the next session
+    if (incompleteConcepts.length > 0) {
       const nextSession = await Session.findOne({
-        where: {
-          id: { [Op.gt]: sessionId }, // Find the next session in sequence
-          subjectId: session.Subject.id,
-          sectionId: session.sectionId,
-        },
-        include: [
-          {
-            model: SessionPlan,
-            as: 'SessionPlan',
-            attributes: ['id'],
-          },
-        ],
-        order: [['id', 'ASC']], // Ensure correct ordering
+        where: { id: { [Op.gt]: sessionId }, sectionId: session.sectionId },
+        include: [{ model: SessionPlan, as: 'SessionPlan' }],
       });
 
       if (nextSession && nextSession.SessionPlan) {
-        // Update the next session's plan with incomplete concepts
-        const updatedConcepts = [...(incompleteConcepts || [])];
-
-        // Save the updated concepts to the next session plan
-        await sequelize.models.Concepts.bulkCreate(
-          updatedConcepts.map((concept) => ({
-            topicId: nextSession.SessionPlan.id, // Link to next session's plan
+        // Update the next session plan
+        await Concepts.bulkCreate(
+          incompleteConcepts.map((concept) => ({
+            topicId: nextSession.SessionPlan.id,
             concept: concept.name,
             conceptDetailing: concept.detailing,
           }))
@@ -650,14 +624,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       }
     }
 
-    res.json({
-      message: 'Session ended successfully, incomplete concepts pushed to the next session.',
-    });
+    res.json({ message: 'Session ended successfully!' });
   } catch (error) {
-    console.error('Error ending session:', error.message);
-    res.status(500).json({ error: 'Failed to process session details.' });
+    console.error('Error ending session:', error);
+    res.status(500).json({ error: 'Failed to end the session.' });
   }
 });
+
 
 
 

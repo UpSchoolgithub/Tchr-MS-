@@ -273,39 +273,38 @@ const fetchSessionDetails = async () => {
       alert('Session Plan ID is missing. Cannot end the session.');
       return;
     }
-
+  
+    // Separate completed and incomplete concepts
     const completedTopics = [];
     const incompleteTopics = [];
-
-    sessionDetails.topics.forEach((topic, idx) => {
-      const isChecked = document.getElementById(`topic-${idx}`).checked;
-      if (isChecked) {
-        completedTopics.push(topic);
+  
+    sessionDetails.topics.forEach((topic) => {
+      const isCompleted = topic.completed;
+      if (isCompleted) {
+        completedTopics.push({
+          name: topic.name,
+          details: topic.concepts.filter((concept) => concept.completed),
+        });
       } else {
-        incompleteTopics.push(topic);
+        incompleteTopics.push({
+          name: topic.name,
+          details: topic.concepts.filter((concept) => !concept.completed),
+        });
       }
     });
-
-    if (completedTopics.length === 0) {
-      alert('Please mark at least one topic as completed.');
-      return;
-    }
-
+  
     try {
       const payload = {
         sessionPlanId: sessionDetails.sessionPlanId,
-        completedTopics,
-        incompleteTopics,
-        observations,
-        absentees,
-        completed: true,
+        completedConcepts: completedTopics,
+        incompleteConcepts: incompleteTopics,
       };
-
+  
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
         payload
       );
-
+  
       alert(response.data.message || 'Session ended successfully!');
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
@@ -313,6 +312,7 @@ const fetchSessionDetails = async () => {
       alert('Failed to end the session.');
     }
   };
+  
 
   const studentOptions = students.map((student) => ({
     value: student.rollNumber,
