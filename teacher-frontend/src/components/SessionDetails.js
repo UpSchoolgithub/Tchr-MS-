@@ -30,6 +30,25 @@ const SessionDetails = () => {
   const [existingFile, setExistingFile] = useState(null);
   const [file, setFile] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [topicCompletion, setTopicCompletion] = useState({});
+
+  // Handle "Finish All Concepts" checkbox change
+  const handleFinishAllConcepts = (sessionIndex) => {
+    setSessionDetails((prevDetails) => {
+      const updatedDetails = [...prevDetails];
+      updatedDetails[sessionIndex].topics.forEach((topic) => {
+        topic.completed = !updatedDetails[sessionIndex].topics.every((t) => t.completed);
+      });
+      return updatedDetails;
+    });
+  
+    // Optionally send updated state to the backend
+    const session = sessionDetails[sessionIndex];
+    axiosInstance.post(`/sessions/${session.sessionId}/mark-all-completed`, {
+      completed: !session.topics.every((t) => t.completed),
+    });
+  };
+  
 
   // Fetch students for attendance
   useEffect(() => {
@@ -290,80 +309,123 @@ const fetchSessionDetails = async () => {
   }));
 
 
-return (
-  <div className="session-details-container">
-    <div className="session-details-header">
-      <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
-      <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
-      <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
-      <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
-      <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
-    </div>
-
-    <h2>Welcome, Teacher Name!</h2>
-
-    <div className="session-notes-section">
-  <h3>Session Notes and Details:</h3>
-  {sessionDetails && sessionDetails.length > 0 ? (
-    sessionDetails.map((session, sessionIndex) => (
-      <div key={sessionIndex} className="session-item">
-        <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
-        <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-      <h4>Topics to Cover:</h4>
-      <ul className="topics-list">
-  {session.topics.map((topic, topicIndex) => (
-    <li key={topicIndex}>
-      <div className="topic-header">
-        <input
-          type="checkbox"
-          id={`topic-${sessionIndex}-${topicIndex}`}
-          checked={topic.completed}
-          onChange={() => handleTopicChange(topicIndex)}
-        />
-        <label>{topic.name}</label>
-        <button
-          onClick={() => handleTopicExpand(topicIndex)}
-          className="view-lp-button"
-        >
-          {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-        </button>
+  return (
+    <div className="session-details-container">
+      <div className="session-details-header">
+        <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
+        <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
+        <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
+        <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
+        <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
       </div>
-
-      {expandedTopic === topicIndex && (
-        <ul className="concepts-list">
-          {topic.concepts.map((concept, conceptIndex) => (
-            <li key={conceptIndex}>
-              <div className="concept-header">
+  
+      <h2>Welcome, Teacher Name!</h2>
+  
+      <div className="session-notes-section">
+        <h3>Session Notes and Details:</h3>
+        {sessionDetails && sessionDetails.length > 0 ? (
+          sessionDetails.map((session, sessionIndex) => (
+            <div key={sessionIndex} className="session-item">
+              <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+              <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+  
+              <div className="finish-all-concepts">
                 <input
                   type="checkbox"
-                  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                  checked={concept.completed}
-                  onChange={() =>
-                    handleConceptChange(sessionIndex, topicIndex, conceptIndex)
-                  }
+                  id={`finish-all-${sessionIndex}`}
+                  checked={session.topics.every(topic => topic.completed)}
+                  onChange={() => handleFinishAllConcepts(sessionIndex)}
                 />
-                <label>{concept.name}</label>
+                <label htmlFor={`finish-all-${sessionIndex}`}>Finish All Concepts</label>
               </div>
-              <p>{concept.detailing || 'N/A'}</p>
-              {concept.lessonPlans?.map((plan, planIndex) => (
-                <pre key={planIndex}>{plan}</pre>
-              ))}
-            </li>
-          ))}
-        </ul>
-      )}
-    </li>
-  ))}
-</ul>
+  
+              <h4>Topics to Cover:</h4>
+              <ul className="topics-list">
+                {session.topics.map((topic, topicIndex) => (
+                  <li key={topicIndex}>
+                    <div className="topic-header">
+                      <input
+                        type="checkbox"
+                        id={`topic-${sessionIndex}-${topicIndex}`}
+                        checked={topic.completed}
+                        onChange={() => handleTopicChange(sessionIndex, topicIndex)}
+                      />
+                      <label>{topic.name}</label>
+                      <button
+                        onClick={() => handleTopicExpand(topicIndex)}
+                        className="view-lp-button"
+                      >
+                        {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+                      </button>
+                    </div>
+  
+                    {expandedTopic === topicIndex && (
+                      <ul className="concepts-list">
+                        {topic.concepts.map((concept, conceptIndex) => (
+                          <li key={conceptIndex}>
+                            <div className="concept-header">
+                              <input
+                                type="checkbox"
+                                id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+                                checked={concept.completed}
+                                onChange={() =>
+                                  handleConceptChange(sessionIndex, topicIndex, conceptIndex)
+                                }
+                              />
+                              <label>{concept.name}</label>
+                            </div>
+                            <p>{concept.detailing || 'N/A'}</p>
+                            {concept.lessonPlans?.map((plan, planIndex) => (
+                              <pre key={planIndex}>{plan}</pre>
+                            ))}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        ) : (
+          <p>No session details available.</p>
+        )}
+      </div>
+    
 
-    </div>
-  ))
-) : (
-  <p>No session details available.</p>
-)}
-    </div>
-
-
+    <h4>Assignments:</h4>
+          {assignmentDetails && (
+            <div>
+              <p>Existing Assignment: {assignmentDetails}</p>
+              {existingFile && (
+                <p>
+                  <a href={existingFile} target="_blank" rel="noopener noreferrer">
+                    View Uploaded File
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
+          <select onChange={handleAssignmentChange}>
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+          {assignmentsEnabled && (
+            <div className="assignment-input">
+            <textarea
+              value={assignmentDetails}
+              onChange={(e) => setAssignmentDetails(e.target.value)}
+              placeholder="Enter assignment details here..."
+            ></textarea>
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files[0])}
+              accept=".pdf,.doc,.docx,.jpg,.png" // Optional: Restrict file types
+            />
+            <button onClick={handleSaveAssignment}>Save</button>
+          </div>
+          
+          )}
     <div className="observations-section">
       <h4>Observations:</h4>
       <textarea
