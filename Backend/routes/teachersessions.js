@@ -265,6 +265,10 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           timetable_entries.teacherId = :teacherId
           AND timetable_entries.sectionId = :sectionId
           AND timetable_entries.subjectId = :subjectId
+          AND DATE_ADD(
+              subjects.academicStartDate,
+              INTERVAL ((sessions.priorityNumber - 1) * 7 + (sp.sessionNumber - 1)) DAY
+          ) = CURDATE() -- Filter for today's sessions
       ORDER BY
           sessionDate ASC, startTime ASC, sessions.priorityNumber ASC, sp.sessionNumber ASC;
       `,
@@ -338,6 +342,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 
 // Fetch sessions and session plan details for start
