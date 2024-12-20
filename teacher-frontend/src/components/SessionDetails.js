@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import './SessionDetails.css';
+import moment from 'moment'; // Install this library for date formatting
 
 const SessionDetails = () => {
   const location = useLocation(); // Correctly use useLocation
@@ -58,25 +59,29 @@ const SessionDetails = () => {
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
   
-        const sessions = response.data.sessions.map((session) => ({
-          ...session,
-          topics: session.topics.map((topic) => ({
-            ...topic,
-            completed: false,
-            concepts: topic.details.map((detail) => ({
-              name: detail.concept,
-              detailing: detail.conceptDetailing,
-              lessonPlans: detail.lessonPlans.map((plan) => {
-                // Extract only the content starting from "Objectives"
-                const objectivesIndex = plan.indexOf("Objectives");
-                return objectivesIndex !== -1
-                  ? plan.substring(objectivesIndex)
-                  : plan; // If "Objectives" is not found, return the plan as is
-              }),
+        const todayDate = moment().format('YYYY-MM-DD'); // Get today's date
+  
+        // Filter sessions for today's date based on academicStartDate
+        const sessions = response.data.sessions
+          .filter((session) => session.academicStartDate === todayDate)
+          .map((session) => ({
+            ...session,
+            topics: session.topics.map((topic) => ({
+              ...topic,
               completed: false,
+              concepts: topic.details.map((detail) => ({
+                name: detail.concept,
+                detailing: detail.conceptDetailing,
+                lessonPlans: detail.lessonPlans.map((plan) => {
+                  const objectivesIndex = plan.indexOf("Objectives");
+                  return objectivesIndex !== -1
+                    ? plan.substring(objectivesIndex)
+                    : plan;
+                }),
+                completed: false,
+              })),
             })),
-          })),
-        }));
+          }));
   
         setSessionDetails(sessions);
       } catch (err) {
@@ -87,6 +92,7 @@ const SessionDetails = () => {
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
   
 
   // Track completed topics
