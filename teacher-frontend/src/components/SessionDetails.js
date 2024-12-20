@@ -62,43 +62,46 @@ const SessionDetails = () => {
         const todayDate = new Date().toISOString().split('T')[0];
         console.log('Today Date:', todayDate);
     
-        const sessions = response.data.sessions
-          .filter((session) => {
-            const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0];
-            return sessionDate === todayDate;
-             })
-          .map((session) => ({
-            ...session,
-            topics: (session.topics || []).map((topic) => ({
-              ...topic,
-              completed: false,
-              concepts: (topic.details || []).map((detail) => ({
-                name: detail.concept,
-                detailing: detail.conceptDetailing,
-                lessonPlans: (detail.lessonPlans || []).map((plan) => {
-                  const objectivesIndex = plan.indexOf("Objectives");
-                  return objectivesIndex !== -1
-                    ? plan.substring(objectivesIndex)
-                    : plan;
-                }),
-                completed: false,
-              })),
-            })),
-          }));
-    
-        console.log('Filtered Sessions:', sessions);
+        const sessions = response.data.sessions.filter((session) => {
+          console.log('Session Date:', session.sessionDate, 'Matches Today:', session.sessionDate === todayDate);
+          return session.sessionDate === todayDate;
+        });
     
         if (sessions.length === 0) {
           setError('No sessions found for today.');
+          console.log('No sessions for today.');
           return;
         }
     
-        setSessionDetails(sessions);
+        console.log('Filtered Sessions:', sessions);
+    
+        const processedSessions = sessions.map((session) => ({
+          ...session,
+          topics: (session.topics || []).map((topic) => ({
+            ...topic,
+            completed: false,
+            concepts: (topic.details || []).map((detail) => ({
+              name: detail.concept,
+              detailing: detail.conceptDetailing,
+              lessonPlans: (detail.lessonPlans || []).map((plan) => {
+                const objectivesIndex = plan.indexOf("Objectives");
+                return objectivesIndex !== -1
+                  ? plan.substring(objectivesIndex)
+                  : plan;
+              }),
+              completed: false,
+            })),
+          })),
+        }));
+    
+        setSessionDetails(processedSessions);
+        console.log('Processed Session Details:', processedSessions);
       } catch (err) {
         setError('Failed to fetch session details.');
-        console.error('Fetch Error:', err);
+        console.error('Error Fetching Sessions:', err);
       }
     };
+    
     
   
     if (teacherId && sectionId && subjectId) {
