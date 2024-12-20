@@ -25,7 +25,9 @@ const SchoolDetails = ({ onSave }) => {
         });
       } catch (error) {
         console.error('Error fetching school details:', error);
+        alert('Failed to fetch school details. Please try again later.');
       }
+      
     };
 
     if (schoolId) {

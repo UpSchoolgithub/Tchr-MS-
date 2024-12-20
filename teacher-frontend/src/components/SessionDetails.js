@@ -66,16 +66,13 @@ const SessionDetails = () => {
             concepts: topic.details.map((detail) => ({
               name: detail.concept,
               detailing: detail.conceptDetailing,
-              lessonPlans: detail.lessonPlans.map((plan) => ({
-                objective: plan.objective || 'Not provided',
-                introduction: plan.introduction || 'Not provided',
-                content: plan.content || 'Not provided',
-                teachingMethod: plan.teachingMethod || 'Not provided',
-                activities: plan.activities || 'Not provided',
-                assessment: plan.assessment || 'Not provided',
-                conclusion: plan.conclusion || 'Not provided',
-                note: plan.note || 'Not provided',
-              })),
+              lessonPlans: detail.lessonPlans.map((plan) => {
+                // Extract only the content starting from "Objectives"
+                const objectivesIndex = plan.indexOf("Objectives");
+                return objectivesIndex !== -1
+                  ? plan.substring(objectivesIndex)
+                  : plan; // If "Objectives" is not found, return the plan as is
+              }),
               completed: false,
             })),
           })),
@@ -90,6 +87,7 @@ const SessionDetails = () => {
   
     if (teacherId && sectionId && subjectId) fetchSessionDetails();
   }, [teacherId, sectionId, subjectId]);
+  
 
   // Track completed topics
   const [completedTopics, setCompletedTopics] = useState([]);
@@ -315,24 +313,9 @@ return (
                       <label>{concept.name}</label>
                     </div>
                     <p>{concept.detailing || 'N/A'}</p>
-                    <div className="lesson-plan">
-                      <h5>Objective:</h5>
-                      <p>{concept.lessonPlans?.[0]?.objective || 'N/A'}</p>
-                      <h5>Introduction:</h5>
-                      <p>{concept.lessonPlans?.[0]?.introduction || 'N/A'}</p>
-                      <h5>Content/Body:</h5>
-                      <p>{concept.lessonPlans?.[0]?.content || 'N/A'}</p>
-                      <h5>Teaching Method:</h5>
-                      <p>{concept.lessonPlans?.[0]?.teachingMethod || 'N/A'}</p>
-                      <h5>Activities:</h5>
-                      <p>{concept.lessonPlans?.[0]?.activities || 'N/A'}</p>
-                      <h5>Assessment:</h5>
-                      <p>{concept.lessonPlans?.[0]?.assessment || 'N/A'}</p>
-                      <h5>Conclusion:</h5>
-                      <p>{concept.lessonPlans?.[0]?.conclusion || 'N/A'}</p>
-                      <h5>Note:</h5>
-                      <p>{concept.lessonPlans?.[0]?.note || 'N/A'}</p>
-                    </div>
+                    {concept.lessonPlans?.map((plan, planIndex) => (
+                      <pre key={planIndex}>{plan}</pre>
+                    ))}
                   </li>
                 ))}
               </ul>
