@@ -81,9 +81,6 @@ const testRoutes = require('./routes/tests');
 //const assignmentRoutes = require('./routes/assignments');
 const teacherSessionsRoutes = require('./routes/teachersessions');
 
-const teacherSessionsRouter = require('./routes/teachersessions');
-app.use('/api', teacherSessionsRouter); // Ensure this is included
-
 const assignmentRoutes = require('./routes/assignmentRoutes');
 app.use('/api', assignmentRoutes);
 
