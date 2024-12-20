@@ -89,7 +89,7 @@ const fetchSessionDetails = async () => {
 
     const processedSessions = sessions.map((session) => ({
       ...session,
-      sessionPlanId: session.sessionPlanId, // Ensure this is included
+      sessionPlanId: session.sessionPlanId || session.sessionPlanId, // Ensure sessionPlanId is included
       topics: (session.topics || []).map((topic) => ({
         ...topic,
         completed: false,
@@ -104,6 +104,7 @@ const fetchSessionDetails = async () => {
         })),
       })),
     }));
+    
 
     setSessionDetails(processedSessions);
     console.log('Processed Session Details:', processedSessions);
@@ -270,7 +271,7 @@ const fetchSessionDetails = async () => {
   const handleEndSession = async () => {
     console.log('Session Details on End Session:', sessionDetails); // Debug log
   
-    if (!sessionDetails || !sessionDetails.sessionPlanId) {
+    if (!sessionDetails || !sessionDetails[0]?.sessionPlanId) {
       alert('Session Plan ID is missing. Cannot end the session.');
       return;
     }
@@ -279,9 +280,8 @@ const fetchSessionDetails = async () => {
     const completedTopics = [];
     const incompleteTopics = [];
   
-    sessionDetails.topics.forEach((topic) => {
-      const isCompleted = topic.completed;
-      if (isCompleted) {
+    sessionDetails[0]?.topics.forEach((topic) => {
+      if (topic.completed) {
         completedTopics.push({
           name: topic.name,
           details: topic.concepts.filter((concept) => concept.completed),
@@ -296,14 +296,14 @@ const fetchSessionDetails = async () => {
   
     try {
       const payload = {
-        sessionPlanId: sessionDetails.sessionPlanId,
+        sessionPlanId: sessionDetails[0]?.sessionPlanId, // Ensure correct sessionPlanId
         completedConcepts: completedTopics,
         incompleteConcepts: incompleteTopics,
       };
   
       // Save completed and incomplete concepts to the current session
       const response = await axiosInstance.post(
-        `/teachers/${teacherId}/sessions/${sessionDetails.sessionId}/end`,
+        `/teachers/${teacherId}/sessions/${sessionDetails[0]?.sessionId}/end`,
         payload
       );
   
@@ -314,7 +314,7 @@ const fetchSessionDetails = async () => {
         );
   
         const nextSession = nextSessionResponse.data.sessions.find(
-          (session) => session.sessionId !== sessionDetails.sessionId
+          (session) => session.sessionId !== sessionDetails[0]?.sessionId
         );
   
         if (nextSession && nextSession.sessionPlanId) {
@@ -335,6 +335,7 @@ const fetchSessionDetails = async () => {
       alert('Failed to end the session.');
     }
   };
+  
   
   
 

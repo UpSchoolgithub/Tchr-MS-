@@ -618,7 +618,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/add-topics', async (req, r
 // Update session, topics, concepts, and unit/chapter status
 const updateCompletionStatus = async (sessionId) => {
   try {
-    // Check if all topics and concepts for the session are completed
+    // Fetch all topics linked to the session plan
     const topics = await sequelize.models.Topic.findAll({
       where: { sessionPlanId: sessionId },
       include: [
@@ -634,49 +634,44 @@ const updateCompletionStatus = async (sessionId) => {
     for (const topic of topics) {
       const allConceptsCompleted = topic.Concepts.every((concept) => concept.completed);
 
-      if (!allConceptsCompleted) {
-        allTopicsCompleted = false;
-        break;
-      }
-
-      // Mark topic as complete if all its concepts are complete
+      // Mark topic as complete if all concepts are completed
       if (allConceptsCompleted && !topic.completed) {
         await topic.update({ completed: true });
+      } else if (!allConceptsCompleted) {
+        allTopicsCompleted = false;
       }
     }
 
-    // Mark session as complete if all topics are completed
+    // Mark session plan as complete if all topics are completed
     if (allTopicsCompleted) {
       await sequelize.models.SessionPlan.update(
         { completed: true },
         { where: { id: sessionId } }
       );
 
-      // Get the associated session and update the chapter and unit
+      // Fetch the session associated with this session plan
       const session = await sequelize.models.Session.findOne({
         where: { id: sessionId },
-        include: ['SessionPlan'],
       });
 
       if (session) {
+        // Check if all sessions for the chapter are completed
         const allSessionsInChapter = await sequelize.models.Session.findAll({
-          where: {
-            chapterName: session.chapterName,
-          },
+          where: { chapterName: session.chapterName },
         });
 
         const allSessionsCompleted = allSessionsInChapter.every(
           (s) => s.SessionPlan?.completed
         );
 
-        // Mark chapter as complete if all sessions are completed
         if (allSessionsCompleted) {
+          // Mark chapter as completed
           await sequelize.models.Session.update(
             { chapterCompleted: true },
             { where: { chapterName: session.chapterName } }
           );
 
-          // Mark the unit as complete if all chapters in the unit are complete
+          // Check if all chapters in the unit are completed
           const allChaptersInUnit = await sequelize.models.Session.findAll({
             where: { unitName: session.unitName },
           });
@@ -686,6 +681,7 @@ const updateCompletionStatus = async (sessionId) => {
           );
 
           if (allChaptersCompleted) {
+            // Mark unit as completed
             await sequelize.models.Session.update(
               { unitCompleted: true },
               { where: { unitName: session.unitName } }
@@ -700,13 +696,14 @@ const updateCompletionStatus = async (sessionId) => {
   }
 };
 
+
 // Add this logic to the End Session API
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
   const { sessionId } = req.params;
   const { completedConcepts, incompleteConcepts } = req.body;
 
   try {
-    // Save completed and incomplete concepts
+    // Update completed concepts
     for (const concept of completedConcepts) {
       await sequelize.models.Concept.update(
         { completed: true },
@@ -714,6 +711,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       );
     }
 
+    // Update incomplete concepts
     for (const concept of incompleteConcepts) {
       await sequelize.models.Concept.update(
         { completed: false },
@@ -721,10 +719,73 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       );
     }
 
-    // Update completion status
+    // Update the completion status of session, topics, etc.
     await updateCompletionStatus(sessionId);
 
-    res.json({ message: 'Session ended successfully and completion statuses updated!' });
+    // Fetch the next session
+    const currentSession = await sequelize.models.Session.findByPk(sessionId);
+    const nextSession = await sequelize.models.Session.findOne({
+      where: {
+        subjectId: currentSession.subjectId,
+        sectionId: currentSession.sectionId,
+        priorityNumber: currentSession.priorityNumber + 1, // Find the next session by priority
+      },
+    });
+
+    if (!nextSession) {
+      console.log('No next session found. Skipping carry-over.');
+    } else {
+      // Add incomplete concepts to the next session
+      for (const topic of incompleteConcepts) {
+        const existingTopic = await sequelize.models.Topic.findOne({
+          where: {
+            sessionPlanId: nextSession.sessionPlanId,
+            topicName: topic.name,
+          },
+        });
+
+        if (existingTopic) {
+          // Append concepts to the existing topic
+          const existingConcepts = await sequelize.models.Concept.findAll({
+            where: { topicId: existingTopic.id },
+          });
+
+          const newConcepts = topic.details.filter(
+            (concept) =>
+              !existingConcepts.some(
+                (existingConcept) => existingConcept.concept === concept.name
+              )
+          );
+
+          for (const newConcept of newConcepts) {
+            await sequelize.models.Concept.create({
+              topicId: existingTopic.id,
+              concept: newConcept.concept,
+              conceptDetailing: newConcept.detailing,
+              completed: false,
+            });
+          }
+        } else {
+          // Create a new topic and add incomplete concepts
+          const newTopic = await sequelize.models.Topic.create({
+            sessionPlanId: nextSession.sessionPlanId,
+            topicName: topic.name,
+            completed: false,
+          });
+
+          for (const concept of topic.details) {
+            await sequelize.models.Concept.create({
+              topicId: newTopic.id,
+              concept: concept.concept,
+              conceptDetailing: concept.detailing,
+              completed: false,
+            });
+          }
+        }
+      }
+    }
+
+    res.json({ message: 'Session ended successfully and incomplete topics carried over!' });
   } catch (error) {
     console.error('Error ending session:', error);
     res.status(500).json({ error: 'Failed to end the session.' });
