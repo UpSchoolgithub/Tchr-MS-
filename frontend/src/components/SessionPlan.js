@@ -617,12 +617,7 @@ const SessionPlans = () => {
       </div>
   
       <div className="table-container">
-      <button
-  onClick={handleDownloadSessionPlans}
-  className="btn btn-success"
->
-  Download All Session Plans
-</button>
+    
 
 
       <table>
