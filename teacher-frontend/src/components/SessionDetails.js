@@ -276,35 +276,39 @@ const fetchSessionDetails = async () => {
       return;
     }
   
-    // Initialize arrays for completed and incomplete topics
     const completedTopics = [];
     const incompleteTopics = [];
   
-    // Separate completed and incomplete topics
     sessionDetails[0]?.topics.forEach((topic) => {
-      if (topic.completed) {
-        completedTopics.push({
-          name: topic.name,
-          details: topic.concepts.filter((concept) => concept.completed),
-        });
-      } else {
-        incompleteTopics.push({
-          name: topic.name,
-          details: topic.concepts.filter((concept) => !concept.completed),
-        });
+      const completedConcepts = topic.concepts.filter((concept) => concept.completed);
+      const incompleteConcepts = topic.concepts.filter((concept) => !concept.completed);
+  
+      if (completedConcepts.length > 0) {
+        completedTopics.push({ name: topic.name, details: completedConcepts });
+      }
+      if (incompleteConcepts.length > 0) {
+        incompleteTopics.push({ name: topic.name, details: incompleteConcepts });
       }
     });
   
     try {
       const payload = {
-        sessionId: sessionDetails[0]?.sessionId, // Ensure correct sessionId
-        completedConcepts: completedTopics,
-        incompleteConcepts: incompleteTopics,
+        completedConcepts: completedTopics.flatMap((topic) =>
+          topic.details.map((concept) => ({
+            id: concept.id,
+            name: concept.name,
+          }))
+        ),
+        incompleteConcepts: incompleteTopics.flatMap((topic) =>
+          topic.details.map((concept) => ({
+            id: concept.id,
+            name: concept.name,
+          }))
+        ),
       };
   
       console.log('Payload for End Session:', payload);
   
-      // Save completed and incomplete concepts to the current session
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails[0]?.sessionId}/end`,
         payload
@@ -312,7 +316,6 @@ const fetchSessionDetails = async () => {
   
       alert(response.data.message || 'Session ended successfully!');
   
-      // If there are incomplete topics, carry them over to the next session
       if (incompleteTopics.length > 0) {
         console.log('Carrying over incomplete topics:', incompleteTopics);
   
@@ -341,20 +344,13 @@ const fetchSessionDetails = async () => {
         console.log('All topics completed. No carry-over needed.');
       }
   
-      // Navigate back to the teacher sessions page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
   
-      // Handle specific error scenarios
       if (error.response) {
-        console.error('Server Response:', error.response.data);
         alert(error.response.data.error || 'Failed to end the session.');
-      } else if (error.request) {
-        console.error('No Response from Server:', error.request);
-        alert('No response from the server. Please try again later.');
       } else {
-        console.error('Unexpected Error:', error.message);
         alert('An unexpected error occurred. Please try again.');
       }
     }
