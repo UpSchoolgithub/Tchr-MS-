@@ -110,7 +110,7 @@ Session.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false,
-    },
+    },    
     
   },
   {
