@@ -106,11 +106,11 @@ Session.init(
         key: 'id',
       },
     },
-    completed: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    status: {
+      type: DataTypes.STRING,
       allowNull: false,
-    },    
+      defaultValue: 'pending', // Default to 'pending'
+    },   
     
   },
   {

@@ -387,8 +387,8 @@ return (
       <div key={sessionIndex} className="session-item">
 
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-        <p><strong>Status:</strong> {session.completed ? 'Completed' : 'Incomplete'}</p>
-{/* Recommended Topics Section 
+        <p><strong>Status:</strong> {session.status === 'completed' ? 'Completed' : 'Incomplete'}</p>
+        {/* Recommended Topics Section 
 <div className="recommended-topics-box">
   <h3>Recommended Topics to Cover from A&R:</h3>
   <div className="recommended-topic-item">
