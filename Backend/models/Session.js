@@ -108,9 +108,10 @@ Session.init(
     },
     completed: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false, // Default to false
+      defaultValue: false,
       allowNull: false,
     },
+    
   },
   {
     sequelize,
