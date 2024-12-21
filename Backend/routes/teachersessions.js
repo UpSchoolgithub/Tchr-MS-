@@ -727,7 +727,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     // Update concepts
     for (const concept of completedConcepts) {
-      const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
+      const conceptInstance = await Concept.findByPk(concept.id);
       if (!conceptInstance) {
         console.error(`Concept not found for ID: ${concept.id}`);
         throw new Error(`Concept not found for ID: ${concept.id}`);
@@ -737,7 +737,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     }
 
     for (const concept of incompleteConcepts) {
-      const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
+      const conceptInstance = await Concept.findByPk(concept.id);
       if (!conceptInstance) {
         console.error(`Concept not found for ID: ${concept.id}`);
         throw new Error(`Concept not found for ID: ${concept.id}`);
