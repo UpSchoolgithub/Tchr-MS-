@@ -365,7 +365,7 @@ return (
 
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
         <p><strong>Status:</strong> {session.completed ? 'Completed' : 'Incomplete'}</p>
-{/* Recommended Topics Section */}
+{/* Recommended Topics Section 
 <div className="recommended-topics-box">
   <h3>Recommended Topics to Cover from A&R:</h3>
   <div className="recommended-topic-item">
@@ -375,7 +375,7 @@ return (
     />
     <label htmlFor={`Introduction to Economic Growth-${sessionIndex}`}>Introduction to Economic Growth</label>
   </div>
-</div>
+</div>*/}
 
 
       <h4>Topics to Cover:</h4>

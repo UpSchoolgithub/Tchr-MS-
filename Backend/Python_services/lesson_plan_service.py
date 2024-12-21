@@ -73,6 +73,7 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                     "role": "system",
                     "content": f"""Create a detailed and structured lesson plan based on the concept and its details provided below. Use the concept details to create the plan and align it with the specified parameters. The lesson plan must follow the given format:
 
+                    
                     - **Board**: {data.board}
                     - **Grade**: {data.grade}
                     - **Subject**: {data.subject}
@@ -81,7 +82,7 @@ def generate_lesson_plan(data: LessonPlanRequest) -> Dict[str, Any]:
                     - **Topic**: {topic.topic}
                     - **Concept**: {concept}
 
-                    **Duration**: {duration} minutes
+                    **Duration**: {duration} minutes 
 
                     **Objectives**:
                     - List specific learning objectives for this concept.
