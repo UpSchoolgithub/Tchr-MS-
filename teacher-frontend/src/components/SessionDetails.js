@@ -366,7 +366,23 @@ return (
         <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
         <p><strong>Status:</strong> {session.completed ? 'Completed' : 'Incomplete'}</p>
-
+{/* Recommended Topics Section */}
+<div className="recommended-topics-box">
+                  <h3>Recommended Topics to Cover from A&R:</h3>
+                  <div className="recommended-topic-item">
+                    <input type="checkbox" id={`electric-current-${idx}`} />
+                    <label htmlFor={`electric-current-${idx}`}>Electric Current</label>
+                  </div>
+                </div>
+                {/* Recommended Topics Section */}
+                <div className="recommended-topics-box">
+                  <h3>Recommended Topics to Cover from A&R:</h3>
+                  <div className="recommended-topic-item">
+                    <input type="checkbox" id={`electric-current-${idx}`} />
+                    <label htmlFor={`electric-current-${idx}`}>Electric Current</label>
+                  </div>
+                </div>
+                
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
   {session.topics.map((topic, topicIndex) => (
