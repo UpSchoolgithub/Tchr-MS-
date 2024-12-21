@@ -269,72 +269,29 @@ const fetchSessionDetails = async () => {
   };
 
   const handleEndSession = async () => {
-    console.log('Session Details on End Session:', sessionDetails); // Debug log
-  
-    if (!sessionDetails || !sessionDetails[0]?.sessionPlanId) {
-      alert('Session Plan ID is missing. Cannot end the session.');
+    if (!sessionDetails || !sessionDetails[0]?.sessionId) {
+      alert('Session ID is missing. Cannot end the session.');
       return;
     }
   
-    // Separate completed and incomplete topics
-    const completedTopics = [];
-    const incompleteTopics = [];
-  
-    sessionDetails[0]?.topics.forEach((topic) => {
-      if (topic.completed) {
-        completedTopics.push({
-          name: topic.name,
-          details: topic.concepts.filter((concept) => concept.completed),
-        });
-      } else {
-        incompleteTopics.push({
-          name: topic.name,
-          details: topic.concepts.filter((concept) => !concept.completed),
-        });
-      }
-    });
+    const payload = {
+      completedConcepts: completedTopics,
+      incompleteConcepts: incompleteTopics,
+    };
   
     try {
-      const payload = {
-        sessionPlanId: sessionDetails[0]?.sessionPlanId, // Ensure correct sessionPlanId
-        completedConcepts: completedTopics,
-        incompleteConcepts: incompleteTopics,
-      };
-  
-      // Save completed and incomplete concepts to the current session
       const response = await axiosInstance.post(
         `/teachers/${teacherId}/sessions/${sessionDetails[0]?.sessionId}/end`,
         payload
       );
   
-      // Push incomplete topics to the next session
-      if (incompleteTopics.length > 0) {
-        const nextSessionResponse = await axiosInstance.get(
-          `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
-        );
-  
-        const nextSession = nextSessionResponse.data.sessions.find(
-          (session) => session.sessionId !== sessionDetails[0]?.sessionId
-        );
-  
-        if (nextSession && nextSession.sessionPlanId) {
-          await axiosInstance.post(
-            `/teachers/${teacherId}/sessions/${nextSession.sessionId}/add-topics`,
-            { incompleteTopics }
-          );
-          alert('Incomplete topics carried over to the next session.');
-        } else {
-          alert('No next session found to carry over topics.');
-        }
-      }
-  
       alert(response.data.message || 'Session ended successfully!');
-      navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
       alert('Failed to end the session.');
     }
   };
+  
   
   
   

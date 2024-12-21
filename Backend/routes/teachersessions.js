@@ -697,15 +697,26 @@ const updateCompletionStatus = async (sessionId) => {
 };
 
 
+
 // Add this logic to the End Session API
 router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => {
-  const { sessionId } = req.params;
+  const { teacherId, sessionId } = req.params;
   const { completedConcepts, incompleteConcepts } = req.body;
 
   try {
-    const sessionPlan = await SessionPlan.findByPk(sessionId);
+    // Fetch the session by sessionId
+    const session = await Session.findByPk(sessionId, {
+      include: [{ model: SessionPlan, as: 'SessionPlan' }],
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found.' });
+    }
+
+    const sessionPlan = session.SessionPlan;
+
     if (!sessionPlan) {
-      return res.status(404).json({ error: 'SessionPlan not found.' });
+      return res.status(404).json({ error: 'SessionPlan not found for the given session.' });
     }
 
     // Update completed concepts
@@ -729,58 +740,15 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     }
 
     // Update the completion status
-    await updateCompletionStatus(sessionId);
+    await updateCompletionStatus(sessionPlan.id);
 
-    // Fetch next session
-    const currentSession = await Session.findByPk(sessionId);
-    const nextSession = await Session.findOne({
-      where: {
-        subjectId: currentSession.subjectId,
-        sectionId: currentSession.sectionId,
-        priorityNumber: currentSession.priorityNumber + 1,
-      },
-    });
-
-    if (nextSession) {
-      for (const topic of incompleteConcepts) {
-        const existingTopic = await sequelize.models.Topic.findOne({
-          where: { sessionPlanId: nextSession.sessionPlanId, topicName: topic.name },
-        });
-
-        if (existingTopic) {
-          for (const detail of topic.details) {
-            await sequelize.models.Concept.create({
-              topicId: existingTopic.id,
-              concept: detail.concept,
-              conceptDetailing: detail.detailing,
-              completed: false,
-            });
-          }
-        } else {
-          const newTopic = await sequelize.models.Topic.create({
-            sessionPlanId: nextSession.sessionPlanId,
-            topicName: topic.name,
-            completed: false,
-          });
-
-          for (const detail of topic.details) {
-            await sequelize.models.Concept.create({
-              topicId: newTopic.id,
-              concept: detail.concept,
-              conceptDetailing: detail.detailing,
-              completed: false,
-            });
-          }
-        }
-      }
-    }
-
-    res.json({ message: 'Session ended successfully and incomplete topics carried over!' });
+    res.json({ message: 'Session ended successfully!' });
   } catch (error) {
     console.error('Error ending session:', error);
     res.status(500).json({ error: 'Failed to end the session.' });
   }
 });
+
 
 
 
