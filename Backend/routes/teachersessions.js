@@ -739,16 +739,41 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       }
     }
 
-    // Update the completion status
-    await updateCompletionStatus(sessionPlan.id);
+    // Check if all topics in the session are completed
+    const topics = await sequelize.models.Topic.findAll({
+      where: { sessionPlanId: sessionPlan.id },
+      include: [
+        {
+          model: sequelize.models.Concept,
+          as: 'Concepts',
+        },
+      ],
+    });
 
-    res.json({ message: 'Session ended successfully!' });
+    let allTopicsCompleted = true;
+
+    for (const topic of topics) {
+      const allConceptsCompleted = topic.Concepts.every((concept) => concept.completed);
+
+      if (allConceptsCompleted && !topic.completed) {
+        await topic.update({ completed: true });
+      } else if (!allConceptsCompleted) {
+        allTopicsCompleted = false;
+      }
+    }
+
+    // Mark the session as completed only if all topics are completed
+    if (allTopicsCompleted) {
+      await session.update({ completed: true });
+      res.json({ message: 'Session ended successfully and marked as completed!' });
+    } else {
+      res.json({ message: 'Session ended, but not all topics are completed.' });
+    }
   } catch (error) {
     console.error('Error ending session:', error);
     res.status(500).json({ error: 'Failed to end the session.' });
   }
 });
-
 
 
 

@@ -314,6 +314,8 @@ const fetchSessionDetails = async () => {
   
       // If there are incomplete topics, carry them over to the next session
       if (incompleteTopics.length > 0) {
+        console.log('Carrying over incomplete topics:', incompleteTopics);
+  
         const nextSessionResponse = await axiosInstance.get(
           `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions`
         );
@@ -323,22 +325,41 @@ const fetchSessionDetails = async () => {
         );
   
         if (nextSession && nextSession.sessionPlanId) {
+          console.log('Next session found:', nextSession);
+  
           await axiosInstance.post(
             `/teachers/${teacherId}/sessions/${nextSession.sessionId}/add-topics`,
             { incompleteTopics }
           );
+  
           alert('Incomplete topics carried over to the next session.');
         } else {
+          console.warn('No next session found to carry over topics.');
           alert('No next session found to carry over topics.');
         }
+      } else {
+        console.log('All topics completed. No carry-over needed.');
       }
   
+      // Navigate back to the teacher sessions page
       navigate(`/teacher-sessions/${teacherId}`);
     } catch (error) {
       console.error('Error ending session:', error);
-      alert('Failed to end the session.');
+  
+      // Handle specific error scenarios
+      if (error.response) {
+        console.error('Server Response:', error.response.data);
+        alert(error.response.data.error || 'Failed to end the session.');
+      } else if (error.request) {
+        console.error('No Response from Server:', error.request);
+        alert('No response from the server. Please try again later.');
+      } else {
+        console.error('Unexpected Error:', error.message);
+        alert('An unexpected error occurred. Please try again.');
+      }
     }
   };
+  
   
   
   
