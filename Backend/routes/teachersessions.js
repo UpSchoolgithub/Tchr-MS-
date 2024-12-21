@@ -704,77 +704,79 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   const { completedConcepts, incompleteConcepts } = req.body;
 
   try {
-    // Fetch the session by sessionId
+    console.log('Request received:', { teacherId, sessionId, completedConcepts, incompleteConcepts });
+
+    // Fetch session and session plan
     const session = await Session.findByPk(sessionId, {
       include: [{ model: SessionPlan, as: 'SessionPlan' }],
     });
 
     if (!session) {
+      console.error('Session not found:', sessionId);
       return res.status(404).json({ error: 'Session not found.' });
     }
 
     const sessionPlan = session.SessionPlan;
-
     if (!sessionPlan) {
-      return res.status(404).json({ error: 'SessionPlan not found for the given session.' });
+      console.error('SessionPlan not found for session:', sessionId);
+      return res.status(404).json({ error: 'SessionPlan not found.' });
     }
 
-    // Update completed concepts
-    for (const concept of completedConcepts) {
-      const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
-      if (conceptInstance) {
-        await conceptInstance.update({ completed: true });
-      } else {
-        console.error(`Concept not found for id: ${concept.id}`);
+    // Handle concept updates
+    if (completedConcepts && completedConcepts.length > 0) {
+      for (const concept of completedConcepts) {
+        const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
+        if (conceptInstance) {
+          await conceptInstance.update({ completed: true });
+        } else {
+          console.warn(`Concept not found for ID: ${concept.id}`);
+        }
       }
     }
 
-    // Update incomplete concepts
-    for (const concept of incompleteConcepts) {
-      const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
-      if (conceptInstance) {
-        await conceptInstance.update({ completed: false });
-      } else {
-        console.error(`Concept not found for id: ${concept.id}`);
+    if (incompleteConcepts && incompleteConcepts.length > 0) {
+      for (const concept of incompleteConcepts) {
+        const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
+        if (conceptInstance) {
+          await conceptInstance.update({ completed: false });
+        } else {
+          console.warn(`Concept not found for ID: ${concept.id}`);
+        }
       }
     }
 
-    // Check if all topics in the session are completed
+    console.log('Concept updates completed.');
+
+    // Check if all topics in session are completed
     const topics = await sequelize.models.Topic.findAll({
       where: { sessionPlanId: sessionPlan.id },
-      include: [
-        {
-          model: sequelize.models.Concept,
-          as: 'Concepts',
-        },
-      ],
+      include: [{ model: sequelize.models.Concept, as: 'Concepts' }],
     });
 
     let allTopicsCompleted = true;
 
     for (const topic of topics) {
-      const allConceptsCompleted = topic.Concepts.every((concept) => concept.completed);
-
-      if (allConceptsCompleted && !topic.completed) {
-        await topic.update({ completed: true });
-      } else if (!allConceptsCompleted) {
+      const allConceptsCompleted = topic.Concepts?.every((concept) => concept.completed);
+      if (!allConceptsCompleted) {
         allTopicsCompleted = false;
+        break;
       }
     }
 
-    // Mark the session as completed only if all topics are completed
+    // Mark session as completed
     if (allTopicsCompleted) {
       await session.update({ completed: true });
-      res.json({ message: 'Session ended successfully and marked as completed!' });
+      console.log('Session marked as completed:', sessionId);
+      return res.json({ message: 'Session ended successfully and marked as completed!' });
     } else {
-      res.json({ message: 'Session ended, but not all topics are completed.' });
+      console.log('Session ended but not all topics are completed:', sessionId);
+      return res.json({ message: 'Session ended, but not all topics are completed.' });
     }
   } catch (error) {
     console.error('Error ending session:', error);
     res.status(500).json({ error: 'Failed to end the session.' });
   }
 });
-
 
 
 
