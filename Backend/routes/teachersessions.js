@@ -3,7 +3,7 @@ const router = express.Router();
 const { TimetableEntry, Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db'); // Adjust the path based on your folder structure
-const { Concept } = require('../models'); // Adjust the path if needed
+const { concept } = require('../models'); // Adjust the path if needed
 
 // Get sessions for a specific teacher
 // Get sessions for a specific teacher
@@ -715,13 +715,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     if (!session) {
       console.error(`Session not found for ID: ${sessionId}`);
-      throw new Error(`Session not found for ID: ${sessionId}`);
+      return res.status(404).json({ error: `Session not found for ID: ${sessionId}` });
     }
 
     const sessionPlan = session.SessionPlan;
     if (!sessionPlan) {
       console.error(`SessionPlan not found for Session ID: ${sessionId}`);
-      throw new Error(`SessionPlan not found for Session ID: ${sessionId}`);
+      return res.status(404).json({ error: `SessionPlan not found for Session ID: ${sessionId}` });
     }
 
     console.log('Session and SessionPlan fetched:', { sessionId, sessionPlanId: sessionPlan.id });
@@ -749,34 +749,9 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     console.log('Concept updates completed.');
 
-    // Check if all topics are completed
-    const topics = await sequelize.models.Topic.findAll({
-      where: { sessionPlanId: sessionPlan.id },
-      include: [{ model: sequelize.models.Concept, as: 'Concepts' }],
-    });
-
-    const allTopicsCompleted = topics.every((topic) => {
-      if (!topic.Concepts || topic.Concepts.length === 0) {
-        console.warn(`No concepts found for topic ID: ${topic.id}`);
-        return false; // Treat missing concepts as incomplete
-      }
-      return topic.Concepts.every((concept) => concept.status === 'completed');
-    });
-
-    // Update session status
-    await session.update(
-      { status: allTopicsCompleted ? 'completed' : 'in-progress' },
-      { transaction }
-    );
-
-    console.log(`Session status updated: ${allTopicsCompleted ? 'completed' : 'in-progress'}`);
-
+    // Commit transaction
     await transaction.commit();
-    res.json({
-      message: allTopicsCompleted
-        ? 'Session ended successfully and marked as completed!'
-        : 'Session ended, but not all topics are completed.',
-    });
+    res.json({ message: 'Session ended successfully!' });
   } catch (error) {
     await transaction.rollback();
     console.error('Error ending session:', error);
