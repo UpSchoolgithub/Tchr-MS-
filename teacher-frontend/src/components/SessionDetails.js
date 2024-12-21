@@ -372,9 +372,9 @@ return (
   <div className="recommended-topic-item">
     <input
       type="checkbox"
-      id={`electric-current-${sessionIndex}`}
+      id={`Introduction to Economic Growth-${sessionIndex}`}
     />
-    <label htmlFor={`electric-current-${sessionIndex}`}>Electric Current</label>
+    <label htmlFor={`Introduction to Economic Growth-${sessionIndex}`}>Electric Current</label>
   </div>
 </div>
 
