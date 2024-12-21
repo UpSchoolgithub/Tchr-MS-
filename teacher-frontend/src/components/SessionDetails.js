@@ -374,7 +374,7 @@ return (
       type="checkbox"
       id={`Introduction to Economic Growth-${sessionIndex}`}
     />
-    <label htmlFor={`Introduction to Economic Growth-${sessionIndex}`}>Electric Current</label>
+    <label htmlFor={`Introduction to Economic Growth-${sessionIndex}`}>Introduction to Economic Growth</label>
   </div>
 </div>
 
