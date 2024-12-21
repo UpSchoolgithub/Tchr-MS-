@@ -713,33 +713,37 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     });
 
     if (!session) {
-      console.error('Session not found:', sessionId);
-      return res.status(404).json({ error: 'Session not found.' });
+      console.error(`Session not found for ID: ${sessionId}`);
+      throw new Error(`Session not found for ID: ${sessionId}`);
     }
 
     const sessionPlan = session.SessionPlan;
     if (!sessionPlan) {
-      console.error('SessionPlan not found for session:', sessionId);
-      return res.status(404).json({ error: 'SessionPlan not found.' });
+      console.error(`SessionPlan not found for Session ID: ${sessionId}`);
+      throw new Error(`SessionPlan not found for Session ID: ${sessionId}`);
     }
+
+    console.log('Session and SessionPlan fetched:', { sessionId, sessionPlanId: sessionPlan.id });
 
     // Update concepts
     for (const concept of completedConcepts) {
       const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
-      if (conceptInstance) {
-        await conceptInstance.update({ status: 'completed' }, { transaction });
-      } else {
-        console.warn(`Concept not found for ID: ${concept.id}`);
+      if (!conceptInstance) {
+        console.error(`Concept not found for ID: ${concept.id}`);
+        throw new Error(`Concept not found for ID: ${concept.id}`);
       }
+      await conceptInstance.update({ status: 'completed' }, { transaction });
+      console.log(`Concept updated to completed: ID ${concept.id}`);
     }
 
     for (const concept of incompleteConcepts) {
       const conceptInstance = await sequelize.models.Concept.findByPk(concept.id);
-      if (conceptInstance) {
-        await conceptInstance.update({ status: 'pending' }, { transaction });
-      } else {
-        console.warn(`Concept not found for ID: ${concept.id}`);
+      if (!conceptInstance) {
+        console.error(`Concept not found for ID: ${concept.id}`);
+        throw new Error(`Concept not found for ID: ${concept.id}`);
       }
+      await conceptInstance.update({ status: 'pending' }, { transaction });
+      console.log(`Concept updated to pending: ID ${concept.id}`);
     }
 
     console.log('Concept updates completed.');
@@ -750,32 +754,32 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
       include: [{ model: sequelize.models.Concept, as: 'Concepts' }],
     });
 
-    let allTopicsCompleted = true;
-
-    for (const topic of topics) {
-      const allConceptsCompleted = topic.Concepts?.every((concept) => concept.status === 'completed');
-      if (!allConceptsCompleted) {
-        allTopicsCompleted = false;
-        break;
+    const allTopicsCompleted = topics.every((topic) => {
+      if (!topic.Concepts || topic.Concepts.length === 0) {
+        console.warn(`No concepts found for topic ID: ${topic.id}`);
+        return false; // Treat missing concepts as incomplete
       }
-    }
+      return topic.Concepts.every((concept) => concept.status === 'completed');
+    });
 
     // Update session status
-    if (allTopicsCompleted) {
-      await session.update({ status: 'completed' }, { transaction });
-      console.log('Session marked as completed:', sessionId);
-      await transaction.commit();
-      return res.json({ message: 'Session ended successfully and marked as completed!' });
-    } else {
-      await session.update({ status: 'in-progress' }, { transaction });
-      console.log('Session ended but not all topics are completed:', sessionId);
-      await transaction.commit();
-      return res.json({ message: 'Session ended, but not all topics are completed.' });
-    }
+    await session.update(
+      { status: allTopicsCompleted ? 'completed' : 'in-progress' },
+      { transaction }
+    );
+
+    console.log(`Session status updated: ${allTopicsCompleted ? 'completed' : 'in-progress'}`);
+
+    await transaction.commit();
+    res.json({
+      message: allTopicsCompleted
+        ? 'Session ended successfully and marked as completed!'
+        : 'Session ended, but not all topics are completed.',
+    });
   } catch (error) {
     await transaction.rollback();
     console.error('Error ending session:', error);
-    res.status(500).json({ error: 'Failed to end the session.' });
+    res.status(500).json({ error: error.message || 'Failed to end the session.' });
   }
 });
 
