@@ -176,7 +176,7 @@ const TeacherSessions = () => {
 ) : (
   <table className="sessions-table">
     <thead>
-      <tr>
+    <tr>
         <th>School</th>
         <th>Class</th>
         <th>Section</th>
@@ -188,10 +188,10 @@ const TeacherSessions = () => {
         <th>End Time</th>
         <th>Assignments</th>
         <th>Today's Session Plan</th>
-
         <th>Session Report</th>
-      </tr>
-    </thead>
+    </tr>
+</thead>
+
     <tbody>
   {filteredSessions.map((session, index) => {
     const progressPercentage =
