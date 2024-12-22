@@ -1,7 +1,18 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class ActionsAndRecommendations extends Model {}
+class ActionsAndRecommendations extends Model {
+  static associate(models) {
+    this.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
+    this.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
+    this.belongsTo(models.Chapter, { foreignKey: 'chapterId', as: 'Chapter' });
+    this.belongsTo(models.Unit, { foreignKey: 'unitId', as: 'Unit' });
+    this.hasOne(models.LessonPlansForActionsAndRecommendations, {
+      foreignKey: 'actionsAndRecommendationsId',
+      as: 'LessonPlan',
+    });
+  }
+}
 
 ActionsAndRecommendations.init(
   {
@@ -14,7 +25,7 @@ ActionsAndRecommendations.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'SessionPlans', // Links to SessionPlan table
+        model: 'SessionPlans', // References SessionPlans table
         key: 'id',
       },
     },
@@ -22,7 +33,7 @@ ActionsAndRecommendations.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Sessions', // Links to Session table
+        model: 'Sessions', // References Sessions table
         key: 'id',
       },
     },
@@ -30,7 +41,7 @@ ActionsAndRecommendations.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Chapters', // Links to Chapter table
+        model: 'Chapters', // References Chapters table
         key: 'id',
       },
     },
@@ -38,7 +49,7 @@ ActionsAndRecommendations.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Units', // Links to Unit table
+        model: 'Units', // References Units table
         key: 'id',
       },
     },

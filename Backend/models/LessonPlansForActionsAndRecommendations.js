@@ -1,34 +1,81 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class LessonPlansForActionsAndRecommendations extends Model {}
+class ActionsAndRecommendations extends Model {
+  static associate(models) {
+    this.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
+    this.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
+    this.belongsTo(models.Chapter, { foreignKey: 'chapterId', as: 'Chapter' });
+    this.belongsTo(models.Unit, { foreignKey: 'unitId', as: 'Unit' });
+    this.hasOne(models.LessonPlansForActionsAndRecommendations, {
+      foreignKey: 'actionsAndRecommendationsId',
+      as: 'LessonPlan',
+    });
+  }
+}
 
-LessonPlansForActionsAndRecommendations.init(
+ActionsAndRecommendations.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    actionsAndRecommendationsId: {
+    sessionPlanId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'ActionsAndRecommendations', // Links to ActionsAndRecommendations table
+        model: 'SessionPlans', // References SessionPlans table
         key: 'id',
       },
     },
-    generatedLessonPlan: {
-      type: DataTypes.TEXT,
+    sessionId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Sessions', // References Sessions table
+        key: 'id',
+      },
+    },
+    chapterId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Chapters', // References Chapters table
+        key: 'id',
+      },
+    },
+    unitId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Units', // References Units table
+        key: 'id',
+      },
+    },
+    type: {
+      type: DataTypes.ENUM('pre-learning', 'post-learning'),
+      allowNull: false,
+    },
+    topicName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    conceptName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    order: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
   },
   {
     sequelize,
-    modelName: 'LessonPlansForActionsAndRecommendations',
-    tableName: 'LessonPlansForActionsAndRecommendations',
+    modelName: 'ActionsAndRecommendations',
+    tableName: 'ActionsAndRecommendations',
     timestamps: true,
   }
 );
 
-module.exports = LessonPlansForActionsAndRecommendations;
+module.exports = ActionsAndRecommendations;
