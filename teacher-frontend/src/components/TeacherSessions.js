@@ -63,7 +63,8 @@ const TeacherSessions = () => {
   
       const sessionsWithDetails = response.data.map((session) => ({
         ...session,
-        completed: !!session.actualEndTime, // Mark as completed if actualEndTime exists
+        completed: !!session.endTime, // Mark as completed if endTime exists
+        inProgress: session.startTime && !session.endTime, // Mark as in-progress if only startTime exists
       }));
   
       setSessions(sessionsWithDetails);
@@ -74,6 +75,7 @@ const TeacherSessions = () => {
       setLoading(false);
     }
   }, [teacherId]);
+  
   
   
   
@@ -125,6 +127,12 @@ const TeacherSessions = () => {
         sessionId: session.sessionId, // Include sessionId
       },
     });
+  };
+  
+  const getSessionStatus = (session) => {
+    if (session.status === 'completed') return 'Completed';
+    if (session.startTime && !session.endTime) return 'In Progress';
+    return 'Pending';
   };
   
   
@@ -209,22 +217,25 @@ const TeacherSessions = () => {
           </div>
         </td>
         <td>
-    {session.status === 'completed' ? (
-        <>
-            <p>Start: {new Date(session.startTime).toLocaleTimeString()}</p>
-            <p>End: {new Date(session.endTime).toLocaleTimeString()}</p>
-        </>
-    ) : isToday(selectedDate) ? (
-        <button
-            onClick={() => handleStartSession(session)}
-            style={{ backgroundColor: '#dc3545', color: 'white' }}
-        >
-            Start Session
-        </button>
-    ) : (
-        <span>-</span>
-    )}
+  {session.status === 'completed' ? (
+    <>
+      <p><strong>Start:</strong> {session.startTime ? new Date(session.startTime).toLocaleTimeString() : 'Not Started'}</p>
+<p><strong>End:</strong> {session.endTime ? new Date(session.endTime).toLocaleTimeString() : 'Not Ended'}</p>
+    </>
+  ) : isToday(selectedDate) ? (
+    <button
+      onClick={() => handleStartSession(session)}
+      style={{ backgroundColor: '#dc3545', color: 'white' }}
+      disabled={!!session.startTime} // Disable if startTime exists
+    >
+      {session.startTime ? 'In Progress' : 'Start Session'}
+    </button>
+  ) : (
+    <span>Pending</span>
+  )}
 </td>
+
+<td>{getSessionStatus(session)}</td>
 
 
 
