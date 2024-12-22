@@ -113,26 +113,29 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       });
     }
 
-    // Fetch session details for the academic day
+    // Fetch session plan details to update sessionStartTime
+    const sessionPlan = await SessionPlan.findOne({ where: { id: sessionId } });
+    if (!sessionPlan) {
+      return res.status(404).json({ error: 'SessionPlan not found.' });
+    }
+
+    // Set sessionStartTime if not already set
+    if (!sessionPlan.sessionStartTime) {
+      sessionPlan.sessionStartTime = new Date(); // Set the start time
+      sessionPlan.sessionStatus = 'in-progress'; // Update session status
+      await sessionPlan.save();
+    }
+
+    // Fetch academic start date to calculate academic day
     const session = await Session.findOne({
       where: { id: sessionId },
-      include: [
-        { model: SessionPlan, attributes: ['sessionNumber', 'planDetails'], as: 'SessionPlan' },
-        { model: Subject, attributes: ['academicStartDate'] },
-      ],
+      include: [{ model: Subject, attributes: ['academicStartDate'] }],
     });
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found.' });
     }
 
-    // Update or fetch the session start and end times
-    if (!session.startTime) {
-      session.startTime = new Date(); // Set the start time if not already set
-      await session.save();
-    }
-
-    // Calculate academic day
     const academicStartDate = new Date(session.Subject.academicStartDate);
     const currentDate = new Date();
     const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
@@ -141,12 +144,12 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       message: 'Attendance marked successfully',
       sessionDetails: {
         id: session.id,
-        chapterName: session.chapterName,
-        sessionNumber: session.SessionPlan.sessionNumber,
-        topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
+        chapterName: session.chapterName || 'N/A',
+        sessionNumber: sessionPlan.sessionNumber || 'N/A',
+        topics: JSON.parse(sessionPlan.planDetails || '[]'),
         academicDay,
-        startTime: session.startTime, // Include start time
-        endTime: session.endTime || null, // Include end time if it exists
+        sessionStartTime: sessionPlan.sessionStartTime, // Include session start time
+        sessionEndTime: sessionPlan.sessionEndTime || null, // Include session end time if it exists
       },
     });
   } catch (error) {
@@ -154,6 +157,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
     res.status(500).json({ error: 'Failed to mark attendance.' });
   }
 });
+
 
 
 // Get session details for a specific teacher and session
@@ -715,70 +719,49 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
   const transaction = await sequelize.transaction();
   try {
-    console.log('Request received:', { teacherId, sessionId, completedConcepts, incompleteConcepts });
-
-    // Fetch session and session plan
+    // Fetch the session and session plan
     const session = await Session.findByPk(sessionId, {
       include: [{ model: SessionPlan, as: 'SessionPlan' }],
     });
 
-    if (!session) {
-      console.error(`Session not found for ID: ${sessionId}`);
-      return res.status(404).json({ error: `Session not found for ID: ${sessionId}` });
+    if (!session || !session.SessionPlan) {
+      return res.status(404).json({ error: 'Session or SessionPlan not found.' });
     }
 
+    // Update the session plan with the end time and status
     const sessionPlan = session.SessionPlan;
-    if (!sessionPlan) {
-      console.error(`SessionPlan not found for Session ID: ${sessionId}`);
-      return res.status(404).json({ error: `SessionPlan not found for Session ID: ${sessionId}` });
-    }
-
-    console.log('Session and SessionPlan fetched:', { sessionId, sessionPlanId: sessionPlan.id });
-
-    // Update completed concepts
-    for (const concept of completedConcepts) {
-      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } }); // Use `concept` instead of `name`
-      if (!conceptInstance) {
-        console.error(`Concept not found: ${concept.name}`);
-        continue; // Skip this concept and move to the next
-      }
-
-      await conceptInstance.update({ status: 'completed' }, { transaction });
-      console.log(`Concept marked as completed:`, concept.name);
-    }
-
-    // Update incomplete concepts
-    for (const concept of incompleteConcepts) {
-      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } }); // Use `concept` instead of `name`
-      if (!conceptInstance) {
-        console.error(`Concept not found: ${concept.name}`);
-        continue; // Skip this concept and move to the next
-      }
-
-      await conceptInstance.update({ status: 'pending' }, { transaction });
-      console.log(`Concept marked as pending:`, concept.name);
-    }
-
-    console.log('Concept updates completed.');
-
-    // Update session plan status and endTime
     await sessionPlan.update(
       {
-        status: 'completed', // Mark session plan as completed
-        endTime: new Date(), // Set the current date and time as endTime
+        sessionEndTime: new Date(), // Set session end time
+        sessionStatus: 'completed', // Mark the session as completed
       },
       { transaction }
     );
 
-    console.log('SessionPlan updated with status "completed" and endTime set.');
+    // Update concepts as completed or pending
+    for (const concept of completedConcepts) {
+      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } });
+      if (conceptInstance) {
+        await conceptInstance.update({ status: 'completed' }, { transaction });
+      }
+    }
 
-    // Commit transaction
+    for (const concept of incompleteConcepts) {
+      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } });
+      if (conceptInstance) {
+        await conceptInstance.update({ status: 'pending' }, { transaction });
+      }
+    }
+
+    console.log('SessionPlan updated with end time and status.');
+
+    // Commit the transaction
     await transaction.commit();
-    res.json({ message: 'Session ended successfully!' });
+    res.json({ message: 'Session ended successfully!', sessionId, sessionPlanId: sessionPlan.id });
   } catch (error) {
     await transaction.rollback();
     console.error('Error ending session:', error);
-    res.status(500).json({ error: error.message || 'Failed to end the session.' });
+    res.status(500).json({ error: 'Failed to end the session.' });
   }
 });
 
