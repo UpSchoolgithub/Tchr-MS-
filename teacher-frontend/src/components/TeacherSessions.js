@@ -217,23 +217,23 @@ const TeacherSessions = () => {
           </div>
         </td>
         <td>
-  {session.status === 'completed' ? (
-    <>
-      <p><strong>Start:</strong> {session.startTime ? new Date(session.startTime).toLocaleTimeString() : 'Not Started'}</p>
-<p><strong>End:</strong> {session.endTime ? new Date(session.endTime).toLocaleTimeString() : 'Not Ended'}</p>
-    </>
-  ) : isToday(selectedDate) ? (
-    <button
-      onClick={() => handleStartSession(session)}
-      style={{ backgroundColor: '#dc3545', color: 'white' }}
-      disabled={!!session.startTime} // Disable if startTime exists
-    >
-      {session.startTime ? 'In Progress' : 'Start Session'}
-    </button>
-  ) : (
-    <span>Pending</span>
-  )}
+    {session.status === 'completed' ? (
+        <>
+            <p>Start: {new Date(session.startTime).toLocaleTimeString()}</p>
+            <p>End: {new Date(session.endTime).toLocaleTimeString()}</p>
+        </>
+    ) : session.status === 'pending' || session.status === 'in-progress' ? (
+        <button
+            onClick={() => handleStartSession(session)}
+            style={{ backgroundColor: '#dc3545', color: 'white' }}
+        >
+            Start Session
+        </button>
+    ) : (
+        <span title="Session not available to start">-</span>
+    )}
 </td>
+
 
 <td>{getSessionStatus(session)}</td>
 
