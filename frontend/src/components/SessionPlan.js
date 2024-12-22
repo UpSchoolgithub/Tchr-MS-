@@ -59,42 +59,42 @@ const SessionPlans = () => {
 // Function to handle opening the modal
 const handleOpenARModal = async (type) => {
   setShowARModal(true);
-  setARType(type); // Track whether it's pre-learning or post-learning
+  setARType(type);
 
-  if (type === "post-learning") {
+  if (type === 'post-learning') {
     try {
-      // Fetch existing topics and concepts for the session
       const response = await axios.get(`/api/sessions/${sessionId}/existingTopics`);
       setExistingTopics(response.data || []);
+      setError('');
     } catch (error) {
-      console.error("Error fetching existing topics:", error);
-      setError("Failed to fetch existing topics for post-learning.");
+      console.error('Error fetching existing topics:', error);
+      setError('Failed to fetch existing topics for post-learning.');
     }
   }
 };
 
+
 // Save Action and Recommendation
 const handleSaveAR = async (topicId, conceptIds) => {
+  const payload = {
+    type: arType,
+    topicName: arTopicName, // Only for pre-learning
+    conceptDetails: arConcepts, // Only for pre-learning
+    topicId, // Only for post-learning
+    conceptIds, // Only for post-learning
+  };
+
   try {
-    const payload = {
-      type: arType, // pre-learning or post-learning
-      topicId,
-      conceptIds,
-    };
-
-    const response = await axios.post(
-      `/api/sessions/${sessionId}/actionsAndRecommendations`,
-      payload
-    );
-
-    setSuccessMessage("Action/Recommendation added successfully!");
+    await axios.post(`/api/sessions/${sessionId}/actionsAndRecommendations`, payload);
+    setSuccessMessage('Action/Recommendation added successfully!');
     setShowARModal(false);
     fetchSessionPlans(); // Refresh session plans
   } catch (error) {
-    console.error("Error saving action/recommendation:", error);
-    setError("Failed to save action/recommendation.");
+    console.error('Error saving action/recommendation:', error);
+    setError('Failed to save action/recommendation.');
   }
 };
+
 
 
 
@@ -122,12 +122,12 @@ const handleGenerateARLessonPlan = async (arId) => {
 <Modal show={showARModal} onHide={() => setShowARModal(false)}>
   <Modal.Header closeButton>
     <Modal.Title>
-      {arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}
+      {arType === 'pre-learning' ? 'Add Pre-learning' : 'Add Post-learning'}
     </Modal.Title>
   </Modal.Header>
   <Modal.Body>
     <Form>
-      {arType === "pre-learning" && (
+      {arType === 'pre-learning' && (
         <>
           <Form.Group>
             <Form.Label>Topic Name</Form.Label>
@@ -139,7 +139,7 @@ const handleGenerateARLessonPlan = async (arId) => {
             />
           </Form.Group>
           <Form.Group>
-            <Form.Label>Concept Name</Form.Label>
+            <Form.Label>Concept Name 1</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter concept name"
@@ -147,13 +147,20 @@ const handleGenerateARLessonPlan = async (arId) => {
               onChange={(e) => setARConceptName(e.target.value)}
             />
           </Form.Group>
+          <Button
+            onClick={() =>
+              setARConcepts((prev) => [...prev, { name: '', detailing: '' }])
+            }
+          >
+            Add More Concepts
+          </Button>
         </>
       )}
 
-      {arType === "post-learning" && (
+      {arType === 'post-learning' && (
         <>
           <Form.Group>
-            <Form.Label>Select Topic</Form.Label>
+            <Form.Label>Topic Name</Form.Label>
             <Form.Control
               as="select"
               value={selectedTopic}
@@ -168,7 +175,7 @@ const handleGenerateARLessonPlan = async (arId) => {
             </Form.Control>
           </Form.Group>
           <Form.Group>
-            <Form.Label>Select Concepts</Form.Label>
+            <Form.Label>Concepts</Form.Label>
             {existingTopics
               .find((topic) => topic.id === selectedTopic)
               ?.concepts.map((concept) => (
@@ -205,6 +212,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </Button>
   </Modal.Footer>
 </Modal>
+
 
 
 // A & R ends

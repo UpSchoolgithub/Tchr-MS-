@@ -51,10 +51,11 @@ router.get('/sessions/:sessionId/existingTopics', async (req, res) => {
 
     res.json(topicsWithConcepts);
   } catch (error) {
-    console.error("Error fetching topics and concepts:", error);
-    res.status(500).json({ message: "Failed to fetch topics and concepts." });
+    console.error('Error fetching topics and concepts:', error);
+    res.status(500).json({ message: 'Failed to fetch topics and concepts.' });
   }
 });
+
 
 //Create Actions And Recommendations
 router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
