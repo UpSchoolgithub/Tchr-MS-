@@ -3,7 +3,7 @@ const router = express.Router();
 const { TimetableEntry, Session, Teacher, School, ClassInfo, Section, Subject, Attendance, Student, SessionPlan } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db'); // Adjust the path based on your folder structure
-const { concept } = require('../models'); // Adjust the path if needed
+const Concept = require('../models/concept');
 
 // Get sessions for a specific teacher
 // Get sessions for a specific teacher
