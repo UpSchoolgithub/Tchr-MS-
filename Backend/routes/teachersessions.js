@@ -13,7 +13,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
     // Fetch sessions indirectly linked to the teacher via timetable entries
     const sessions = await Session.findAll({
       where: {
-        endTime: null, // Only fetch sessions that are not completed
+        endTime: null, // Fetch only uncompleted sessions
       },
       include: [
         {
@@ -31,7 +31,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
                         {
                           model: Teacher,
                           where: { id: teacherId }, // Filter by teacherId
-                          attributes: [] // Exclude teacher attributes from response
+                          attributes: []
                         }
                       ],
                     }
@@ -44,17 +44,18 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         {
           model: SessionPlan,
           as: 'SessionPlan',
+          include: [
+            {
+              model: Concept, // Assuming a Concept model is linked to SessionPlan
+              attributes: ['conceptName', 'completed'] // Include concept completion status
+            }
+          ],
           attributes: ['id', 'sessionNumber', 'planDetails']
         }
       ],
-      attributes: [
-        'id',          // Ensure session.id is included
-        'chapterName', // Include chapter name
-        'priorityNumber', // Include priority
-        'startTime',   // Include start time
-        'endTime'      // Include end time
-      ]
+      attributes: ['id', 'chapterName', 'priorityNumber', 'startTime', 'endTime']
     });
+    
 
     // Format response with session details
     const formattedSessions = sessions.map((session) => {
@@ -62,10 +63,16 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       const section = subject.Section || {};
       const classInfo = section.ClassInfo || {};
       const school = classInfo.School || {};
-
+    
+      // Extract concepts and their completion status
+      const concepts = session.SessionPlan?.Concepts.map((concept) => ({
+        name: concept.conceptName,
+        completed: concept.completed,
+      })) || [];
+    
       return {
         id: session.id,
-        sessionId: session.id, // Map session.id to sessionId
+        sessionId: session.id,
         schoolName: school.name || 'N/A',
         className: classInfo.className || 'N/A',
         sectionName: section.sectionName || 'N/A',
@@ -74,13 +81,14 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         priorityNumber: session.priorityNumber,
         startTime: session.startTime,
         endTime: session.endTime,
-        sessionPlanId: session.SessionPlan?.id || 'N/A', // Add sessionPlanId
-        sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
-        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : []
+        sessionPlanId: session.SessionPlan?.id || 'N/A',
+        sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
+        concepts: concepts // Add concepts and their completion status
       };
     });
-
+    
     res.json(formattedSessions);
+    
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
