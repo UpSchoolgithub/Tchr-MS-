@@ -243,13 +243,13 @@ const TeacherSessions = () => {
             Start:{" "}
             {session.startTime
               ? new Date(session.startTime).toLocaleTimeString()
-              : "Invalid Date"}
+              : "N/A"}
           </p>
           <p>
             End:{" "}
             {session.endTime
               ? new Date(session.endTime).toLocaleTimeString()
-              : "Invalid Date"}
+              : "N/A"}
           </p>
         </>
       );
@@ -267,6 +267,7 @@ const TeacherSessions = () => {
     }
   })()}
 </td>
+
 
 
 
