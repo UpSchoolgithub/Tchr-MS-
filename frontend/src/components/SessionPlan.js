@@ -752,68 +752,75 @@ const handleGenerateARLessonPlan = async (arId) => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
-              sessionPlans.map((plan) => (
-                <React.Fragment key={plan.id}>
-                  {/* Download Button for Each Session */}
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: "left" }}>
-                      <strong>Session {plan.sessionNumber}</strong>
-                      <button
-                        onClick={() => handleDownloadSession(plan.sessionNumber)}
-                        className="btn btn-primary"
-                      >
-                        Download Session {plan.sessionNumber} Plan
-                      </button>
-                    </td>
-                  </tr>
-  
-                  {/* Topics and Concepts in the Session */}
-                  {(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex) =>
-                    topic.concepts.map((concept, cIndex) => (
-                      <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
-                        {/* Render Session Number */}
-                        {tIndex === 0 && cIndex === 0 && (
-                          <td
-                            rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
-                              (acc, t) => acc + t.concepts.length,
-                              0
-                            )}
-                          >
-                            {plan.sessionNumber}
-                          </td>
-                        )}
-  
-                        {/* Render Topic Name */}
-                        {cIndex === 0 && (
-                          <td rowSpan={topic.concepts.length}>
-                            {topic.name || "No Topic Name"}
-                          </td>
-                        )}
-  
-                        {/* Render Concept */}
-                        <td>{concept.name || "No Concept"}</td>
-  
-                        {/* Render Concept Detailing */}
-                        <td>{concept.detailing || "No Detailing"}</td>
-  
-                        {/* Lesson Plan View Button */}
-                        <td>
-                          <button onClick={() => handleViewLessonPlan(concept.id)}>
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </React.Fragment>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5">No session plans available. Please upload or create a new one.</td>
+  {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+    sessionPlans.map((plan) => (
+      <React.Fragment key={plan.id}>
+        {/* Download Button for Each Session */}
+        <tr>
+          <td colSpan="5" style={{ textAlign: "left" }}>
+            <strong>Session {plan.sessionNumber}</strong>
+            <button
+              onClick={() => handleDownloadSession(plan.sessionNumber)}
+              className="btn btn-primary"
+            >
+              Download Session {plan.sessionNumber} Plan
+            </button>
+          </td>
+        </tr>
+
+        {/* Topics and Concepts in the Session */}
+        {(topicsWithConcepts[plan.sessionNumber] || []).length > 0 ? (
+          topicsWithConcepts[plan.sessionNumber].map((topic, tIndex) =>
+            (topic.concepts || []).map((concept, cIndex) => (
+              <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+                {/* Render Session Number */}
+                {tIndex === 0 && cIndex === 0 && (
+                  <td
+                    rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
+                      (acc, t) => acc + (t.concepts || []).length,
+                      0
+                    )}
+                  >
+                    {plan.sessionNumber}
+                  </td>
+                )}
+
+                {/* Render Topic Name */}
+                {cIndex === 0 && (
+                  <td rowSpan={topic.concepts.length}>
+                    {topic.name || "No Topic Name"}
+                  </td>
+                )}
+
+                {/* Render Concept */}
+                <td>{concept.name || "No Concept"}</td>
+
+                {/* Render Concept Detailing */}
+                <td>{concept.detailing || "No Detailing"}</td>
+
+                {/* Lesson Plan View Button */}
+                <td>
+                  <button onClick={() => handleViewLessonPlan(concept.id)}>
+                    View
+                  </button>
+                </td>
               </tr>
-            )}
-          </tbody>
+            ))
+          )
+        ) : (
+          <tr>
+            <td colSpan="5">No topics or concepts available for this session.</td>
+          </tr>
+        )}
+      </React.Fragment>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="5">No session plans available. Please upload or create a new one.</td>
+    </tr>
+  )}
+</tbody>
+
         </table>
       </div>
   
@@ -830,21 +837,22 @@ const handleGenerateARLessonPlan = async (arId) => {
             </tr>
           </thead>
           <tbody>
-            {sessionPlans.flatMap((plan) =>
-              plan.ActionsAndRecommendations.map((ar) => (
-                <tr key={ar.id}>
-                  <td>{ar.type}</td>
-                  <td>{ar.topicName}</td>
-                  <td>{ar.conceptName}</td>
-                  <td>
-                    <button onClick={() => handleGenerateARLessonPlan(ar.id)}>
-                      Generate Lesson Plan
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
+  {sessionPlans.flatMap((plan) =>
+    (plan.ActionsAndRecommendations || []).map((ar) => (
+      <tr key={ar.id}>
+        <td>{ar.type || "N/A"}</td>
+        <td>{ar.topicName || "No Topic Name"}</td>
+        <td>{ar.conceptName || "No Concept Name"}</td>
+        <td>
+          <button onClick={() => handleGenerateARLessonPlan(ar.id)}>
+            Generate Lesson Plan
+          </button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
         </table>
       </div>
   
