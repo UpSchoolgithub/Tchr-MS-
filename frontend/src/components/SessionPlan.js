@@ -123,86 +123,92 @@ const handleGenerateARLessonPlan = async (arId) => {
 
 // Modal for Adding A and R Topics
 <Modal show={showARModal} onHide={() => setShowARModal(false)}>
-  <Modal.Header closeButton>
-    <Modal.Title>
-      {arType === 'pre-learning' ? 'Add Pre-learning' : 'Add Post-learning'}
-    </Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    <Form>
-      {arType === 'pre-learning' && (
-        <>
-          <Form.Group>
-            <Form.Label>Topic Name</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter topic name"
-              value={arTopicName}
-              onChange={(e) => setARTopicName(e.target.value)}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Concept Name</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter concept name"
-              value={arConceptName}
-              onChange={(e) => setARConceptName(e.target.value)}
-            />
-          </Form.Group>
-          <Button
-            onClick={() =>
-              setARConcepts((prev) => [...prev, { name: '', detailing: '' }])
-            }
+<Modal.Header closeButton>
+  <Modal.Title>
+    {arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}
+  </Modal.Title>
+</Modal.Header>
+<Modal.Body>
+  <Form>
+    {arType === "pre-learning" && (
+      <>
+        <Form.Group>
+          <Form.Label>Topic Name</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter topic name"
+            value={arTopicName}
+            onChange={(e) => setARTopicName(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Concept Name</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter concept name"
+            value={arConceptName}
+            onChange={(e) => setARConceptName(e.target.value)}
+          />
+        </Form.Group>
+      </>
+    )}
+    {arType === "post-learning" && (
+      <>
+        <Form.Group>
+          <Form.Label>Topic Name</Form.Label>
+          <Form.Control
+            as="select"
+            value={selectedTopic}
+            onChange={(e) => setSelectedTopic(e.target.value)}
           >
-            Add More Concepts
-          </Button>
-        </>
-      )}
+            <option value="">Select a topic</option>
+            {existingTopics.map((topic) => (
+              <option key={topic.id} value={topic.id}>
+                {topic.name}
+              </option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Concepts</Form.Label>
+          {existingTopics
+            .find((topic) => topic.id === selectedTopic)
+            ?.concepts.map((concept) => (
+              <Form.Check
+                key={concept.id}
+                type="checkbox"
+                label={concept.name}
+                value={concept.id}
+                checked={selectedConcepts.includes(concept.id)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedConcepts((prev) =>
+                    prev.includes(value)
+                      ? prev.filter((id) => id !== value)
+                      : [...prev, value]
+                  );
+                }}
+              />
+            ))}
+        </Form.Group>
+      </>
+    )}
+  </Form>
+</Modal.Body>
+  <Button variant="secondary" onClick={() => setShowARModal(false)}>
+    Close
+  </Button>
+  <Button
+    variant="primary"
+    onClick={() =>
+      arType === "pre-learning"
+        ? handleSaveAR(null, [])
+        : handleSaveAR(selectedTopic, selectedConcepts)
+    }
+  >
+    Save
+  </Button>
 
-      {arType === 'post-learning' && (
-        <>
-          <Form.Group>
-            <Form.Label>Topic Name</Form.Label>
-            <Form.Control
-              as="select"
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-            >
-              <option value="">Select a topic</option>
-              {existingTopics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.name}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Concepts</Form.Label>
-            {existingTopics
-              .find((topic) => topic.id === selectedTopic)
-              ?.concepts.map((concept) => (
-                <Form.Check
-                  key={concept.id}
-                  type="checkbox"
-                  label={concept.name}
-                  value={concept.id}
-                  checked={selectedConcepts.includes(concept.id)}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedConcepts((prev) =>
-                      prev.includes(value)
-                        ? prev.filter((id) => id !== value)
-                        : [...prev, value]
-                    );
-                  }}
-                />
-              ))}
-          </Form.Group>
-        </>
-      )}
-    </Form>
-  </Modal.Body>
   <Modal.Footer>
     <Button variant="secondary" onClick={() => setShowARModal(false)}>
       Close
@@ -742,14 +748,14 @@ const handleGenerateARLessonPlan = async (arId) => {
       <h2 className="header">Session Plans</h2>
   
       {/* Actions and Recommendations Controls */}
-      <div className="ar-controls">
-        <Button onClick={() => handleOpenARModal("pre-learning")} className="btn btn-primary">
-          Add Pre-learning
-        </Button>
-        <Button onClick={() => handleOpenARModal("post-learning")} className="btn btn-primary">
-          Add Post-learning
-        </Button>
-      </div>
+    <div className="ar-controls">
+      <Button onClick={() => handleOpenARModal("pre-learning")} className="btn btn-primary">
+        Add Pre-learning
+      </Button>
+      <Button onClick={() => handleOpenARModal("post-learning")} className="btn btn-primary">
+        Add Post-learning
+      </Button>
+    </div>
   
       {/* Info Banner */}
       <div className="info-banner">
