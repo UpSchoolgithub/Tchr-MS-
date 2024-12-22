@@ -187,6 +187,7 @@ const TeacherSessions = () => {
         <th>School</th>
         <th>Class</th>
         <th>Section</th>
+        <th>Section ID</th>
         <th>Day</th>
         <th>Period</th>
         <th>Subject</th>
