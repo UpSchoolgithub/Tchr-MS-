@@ -130,10 +130,11 @@ const TeacherSessions = () => {
   };
   
   const getSessionStatus = (session) => {
-    if (session.status === 'completed') return 'Completed';
-    if (session.startTime && !session.endTime) return 'In Progress';
-    return 'Pending';
+    if (session.startTime && session.endTime) return 'completed';
+    if (session.startTime && !session.endTime) return 'in-progress';
+    return 'pending';
   };
+  
   
   
   
@@ -208,41 +209,50 @@ const TeacherSessions = () => {
         <td>{session.period}</td>
         <td>{session.subjectName}</td>
         <td>
-    <div className="progress" style={{ width: '100%', height: '20px' }}>
-        <div
-            className="progress-bar"
-            role="progressbar"
-            style={{
-                width: `${progressPercentage}%`,
-                backgroundColor: progressPercentage === 100 ? '#28a745' : '#007bff'
-            }}
-            aria-valuenow={progressPercentage}
-            aria-valuemin="0"
-            aria-valuemax="100"
-        >
-            {`${Math.round(progressPercentage)}%`}
-        </div>
+  <div className="progress" style={{ width: '100%', height: '20px' }}>
+    <div
+      className="progress-bar"
+      role="progressbar"
+      style={{
+        width: `${progressPercentage}%`,
+        backgroundColor: progressPercentage === 100 ? '#28a745' : '#007bff',
+      }}
+      aria-valuenow={progressPercentage}
+      aria-valuemin="0"
+      aria-valuemax="100"
+    >
+      {`${Math.round(progressPercentage)}%`}
     </div>
-    <p>{session.completedTopics}/{session.totalTopics} topics completed</p>
+  </div>
+  <p>{session.completedTopics}/{session.totalTopics} topics completed</p>
 </td>
 
-        <td>
-    {session.status === 'completed' ? (
+
+<td>
+  {(() => {
+    const status = getSessionStatus(session);
+    if (status === 'completed') {
+      return (
         <>
-            <p>Start: {session.startTime ? new Date(session.startTime).toLocaleTimeString() : '-'}</p>
-            <p>End: {session.endTime ? new Date(session.endTime).toLocaleTimeString() : '-'}</p>
+          <p>Start: {new Date(session.startTime).toLocaleTimeString()}</p>
+          <p>End: {new Date(session.endTime).toLocaleTimeString()}</p>
         </>
-    ) : session.status === 'pending' || session.status === 'in-progress' ? (
+      );
+    } else if (status === 'in-progress') {
+      return <span>In Progress</span>;
+    } else {
+      return (
         <button
-            onClick={() => handleStartSession(session)}
-            style={{ backgroundColor: '#dc3545', color: 'white' }}
+          onClick={() => handleStartSession(session)}
+          style={{ backgroundColor: '#dc3545', color: 'white' }}
         >
-            Start Session
+          Start Session
         </button>
-    ) : (
-        <span title="Session not available to start">-</span>
-    )}
+      );
+    }
+  })()}
 </td>
+
 
 
 
