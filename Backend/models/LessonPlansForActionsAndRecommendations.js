@@ -1,18 +1,13 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class ActionsAndRecommendations extends Model {
-  static associate(models) {
-    this.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
-    this.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
-    this.belongsTo(models.Chapter, { foreignKey: 'chapterId', as: 'Chapter' });
-    this.belongsTo(models.Unit, { foreignKey: 'unitId', as: 'Unit' });
-    this.hasOne(models.LessonPlansForActionsAndRecommendations, {
+LessonPlansForActionsAndRecommendations.associate = (models) => {
+    this.belongsTo(models.ActionsAndRecommendations, {
       foreignKey: 'actionsAndRecommendationsId',
-      as: 'LessonPlan',
+      as: 'ActionsAndRecommendations',
     });
-  }
-}
+  };
+  
 
 ActionsAndRecommendations.init(
   {
