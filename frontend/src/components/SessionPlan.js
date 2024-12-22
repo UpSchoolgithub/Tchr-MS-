@@ -58,12 +58,14 @@ const SessionPlans = () => {
 // A & R starts
 // Function to handle opening the modal
 const handleOpenARModal = async (type) => {
+  console.log('Opening Modal:', type);
   setShowARModal(true);
   setARType(type);
 
   if (type === 'post-learning') {
     try {
       const response = await axios.get(`/api/sessions/${sessionId}/existingTopics`);
+      console.log('Fetched Topics:', response.data);
       setExistingTopics(response.data || []);
       setError('');
     } catch (error) {
@@ -72,6 +74,7 @@ const handleOpenARModal = async (type) => {
     }
   }
 };
+
 
 
 // Save Action and Recommendation
@@ -139,7 +142,7 @@ const handleGenerateARLessonPlan = async (arId) => {
             />
           </Form.Group>
           <Form.Group>
-            <Form.Label>Concept Name 1</Form.Label>
+            <Form.Label>Concept Name</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter concept name"
@@ -212,6 +215,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </Button>
   </Modal.Footer>
 </Modal>
+
 
 
 
