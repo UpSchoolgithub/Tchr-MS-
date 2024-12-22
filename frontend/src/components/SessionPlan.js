@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
-import { Modal, Button } from "react-bootstrap";
+import { Modal as BootstrapModal, Button, Form } from "react-bootstrap";
 import "../styles.css";
 import { jsPDF } from "jspdf";
-import { Modal, Button, Form } from "react-bootstrap";
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
