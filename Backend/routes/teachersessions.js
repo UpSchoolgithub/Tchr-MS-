@@ -709,19 +709,22 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     const session = await Session.findByPk(sessionId, {
       include: [{ model: SessionPlan, as: 'SessionPlan' }],
     });
-    
+
     if (!session) {
       console.error(`Session not found for ID: ${sessionId}`);
       return res.status(404).json({ error: `Session not found for ID: ${sessionId}` });
     }
-    
-    if (!session.SessionPlan) {
+
+    const sessionPlan = session.SessionPlan;
+    if (!sessionPlan) {
       console.error(`SessionPlan not found for Session ID: ${sessionId}`);
       return res.status(404).json({ error: `SessionPlan not found for Session ID: ${sessionId}` });
     }
-    
 
-    console.log('Session and SessionPlan fetched:', { sessionId, sessionPlanId: sessionPlan.id });
+    console.log('Session and SessionPlan fetched:', {
+      sessionId: session.id,
+      sessionPlanId: sessionPlan.id,
+    });
 
     // Update completed concepts
     for (const concept of completedConcepts) {
@@ -758,6 +761,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
     res.status(500).json({ error: error.message || 'Failed to end the session.' });
   }
 });
+
 
 
 
