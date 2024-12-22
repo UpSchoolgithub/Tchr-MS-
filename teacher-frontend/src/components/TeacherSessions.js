@@ -134,7 +134,7 @@ const TeacherSessions = () => {
   };
   
   const getSessionStatus = (session) => {
-    if (session.startTime && session.endTime) return 'completed';
+    if (session.endTime) return 'completed';
     if (session.startTime && !session.endTime) return 'in-progress';
     return 'pending';
   };
