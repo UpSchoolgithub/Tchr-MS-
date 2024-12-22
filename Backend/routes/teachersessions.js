@@ -126,6 +126,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       return res.status(404).json({ error: 'Session not found.' });
     }
 
+    // Update or fetch the session start and end times
+    if (!session.startTime) {
+      session.startTime = new Date(); // Set the start time if not already set
+      await session.save();
+    }
+
+    // Calculate academic day
     const academicStartDate = new Date(session.Subject.academicStartDate);
     const currentDate = new Date();
     const academicDay = Math.floor((currentDate - academicStartDate) / (1000 * 60 * 60 * 24)) + 1;
@@ -138,6 +145,8 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
         sessionNumber: session.SessionPlan.sessionNumber,
         topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
         academicDay,
+        startTime: session.startTime, // Include start time
+        endTime: session.endTime || null, // Include end time if it exists
       },
     });
   } catch (error) {
@@ -752,9 +761,21 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     console.log('Concept updates completed.');
 
+    // Set the end time for the session
+    session.endTime = new Date(); // Set the current time as the end time
+    await session.save({ transaction }); // Save the updated session
+
     // Commit transaction
     await transaction.commit();
-    res.json({ message: 'Session ended successfully!' });
+
+    res.json({
+      message: 'Session ended successfully!',
+      sessionDetails: {
+        id: session.id,
+        startTime: session.startTime || 'N/A', // Include the session start time
+        endTime: session.endTime, // Include the session end time
+      },
+    });
   } catch (error) {
     await transaction.rollback();
     console.error('Error ending session:', error);
