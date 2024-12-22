@@ -143,6 +143,7 @@ const TeacherSessions = () => {
   
   
   
+  
   const isToday = (date) => date.toDateString() === new Date().toDateString();
 
   if (loading) return <p>Loading...</p>;
@@ -239,18 +240,8 @@ const TeacherSessions = () => {
     if (status === 'completed') {
       return (
         <>
-          <p>
-            Start:{" "}
-            {session.startTime
-              ? new Date(session.startTime).toLocaleTimeString()
-              : "N/A"}
-          </p>
-          <p>
-            End:{" "}
-            {session.endTime
-              ? new Date(session.endTime).toLocaleTimeString()
-              : "N/A"}
-          </p>
+          <p>Start: {session.startTime ? new Date(session.startTime).toLocaleTimeString() : 'Not Started'}</p>
+          <p>End: {session.endTime ? new Date(session.endTime).toLocaleTimeString() : 'Not Ended'}</p>
         </>
       );
     } else if (status === 'in-progress') {
@@ -273,7 +264,18 @@ const TeacherSessions = () => {
 
 
 
-<td>{getSessionStatus(session)}</td>
+
+<td>
+  {(() => {
+    const status = getSessionStatus(session);
+    if (status === 'completed') {
+      return 'Completed';
+    } else if (status === 'in-progress') {
+      return 'In Progress';
+    }
+    return 'Pending';
+  })()}
+</td>
 
 
 
