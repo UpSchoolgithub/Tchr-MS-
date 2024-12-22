@@ -78,25 +78,27 @@ const handleOpenARModal = async (type) => {
 
 
 // Save Action and Recommendation
-const handleSaveAR = async (topicId, conceptIds) => {
+const handleSaveAR = async (topicId, conceptData) => {
   const payload = {
     type: arType,
     topicName: arTopicName, // Only for pre-learning
-    conceptDetails: arConcepts, // Only for pre-learning
+    conceptDetails: conceptData, // Only for pre-learning
     topicId, // Only for post-learning
-    conceptIds, // Only for post-learning
+    conceptIds: conceptData, // Only for post-learning
   };
 
   try {
     await axios.post(`/api/sessions/${sessionId}/actionsAndRecommendations`, payload);
-    setSuccessMessage('Action/Recommendation added successfully!');
+    setSuccessMessage("Action/Recommendation added successfully!");
     setShowARModal(false);
     fetchSessionPlans(); // Refresh session plans
+    setARConcepts([]); // Reset concepts array
   } catch (error) {
-    console.error('Error saving action/recommendation:', error);
-    setError('Failed to save action/recommendation.');
+    console.error("Error saving action/recommendation:", error);
+    setError("Failed to save action/recommendation.");
   }
 };
+
 
 
 
@@ -122,105 +124,121 @@ const handleGenerateARLessonPlan = async (arId) => {
 };
 
 // Modal for Adding A and R Topics
+{/* A and R Modal */}
 <Modal show={showARModal} onHide={() => setShowARModal(false)}>
-<Modal.Header closeButton>
-  <Modal.Title>
-    {arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}
-  </Modal.Title>
-</Modal.Header>
-<Modal.Body>
-  <Form>
-    {arType === "pre-learning" && (
-      <>
-        <Form.Group>
-          <Form.Label>Topic Name</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter topic name"
-            value={arTopicName}
-            onChange={(e) => setARTopicName(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Concept Name</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter concept name"
-            value={arConceptName}
-            onChange={(e) => setARConceptName(e.target.value)}
-          />
-        </Form.Group>
-      </>
-    )}
-    {arType === "post-learning" && (
-      <>
-        <Form.Group>
-          <Form.Label>Topic Name</Form.Label>
-          <Form.Control
-            as="select"
-            value={selectedTopic}
-            onChange={(e) => setSelectedTopic(e.target.value)}
+  <Modal.Header closeButton>
+    <Modal.Title>{arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form>
+      {arType === "pre-learning" && (
+        <>
+          <Form.Group>
+            <Form.Label>Topic Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter topic name"
+              value={arTopicName}
+              onChange={(e) => setARTopicName(e.target.value)}
+            />
+          </Form.Group>
+          {arConcepts.map((concept, index) => (
+            <div key={index} className="concept-row">
+              <Form.Group>
+                <Form.Label>Concept Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder={`Enter concept ${index + 1}`}
+                  value={concept.name}
+                  onChange={(e) => {
+                    const updatedConcepts = [...arConcepts];
+                    updatedConcepts[index].name = e.target.value;
+                    setARConcepts(updatedConcepts);
+                  }}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Concept Details</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder={`Enter details for concept ${index + 1}`}
+                  value={concept.detailing}
+                  onChange={(e) => {
+                    const updatedConcepts = [...arConcepts];
+                    updatedConcepts[index].detailing = e.target.value;
+                    setARConcepts(updatedConcepts);
+                  }}
+                />
+              </Form.Group>
+            </div>
+          ))}
+          <Button
+            onClick={() => setARConcepts([...arConcepts, { name: "", detailing: "" }])}
+            className="btn btn-secondary"
           >
-            <option value="">Select a topic</option>
-            {existingTopics.map((topic) => (
-              <option key={topic.id} value={topic.id}>
-                {topic.name}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Concepts</Form.Label>
-          {existingTopics
-            .find((topic) => topic.id === selectedTopic)
-            ?.concepts.map((concept) => (
-              <Form.Check
-                key={concept.id}
-                type="checkbox"
-                label={concept.name}
-                value={concept.id}
-                checked={selectedConcepts.includes(concept.id)}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSelectedConcepts((prev) =>
-                    prev.includes(value)
-                      ? prev.filter((id) => id !== value)
-                      : [...prev, value]
-                  );
-                }}
-              />
-            ))}
-        </Form.Group>
-      </>
-    )}
-  </Form>
-</Modal.Body>
-  <Button variant="secondary" onClick={() => setShowARModal(false)}>
-    Close
-  </Button>
-  <Button
-    variant="primary"
-    onClick={() =>
-      arType === "pre-learning"
-        ? handleSaveAR(null, [])
-        : handleSaveAR(selectedTopic, selectedConcepts)
-    }
-  >
-    Save
-  </Button>
-
+            Add More Concepts
+          </Button>
+        </>
+      )}
+      {arType === "post-learning" && (
+        <>
+          <Form.Group>
+            <Form.Label>Select Topic</Form.Label>
+            <Form.Control
+              as="select"
+              value={selectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+            >
+              <option value="">Choose a topic</option>
+              {existingTopics.map((topic) => (
+                <option key={topic.id} value={topic.id}>
+                  {topic.name}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Select Concepts</Form.Label>
+            {existingTopics
+              .find((topic) => topic.id === selectedTopic)
+              ?.concepts.map((concept) => (
+                <Form.Check
+                  key={concept.id}
+                  type="checkbox"
+                  label={concept.name}
+                  value={concept.id}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedConcepts((prev) =>
+                      prev.includes(value)
+                        ? prev.filter((id) => id !== value)
+                        : [...prev, value]
+                    );
+                  }}
+                />
+              ))}
+          </Form.Group>
+        </>
+      )}
+    </Form>
+  </Modal.Body>
   <Modal.Footer>
     <Button variant="secondary" onClick={() => setShowARModal(false)}>
       Close
     </Button>
     <Button
       variant="primary"
-      onClick={() => handleSaveAR(selectedTopic, selectedConcepts)}
+      onClick={() =>
+        arType === "pre-learning"
+          ? handleSaveAR(null, arConcepts)
+          : handleSaveAR(selectedTopic, selectedConcepts)
+      }
     >
       Save
     </Button>
   </Modal.Footer>
 </Modal>
+
 
 
 
