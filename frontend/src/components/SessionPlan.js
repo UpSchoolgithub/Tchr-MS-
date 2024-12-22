@@ -79,26 +79,35 @@ const handleOpenARModal = async (type) => {
 
 
 // Save Action and Recommendation
-const handleSaveAR = async (topicId, conceptData) => {
+const handleSaveAR = async (topicId, concepts) => {
   const payload = {
     type: arType,
-    topicName: arTopicName, // Only for pre-learning
-    conceptDetails: conceptData, // Only for pre-learning
-    topicId, // Only for post-learning
-    conceptIds: conceptData, // Only for post-learning
+    topicName: arTopicName, // For pre-learning
+    conceptDetails: concepts, // For pre-learning (multiple concepts)
+    topicId, // For post-learning
+    conceptIds: selectedConcepts, // For post-learning
   };
 
   try {
-    await axios.post(`/api/sessions/${sessionId}/actionsAndRecommendations`, payload);
+    const response = await axios.post(
+      `/api/sessions/${sessionId}/actionsAndRecommendations`,
+      payload
+    );
+
+    // Fetch updated session plans
+    fetchSessionPlans();
+
     setSuccessMessage("Action/Recommendation added successfully!");
     setShowARModal(false);
-    fetchSessionPlans(); // Refresh session plans
-    setARConcepts([]); // Reset concepts array
+    setARTopicName(""); // Reset topic name
+    setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
+    setError("");
   } catch (error) {
     console.error("Error saving action/recommendation:", error);
-    setError("Failed to save action/recommendation.");
+    setError("Failed to save action/recommendation. Please try again.");
   }
 };
+
 
 
 
@@ -128,12 +137,15 @@ const handleGenerateARLessonPlan = async (arId) => {
 {/* A and R Modal */}
 <Modal show={showARModal} onHide={() => setShowARModal(false)}>
   <Modal.Header closeButton>
-    <Modal.Title>{arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}</Modal.Title>
+    <Modal.Title>
+      {arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}
+    </Modal.Title>
   </Modal.Header>
   <Modal.Body>
     <Form>
       {arType === "pre-learning" && (
         <>
+          {/* Topic Name */}
           <Form.Group>
             <Form.Label>Topic Name</Form.Label>
             <Form.Control
@@ -143,13 +155,15 @@ const handleGenerateARLessonPlan = async (arId) => {
               onChange={(e) => setARTopicName(e.target.value)}
             />
           </Form.Group>
+
+          {/* Concepts */}
           {arConcepts.map((concept, index) => (
             <div key={index} className="concept-row">
               <Form.Group>
                 <Form.Label>Concept Name</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder={`Enter concept ${index + 1}`}
+                  placeholder={`Enter concept ${index + 1} name`}
                   value={concept.name}
                   onChange={(e) => {
                     const updatedConcepts = [...arConcepts];
@@ -171,16 +185,32 @@ const handleGenerateARLessonPlan = async (arId) => {
                   }}
                 />
               </Form.Group>
+
+              {/* Remove Concept Button */}
+              <Button
+                variant="danger"
+                onClick={() => {
+                  const updatedConcepts = arConcepts.filter((_, i) => i !== index);
+                  setARConcepts(updatedConcepts);
+                }}
+                className="btn-sm"
+              >
+                Remove Concept
+              </Button>
             </div>
           ))}
+
+          {/* Add More Concepts Button */}
           <Button
+            variant="secondary"
             onClick={() => setARConcepts([...arConcepts, { name: "", detailing: "" }])}
-            className="btn btn-secondary"
           >
-            Add More Concepts
+            + Add More Concepts
           </Button>
         </>
       )}
+
+      {/* For Post-learning */}
       {arType === "post-learning" && (
         <>
           <Form.Group>
@@ -231,14 +261,15 @@ const handleGenerateARLessonPlan = async (arId) => {
       variant="primary"
       onClick={() =>
         arType === "pre-learning"
-          ? handleSaveAR(null, arConcepts)
-          : handleSaveAR(selectedTopic, selectedConcepts)
+          ? handleSaveAR(null, arConcepts) // Save pre-learning with concepts
+          : handleSaveAR(selectedTopic, selectedConcepts) // Save post-learning with selected concepts
       }
     >
       Save
     </Button>
   </Modal.Footer>
 </Modal>
+
 
 
 

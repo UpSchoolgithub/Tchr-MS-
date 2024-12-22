@@ -17,45 +17,39 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 
 // Endpoint for Fetching Topics and Concepts
-router.get('/sessions/:sessionId/existingTopics', async (req, res) => {
-  const { sessionId } = req.params;
+app.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
+  const { type, topicName, conceptDetails, sessionNumber } = req.body;
 
   try {
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId },
-      include: [
-        {
-          model: Topic,
-          as: 'Topics',
-          include: [
-            {
-              model: Concept,
-              as: 'Concepts',
-              attributes: ['id', 'concept'],
-            },
-          ],
-        },
-      ],
-    });
+    // Create a new topic with a unique topic ID
+    const topicId = generateUniqueId();
 
-    const topicsWithConcepts = sessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => ({
-        id: topic.id,
-        name: topic.topicName,
-        concepts: topic.Concepts.map((concept) => ({
-          id: concept.id,
-          name: concept.concept,
-        })),
-      }))
-    );
+    const topic = {
+      sessionId: req.params.sessionId,
+      topicId,
+      type,
+      topicName,
+      sessionNumber,
+    };
 
-    res.json(topicsWithConcepts);
+    // Insert the topic
+    await db.insert("topics", topic);
+
+    // Insert multiple concepts associated with the topic
+    const concepts = conceptDetails.map((concept) => ({
+      topicId,
+      conceptName: concept.name,
+      conceptDetailing: concept.detailing,
+    }));
+
+    await db.insertMany("concepts", concepts);
+
+    res.status(201).send({ message: "Topic and concepts added successfully!" });
   } catch (error) {
-    console.error('Error fetching topics and concepts:', error);
-    res.status(500).json({ message: 'Failed to fetch topics and concepts.' });
+    console.error("Error saving action/recommendation:", error);
+    res.status(500).send({ error: "Failed to save topic and concepts." });
   }
 });
-
 
 
 //Create Actions And Recommendations
