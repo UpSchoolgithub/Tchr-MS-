@@ -22,10 +22,10 @@ Concept.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    completed: {
-      type: DataTypes.BOOLEAN,
+    status: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: false, // Default to false (not completed)
+      defaultValue: 'pending', // Default to 'pending'
     },
   },
   {

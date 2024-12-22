@@ -728,10 +728,11 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     // Update completed concepts
     for (const concept of completedConcepts) {
+      console.log('Fetching concept with name:', concept.name);
       const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
       if (!conceptInstance) {
-        console.error(`Concept not found:`, concept.name);
-        throw new Error(`Concept not found for name: ${concept.name}`);
+        console.error(`Concept not found: ${concept.name}`);
+        continue; // Skip this concept and move to the next
       }
 
       await conceptInstance.update({ status: 'completed' }, { transaction });
@@ -740,10 +741,11 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     // Update incomplete concepts
     for (const concept of incompleteConcepts) {
+      console.log('Fetching concept with name:', concept.name);
       const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
       if (!conceptInstance) {
-        console.error(`Concept not found:`, concept.name);
-        throw new Error(`Concept not found for name: ${concept.name}`);
+        console.error(`Concept not found: ${concept.name}`);
+        continue; // Skip this concept and move to the next
       }
 
       await conceptInstance.update({ status: 'pending' }, { transaction });
