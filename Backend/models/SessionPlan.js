@@ -29,12 +29,13 @@ SessionPlan.init(
     },
     endTime: {
       type: DataTypes.DATE,
-      allowNull: true, // Null when not ended
+      allowNull: true,
+      field: 'sessionEndTime', // Use the actual column name from the database
     },
     status: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 'in-progress', // Default to 'in-progress'
+      defaultValue: 'in-progress',
     },
   },
   {

@@ -13,7 +13,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
   try {
     // Fetch sessions indirectly linked to the teacher via timetable_entries
     const sessions = await Session.findAll({
-      attributes: ['id', 'sessionId', 'chapterName', 'priorityNumber', 'startTime', 'endTime'], // Include sessionId
+      attributes: ['id', 'chapterName', 'priorityNumber', 'startTime'], // Exclude 'endTime' from Session
       include: [
         {
           model: Subject,
@@ -36,18 +36,15 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
                     }
                   ],
                 }
-              ]
+              ],
             }
-          ]
+          ],
         },
-        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'sessionNumber', 'planDetails'] }
-      ],
-      attributes: [
-        'id',  // Ensure session.id is included
-        'chapterName',
-        'priorityNumber',
-        'startTime',
-        'endTime',
+        {
+          model: SessionPlan,
+          as: 'SessionPlan',
+          attributes: ['id', 'sessionNumber', 'planDetails', 'sessionEndTime'], // Include sessionEndTime
+        },
       ],
     });
     
