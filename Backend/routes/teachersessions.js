@@ -6,14 +6,15 @@ const sequelize = require('../config/db'); // Adjust the path based on your fold
 const Concept = require('../models/concept');
 
 // Get sessions for a specific teacher
-// Get sessions for a specific teacher
 router.get('/teachers/:teacherId/assignments', async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    // Fetch sessions indirectly linked to the teacher via timetable_entries
+    // Fetch sessions indirectly linked to the teacher via timetable entries
     const sessions = await Session.findAll({
-      attributes: ['id', 'sessionId', 'chapterName', 'priorityNumber', 'startTime', 'endTime'], // Include sessionId
+      where: {
+        endTime: null, // Only fetch sessions that are not completed
+      },
       include: [
         {
           model: Subject,
@@ -40,17 +41,20 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
             }
           ]
         },
-        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'sessionNumber', 'planDetails'] }
+        {
+          model: SessionPlan,
+          as: 'SessionPlan',
+          attributes: ['id', 'sessionNumber', 'planDetails']
+        }
       ],
       attributes: [
-        'id',  // Ensure session.id is included
-        'chapterName',
-        'priorityNumber',
-        'startTime',
-        'endTime',
-      ],
+        'id',          // Ensure session.id is included
+        'chapterName', // Include chapter name
+        'priorityNumber', // Include priority
+        'startTime',   // Include start time
+        'endTime'      // Include end time
+      ]
     });
-    
 
     // Format response with session details
     const formattedSessions = sessions.map((session) => {
@@ -61,7 +65,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
 
       return {
         id: session.id,
-        sessionId: session.id, // Correctly map session.id to sessionId
+        sessionId: session.id, // Map session.id to sessionId
         schoolName: school.name || 'N/A',
         className: classInfo.className || 'N/A',
         sectionName: section.sectionName || 'N/A',
@@ -70,9 +74,9 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         priorityNumber: session.priorityNumber,
         startTime: session.startTime,
         endTime: session.endTime,
-        sessionPlanId: session.SessionPlan?.id || 'N/A', // Add sessionPlanId here
+        sessionPlanId: session.SessionPlan?.id || 'N/A', // Add sessionPlanId
         sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
-        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [],
+        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : []
       };
     });
 
@@ -82,6 +86,8 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
+
+
 
 
 // Mark attendance for a session
