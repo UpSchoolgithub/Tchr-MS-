@@ -15,6 +15,173 @@ const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
+
+//Create Actions And Recommendations
+router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
+  const { sessionPlanId } = req.params;
+  const { type, topicName, conceptName, sessionId, chapterId, unitId, order } = req.body;
+
+  try {
+    if (!['pre-learning', 'post-learning'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid type. Must be "pre-learning" or "post-learning".' });
+    }
+
+    if (!topicName || !conceptName) {
+      return res.status(400).json({ message: 'Topic name and concept name are required.' });
+    }
+
+    const transaction = await sequelize.transaction();
+    try {
+      // Adjust session numbers for "pre-learning"
+      if (type === 'pre-learning') {
+        await SessionPlan.increment('sessionNumber', {
+          where: { id: sessionPlanId },
+          transaction,
+        });
+      }
+
+      // Insert the action or recommendation
+      const actionOrRecommendation = await ActionsAndRecommendations.create(
+        {
+          sessionPlanId,
+          sessionId,
+          chapterId,
+          unitId,
+          type,
+          topicName,
+          conceptName,
+          order,
+        },
+        { transaction }
+      );
+
+      await transaction.commit();
+      res.status(201).json({
+        message: `${type} topic added successfully`,
+        actionOrRecommendation,
+      });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error adding action or recommendation:', error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+
+// Generate Lesson Plan for A and R
+router.post(
+  '/sessionPlans/:sessionPlanId/actionsAndRecommendations/:id/generateLessonPlan',
+  async (req, res) => {
+    const { sessionPlanId, id } = req.params;
+
+    try {
+      // Fetch the action/recommendation details
+      const actionOrRecommendation = await ActionsAndRecommendations.findByPk(id);
+
+      if (!actionOrRecommendation) {
+        return res.status(404).json({ message: 'Action or recommendation not found.' });
+      }
+
+      const payload = {
+        board: req.body.board || 'Board Not Specified',
+        grade: req.body.grade || 'Grade Not Specified',
+        subject: req.body.subject || 'Subject Not Specified',
+        unit: req.body.unit || 'Unit Not Specified',
+        chapter: actionOrRecommendation.topicName,
+        sessionType: actionOrRecommendation.type,
+        duration: req.body.duration || 45,
+        topics: [
+          {
+            topic: actionOrRecommendation.topicName,
+            concepts: [actionOrRecommendation.conceptName],
+          },
+        ],
+      };
+
+      // Call the external API to generate the lesson plan
+      const response = await axios.post(
+        'https://dynamiclp.up.school/generate-lesson-plan',
+        payload
+      );
+
+      const generatedLessonPlan = response.data.lesson_plan || 'No Lesson Plan Generated';
+
+      // Save the generated lesson plan
+      await LessonPlansForActionsAndRecommendations.create({
+        actionsAndRecommendationsId: id,
+        generatedLessonPlan,
+      });
+
+      res.status(201).json({
+        message: 'Lesson plan generated successfully.',
+        lessonPlan: generatedLessonPlan,
+      });
+    } catch (error) {
+      console.error('Error generating lesson plan:', error.message);
+      res.status(500).json({ message: 'Failed to generate lesson plan.', error: error.message });
+    }
+  }
+);
+
+// Fetching All Actions and Recommendations
+router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
+  const { sessionPlanId } = req.params;
+
+  try {
+    const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
+      where: { sessionPlanId },
+      order: [['order', 'ASC']],
+    });
+
+    res.status(200).json({ actionsAndRecommendations });
+  } catch (error) {
+    console.error('Error fetching actions and recommendations:', error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// Fetch Generated Lesson Plan for A and R
+router.get('/actionsAndRecommendations/:id/lessonPlan', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const lessonPlan = await LessonPlansForActionsAndRecommendations.findOne({
+      where: { actionsAndRecommendationsId: id },
+    });
+
+    if (!lessonPlan) {
+      return res.status(404).json({ message: 'Lesson plan not found.' });
+    }
+
+    res.status(200).json({ lessonPlan: lessonPlan.generatedLessonPlan });
+  } catch (error) {
+    console.error('Error fetching lesson plan:', error.message);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+//Delete Action or Recommendation
+router.delete('/actionsAndRecommendations/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const actionOrRecommendation = await ActionsAndRecommendations.findByPk(id);
+
+    if (!actionOrRecommendation) {
+      return res.status(404).json({ message: 'Action or recommendation not found.' });
+    }
+
+    await actionOrRecommendation.destroy();
+
+    res.status(200).json({ message: 'Action or recommendation deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting action or recommendation:', error.message);
+    res.status(500).json({ message: 'Failed to delete action or recommendation.', error: error.message });
+  }
+});
+
 // Proportional Time Allocation
 const allocateDurations = (conceptDetails, totalDuration) => {
   const wordCounts = conceptDetails.map((detail) => (detail ? detail.split(" ").length : 1));

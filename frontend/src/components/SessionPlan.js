@@ -4,6 +4,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 import "../styles.css";
 import { jsPDF } from "jspdf";
+import { Modal, Button, Form } from "react-bootstrap";
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
@@ -20,7 +21,12 @@ const SessionPlans = () => {
   const [currentSessionPlanId, setCurrentSessionPlanId] = useState(null); // Store current session plan ID
   const [currentTopicIndex, setCurrentTopicIndex] = useState(null); // Store current topic index
   const [lessonPlanContent, setLessonPlanContent] = useState('');
-
+  const [showARModal, setShowARModal] = useState(false); // Modal for A and R
+  const [arType, setARType] = useState(""); // Type: pre-learning or post-learning
+  const [arTopicName, setARTopicName] = useState(""); // Topic Name
+  const [arConceptName, setARConceptName] = useState(""); // Concept Name
+  const [arOrder, setAROrder] = useState(1); // Order for post-learning
+  const [arSaving, setARSaving] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
 
   const {
@@ -47,7 +53,115 @@ const SessionPlans = () => {
     }
   }, [boardName, location]);
   
+// A & R starts
+// Function to handle opening the modal
+const handleOpenARModal = (type) => {
+  setARType(type);
+  setShowARModal(true);
+};
 
+// Function to handle saving A and R topics
+const handleSaveAR = async () => {
+  if (!arTopicName || !arConceptName) {
+    setError("Topic name and concept name are required.");
+    return;
+  }
+
+  const payload = {
+    type: arType,
+    topicName: arTopicName,
+    conceptName: arConceptName,
+    order: arType === "post-learning" ? arOrder : undefined,
+  };
+
+  try {
+    setARSaving(true);
+    const response = await axios.post(
+      `https://tms.up.school/api/sessionPlans/${sessionId}/actionsAndRecommendations`,
+      payload
+    );
+    setSuccessMessage(`Successfully added ${arType} topic.`);
+    setError("");
+    setShowARModal(false);
+    setARSaving(false);
+    // Refresh session plans
+    fetchSessionPlans();
+  } catch (error) {
+    console.error("Error saving A and R topic:", error);
+    setError("Failed to save A and R topic. Please try again.");
+    setARSaving(false);
+  }
+};
+
+// Function to generate lesson plan for A and R
+const handleGenerateARLessonPlan = async (arId) => {
+  try {
+    const response = await axios.post(
+      `https://tms.up.school/api/sessionPlans/${sessionId}/actionsAndRecommendations/${arId}/generateLessonPlan`,
+      {
+        board,
+        grade: className,
+        subject: subjectName,
+        unit: unitName,
+      }
+    );
+    setSuccessMessage("Lesson plan generated successfully!");
+    setError("");
+  } catch (error) {
+    console.error("Error generating lesson plan for A and R:", error);
+    setError("Failed to generate lesson plan for A and R.");
+  }
+};
+
+// Modal for Adding A and R Topics
+<Modal show={showARModal} onHide={() => setShowARModal(false)}>
+  <Modal.Header closeButton>
+    <Modal.Title>{arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form>
+      <Form.Group>
+        <Form.Label>Topic Name</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter topic name"
+          value={arTopicName}
+          onChange={(e) => setARTopicName(e.target.value)}
+        />
+      </Form.Group>
+      <Form.Group>
+        <Form.Label>Concept Name</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter concept name"
+          value={arConceptName}
+          onChange={(e) => setARConceptName(e.target.value)}
+        />
+      </Form.Group>
+      {arType === "post-learning" && (
+        <Form.Group>
+          <Form.Label>Order</Form.Label>
+          <Form.Control
+            type="number"
+            placeholder="Enter session number to place after"
+            value={arOrder}
+            onChange={(e) => setAROrder(e.target.value)}
+          />
+        </Form.Group>
+      )}
+    </Form>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowARModal(false)}>
+      Cancel
+    </Button>
+    <Button variant="primary" onClick={handleSaveAR} disabled={arSaving}>
+      {arSaving ? "Saving..." : "Save"}
+    </Button>
+  </Modal.Footer>
+</Modal>;
+
+// A & R ends
   // Fetch session plans
   useEffect(() => {
     const fetchSessionPlans = async () => {
@@ -566,35 +680,44 @@ const SessionPlans = () => {
   return (
     <div className="container">
       <h2 className="header">Session Plans</h2>
+  
+      {/* Actions and Recommendations Controls */}
+      <div className="ar-controls">
+        <Button onClick={() => handleOpenARModal("pre-learning")} className="btn btn-primary">
+          Add Pre-learning
+        </Button>
+        <Button onClick={() => handleOpenARModal("post-learning")} className="btn btn-primary">
+          Add Post-learning
+        </Button>
+      </div>
+  
+      {/* Info Banner */}
       <div className="info-banner">
         <p>
-          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong>{" "}
-          {schoolId}
+          <strong>School Name:</strong> {schoolName} | <strong>School ID:</strong> {schoolId}
         </p>
         <p>
-          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong>{" "}
-          {classId}
+          <strong>Class Name:</strong> {className} | <strong>Class ID:</strong> {classId}
         </p>
         <p>
-          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong>{" "}
-          {sectionId}
+          <strong>Section Name:</strong> {sectionName} | <strong>Section ID:</strong> {sectionId}
         </p>
         <p>
-          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong>{" "}
-          {subjectId}
+          <strong>Subject Name:</strong> {subjectName} | <strong>Subject ID:</strong> {subjectId}
         </p>
         <p>
           <strong>Board:</strong> {board}
         </p>
         <p>
-          <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong>{" "}
-          {unitName}
+          <strong>Chapter Name:</strong> {chapterName} | <strong>Unit Name:</strong> {unitName}
         </p>
       </div>
   
+      {/* Success and Error Messages */}
       {successMessage && <div className="success-message">{successMessage}</div>}
       {error && <div className="error-message">{error}</div>}
   
+      {/* File Upload Section */}
       <div className="top-controls">
         <form onSubmit={handleFileUpload} className="form-group">
           <label>Upload Session Plans via Excel:</label>
@@ -610,115 +733,138 @@ const SessionPlans = () => {
         </form>
       </div>
   
+      {/* Generate Lesson Plans Button */}
       <div className="generate-controls">
         <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
           {saving ? "Generating..." : "Generate All Lesson Plans"}
         </button>
       </div>
   
+      {/* Session Plans Table */}
       <div className="table-container">
-    
-
-
-      <table>
-  <thead>
-    <tr>
-      <th>Session Number</th>
-      <th>Topic Name</th>
-      <th>Concept</th>
-      <th>Concept Detailing</th>
-      <th>Lesson Plan</th>
-    </tr>
-  </thead>
-  <tbody>
-  {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
-    sessionPlans.map((plan) => (
-      <React.Fragment key={plan.id}>
-        {/* Download Button Row for the Session */}
-        <tr>
-  <td colSpan="5" style={{ textAlign: "left" }}>
-    <strong>Session {plan.sessionNumber}</strong>
-    <button
-  onClick={() => handleDownloadSession(plan.sessionNumber)}
-  className="btn btn-primary"
->
-  Download Session {plan.sessionNumber} Plan
-</button>
-
-  </td>
-</tr>
-
-
-
-        {/* Topics and Concepts Row */}
-        {(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex) =>
-          topic.concepts.map((concept, cIndex) => (
-            <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
-              {/* Render Session Number once per session */}
-              {tIndex === 0 && cIndex === 0 && (
-                <td
-                  rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
-                    (acc, t) => acc + t.concepts.length,
-                    0
-                  )}
-                >
-                  {plan.sessionNumber}
-                </td>
-              )}
-
-              {/* Render Topic Name once per topic */}
-              {cIndex === 0 && (
-                <td rowSpan={topic.concepts.length}>
-                  {topic.name || "No Topic Name"}
-                </td>
-              )}
-
-              {/* Render Concept */}
-              <td>{concept.name || "No Concept"}</td>
-
-              {/* Render Concept Detailing */}
-              <td>{concept.detailing || "No Detailing"}</td>
-
-              {/* Lesson Plan View Button */}
-              <td>
-                <button onClick={() => handleViewLessonPlan(concept.id)}>
-                  View
-                </button>
-              </td>
+        <table>
+          <thead>
+            <tr>
+              <th>Session Number</th>
+              <th>Topic Name</th>
+              <th>Concept</th>
+              <th>Concept Detailing</th>
+              <th>Lesson Plan</th>
             </tr>
-          ))
-        )}
-      </React.Fragment>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="5">No session plans available. Please upload or create a new one.</td>
-    </tr>
-  )}
-</tbody>
-
-
-
-</table>
-
+          </thead>
+          <tbody>
+            {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+              sessionPlans.map((plan) => (
+                <React.Fragment key={plan.id}>
+                  {/* Download Button for Each Session */}
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "left" }}>
+                      <strong>Session {plan.sessionNumber}</strong>
+                      <button
+                        onClick={() => handleDownloadSession(plan.sessionNumber)}
+                        className="btn btn-primary"
+                      >
+                        Download Session {plan.sessionNumber} Plan
+                      </button>
+                    </td>
+                  </tr>
+  
+                  {/* Topics and Concepts in the Session */}
+                  {(topicsWithConcepts[plan.sessionNumber] || []).map((topic, tIndex) =>
+                    topic.concepts.map((concept, cIndex) => (
+                      <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+                        {/* Render Session Number */}
+                        {tIndex === 0 && cIndex === 0 && (
+                          <td
+                            rowSpan={(topicsWithConcepts[plan.sessionNumber] || []).reduce(
+                              (acc, t) => acc + t.concepts.length,
+                              0
+                            )}
+                          >
+                            {plan.sessionNumber}
+                          </td>
+                        )}
+  
+                        {/* Render Topic Name */}
+                        {cIndex === 0 && (
+                          <td rowSpan={topic.concepts.length}>
+                            {topic.name || "No Topic Name"}
+                          </td>
+                        )}
+  
+                        {/* Render Concept */}
+                        <td>{concept.name || "No Concept"}</td>
+  
+                        {/* Render Concept Detailing */}
+                        <td>{concept.detailing || "No Detailing"}</td>
+  
+                        {/* Lesson Plan View Button */}
+                        <td>
+                          <button onClick={() => handleViewLessonPlan(concept.id)}>
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </React.Fragment>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5">No session plans available. Please upload or create a new one.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
   
+      {/* A and R Table */}
+      <div className="table-container">
+        <h3>Actions and Recommendations</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Topic Name</th>
+              <th>Concept Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sessionPlans.flatMap((plan) =>
+              plan.ActionsAndRecommendations.map((ar) => (
+                <tr key={ar.id}>
+                  <td>{ar.type}</td>
+                  <td>{ar.topicName}</td>
+                  <td>{ar.conceptName}</td>
+                  <td>
+                    <button onClick={() => handleGenerateARLessonPlan(ar.id)}>
+                      Generate Lesson Plan
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+  
+      {/* Lesson Plan Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-  <Modal.Header closeButton>
-    <Modal.Title>Lesson Plan</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    <pre>{lessonPlanContent}</pre>
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowModal(false)}>
-      Close
-    </Button>
-    </Modal.Footer>
-</Modal>;
+        <Modal.Header closeButton>
+          <Modal.Title>Lesson Plan</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <pre>{lessonPlanContent}</pre>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
-  
-};  
+}; 
 
 export default SessionPlans;
