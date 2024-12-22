@@ -60,7 +60,7 @@ const TeacherSessions = () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
-      
+  
       const sessionsWithDetails = response.data.map((session) => ({
         ...session,
         completed: !!session.actualEndTime, // Mark as completed if actualEndTime exists
@@ -74,6 +74,7 @@ const TeacherSessions = () => {
       setLoading(false);
     }
   }, [teacherId]);
+  
   
   
   useEffect(() => {
@@ -209,11 +210,11 @@ const TeacherSessions = () => {
         </td>
         <td>
   {session.completed ? (
-    <span>
-      <strong>Start:</strong> {new Date(session.actualStartTime).toLocaleTimeString() || '-'}
+    <div>
+      <strong>Start:</strong> {session.actualStartTime ? new Date(session.actualStartTime).toLocaleTimeString() : '-'}
       <br />
-      <strong>End:</strong> {new Date(session.actualEndTime).toLocaleTimeString() || '-'}
-    </span>
+      <strong>End:</strong> {session.actualEndTime ? new Date(session.actualEndTime).toLocaleTimeString() : '-'}
+    </div>
   ) : isToday(selectedDate) ? (
     <button
       onClick={() => handleStartSession(session)}
@@ -225,6 +226,7 @@ const TeacherSessions = () => {
     <span>-</span>
   )}
 </td>
+
 
         <td>{session.endTime}</td>
         <td>
