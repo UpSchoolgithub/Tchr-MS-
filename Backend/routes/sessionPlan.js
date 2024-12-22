@@ -16,6 +16,46 @@ const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 
+// Endpoint for Fetching Topics and Concepts
+router.get('/sessions/:sessionId/existingTopics', async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+      include: [
+        {
+          model: Topic,
+          as: 'Topics',
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts',
+              attributes: ['id', 'concept'],
+            },
+          ],
+        },
+      ],
+    });
+
+    const topicsWithConcepts = sessionPlans.flatMap((plan) =>
+      plan.Topics.map((topic) => ({
+        id: topic.id,
+        name: topic.topicName,
+        concepts: topic.Concepts.map((concept) => ({
+          id: concept.id,
+          name: concept.concept,
+        })),
+      }))
+    );
+
+    res.json(topicsWithConcepts);
+  } catch (error) {
+    console.error("Error fetching topics and concepts:", error);
+    res.status(500).json({ message: "Failed to fetch topics and concepts." });
+  }
+});
+
 //Create Actions And Recommendations
 router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
   const { sessionPlanId } = req.params;
