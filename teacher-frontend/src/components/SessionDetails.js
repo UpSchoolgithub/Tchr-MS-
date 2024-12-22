@@ -128,26 +128,18 @@ const fetchSessionDetails = async () => {
   // Handle checkbox change
   const handleTopicChange = (sessionIndex, topicIndex) => {
     setSessionDetails((prevDetails) => {
-      const updatedDetails = prevDetails.map((session, sIdx) => {
-        if (sIdx === sessionIndex) {
-          return {
-            ...session,
-            topics: session.topics.map((topic, tIdx) =>
-              tIdx === topicIndex
-                ? { ...topic, completed: !topic.completed }
-                : topic
-            ),
-          };
-        }
-        return session;
-      });
-  
-      // Update completedTopics state
-      const completedTopics = updatedDetails.flatMap((session) =>
-        session.topics.filter((topic) => topic.completed)
+      const updatedDetails = prevDetails.map((session, idx) =>
+        idx === sessionIndex
+          ? {
+              ...session,
+              topics: session.topics.map((topic, tIdx) =>
+                tIdx === topicIndex
+                  ? { ...topic, completed: !topic.completed }
+                  : topic
+              ),
+            }
+          : session
       );
-      setCompletedTopics(completedTopics);
-  
       return updatedDetails;
     });
   };
@@ -364,18 +356,6 @@ const fetchSessionDetails = async () => {
     }
   };
   
-  const saveTopicCompletion = async (sessionPlanId, topicId, isCompleted) => {
-    try {
-      await axiosInstance.patch(
-        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions/${sessionPlanId}/topics/${topicId}`,
-        { completed: isCompleted }
-      );
-      setSuccessMessage('Topic completion updated successfully!');
-    } catch (err) {
-      setError('Failed to update topic completion.');
-      console.error('Error Updating Topic:', err);
-    }
-  };
   
   
   
@@ -390,85 +370,93 @@ const fetchSessionDetails = async () => {
 
 return (
   <div className="session-details-container">
-  <div className="session-details-header">
-    <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
-    <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
-    <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
-    <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
-    <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
+    <div className="session-details-header">
+      <p><strong>School ID:</strong> {schoolId || 'Not Available'}</p>
+      <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
+      <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
+      <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
+      <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
+    </div>
+
+    <h2>Welcome, Teacher Name!</h2>
+
+    <div className="session-notes-section">
+  <h3>Session Notes and Details:</h3>
+  {sessionDetails && sessionDetails.length > 0 ? (
+    sessionDetails.map((session, sessionIndex) => (
+      <div key={sessionIndex} className="session-item">
+<p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
+
+        <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
+        <p><strong>Status:</strong> {session.status === 'completed' ? 'Completed' : 'Incomplete'}</p>
+        {/* Recommended Topics Section 
+<div className="recommended-topics-box">
+  <h3>Recommended Topics to Cover from A&R:</h3>
+  <div className="recommended-topic-item">
+    <input
+      type="checkbox"
+      id={`Introduction to Economic Growth-${sessionIndex}`}
+    />
+    <label htmlFor={`Introduction to Economic Growth-${sessionIndex}`}>Introduction to Economic Growth</label>
   </div>
+</div>*/}
 
-  <h2>Welcome, {teacherId ? `Teacher ${teacherId}` : 'Teacher Name'}!</h2>
 
-  <div className="session-notes-section">
-    <h3>Session Notes and Details:</h3>
-    {sessionDetails && sessionDetails.length > 0 ? (
-      sessionDetails.map((session, sessionIndex) => (
-        <div key={sessionIndex} className="session-item">
-          <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
-          <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
-          <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-          <p>
-            <strong>Status:</strong> {session.status === 'completed' ? 'Completed' : 'Incomplete'}
-          </p>
+      <h4>Topics to Cover:</h4>
+      <ul className="topics-list">
+  {session.topics.map((topic, topicIndex) => (
+    <li key={topicIndex}>
+      <div className="topic-header">
+      <input
+  type="checkbox"
+  id={`topic-${sessionIndex}-${topicIndex}`}
+  checked={topic.completed}
+  onChange={() => handleTopicChange(sessionIndex, topicIndex)}
+/>
 
-          <h4>Topics to Cover:</h4>
-          <ul className="topics-list">
-            {session.topics.map((topic, topicIndex) => (
-              <li key={topicIndex}>
-                <div className="topic-header">
-                  <input
-                    type="checkbox"
-                    id={`topic-${sessionIndex}-${topicIndex}`}
-                    checked={topic.completed}
-                    onChange={() => handleTopicChange(sessionIndex, topicIndex)}
-                  />
-                  <label htmlFor={`topic-${sessionIndex}-${topicIndex}`}>
-                    {topic.name}
-                  </label>
-                  <button
-                    onClick={() => handleTopicExpand(topicIndex)}
-                    className="view-lp-button"
-                  >
-                    {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-                  </button>
-                </div>
 
-                {expandedTopic === topicIndex && (
-                  <ul className="concepts-list">
-                    {topic.concepts.map((concept, conceptIndex) => (
-                      <li key={conceptIndex}>
-                        <div className="concept-header">
-                          <input
-                            type="checkbox"
-                            id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-                            checked={concept.completed}
-                            onChange={() =>
-                              handleConceptChange(sessionIndex, topicIndex, conceptIndex)
-                            }
-                          />
-                          <label htmlFor={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}>
-                            {concept.name}
-                          </label>
-                        </div>
-                        <p>{concept.detailing || 'N/A'}</p>
-                        {concept.lessonPlans?.map((plan, planIndex) => (
-                          <pre key={planIndex}>{plan}</pre>
-                        ))}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))
-    ) : (
-      <p>No session details available.</p>
-    )}
-  </div>
+        <label>{topic.name}</label>
+        <button
+          onClick={() => handleTopicExpand(topicIndex)}
+          className="view-lp-button"
+        >
+          {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+        </button>
+      </div>
 
+      {expandedTopic === topicIndex && (
+        <ul className="concepts-list">
+          {topic.concepts.map((concept, conceptIndex) => (
+            <li key={conceptIndex}>
+              <div className="concept-header">
+              <input
+  type="checkbox"
+  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+  checked={concept.completed}
+  onChange={() => handleConceptChange(sessionIndex, topicIndex, conceptIndex)}
+/>
+
+                <label>{concept.name}</label>
+              </div>
+              <p>{concept.detailing || 'N/A'}</p>
+              {concept.lessonPlans?.map((plan, planIndex) => (
+                <pre key={planIndex}>{plan}</pre>
+              ))}
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  ))}
+</ul>
+
+    </div>
+  ))
+) : (
+  <p>No session details available.</p>
+)}
+    </div>
 
     <h4>Assignments:</h4>
           {assignmentDetails && (
