@@ -61,6 +61,9 @@ const TeacherSessions = () => {
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
   
+      // Log sessions for debugging
+      console.log("Fetched Sessions:", response.data);
+  
       const sessionsWithDetails = response.data.map((session) => ({
         ...session,
         completed: !!session.endTime, // Mark as completed if endTime exists
@@ -75,6 +78,7 @@ const TeacherSessions = () => {
       setLoading(false);
     }
   }, [teacherId]);
+  
   
   
   
@@ -134,6 +138,7 @@ const TeacherSessions = () => {
     if (session.startTime && !session.endTime) return 'in-progress';
     return 'pending';
   };
+  
   
   
   
@@ -234,8 +239,18 @@ const TeacherSessions = () => {
     if (status === 'completed') {
       return (
         <>
-          <p>Start: {new Date(session.startTime).toLocaleTimeString()}</p>
-          <p>End: {new Date(session.endTime).toLocaleTimeString()}</p>
+          <p>
+            Start:{" "}
+            {session.startTime
+              ? new Date(session.startTime).toLocaleTimeString()
+              : "Invalid Date"}
+          </p>
+          <p>
+            End:{" "}
+            {session.endTime
+              ? new Date(session.endTime).toLocaleTimeString()
+              : "Invalid Date"}
+          </p>
         </>
       );
     } else if (status === 'in-progress') {
@@ -252,6 +267,7 @@ const TeacherSessions = () => {
     }
   })()}
 </td>
+
 
 
 
