@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
-import { Modal as BootstrapModal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import "../styles.css";
 import { jsPDF } from "jspdf";
 
