@@ -236,29 +236,16 @@ const TeacherSessions = () => {
 
 
 <td>
-  {(() => {
-    const status = getSessionStatus(session);
-    if (status === 'completed') {
-      return (
-        <>
-          <p>Start: {session.startTime ? new Date(session.startTime).toLocaleTimeString() : 'Not Started'}</p>
-          <p>End: {session.endTime ? new Date(session.endTime).toLocaleTimeString() : 'Not Ended'}</p>
-        </>
-      );
-    } else if (status === 'in-progress') {
-      return <span>In Progress</span>;
-    } else {
-      return (
-        <button
-          onClick={() => handleStartSession(session)}
-          style={{ backgroundColor: '#dc3545', color: 'white' }}
-        >
-          Start Session
-        </button>
-      );
-    }
-  })()}
+  {getSessionStatus(session) === 'pending' && (
+    <button
+      onClick={() => handleStartSession(session)}
+      style={{ backgroundColor: '#dc3545', color: 'white' }}
+    >
+      Start Session
+    </button>
+  )}
 </td>
+
 
 
 
