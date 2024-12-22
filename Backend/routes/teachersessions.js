@@ -30,7 +30,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
                       include: [
                         {
                           model: Teacher,
-                          where: { id: teacherId }, // Filter by teacherId
+                          where: { id: teacherId },
                           attributes: []
                         }
                       ],
@@ -46,8 +46,8 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
           as: 'SessionPlan',
           include: [
             {
-              model: Concept, // Assuming a Concept model is linked to SessionPlan
-              attributes: ['conceptName', 'completed'] // Include concept completion status
+              model: Concept, // Include Concept model
+              attributes: ['id', 'conceptName', 'completed'] // Fetch completion status
             }
           ],
           attributes: ['id', 'sessionNumber', 'planDetails']
@@ -55,6 +55,7 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       ],
       attributes: ['id', 'chapterName', 'priorityNumber', 'startTime', 'endTime']
     });
+    
     
 
     // Format response with session details
@@ -64,15 +65,14 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       const classInfo = section.ClassInfo || {};
       const school = classInfo.School || {};
     
-      // Extract concepts and their completion status
       const concepts = session.SessionPlan?.Concepts.map((concept) => ({
+        id: concept.id,
         name: concept.conceptName,
         completed: concept.completed,
       })) || [];
     
       return {
         id: session.id,
-        sessionId: session.id,
         schoolName: school.name || 'N/A',
         className: classInfo.className || 'N/A',
         sectionName: section.sectionName || 'N/A',
@@ -83,11 +83,12 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         endTime: session.endTime,
         sessionPlanId: session.SessionPlan?.id || 'N/A',
         sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
-        concepts: concepts // Add concepts and their completion status
+        concepts: concepts // Include concept details
       };
     });
     
     res.json(formattedSessions);
+    
     
   } catch (error) {
     console.error('Error fetching sessions:', error);
