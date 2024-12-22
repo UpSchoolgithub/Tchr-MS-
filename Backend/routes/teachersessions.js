@@ -6,15 +6,14 @@ const sequelize = require('../config/db'); // Adjust the path based on your fold
 const Concept = require('../models/concept');
 
 // Get sessions for a specific teacher
+// Get sessions for a specific teacher
 router.get('/teachers/:teacherId/assignments', async (req, res) => {
   const { teacherId } = req.params;
 
   try {
-    // Fetch sessions indirectly linked to the teacher via timetable entries
+    // Fetch sessions indirectly linked to the teacher via timetable_entries
     const sessions = await Session.findAll({
-      where: {
-        endTime: null, // Fetch only uncompleted sessions
-      },
+      attributes: ['id', 'sessionId', 'chapterName', 'priorityNumber', 'startTime', 'endTime'], // Include sessionId
       include: [
         {
           model: Subject,
@@ -30,8 +29,8 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
                       include: [
                         {
                           model: Teacher,
-                          where: { id: teacherId },
-                          attributes: []
+                          where: { id: teacherId }, // Filter by teacherId
+                          attributes: [] // Exclude teacher attributes from response
                         }
                       ],
                     }
@@ -41,21 +40,16 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
             }
           ]
         },
-        {
-          model: SessionPlan,
-          as: 'SessionPlan',
-          include: [
-            {
-              model: Concept, // Include Concept model
-              attributes: ['id', 'conceptName', 'completed'] // Fetch completion status
-            }
-          ],
-          attributes: ['id', 'sessionNumber', 'planDetails']
-        }
+        { model: SessionPlan, as: 'SessionPlan', attributes: ['id', 'sessionNumber', 'planDetails'] }
       ],
-      attributes: ['id', 'chapterName', 'priorityNumber', 'startTime', 'endTime']
+      attributes: [
+        'id',  // Ensure session.id is included
+        'chapterName',
+        'priorityNumber',
+        'startTime',
+        'endTime',
+      ],
     });
-    
     
 
     // Format response with session details
@@ -64,15 +58,10 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
       const section = subject.Section || {};
       const classInfo = section.ClassInfo || {};
       const school = classInfo.School || {};
-    
-      const concepts = session.SessionPlan?.Concepts.map((concept) => ({
-        id: concept.id,
-        name: concept.conceptName,
-        completed: concept.completed,
-      })) || [];
-    
+
       return {
         id: session.id,
+        sessionId: session.id, // Correctly map session.id to sessionId
         schoolName: school.name || 'N/A',
         className: classInfo.className || 'N/A',
         sectionName: section.sectionName || 'N/A',
@@ -81,22 +70,18 @@ router.get('/teachers/:teacherId/assignments', async (req, res) => {
         priorityNumber: session.priorityNumber,
         startTime: session.startTime,
         endTime: session.endTime,
-        sessionPlanId: session.SessionPlan?.id || 'N/A',
-        sessionNumber: session.SessionPlan?.sessionNumber || 'N/A',
-        concepts: concepts // Include concept details
+        sessionPlanId: session.SessionPlan?.id || 'N/A', // Add sessionPlanId here
+        sessionNumber: session.SessionPlan ? session.SessionPlan.sessionNumber : 'N/A',
+        planDetails: session.SessionPlan ? JSON.parse(session.SessionPlan.planDetails || '[]') : [],
       };
     });
-    
+
     res.json(formattedSessions);
-    
-    
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
-
-
 
 
 // Mark attendance for a session
@@ -128,23 +113,13 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       });
     }
 
-    // Fetch session plan details to update sessionStartTime
-    const sessionPlan = await SessionPlan.findOne({ where: { id: sessionId } });
-    if (!sessionPlan) {
-      return res.status(404).json({ error: 'SessionPlan not found.' });
-    }
-
-    // Set sessionStartTime if not already set
-    if (!sessionPlan.sessionStartTime) {
-      sessionPlan.sessionStartTime = new Date(); // Set the start time
-      sessionPlan.sessionStatus = 'in-progress'; // Update session status
-      await sessionPlan.save();
-    }
-
-    // Fetch academic start date to calculate academic day
+    // Fetch session details for the academic day
     const session = await Session.findOne({
       where: { id: sessionId },
-      include: [{ model: Subject, attributes: ['academicStartDate'] }],
+      include: [
+        { model: SessionPlan, attributes: ['sessionNumber', 'planDetails'], as: 'SessionPlan' },
+        { model: Subject, attributes: ['academicStartDate'] },
+      ],
     });
 
     if (!session) {
@@ -159,12 +134,10 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
       message: 'Attendance marked successfully',
       sessionDetails: {
         id: session.id,
-        chapterName: session.chapterName || 'N/A',
-        sessionNumber: sessionPlan.sessionNumber || 'N/A',
-        topics: JSON.parse(sessionPlan.planDetails || '[]'),
+        chapterName: session.chapterName,
+        sessionNumber: session.SessionPlan.sessionNumber,
+        topics: JSON.parse(session.SessionPlan.planDetails || '[]'),
         academicDay,
-        sessionStartTime: sessionPlan.sessionStartTime, // Include session start time
-        sessionEndTime: sessionPlan.sessionEndTime || null, // Include session end time if it exists
       },
     });
   } catch (error) {
@@ -172,7 +145,6 @@ router.post('/teachers/:teacherId/sessions/:sessionId/attendance', async (req, r
     res.status(500).json({ error: 'Failed to mark attendance.' });
   }
 });
-
 
 
 // Get session details for a specific teacher and session
@@ -734,53 +706,63 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
   const transaction = await sequelize.transaction();
   try {
-    // Fetch the session and session plan
+    console.log('Request received:', { teacherId, sessionId, completedConcepts, incompleteConcepts });
+
+    // Fetch session and session plan
     const session = await Session.findByPk(sessionId, {
       include: [{ model: SessionPlan, as: 'SessionPlan' }],
     });
 
-    if (!session || !session.SessionPlan) {
-      return res.status(404).json({ error: 'Session or SessionPlan not found.' });
+    if (!session) {
+      console.error(`Session not found for ID: ${sessionId}`);
+      return res.status(404).json({ error: `Session not found for ID: ${sessionId}` });
     }
 
-    // Update the session plan with the end time and status
     const sessionPlan = session.SessionPlan;
-    await sessionPlan.update(
-      {
-        sessionEndTime: new Date(), // Set session end time
-        sessionStatus: 'completed', // Mark the session as completed
-      },
-      { transaction }
-    );
+    if (!sessionPlan) {
+      console.error(`SessionPlan not found for Session ID: ${sessionId}`);
+      return res.status(404).json({ error: `SessionPlan not found for Session ID: ${sessionId}` });
+    }
 
-    // Update concepts as completed or pending
+    console.log('Session and SessionPlan fetched:', { sessionId, sessionPlanId: sessionPlan.id });
+
+    // Update completed concepts
     for (const concept of completedConcepts) {
-      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } });
-      if (conceptInstance) {
-        await conceptInstance.update({ status: 'completed' }, { transaction });
+      console.log('Fetching concept with name:', concept.name);
+      const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
+      if (!conceptInstance) {
+        console.error(`Concept not found: ${concept.name}`);
+        continue; // Skip this concept and move to the next
       }
+
+      await conceptInstance.update({ status: 'completed' }, { transaction });
+      console.log(`Concept marked as completed:`, concept.name);
     }
 
+    // Update incomplete concepts
     for (const concept of incompleteConcepts) {
-      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } });
-      if (conceptInstance) {
-        await conceptInstance.update({ status: 'pending' }, { transaction });
+      console.log('Fetching concept with name:', concept.name);
+      const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
+      if (!conceptInstance) {
+        console.error(`Concept not found: ${concept.name}`);
+        continue; // Skip this concept and move to the next
       }
+
+      await conceptInstance.update({ status: 'pending' }, { transaction });
+      console.log(`Concept marked as pending:`, concept.name);
     }
 
-    console.log('SessionPlan updated with end time and status.');
+    console.log('Concept updates completed.');
 
-    // Commit the transaction
+    // Commit transaction
     await transaction.commit();
-    res.json({ message: 'Session ended successfully!', sessionId, sessionPlanId: sessionPlan.id });
+    res.json({ message: 'Session ended successfully!' });
   } catch (error) {
     await transaction.rollback();
     console.error('Error ending session:', error);
-    res.status(500).json({ error: 'Failed to end the session.' });
+    res.status(500).json({ error: error.message || 'Failed to end the session.' });
   }
 });
-
-
 
 
 
