@@ -61,16 +61,18 @@ const TeacherSessions = () => {
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
   
-      // Log sessions for debugging
-      console.log("Fetched Sessions:", response.data);
+      const sessionsWithPlans = await Promise.all(
+        response.data.map(async (session) => {
+          const sessionPlansForToday = await fetchSessionPlansForToday(
+            teacherId,
+            session.sectionId,
+            session.subjectId
+          );
+          return { ...session, sessionPlansForToday };
+        })
+      );
   
-      const sessionsWithDetails = response.data.map((session) => ({
-        ...session,
-        completed: !!session.endTime, // Mark as completed if endTime exists
-        inProgress: session.startTime && !session.endTime, // Mark as in-progress if only startTime exists
-      }));
-  
-      setSessions(sessionsWithDetails);
+      setSessions(sessionsWithPlans);
       setError(null);
     } catch (err) {
       setError(`Failed to load sessions: ${err.message}. Please try again later.`);
@@ -78,9 +80,6 @@ const TeacherSessions = () => {
       setLoading(false);
     }
   }, [teacherId]);
-  
-  
-  
   
   
   useEffect(() => {
@@ -122,27 +121,15 @@ const TeacherSessions = () => {
     navigate(`/teacherportal/${teacherId}/session-details`, {
       state: {
         teacherId,
-        classId: session.classId,
+        classId: session.classId, // Pass classId
         sectionId: session.sectionId,
-        subjectId: session.subjectId,
-        schoolId: session.schoolId,
+        subjectId: session.subjectId, // Pass subjectId
+        schoolId: session.schoolId, // Pass schoolId
         day: session.day,
         period: session.period,
-        sessionId: session.sessionId, // Include sessionId
       },
     });
   };
-  
-  const getSessionStatus = (session) => {
-    if (!session.startTime && !session.endTime) return 'pending';
-    if (session.startTime && !session.endTime) return 'in-progress';
-    if (session.startTime && session.endTime) return 'completed';
-    return 'unknown'; // Fallback for unexpected cases
-  };
-  
-  
-  
-  
   
   
   
@@ -185,11 +172,10 @@ const TeacherSessions = () => {
 ) : (
   <table className="sessions-table">
     <thead>
-    <tr>
+      <tr>
         <th>School</th>
         <th>Class</th>
         <th>Section</th>
-        <th>Section ID</th>
         <th>Day</th>
         <th>Period</th>
         <th>Subject</th>
@@ -198,15 +184,14 @@ const TeacherSessions = () => {
         <th>End Time</th>
         <th>Assignments</th>
         <th>Today's Session Plan</th>
-        <th>Session Report</th>
-    </tr>
-</thead>
 
+        <th>Session Report</th>
+      </tr>
+    </thead>
     <tbody>
   {filteredSessions.map((session, index) => {
-    const progressPercentage = session.totalTopics > 0 
-    ? (session.completedTopics / session.totalTopics) * 100 
-    : 0;
+    const progressPercentage =
+      session.totalTopics > 0 ? (session.completedTopics / session.totalTopics) * 100 : 0;
 
     return (
       <tr key={index}>
@@ -218,71 +203,29 @@ const TeacherSessions = () => {
         <td>{session.period}</td>
         <td>{session.subjectName}</td>
         <td>
-  <div className="progress" style={{ width: '100%', height: '20px' }}>
-    <div
-      className="progress-bar"
-      role="progressbar"
-      style={{
-        width: `${progressPercentage}%`,
-        backgroundColor: progressPercentage === 100 ? '#28a745' : '#007bff',
-      }}
-      aria-valuenow={progressPercentage}
-      aria-valuemin="0"
-      aria-valuemax="100"
-    >
-      {`${Math.round(progressPercentage)}%`}
-    </div>
-  </div>
-  <p>{session.completedTopics}/{session.totalTopics} topics completed</p>
-</td>
-
-
-<td>
-  {(() => {
-    const status = getSessionStatus(session);
-    console.log(`Session ID: ${session.sessionId}, Status: ${status}`);
-    
-    if (status === 'pending') {
-      return (
-        <button
-          onClick={() => handleStartSession(session)}
-          style={{ backgroundColor: '#dc3545', color: 'white' }}
-        >
-          Start Session
-        </button>
-      );
-    } else if (status === 'in-progress') {
-      return 'In Progress';
-    } else if (status === 'completed') {
-      return 'Completed';
-    }
-    return 'Unknown Status';
-  })()}
-</td>
-
-
-
-
-
-
-
-
-
-
-<td>
-  {(() => {
-    const status = getSessionStatus(session);
-    if (status === 'completed') {
-      return 'Completed';
-    } else if (status === 'in-progress') {
-      return 'In Progress';
-    }
-    return 'Pending';
-  })()}
-</td>
-
-
-
+          <div className="progress-container">
+            <div className="progress-bar">
+              <span style={{ width: `${progressPercentage}%` }}></span>
+            </div>
+            <small>
+              {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
+            </small>
+          </div>
+        </td>
+        <td>
+          {session.completed ? (
+            <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
+          ) : isToday(selectedDate) ? (
+            <button
+              onClick={() => handleStartSession(session)}
+              style={{ backgroundColor: '#dc3545', color: 'white' }}
+            >
+              Start Session
+            </button>
+          ) : (
+            <span>-</span>
+          )}
+        </td>
         <td>{session.endTime}</td>
         <td>
           <button style={{ backgroundColor: 'green' }}>Update</button>
