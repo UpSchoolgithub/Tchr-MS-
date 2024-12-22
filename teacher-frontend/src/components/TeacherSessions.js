@@ -209,23 +209,23 @@ const TeacherSessions = () => {
           </div>
         </td>
         <td>
-  {session.completed ? (
-    <div>
-      <strong>Start:</strong> {session.actualStartTime ? new Date(session.actualStartTime).toLocaleTimeString() : '-'}
-      <br />
-      <strong>End:</strong> {session.actualEndTime ? new Date(session.actualEndTime).toLocaleTimeString() : '-'}
-    </div>
-  ) : isToday(selectedDate) ? (
-    <button
-      onClick={() => handleStartSession(session)}
-      style={{ backgroundColor: '#dc3545', color: 'white' }}
-    >
-      Start Session
-    </button>
-  ) : (
-    <span>-</span>
-  )}
+    {session.status === 'completed' ? (
+        <>
+            <p>Start: {new Date(session.startTime).toLocaleTimeString()}</p>
+            <p>End: {new Date(session.endTime).toLocaleTimeString()}</p>
+        </>
+    ) : isToday(selectedDate) ? (
+        <button
+            onClick={() => handleStartSession(session)}
+            style={{ backgroundColor: '#dc3545', color: 'white' }}
+        >
+            Start Session
+        </button>
+    ) : (
+        <span>-</span>
+    )}
 </td>
+
 
 
         <td>{session.endTime}</td>
