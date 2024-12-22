@@ -765,7 +765,6 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
 
 
-
 // Fetch session details by session ID
 // Endpoint to fetch session report details
 router.get('/sessions/:sessionId/details', async (req, res) => {
