@@ -128,18 +128,26 @@ const fetchSessionDetails = async () => {
   // Handle checkbox change
   const handleTopicChange = (sessionIndex, topicIndex) => {
     setSessionDetails((prevDetails) => {
-      const updatedDetails = prevDetails.map((session, idx) =>
-        idx === sessionIndex
-          ? {
-              ...session,
-              topics: session.topics.map((topic, tIdx) =>
-                tIdx === topicIndex
-                  ? { ...topic, completed: !topic.completed }
-                  : topic
-              ),
-            }
-          : session
+      const updatedDetails = prevDetails.map((session, sIdx) => {
+        if (sIdx === sessionIndex) {
+          return {
+            ...session,
+            topics: session.topics.map((topic, tIdx) =>
+              tIdx === topicIndex
+                ? { ...topic, completed: !topic.completed }
+                : topic
+            ),
+          };
+        }
+        return session;
+      });
+  
+      // Update completedTopics state
+      const completedTopics = updatedDetails.flatMap((session) =>
+        session.topics.filter((topic) => topic.completed)
       );
+      setCompletedTopics(completedTopics);
+  
       return updatedDetails;
     });
   };
@@ -356,6 +364,18 @@ const fetchSessionDetails = async () => {
     }
   };
   
+  const saveTopicCompletion = async (sessionPlanId, topicId, isCompleted) => {
+    try {
+      await axiosInstance.patch(
+        `/teachers/${teacherId}/sections/${sectionId}/subjects/${subjectId}/sessions/${sessionPlanId}/topics/${topicId}`,
+        { completed: isCompleted }
+      );
+      setSuccessMessage('Topic completion updated successfully!');
+    } catch (err) {
+      setError('Failed to update topic completion.');
+      console.error('Error Updating Topic:', err);
+    }
+  };
   
   
   
