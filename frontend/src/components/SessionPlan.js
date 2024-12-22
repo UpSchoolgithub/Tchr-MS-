@@ -748,14 +748,14 @@ const handleGenerateARLessonPlan = async (arId) => {
       <h2 className="header">Session Plans</h2>
   
       {/* Actions and Recommendations Controls */}
-    <div className="ar-controls">
-      <Button onClick={() => handleOpenARModal("pre-learning")} className="btn btn-primary">
-        Add Pre-learning
-      </Button>
-      <Button onClick={() => handleOpenARModal("post-learning")} className="btn btn-primary">
-        Add Post-learning
-      </Button>
-    </div>
+      <div className="ar-controls">
+        <Button onClick={() => handleOpenARModal("pre-learning")} className="btn btn-primary">
+          Add Pre-learning
+        </Button>
+        <Button onClick={() => handleOpenARModal("post-learning")} className="btn btn-primary">
+          Add Post-learning
+        </Button>
+      </div>
   
       {/* Info Banner */}
       <div className="info-banner">
@@ -819,162 +819,174 @@ const handleGenerateARLessonPlan = async (arId) => {
             </tr>
           </thead>
           <tbody>
-  {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
-    sessionPlans.flatMap((plan, planIndex) => {
-      const preLearningTopics = plan.ActionsAndRecommendations?.filter(
-        (ar) => ar.type === "pre-learning"
-      ) || [];
-      const postLearningTopics = plan.ActionsAndRecommendations?.filter(
-        (ar) => ar.type === "post-learning"
-      ) || [];
-
-      // Pre-learning topics come before the session
-      const preLearningRows = preLearningTopics.map((ar, arIndex) => (
-        <tr key={`pre-${plan.id}-${arIndex}`}>
-          <td>{planIndex === 0 && arIndex === 0 ? "Pre-learning" : ""}</td>
-          <td>{ar.topicName || "No Topic Name"}</td>
-          <td>{ar.conceptName || "No Concept Name"}</td>
-          <td>N/A</td>
-          <td>
-            <button onClick={() => handleGenerateARLessonPlan(ar.id)}>
-              Generate
-            </button>
-          </td>
-        </tr>
-      ));
-
-      // Session topics
-      const sessionRows =
-        topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
-          topic.concepts.map((concept, cIndex) => (
-            <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
-              {/* Render Session Number */}
-              {tIndex === 0 && cIndex === 0 && (
-                <td
-                  rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
-                    (acc, t) => acc + t.concepts.length,
-                    0
-                  )}
-                >
-                  {plan.sessionNumber}
-                </td>
-              )}
-
-              {/* Render Topic Name */}
-              {cIndex === 0 && (
-                <td rowSpan={topic.concepts.length}>
-                  {topic.name || "No Topic Name"}
-                </td>
-              )}
-
-              {/* Render Concept */}
-              <td>{concept.name || "No Concept"}</td>
-
-              {/* Render Concept Detailing */}
-              <td>{concept.detailing || "No Detailing"}</td>
-
-              {/* Lesson Plan View Button */}
-              <td>
-                <button onClick={() => handleViewLessonPlan(concept.id)}>
-                  View
-                </button>
-              </td>
-            </tr>
-          ))
-        ) || [];
-
-      // Post-learning topics come after the session
-      const postLearningRows = postLearningTopics.map((ar, arIndex) => (
-        <tr key={`post-${plan.id}-${arIndex}`}>
-          <td>Post-learning</td>
-          <td>{ar.topicName || "No Topic Name"}</td>
-          <td>{ar.conceptName || "No Concept Name"}</td>
-          <td>N/A</td>
-          <td>
-            <button onClick={() => handleGenerateARLessonPlan(ar.id)}>
-              Generate
-            </button>
-          </td>
-        </tr>
-      ));
-
-      return [
-        ...preLearningRows,
-        <React.Fragment key={`session-${plan.id}`}>
-          <tr>
-            <td colSpan="5" style={{ textAlign: "left" }}>
-              <strong>Session {plan.sessionNumber}</strong>
-              <button
-                onClick={() => handleDownloadSession(plan.sessionNumber)}
-                className="btn btn-primary"
-              >
-                Download
-              </button>
-            </td>
-          </tr>
-          {sessionRows}
-        </React.Fragment>,
-        ...postLearningRows,
-      ];
-    })
-  ) : (
-    <tr>
-      <td colSpan="5">No session plans available. Please upload or create a new one.</td>
-    </tr>
-  )}
-</tbody>
-
+            {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+              sessionPlans.flatMap((plan, planIndex) => {
+                const preLearningTopics =
+                  plan.ActionsAndRecommendations?.filter((ar) => ar.type === "pre-learning") || [];
+                const postLearningTopics =
+                  plan.ActionsAndRecommendations?.filter((ar) => ar.type === "post-learning") || [];
+  
+                const preLearningRows = preLearningTopics.map((ar, arIndex) => (
+                  <tr key={`pre-${plan.id}-${arIndex}`}>
+                    <td>{planIndex === 0 && arIndex === 0 ? "Pre-learning" : ""}</td>
+                    <td>{ar.topicName || "No Topic Name"}</td>
+                    <td>{ar.conceptName || "No Concept Name"}</td>
+                    <td>N/A</td>
+                    <td>
+                      <button onClick={() => handleGenerateARLessonPlan(ar.id)}>Generate</button>
+                    </td>
+                  </tr>
+                ));
+  
+                const sessionRows =
+                  topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
+                    topic.concepts.map((concept, cIndex) => (
+                      <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+                        {tIndex === 0 && cIndex === 0 && (
+                          <td
+                            rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
+                              (acc, t) => acc + t.concepts.length,
+                              0
+                            )}
+                          >
+                            {plan.sessionNumber}
+                          </td>
+                        )}
+                        {cIndex === 0 && (
+                          <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
+                        )}
+                        <td>{concept.name || "No Concept"}</td>
+                        <td>{concept.detailing || "No Detailing"}</td>
+                        <td>
+                          <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) || [];
+  
+                const postLearningRows = postLearningTopics.map((ar, arIndex) => (
+                  <tr key={`post-${plan.id}-${arIndex}`}>
+                    <td>Post-learning</td>
+                    <td>{ar.topicName || "No Topic Name"}</td>
+                    <td>{ar.conceptName || "No Concept Name"}</td>
+                    <td>N/A</td>
+                    <td>
+                      <button onClick={() => handleGenerateARLessonPlan(ar.id)}>Generate</button>
+                    </td>
+                  </tr>
+                ));
+  
+                return [
+                  ...preLearningRows,
+                  <React.Fragment key={`session-${plan.id}`}>
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: "left" }}>
+                        <strong>Session {plan.sessionNumber}</strong>
+                        <button
+                          onClick={() => handleDownloadSession(plan.sessionNumber)}
+                          className="btn btn-primary"
+                        >
+                          Download
+                        </button>
+                      </td>
+                    </tr>
+                    {sessionRows}
+                  </React.Fragment>,
+                  ...postLearningRows,
+                ];
+              })
+            ) : (
+              <tr>
+                <td colSpan="5">No session plans available. Please upload or create a new one.</td>
+              </tr>
+            )}
+          </tbody>
         </table>
       </div>
   
-      {/* A and R Table */}
-      <div className="table-container">
-        <h3>Actions and Recommendations</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Topic Name</th>
-              <th>Concept Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-  {sessionPlans.flatMap((plan) =>
-    (plan.ActionsAndRecommendations || []).map((ar) => (
-      <tr key={ar.id}>
-        <td>{ar.type || "N/A"}</td>
-        <td>{ar.topicName || "No Topic Name"}</td>
-        <td>{ar.conceptName || "No Concept Name"}</td>
-        <td>
-          <button onClick={() => handleGenerateARLessonPlan(ar.id)}>
-            Generate Lesson Plan
-          </button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
-
-        </table>
-      </div>
-  
-      {/* Lesson Plan Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      {/* A and R Modal */}
+      <Modal show={showARModal} onHide={() => setShowARModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Lesson Plan</Modal.Title>
+          <Modal.Title>{arType === "pre-learning" ? "Add Pre-learning" : "Add Post-learning"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <pre>{lessonPlanContent}</pre>
+          <Form>
+            {arType === "pre-learning" && (
+              <>
+                <Form.Group>
+                  <Form.Label>Topic Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter topic name"
+                    value={arTopicName}
+                    onChange={(e) => setARTopicName(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Concept Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter concept name"
+                    value={arConceptName}
+                    onChange={(e) => setARConceptName(e.target.value)}
+                  />
+                </Form.Group>
+              </>
+            )}
+            {arType === "post-learning" && (
+              <>
+                <Form.Group>
+                  <Form.Label>Select Topic</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={selectedTopic}
+                    onChange={(e) => setSelectedTopic(e.target.value)}
+                  >
+                    <option value="">Choose a topic</option>
+                    {existingTopics.map((topic) => (
+                      <option key={topic.id} value={topic.id}>
+                        {topic.name}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Select Concepts</Form.Label>
+                  {existingTopics
+                    .find((topic) => topic.id === selectedTopic)
+                    ?.concepts.map((concept) => (
+                      <Form.Check
+                        key={concept.id}
+                        type="checkbox"
+                        label={concept.name}
+                        value={concept.id}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSelectedConcepts((prev) =>
+                            prev.includes(value)
+                              ? prev.filter((id) => id !== value)
+                              : [...prev, value]
+                          );
+                        }}
+                      />
+                    ))}
+                </Form.Group>
+              </>
+            )}
+          </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button variant="secondary" onClick={() => setShowARModal(false)}>
             Close
+          </Button>
+          <Button variant="primary" onClick={handleSaveAR}>
+            Save
           </Button>
         </Modal.Footer>
       </Modal>
     </div>
   );
+  
 }; 
 
 export default SessionPlans;
