@@ -60,19 +60,13 @@ const TeacherSessions = () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/teachers/${teacherId}/assignments`);
+      
+      const sessionsWithDetails = response.data.map((session) => ({
+        ...session,
+        completed: !!session.actualEndTime, // Mark as completed if actualEndTime exists
+      }));
   
-      const sessionsWithPlans = await Promise.all(
-        response.data.map(async (session) => {
-          const sessionPlansForToday = await fetchSessionPlansForToday(
-            teacherId,
-            session.sectionId,
-            session.subjectId
-          );
-          return { ...session, sessionPlansForToday };
-        })
-      );
-  
-      setSessions(sessionsWithPlans);
+      setSessions(sessionsWithDetails);
       setError(null);
     } catch (err) {
       setError(`Failed to load sessions: ${err.message}. Please try again later.`);
@@ -121,12 +115,13 @@ const TeacherSessions = () => {
     navigate(`/teacherportal/${teacherId}/session-details`, {
       state: {
         teacherId,
-        classId: session.classId, // Pass classId
+        classId: session.classId,
         sectionId: session.sectionId,
-        subjectId: session.subjectId, // Pass subjectId
-        schoolId: session.schoolId, // Pass schoolId
+        subjectId: session.subjectId,
+        schoolId: session.schoolId,
         day: session.day,
         period: session.period,
+        sessionId: session.sessionId, // Include sessionId
       },
     });
   };
@@ -213,19 +208,24 @@ const TeacherSessions = () => {
           </div>
         </td>
         <td>
-          {session.completed ? (
-            <span>{new Date(session.actualStartTime).toLocaleTimeString() || '-'}</span>
-          ) : isToday(selectedDate) ? (
-            <button
-              onClick={() => handleStartSession(session)}
-              style={{ backgroundColor: '#dc3545', color: 'white' }}
-            >
-              Start Session
-            </button>
-          ) : (
-            <span>-</span>
-          )}
-        </td>
+  {session.completed ? (
+    <span>
+      <strong>Start:</strong> {new Date(session.actualStartTime).toLocaleTimeString() || '-'}
+      <br />
+      <strong>End:</strong> {new Date(session.actualEndTime).toLocaleTimeString() || '-'}
+    </span>
+  ) : isToday(selectedDate) ? (
+    <button
+      onClick={() => handleStartSession(session)}
+      style={{ backgroundColor: '#dc3545', color: 'white' }}
+    >
+      Start Session
+    </button>
+  ) : (
+    <span>-</span>
+  )}
+</td>
+
         <td>{session.endTime}</td>
         <td>
           <button style={{ backgroundColor: 'green' }}>Update</button>
