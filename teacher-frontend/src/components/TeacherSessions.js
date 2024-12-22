@@ -194,8 +194,9 @@ const TeacherSessions = () => {
 
     <tbody>
   {filteredSessions.map((session, index) => {
-    const progressPercentage =
-      session.totalTopics > 0 ? (session.completedTopics / session.totalTopics) * 100 : 0;
+    const progressPercentage = session.totalTopics > 0 
+    ? (session.completedTopics / session.totalTopics) * 100 
+    : 0;
 
     return (
       <tr key={index}>
@@ -207,20 +208,29 @@ const TeacherSessions = () => {
         <td>{session.period}</td>
         <td>{session.subjectName}</td>
         <td>
-          <div className="progress-container">
-            <div className="progress-bar">
-              <span style={{ width: `${progressPercentage}%` }}></span>
-            </div>
-            <small>
-              {session.completedTopics || 0}/{session.totalTopics || 0} topics completed
-            </small>
-          </div>
-        </td>
+    <div className="progress" style={{ width: '100%', height: '20px' }}>
+        <div
+            className="progress-bar"
+            role="progressbar"
+            style={{
+                width: `${progressPercentage}%`,
+                backgroundColor: progressPercentage === 100 ? '#28a745' : '#007bff'
+            }}
+            aria-valuenow={progressPercentage}
+            aria-valuemin="0"
+            aria-valuemax="100"
+        >
+            {`${Math.round(progressPercentage)}%`}
+        </div>
+    </div>
+    <p>{session.completedTopics}/{session.totalTopics} topics completed</p>
+</td>
+
         <td>
     {session.status === 'completed' ? (
         <>
-            <p>Start: {new Date(session.startTime).toLocaleTimeString()}</p>
-            <p>End: {new Date(session.endTime).toLocaleTimeString()}</p>
+            <p>Start: {session.startTime ? new Date(session.startTime).toLocaleTimeString() : '-'}</p>
+            <p>End: {session.endTime ? new Date(session.endTime).toLocaleTimeString() : '-'}</p>
         </>
     ) : session.status === 'pending' || session.status === 'in-progress' ? (
         <button
@@ -233,6 +243,7 @@ const TeacherSessions = () => {
         <span title="Session not available to start">-</span>
     )}
 </td>
+
 
 
 <td>{getSessionStatus(session)}</td>
