@@ -1,6 +1,3 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-
 class SessionPlan extends Model {
   static associate(models) {
     SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
@@ -14,7 +11,7 @@ SessionPlan.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'sessions', // References the 'sessions' table
+        model: 'sessions',
         key: 'id',
       },
     },
@@ -24,8 +21,17 @@ SessionPlan.init(
     },
     completed: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false, // Default to false
+      defaultValue: false,
       allowNull: false,
+    },
+    endTime: {
+      type: DataTypes.DATE,
+      allowNull: true, // Null when not ended
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'in-progress', // Default to 'in-progress'
     },
   },
   {
