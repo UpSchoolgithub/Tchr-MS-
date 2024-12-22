@@ -708,36 +708,46 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
   try {
     console.log('Request received:', { teacherId, sessionId, completedConcepts, incompleteConcepts });
 
+    // Fetch session and session plan
     const session = await Session.findByPk(sessionId, {
       include: [{ model: SessionPlan, as: 'SessionPlan' }],
     });
 
     if (!session) {
+      console.error(`Session not found for ID: ${sessionId}`);
       return res.status(404).json({ error: `Session not found for ID: ${sessionId}` });
     }
 
     const sessionPlan = session.SessionPlan;
     if (!sessionPlan) {
+      console.error(`SessionPlan not found for Session ID: ${sessionId}`);
       return res.status(404).json({ error: `SessionPlan not found for Session ID: ${sessionId}` });
     }
 
     console.log('Session and SessionPlan fetched:', { sessionId, sessionPlanId: sessionPlan.id });
 
-    // Update concepts
+    // Update completed concepts
     for (const concept of completedConcepts) {
-      const conceptInstance = await Concept.findByPk(concept.id);
+      const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
       if (!conceptInstance) {
-        throw new Error(`Concept not found for ID: ${concept.id}`);
+        console.error(`Concept not found:`, concept.name);
+        throw new Error(`Concept not found for name: ${concept.name}`);
       }
+
       await conceptInstance.update({ status: 'completed' }, { transaction });
+      console.log(`Concept marked as completed:`, concept.name);
     }
 
+    // Update incomplete concepts
     for (const concept of incompleteConcepts) {
-      const conceptInstance = await Concept.findByPk(concept.id);
+      const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
       if (!conceptInstance) {
-        throw new Error(`Concept not found for ID: ${concept.id}`);
+        console.error(`Concept not found:`, concept.name);
+        throw new Error(`Concept not found for name: ${concept.name}`);
       }
+
       await conceptInstance.update({ status: 'pending' }, { transaction });
+      console.log(`Concept marked as pending:`, concept.name);
     }
 
     console.log('Concept updates completed.');
