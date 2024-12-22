@@ -728,8 +728,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     // Update completed concepts
     for (const concept of completedConcepts) {
-      console.log('Fetching concept with name:', concept.name);
-      const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
+      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } }); // Use `concept` instead of `name`
       if (!conceptInstance) {
         console.error(`Concept not found: ${concept.name}`);
         continue; // Skip this concept and move to the next
@@ -741,8 +740,7 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     // Update incomplete concepts
     for (const concept of incompleteConcepts) {
-      console.log('Fetching concept with name:', concept.name);
-      const conceptInstance = await Concept.findOne({ where: { name: concept.name } });
+      const conceptInstance = await Concept.findOne({ where: { concept: concept.name } }); // Use `concept` instead of `name`
       if (!conceptInstance) {
         console.error(`Concept not found: ${concept.name}`);
         continue; // Skip this concept and move to the next
