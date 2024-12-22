@@ -1,4 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Ensure this points to your sequelize instance
 
 class SessionPlan extends Model {
   static associate(models) {
