@@ -385,6 +385,8 @@ return (
   {sessionDetails && sessionDetails.length > 0 ? (
     sessionDetails.map((session, sessionIndex) => (
       <div key={sessionIndex} className="session-item">
+<p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
 
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
         <p><strong>Status:</strong> {session.status === 'completed' ? 'Completed' : 'Incomplete'}</p>
