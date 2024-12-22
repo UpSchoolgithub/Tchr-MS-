@@ -134,10 +134,12 @@ const TeacherSessions = () => {
   };
   
   const getSessionStatus = (session) => {
-    if (session.endTime) return 'completed';
+    if (!session.startTime && !session.endTime) return 'pending';
     if (session.startTime && !session.endTime) return 'in-progress';
-    return 'pending';
+    if (session.startTime && session.endTime) return 'completed';
+    return 'unknown'; // Fallback for unexpected cases
   };
+  
   
   
   
@@ -239,6 +241,7 @@ const TeacherSessions = () => {
   {(() => {
     const status = getSessionStatus(session);
     console.log(`Session ID: ${session.sessionId}, Status: ${status}`);
+    
     if (status === 'pending') {
       return (
         <button
@@ -248,10 +251,15 @@ const TeacherSessions = () => {
           Start Session
         </button>
       );
+    } else if (status === 'in-progress') {
+      return 'In Progress';
+    } else if (status === 'completed') {
+      return 'Completed';
     }
-    return status === 'in-progress' ? 'In Progress' : 'Completed';
+    return 'Unknown Status';
   })()}
 </td>
+
 
 
 
