@@ -236,15 +236,23 @@ const TeacherSessions = () => {
 
 
 <td>
-  {getSessionStatus(session) === 'pending' && (
-    <button
-      onClick={() => handleStartSession(session)}
-      style={{ backgroundColor: '#dc3545', color: 'white' }}
-    >
-      Start Session
-    </button>
-  )}
+  {(() => {
+    const status = getSessionStatus(session);
+    console.log(`Session ID: ${session.sessionId}, Status: ${status}`);
+    if (status === 'pending') {
+      return (
+        <button
+          onClick={() => handleStartSession(session)}
+          style={{ backgroundColor: '#dc3545', color: 'white' }}
+        >
+          Start Session
+        </button>
+      );
+    }
+    return status === 'in-progress' ? 'In Progress' : 'Completed';
+  })()}
 </td>
+
 
 
 
