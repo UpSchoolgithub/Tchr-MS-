@@ -30,7 +30,8 @@ const SessionPlans = () => {
   const [existingTopics, setExistingTopics] = useState([]); // Store existing topics
   const [selectedTopic, setSelectedTopic] = useState(""); // Store the selected topic
   const [selectedConcepts, setSelectedConcepts] = useState([]); // Store selected concepts
-  
+  const [arConcepts, setARConcepts] = useState([{ name: "", detailing: "" }]);
+
   const {
     schoolName = "School Name Not Available",
     schoolId,
