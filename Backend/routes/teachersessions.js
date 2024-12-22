@@ -761,28 +761,27 @@ router.post('/teachers/:teacherId/sessions/:sessionId/end', async (req, res) => 
 
     console.log('Concept updates completed.');
 
-    // Update session plan status and endTime
-    await sessionPlan.update(
-      {
-        status: 'completed', // Mark session plan as completed
-        endTime: new Date(), // Set the current date and time as endTime
-      },
-      { transaction }
-    );
-
-    console.log('SessionPlan updated with status "completed" and endTime set.');
+    // Set the end time for the session
+    session.endTime = new Date(); // Set the current time as the end time
+    await session.save({ transaction }); // Save the updated session
 
     // Commit transaction
     await transaction.commit();
-    res.json({ message: 'Session ended successfully!' });
+
+    res.json({
+      message: 'Session ended successfully!',
+      sessionDetails: {
+        id: session.id,
+        startTime: session.startTime || 'N/A', // Include the session start time
+        endTime: session.endTime, // Include the session end time
+      },
+    });
   } catch (error) {
     await transaction.rollback();
     console.error('Error ending session:', error);
     res.status(500).json({ error: error.message || 'Failed to end the session.' });
   }
 });
-
-
 
 
 
