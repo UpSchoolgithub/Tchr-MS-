@@ -1,3 +1,5 @@
+const { Model, DataTypes } = require('sequelize');
+
 class SessionPlan extends Model {
   static associate(models) {
     SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });

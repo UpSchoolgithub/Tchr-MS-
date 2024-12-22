@@ -2,6 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const XLSX = require('xlsx');
 const { Op } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
+
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic');
 const School = require('../models/School');
