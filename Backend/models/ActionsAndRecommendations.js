@@ -24,34 +24,22 @@ ActionsAndRecommendations.init(
     sessionPlanId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'SessionPlans', // References SessionPlans table
-        key: 'id',
-      },
+      references: { model: 'SessionPlans', key: 'id' },
     },
     sessionId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'Sessions', // References Sessions table
-        key: 'id',
-      },
+      references: { model: 'Sessions', key: 'id' },
     },
     chapterId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'Chapters', // References Chapters table
-        key: 'id',
-      },
+      references: { model: 'Chapters', key: 'id' },
     },
     unitId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'Units', // References Units table
-        key: 'id',
-      },
+      references: { model: 'Units', key: 'id' },
     },
     type: {
       type: DataTypes.ENUM('pre-learning', 'post-learning'),

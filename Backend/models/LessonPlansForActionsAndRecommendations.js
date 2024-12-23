@@ -1,7 +1,14 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this is correct
+const sequelize = require('../config/db');
 
-class LessonPlansForActionsAndRecommendations extends Model {}
+class LessonPlansForActionsAndRecommendations extends Model {
+  static associate(models) {
+    this.belongsTo(models.ActionsAndRecommendations, {
+      foreignKey: 'actionsAndRecommendationsId',
+      as: 'ActionsAndRecommendations',
+    });
+  }
+}
 
 LessonPlansForActionsAndRecommendations.init(
   {
@@ -13,12 +20,8 @@ LessonPlansForActionsAndRecommendations.init(
     actionsAndRecommendationsId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'ActionsAndRecommendations',
-        key: 'id',
-      },
+      references: { model: 'ActionsAndRecommendations', key: 'id' },
     },
-    // Add additional fields as necessary
     fieldName: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -31,13 +34,5 @@ LessonPlansForActionsAndRecommendations.init(
     timestamps: true,
   }
 );
-
-// Define associations
-LessonPlansForActionsAndRecommendations.associate = (models) => {
-  LessonPlansForActionsAndRecommendations.belongsTo(models.ActionsAndRecommendations, {
-    foreignKey: 'actionsAndRecommendationsId',
-    as: 'ActionsAndRecommendations',
-  });
-};
 
 module.exports = LessonPlansForActionsAndRecommendations;
