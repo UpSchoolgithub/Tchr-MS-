@@ -17,7 +17,7 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 
 // Endpoint for Fetching Topics and Concepts
-app.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
+router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
   const { type, topicName, conceptDetails, sessionNumber } = req.body;
 
   try {
