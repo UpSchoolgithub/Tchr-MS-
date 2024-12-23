@@ -1,76 +1,43 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Ensure this is correct
 
-LessonPlansForActionsAndRecommendations.associate = (models) => {
-    this.belongsTo(models.ActionsAndRecommendations, {
-      foreignKey: 'actionsAndRecommendationsId',
-      as: 'ActionsAndRecommendations',
-    });
-  };
-  
+class LessonPlansForActionsAndRecommendations extends Model {}
 
-ActionsAndRecommendations.init(
+LessonPlansForActionsAndRecommendations.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    sessionPlanId: {
+    actionsAndRecommendationsId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'SessionPlans', // References SessionPlans table
+        model: 'ActionsAndRecommendations',
         key: 'id',
       },
     },
-    sessionId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Sessions', // References Sessions table
-        key: 'id',
-      },
-    },
-    chapterId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Chapters', // References Chapters table
-        key: 'id',
-      },
-    },
-    unitId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Units', // References Units table
-        key: 'id',
-      },
-    },
-    type: {
-      type: DataTypes.ENUM('pre-learning', 'post-learning'),
-      allowNull: false,
-    },
-    topicName: {
+    // Add additional fields as necessary
+    fieldName: {
       type: DataTypes.STRING,
-      allowNull: false,
-    },
-    conceptName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    order: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
   },
   {
     sequelize,
-    modelName: 'ActionsAndRecommendations',
-    tableName: 'ActionsAndRecommendations',
+    modelName: 'LessonPlansForActionsAndRecommendations',
+    tableName: 'LessonPlansForActionsAndRecommendations',
     timestamps: true,
   }
 );
 
-module.exports = ActionsAndRecommendations;
+// Define associations
+LessonPlansForActionsAndRecommendations.associate = (models) => {
+  LessonPlansForActionsAndRecommendations.belongsTo(models.ActionsAndRecommendations, {
+    foreignKey: 'actionsAndRecommendationsId',
+    as: 'ActionsAndRecommendations',
+  });
+};
+
+module.exports = LessonPlansForActionsAndRecommendations;
