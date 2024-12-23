@@ -75,6 +75,7 @@ app.use('/api/timetable', require('./routes/timetableRoutes'));
 const teacherRoutes = require('./routes/teacherRoutes');
 //const teachersRoutes = require('./routes/teachers');
 //const teacherRoutes = require('./routes/teacher');
+app.use('/api/sessionPlans', sessionPlanRoutes);
 
 
 const testRoutes = require('./routes/tests');
