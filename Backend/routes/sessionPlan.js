@@ -21,35 +21,42 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
   const { type, topicName, conceptDetails, sessionNumber } = req.body;
 
   try {
-    // Create a new topic with a unique topic ID
-    const topicId = generateUniqueId();
+    // Validate inputs
+    if (!type || !['pre-learning', 'post-learning'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid or missing type.' });
+    }
+    if (!topicName || typeof topicName !== 'string') {
+      return res.status(400).json({ message: 'Invalid or missing topicName.' });
+    }
+    if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
+      return res.status(400).json({ message: 'conceptDetails must be a non-empty array.' });
+    }
 
-    const topic = {
+    // Create a new topic
+    const topic = await Topic.create({
       sessionId: req.params.sessionId,
-      topicId,
+      topicId: generateUniqueId(),
       type,
       topicName,
       sessionNumber,
-    };
+    });
 
-    // Insert the topic
-    await db.insert("topics", topic);
-
-    // Insert multiple concepts associated with the topic
+    // Create related concepts
     const concepts = conceptDetails.map((concept) => ({
-      topicId,
+      topicId: topic.id,
       conceptName: concept.name,
       conceptDetailing: concept.detailing,
     }));
 
-    await db.insertMany("concepts", concepts);
+    await Concept.bulkCreate(concepts);
 
     res.status(201).send({ message: "Topic and concepts added successfully!" });
   } catch (error) {
-    console.error("Error saving action/recommendation:", error);
+    console.error("Error saving action/recommendation:", error.message);
     res.status(500).send({ error: "Failed to save topic and concepts." });
   }
 });
+
 
 
 //Create Actions And Recommendations
