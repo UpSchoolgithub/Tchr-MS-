@@ -31,6 +31,7 @@ const SessionPlans = () => {
   const [selectedTopic, setSelectedTopic] = useState(""); // Store the selected topic
   const [selectedConcepts, setSelectedConcepts] = useState([]); // Store selected concepts
   const [arConcepts, setARConcepts] = useState([{ name: "", detailing: "" }]);
+  const [preLearningTopics, setPreLearningTopics] = useState([]);
 
   const {
     schoolName = "School Name Not Available",
@@ -120,7 +121,6 @@ useEffect(() => {
 
   fetchPreLearningTopics();
 }, [sessionId]);
-
 
 
 
@@ -963,21 +963,28 @@ const handleGenerateARLessonPlan = async (arId) => {
               </tr>
             )}
           </tbody>
-          
+
           <tbody>
-  {preLearningTopics.map((topic) => (
-    <tr key={topic.id}>
-      <td>{topic.topicName}</td>
-      <td>
-        {topic.concepts.map((concept) => (
-          <div key={concept.id}>
-            <strong>{concept.conceptName}:</strong> {concept.conceptDetailing}
-          </div>
-        ))}
-      </td>
+  {Array.isArray(preLearningTopics) && preLearningTopics.length > 0 ? (
+    preLearningTopics.map((topic) => (
+      <tr key={topic.id}>
+        <td>{topic.topicName}</td>
+        <td>
+          {topic.concepts.map((concept) => (
+            <div key={concept.id}>
+              <strong>{concept.conceptName}:</strong> {concept.conceptDetailing}
+            </div>
+          ))}
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="2">No pre-learning topics available.</td>
     </tr>
-  ))}
+  )}
 </tbody>
+
         </table>
       </div>
   

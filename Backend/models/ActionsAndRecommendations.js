@@ -38,18 +38,23 @@ ActionsAndRecommendations.init(
     type: {
       type: DataTypes.ENUM('pre-learning', 'post-learning'),
       allowNull: false,
+      validate: {
+        isIn: [['pre-learning', 'post-learning']],
+      },
     },
     topicName: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
     conceptName: {
       type: DataTypes.STRING,
-      allowNull: false,
-    },
-    order: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true, // Not mandatory for pre-learning or post-learning
+      validate: {
+        len: [0, 255], // Optional length restriction
+      },
     },
   },
   {
