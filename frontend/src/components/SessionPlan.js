@@ -81,11 +81,11 @@ const handleOpenARModal = async (type) => {
 
 
 // Save Action and Recommendation
-const handleSaveAR = async () => {
+const handleSaveAR = async (topicId, concepts) => {
   const payload = {
     type: arType,
     topicName: arTopicName,
-    conceptDetails: arConcepts,
+    conceptDetails: concepts,
   };
 
   try {
@@ -93,12 +93,11 @@ const handleSaveAR = async () => {
       `/api/sessions/${sessionId}/actionsAndRecommendations`,
       payload
     );
-    setSuccessMessage(`${arType === "pre-learning" ? "Pre-learning" : "Post-learning"} topic saved successfully!`);
+    setSuccessMessage('Pre-learning topic saved successfully!');
     setShowARModal(false);
-    fetchAR(); // Refresh the list after saving
   } catch (error) {
-    console.error("Error saving action/recommendation:", error.message);
-    setError(`Failed to save ${arType === "pre-learning" ? "pre-learning" : "post-learning"} topic.`);
+    console.error('Error saving pre-learning topic:', error.message);
+    setError('Failed to save pre-learning topic.');
   }
 };
 
@@ -122,7 +121,25 @@ useEffect(() => {
 
 
 
-
+// Function to generate lesson plan for A and R
+const handleGenerateARLessonPlan = async (arId) => {
+  try {
+    const response = await axios.post(
+      `https://tms.up.school/api/sessionPlans/${sessionId}/actionsAndRecommendations/${arId}/generateLessonPlan`,
+      {
+        board,
+        grade: className,
+        subject: subjectName,
+        unit: unitName,
+      }
+    );
+    setSuccessMessage("Lesson plan generated successfully!");
+    setError("");
+  } catch (error) {
+    console.error("Error generating lesson plan for A and R:", error);
+    setError("Failed to generate lesson plan for A and R.");
+  }
+};
 
 // Modal for Adding A and R Topics
 {/* A and R Modal */}
@@ -945,7 +962,7 @@ useEffect(() => {
         </table>
       </div>
   
-      <div className="actions-recommendations-table">
+  <div className="actions-recommendations-table">
   <h3>Actions and Recommendations</h3>
   <table>
     <thead>
