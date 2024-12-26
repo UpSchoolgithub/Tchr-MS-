@@ -32,6 +32,7 @@ const SessionPlans = () => {
   const [selectedConcepts, setSelectedConcepts] = useState([]); // Store selected concepts
   const [arConcepts, setARConcepts] = useState([{ name: "", detailing: "" }]);
   const [preLearningTopics, setPreLearningTopics] = useState([]);
+  const [actionsAndRecommendations, setActionsAndRecommendations] = useState([]);
 
   const {
     schoolName = "School Name Not Available",
@@ -85,11 +86,6 @@ const handleSaveAR = async (topicId, concepts) => {
     type: arType,
     topicName: arTopicName,
     conceptDetails: concepts,
-    chapterId: location.state?.chapterId,
-    unitId: location.state?.unitId,
-    subjectId: subjectId,
-    classId: classId,
-    board: board,
   };
 
   try {
@@ -99,27 +95,27 @@ const handleSaveAR = async (topicId, concepts) => {
     );
     setSuccessMessage('Pre-learning topic saved successfully!');
     setShowARModal(false);
-    fetchSessionPlans(); // Refresh data
   } catch (error) {
     console.error('Error saving pre-learning topic:', error.message);
     setError('Failed to save pre-learning topic.');
   }
 };
 
+
 useEffect(() => {
-  const fetchPreLearningTopics = async () => {
+  const fetchAR = async () => {
     try {
       const response = await axios.get(
-        `/api/sessionPlans/${sessionId}/actionsAndRecommendations/preLearning`
+        `/api/sessions/${sessionId}/actionsAndRecommendations`
       );
-      setPreLearningTopics(response.data.topics || []);
+      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
     } catch (error) {
-      console.error('Error fetching pre-learning topics:', error.message);
-      setError('Failed to fetch pre-learning topics.');
+      console.error('Error fetching actions and recommendations:', error.message);
+      setError('Failed to fetch actions and recommendations.');
     }
   };
 
-  fetchPreLearningTopics();
+  fetchAR();
 }, [sessionId]);
 
 
@@ -962,32 +958,44 @@ const handleGenerateARLessonPlan = async (arId) => {
                 <td colSpan="5">No session plans available. Please upload or create a new one.</td>
               </tr>
             )}
-          </tbody>
-
-          <tbody>
-  {Array.isArray(preLearningTopics) && preLearningTopics.length > 0 ? (
-    preLearningTopics.map((topic) => (
-      <tr key={topic.id}>
-        <td>{topic.topicName}</td>
-        <td>
-          {topic.concepts.map((concept) => (
-            <div key={concept.id}>
-              <strong>{concept.conceptName}:</strong> {concept.conceptDetailing}
-            </div>
-          ))}
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="2">No pre-learning topics available.</td>
-    </tr>
-  )}
-</tbody>
-
+          </tbody>          
         </table>
       </div>
   
+      <div className="actions-recommendations-table">
+  <h3>Actions and Recommendations</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Topic</th>
+        <th>Concepts</th>
+      </tr>
+    </thead>
+    <tbody>
+      {actionsAndRecommendations.length > 0 ? (
+        actionsAndRecommendations.map((ar) => (
+          <tr key={ar.id}>
+            <td>{ar.type}</td>
+            <td>{ar.topicName}</td>
+            <td>
+              {ar.Concepts.map((concept) => (
+                <div key={concept.id}>
+                  <strong>{concept.conceptName}:</strong> {concept.conceptDetailing}
+                </div>
+              ))}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="3">No actions or recommendations available.</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
       {/* A and R Modal */}
       <Modal show={showARModal} onHide={() => setShowARModal(false)}>
   <Modal.Header closeButton>

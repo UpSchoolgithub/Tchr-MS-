@@ -53,53 +53,46 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 
 
 //Create Actions And Recommendations Pre-Learning Topics
-router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
-  const { sessionPlanId } = req.params;
-  const { type, topicName, conceptDetails, chapterId, unitId, subjectId, classId, board } = req.body;
+router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+  const { sessionId } = req.params;
+  const { type, topicName, conceptDetails } = req.body;
 
   try {
-    if (type !== 'pre-learning') {
-      return res.status(400).json({ message: 'Only pre-learning type is supported here.' });
+    // Ensure required fields
+    if (!type || !topicName || !conceptDetails) {
+      return res.status(400).json({ message: 'Missing required fields.' });
     }
 
-    const transaction = await sequelize.transaction();
-
-    // Create the topic entry
-    const topic = await ActionsAndRecommendations.create({
-      sessionPlanId,
+    // Create a new Actions and Recommendations entry
+    const action = await ActionsAndRecommendations.create({
+      sessionId,
       type,
       topicName,
-      chapterId,
-      unitId,
-      subjectId,
-      classId,
-      board,
-    }, { transaction });
+      conceptName: conceptDetails.map((c) => c.name).join('; '), // Concatenate concept names
+    });
 
-    // Create associated concepts
+    // Save associated concepts
     const concepts = conceptDetails.map((concept) => ({
-      actionsAndRecommendationsId: topic.id,
+      actionsAndRecommendationsId: action.id,
       conceptName: concept.name,
       conceptDetailing: concept.detailing,
     }));
+    await Concepts.bulkCreate(concepts);
 
-    await Concepts.bulkCreate(concepts, { transaction });
-
-    await transaction.commit();
-    res.status(201).json({ message: 'Pre-learning topic and concepts added successfully.' });
+    res.status(201).json({ message: 'Action/Recommendation added successfully.', action });
   } catch (error) {
-    console.error('Error adding pre-learning topic:', error.message);
-    res.status(500).json({ message: 'Failed to add pre-learning topic.', error: error.message });
+    console.error('Error saving action/recommendation:', error.message);
+    res.status(500).json({ message: 'Internal server error.' });
   }
 });
 
 //Fetch Pre-Learning Topics
-router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations/preLearning', async (req, res) => {
-  const { sessionPlanId } = req.params;
+router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+  const { sessionId } = req.params;
 
   try {
-    const topics = await ActionsAndRecommendations.findAll({
-      where: { sessionPlanId, type: 'pre-learning' },
+    const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
+      where: { sessionId },
       include: [
         {
           model: Concepts,
@@ -109,10 +102,10 @@ router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations/preLearning',
       ],
     });
 
-    res.status(200).json({ topics });
+    res.status(200).json({ actionsAndRecommendations });
   } catch (error) {
-    console.error('Error fetching pre-learning topics:', error.message);
-    res.status(500).json({ message: 'Failed to fetch pre-learning topics.', error: error.message });
+    console.error('Error fetching actions and recommendations:', error.message);
+    res.status(500).json({ message: 'Internal server error.' });
   }
 });
 
