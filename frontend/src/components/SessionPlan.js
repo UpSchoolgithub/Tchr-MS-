@@ -82,10 +82,13 @@ const handleOpenARModal = async (type) => {
 const handleSaveAR = async (topicId, concepts) => {
   const payload = {
     type: arType,
-    topicName: arTopicName, // For pre-learning
-    conceptDetails: concepts, // For pre-learning (multiple concepts)
-    topicId, // For post-learning
-    conceptIds: selectedConcepts, // For post-learning
+    topicName: arTopicName,
+    conceptDetails: concepts,
+    chapterId: location.state?.chapterId,
+    unitId: location.state?.unitId,
+    subjectId: subjectId,
+    classId: classId,
+    board: board,
   };
 
   try {
@@ -93,21 +96,30 @@ const handleSaveAR = async (topicId, concepts) => {
       `/api/sessions/${sessionId}/actionsAndRecommendations`,
       payload
     );
-
-    // Fetch updated session plans
-    fetchSessionPlans();
-
-    setSuccessMessage("Action/Recommendation added successfully!");
+    setSuccessMessage('Pre-learning topic saved successfully!');
     setShowARModal(false);
-    setARTopicName(""); // Reset topic name
-    setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
-    setError("");
+    fetchSessionPlans(); // Refresh data
   } catch (error) {
-    console.error("Error saving action/recommendation:", error);
-    setError("Failed to save action/recommendation. Please try again.");
+    console.error('Error saving pre-learning topic:', error.message);
+    setError('Failed to save pre-learning topic.');
   }
 };
 
+useEffect(() => {
+  const fetchPreLearningTopics = async () => {
+    try {
+      const response = await axios.get(
+        `/api/sessionPlans/${sessionId}/actionsAndRecommendations/preLearning`
+      );
+      setPreLearningTopics(response.data.topics || []);
+    } catch (error) {
+      console.error('Error fetching pre-learning topics:', error.message);
+      setError('Failed to fetch pre-learning topics.');
+    }
+  };
+
+  fetchPreLearningTopics();
+}, [sessionId]);
 
 
 
@@ -951,6 +963,21 @@ const handleGenerateARLessonPlan = async (arId) => {
               </tr>
             )}
           </tbody>
+          
+          <tbody>
+  {preLearningTopics.map((topic) => (
+    <tr key={topic.id}>
+      <td>{topic.topicName}</td>
+      <td>
+        {topic.concepts.map((concept) => (
+          <div key={concept.id}>
+            <strong>{concept.conceptName}:</strong> {concept.conceptDetailing}
+          </div>
+        ))}
+      </td>
+    </tr>
+  ))}
+</tbody>
         </table>
       </div>
   

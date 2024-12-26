@@ -52,57 +52,67 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 });
 
 
-//Create Actions And Recommendations
+//Create Actions And Recommendations Pre-Learning Topics
 router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
   const { sessionPlanId } = req.params;
-  const { type, topicName, conceptName, sessionId, chapterId, unitId, order } = req.body;
+  const { type, topicName, conceptDetails, chapterId, unitId, subjectId, classId, board } = req.body;
 
   try {
-    if (!['pre-learning', 'post-learning'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid type. Must be "pre-learning" or "post-learning".' });
-    }
-
-    if (!topicName || !conceptName) {
-      return res.status(400).json({ message: 'Topic name and concept name are required.' });
+    if (type !== 'pre-learning') {
+      return res.status(400).json({ message: 'Only pre-learning type is supported here.' });
     }
 
     const transaction = await sequelize.transaction();
-    try {
-      // Adjust session numbers for "pre-learning"
-      if (type === 'pre-learning') {
-        await SessionPlan.increment('sessionNumber', {
-          where: { id: sessionPlanId },
-          transaction,
-        });
-      }
 
-      // Insert the action or recommendation
-      const actionOrRecommendation = await ActionsAndRecommendations.create(
-        {
-          sessionPlanId,
-          sessionId,
-          chapterId,
-          unitId,
-          type,
-          topicName,
-          conceptName,
-          order,
-        },
-        { transaction }
-      );
+    // Create the topic entry
+    const topic = await ActionsAndRecommendations.create({
+      sessionPlanId,
+      type,
+      topicName,
+      chapterId,
+      unitId,
+      subjectId,
+      classId,
+      board,
+    }, { transaction });
 
-      await transaction.commit();
-      res.status(201).json({
-        message: `${type} topic added successfully`,
-        actionOrRecommendation,
-      });
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
+    // Create associated concepts
+    const concepts = conceptDetails.map((concept) => ({
+      actionsAndRecommendationsId: topic.id,
+      conceptName: concept.name,
+      conceptDetailing: concept.detailing,
+    }));
+
+    await Concepts.bulkCreate(concepts, { transaction });
+
+    await transaction.commit();
+    res.status(201).json({ message: 'Pre-learning topic and concepts added successfully.' });
   } catch (error) {
-    console.error('Error adding action or recommendation:', error.message);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error('Error adding pre-learning topic:', error.message);
+    res.status(500).json({ message: 'Failed to add pre-learning topic.', error: error.message });
+  }
+});
+
+//Fetch Pre-Learning Topics
+router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations/preLearning', async (req, res) => {
+  const { sessionPlanId } = req.params;
+
+  try {
+    const topics = await ActionsAndRecommendations.findAll({
+      where: { sessionPlanId, type: 'pre-learning' },
+      include: [
+        {
+          model: Concepts,
+          as: 'concepts',
+          attributes: ['conceptName', 'conceptDetailing'],
+        },
+      ],
+    });
+
+    res.status(200).json({ topics });
+  } catch (error) {
+    console.error('Error fetching pre-learning topics:', error.message);
+    res.status(500).json({ message: 'Failed to fetch pre-learning topics.', error: error.message });
   }
 });
 
