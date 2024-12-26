@@ -17,68 +17,6 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const ActionsAndRecommendations = require("../models/ActionsAndRecommendations");
 
-// Create an Action/Recommendation
-router.post("/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
-  const { sessionId } = req.params;
-  const { type, topicName, conceptDetails } = req.body;
-
-  try {
-    if (!type || !topicName || !conceptDetails) {
-      return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    // Save the action/recommendation
-    const action = await ActionsAndRecommendations.create({
-      sessionId,
-      type,
-      topicName,
-      conceptName: conceptDetails.map((c) => c.name).join("; "), // Concatenate concept names
-    });
-
-    res.status(201).json({ message: "Action/Recommendation saved successfully.", action });
-  } catch (error) {
-    console.error("Error saving action/recommendation:", error.message);
-    res.status(500).json({ message: "Internal server error." });
-  }
-});
-
-// Fetch Actions/Recommendations for a Session
-router.get("/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
-  const { sessionId } = req.params;
-
-  try {
-    // Fetch all actions/recommendations for the given session
-    const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
-      where: { sessionId },
-    });
-
-    res.status(200).json({ actionsAndRecommendations });
-  } catch (error) {
-    console.error("Error fetching actions and recommendations:", error.message);
-    res.status(500).json({ message: "Internal server error." });
-  }
-});
-
-// Delete an Action/Recommendation
-router.delete("/actionsAndRecommendations/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const actionOrRecommendation = await ActionsAndRecommendations.findByPk(id);
-
-    if (!actionOrRecommendation) {
-      return res.status(404).json({ message: "Action/Recommendation not found." });
-    }
-
-    await actionOrRecommendation.destroy();
-
-    res.status(200).json({ message: "Action/Recommendation deleted successfully." });
-  } catch (error) {
-    console.error("Error deleting action/recommendation:", error.message);
-    res.status(500).json({ message: "Failed to delete action/recommendation." });
-  }
-});
-
 
 
 // Upload Session Plans
