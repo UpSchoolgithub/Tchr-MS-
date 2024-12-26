@@ -18,44 +18,33 @@ const axios = require('axios');
 
 // Endpoint for Fetching Topics and Concepts
 router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
-  const { type, topicName, conceptDetails, sessionNumber } = req.body;
+  const { type, topicName, conceptDetails } = req.body;
+
+  console.log("Received Data:", {
+    type,
+    topicName,
+    conceptDetails,
+  });
+
+  // Validate inputs
+  if (!type || !['pre-learning', 'post-learning'].includes(type)) {
+    return res.status(400).json({ message: 'Invalid or missing type.' });
+  }
+  if (!topicName || typeof topicName !== 'string' || topicName.trim() === '') {
+    return res.status(400).json({ message: 'Topic name is required.' });
+  }
+  if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
+    return res.status(400).json({ message: 'Concept details must be a non-empty array.' });
+  }
 
   try {
-    // Validate inputs
-    if (!type || !['pre-learning', 'post-learning'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid or missing type.' });
-    }
-    if (!topicName || typeof topicName !== 'string') {
-      return res.status(400).json({ message: 'Invalid or missing topicName.' });
-    }
-    if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
-      return res.status(400).json({ message: 'conceptDetails must be a non-empty array.' });
-    }
-
-    // Create a new topic
-    const topic = await Topic.create({
-      sessionId: req.params.sessionId,
-      topicId: generateUniqueId(),
-      type,
-      topicName,
-      sessionNumber,
-    });
-
-    // Create related concepts
-    const concepts = conceptDetails.map((concept) => ({
-      topicId: topic.id,
-      conceptName: concept.name,
-      conceptDetailing: concept.detailing,
-    }));
-
-    await Concept.bulkCreate(concepts);
-
-    res.status(201).send({ message: "Topic and concepts added successfully!" });
+    // Process the logic...
   } catch (error) {
-    console.error("Error saving action/recommendation:", error.message);
+    console.error("Error:", error.message);
     res.status(500).send({ error: "Failed to save topic and concepts." });
   }
 });
+
 
 
 
