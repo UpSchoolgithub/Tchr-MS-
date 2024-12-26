@@ -81,11 +81,11 @@ const handleOpenARModal = async (type) => {
 
 
 // Save Action and Recommendation
-const handleSaveAR = async (topicId, concepts) => {
+const handleSaveAR = async () => {
   const payload = {
     type: arType,
     topicName: arTopicName,
-    conceptDetails: concepts,
+    conceptDetails: arConcepts,
   };
 
   try {
@@ -93,11 +93,12 @@ const handleSaveAR = async (topicId, concepts) => {
       `/api/sessions/${sessionId}/actionsAndRecommendations`,
       payload
     );
-    setSuccessMessage('Pre-learning topic saved successfully!');
+    setSuccessMessage(`${arType === "pre-learning" ? "Pre-learning" : "Post-learning"} topic saved successfully!`);
     setShowARModal(false);
+    fetchAR(); // Refresh the list after saving
   } catch (error) {
-    console.error('Error saving pre-learning topic:', error.message);
-    setError('Failed to save pre-learning topic.');
+    console.error("Error saving action/recommendation:", error.message);
+    setError(`Failed to save ${arType === "pre-learning" ? "pre-learning" : "post-learning"} topic.`);
   }
 };
 
@@ -121,25 +122,7 @@ useEffect(() => {
 
 
 
-// Function to generate lesson plan for A and R
-const handleGenerateARLessonPlan = async (arId) => {
-  try {
-    const response = await axios.post(
-      `https://tms.up.school/api/sessionPlans/${sessionId}/actionsAndRecommendations/${arId}/generateLessonPlan`,
-      {
-        board,
-        grade: className,
-        subject: subjectName,
-        unit: unitName,
-      }
-    );
-    setSuccessMessage("Lesson plan generated successfully!");
-    setError("");
-  } catch (error) {
-    console.error("Error generating lesson plan for A and R:", error);
-    setError("Failed to generate lesson plan for A and R.");
-  }
-};
+
 
 // Modal for Adding A and R Topics
 {/* A and R Modal */}

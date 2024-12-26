@@ -15,240 +15,69 @@ const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
+const ActionsAndRecommendations = require("../models/ActionsAndRecommendations");
 
-// Endpoint for Fetching Topics and Concepts
-router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
-  const { type, topicName, conceptDetails, sessionNumber } = req.body;
-
-  try {
-    // Create a new topic with a unique topic ID
-    const topicId = generateUniqueId();
-
-    const topic = {
-      sessionId: req.params.sessionId,
-      topicId,
-      type,
-      topicName,
-      sessionNumber,
-    };
-
-    // Insert the topic
-    await db.insert("topics", topic);
-
-    // Insert multiple concepts associated with the topic
-    const concepts = conceptDetails.map((concept) => ({
-      topicId,
-      conceptName: concept.name,
-      conceptDetailing: concept.detailing,
-    }));
-
-    await db.insertMany("concepts", concepts);
-
-    res.status(201).send({ message: "Topic and concepts added successfully!" });
-  } catch (error) {
-    console.error("Error saving action/recommendation:", error);
-    res.status(500).send({ error: "Failed to save topic and concepts." });
-  }
-});
-
-
-//Create Actions And Recommendations Pre-Learning Topics
-router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+// Create an Action/Recommendation
+router.post("/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
   const { sessionId } = req.params;
   const { type, topicName, conceptDetails } = req.body;
 
   try {
-    // Ensure required fields
     if (!type || !topicName || !conceptDetails) {
-      return res.status(400).json({ message: 'Missing required fields.' });
+      return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // Create a new Actions and Recommendations entry
+    // Save the action/recommendation
     const action = await ActionsAndRecommendations.create({
       sessionId,
       type,
       topicName,
-      conceptName: conceptDetails.map((c) => c.name).join('; '), // Concatenate concept names
+      conceptName: conceptDetails.map((c) => c.name).join("; "), // Concatenate concept names
     });
 
-    // Save associated concepts
-    const concepts = conceptDetails.map((concept) => ({
-      actionsAndRecommendationsId: action.id,
-      conceptName: concept.name,
-      conceptDetailing: concept.detailing,
-    }));
-    await Concepts.bulkCreate(concepts);
-
-    res.status(201).json({ message: 'Action/Recommendation added successfully.', action });
+    res.status(201).json({ message: "Action/Recommendation saved successfully.", action });
   } catch (error) {
-    console.error('Error saving action/recommendation:', error.message);
-    res.status(500).json({ message: 'Internal server error.' });
+    console.error("Error saving action/recommendation:", error.message);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
-//Fetch Pre-Learning Topics
-router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+// Fetch Actions/Recommendations for a Session
+router.get("/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
   const { sessionId } = req.params;
 
   try {
+    // Fetch all actions/recommendations for the given session
     const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
       where: { sessionId },
-      include: [
-        {
-          model: Concepts,
-          as: 'concepts',
-          attributes: ['conceptName', 'conceptDetailing'],
-        },
-      ],
     });
 
     res.status(200).json({ actionsAndRecommendations });
   } catch (error) {
-    console.error('Error fetching actions and recommendations:', error.message);
-    res.status(500).json({ message: 'Internal server error.' });
+    console.error("Error fetching actions and recommendations:", error.message);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
-
-// Generate Lesson Plan for A and R
-router.post(
-  '/sessionPlans/:sessionPlanId/actionsAndRecommendations/:id/generateLessonPlan',
-  async (req, res) => {
-    const { sessionPlanId, id } = req.params;
-
-    try {
-      // Fetch the action/recommendation details
-      const actionOrRecommendation = await ActionsAndRecommendations.findByPk(id);
-
-      if (!actionOrRecommendation) {
-        return res.status(404).json({ message: 'Action or recommendation not found.' });
-      }
-
-      const payload = {
-        board: req.body.board || 'Board Not Specified',
-        grade: req.body.grade || 'Grade Not Specified',
-        subject: req.body.subject || 'Subject Not Specified',
-        unit: req.body.unit || 'Unit Not Specified',
-        chapter: actionOrRecommendation.topicName,
-        sessionType: actionOrRecommendation.type,
-        duration: req.body.duration || 45,
-        topics: [
-          {
-            topic: actionOrRecommendation.topicName,
-            concepts: [actionOrRecommendation.conceptName],
-          },
-        ],
-      };
-
-      // Call the external API to generate the lesson plan
-      const response = await axios.post(
-        'https://dynamiclp.up.school/generate-lesson-plan',
-        payload
-      );
-
-      const generatedLessonPlan = response.data.lesson_plan || 'No Lesson Plan Generated';
-
-      // Save the generated lesson plan
-      await LessonPlansForActionsAndRecommendations.create({
-        actionsAndRecommendationsId: id,
-        generatedLessonPlan,
-      });
-
-      res.status(201).json({
-        message: 'Lesson plan generated successfully.',
-        lessonPlan: generatedLessonPlan,
-      });
-    } catch (error) {
-      console.error('Error generating lesson plan:', error.message);
-      res.status(500).json({ message: 'Failed to generate lesson plan.', error: error.message });
-    }
-  }
-);
-
-// Fetching All Actions and Recommendations
-router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
-  const { sessionPlanId } = req.params;
-
-  try {
-    const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
-      where: { sessionPlanId },
-      order: [['order', 'ASC']],
-    });
-
-    res.status(200).json({ actionsAndRecommendations });
-  } catch (error) {
-    console.error('Error fetching actions and recommendations:', error.message);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-
-// Fetch Generated Lesson Plan for A and R
-router.get('/actionsAndRecommendations/:id/lessonPlan', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const lessonPlan = await LessonPlansForActionsAndRecommendations.findOne({
-      where: { actionsAndRecommendationsId: id },
-    });
-
-    if (!lessonPlan) {
-      return res.status(404).json({ message: 'Lesson plan not found.' });
-    }
-
-    res.status(200).json({ lessonPlan: lessonPlan.generatedLessonPlan });
-  } catch (error) {
-    console.error('Error fetching lesson plan:', error.message);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-});
-//Delete Action or Recommendation
-router.delete('/actionsAndRecommendations/:id', async (req, res) => {
+// Delete an Action/Recommendation
+router.delete("/actionsAndRecommendations/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     const actionOrRecommendation = await ActionsAndRecommendations.findByPk(id);
 
     if (!actionOrRecommendation) {
-      return res.status(404).json({ message: 'Action or recommendation not found.' });
+      return res.status(404).json({ message: "Action/Recommendation not found." });
     }
 
     await actionOrRecommendation.destroy();
 
-    res.status(200).json({ message: 'Action or recommendation deleted successfully.' });
+    res.status(200).json({ message: "Action/Recommendation deleted successfully." });
   } catch (error) {
-    console.error('Error deleting action or recommendation:', error.message);
-    res.status(500).json({ message: 'Failed to delete action or recommendation.', error: error.message });
+    console.error("Error deleting action/recommendation:", error.message);
+    res.status(500).json({ message: "Failed to delete action/recommendation." });
   }
 });
-
-// Proportional Time Allocation
-const allocateDurations = (conceptDetails, totalDuration) => {
-  const wordCounts = conceptDetails.map((detail) => (detail ? detail.split(" ").length : 1));
-  const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
-  return wordCounts.map((count) => Math.floor((count / totalWords) * totalDuration));
-};
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-const upload = multer({ storage });
-// Helper function to validate row data
-const validateRow = (row) => {
-  console.log("Validating row:", row); // Debugging
-  if (!row.SessionNumber || !row.TopicName || !row.Concepts) {
-    return 'Missing required fields: SessionNumber, TopicName, or Concepts.';
-  }
-  const concepts = row.Concepts.split(';');
-  const details = row.ConceptDetailing ? row.ConceptDetailing.split(';') : [];
-  if (concepts.length !== details.length) {
-    return 'Mismatch between Concepts and ConceptDetailing.';
-  }
-  return null; // No validation errors
-};
 
 
 
