@@ -5,6 +5,13 @@ class SessionPlan extends Model {
   static associate(models) {
     SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
     SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
+    SessionPlan.hasMany(models.ActionsAndRecommendations, {
+      foreignKey: 'sessionPlanId',
+      as: 'ActionsAndRecommendations',
+      onDelete: 'CASCADE',
+    });
+    
+  
   }
 }
 

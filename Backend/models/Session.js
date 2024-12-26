@@ -41,6 +41,11 @@ class Session extends Model {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
+    this.hasMany(models.ActionsAndRecommendations, {
+      foreignKey: 'sessionId',
+      as: 'ActionsAndRecommendations',
+      onDelete: 'CASCADE',
+    });
   }
 }
 
