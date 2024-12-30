@@ -108,16 +108,17 @@ useEffect(() => {
       const response = await axios.get(
         `/api/sessions/${sessionId}/actionsAndRecommendations`
       );
-      console.log("Fetched Actions and Recommendations:", response.data);
+      console.log("Fetched Actions and Recommendations:", response.data); // Add this for debugging
       setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
     } catch (error) {
       console.error("Error fetching actions and recommendations:", error.message);
       setError("Failed to fetch actions and recommendations.");
     }
   };
-
   fetchAR();
 }, [sessionId]);
+
+
 
 
 
@@ -993,6 +994,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </tr>
   )}
 </tbody>
+
 
   </table>
 </div>
