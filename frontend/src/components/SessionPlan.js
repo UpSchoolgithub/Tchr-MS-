@@ -102,19 +102,20 @@ const handleSaveAR = async (topicId, concepts) => {
 };
 
 
-const fetchAR = async () => {
-  try {
-    const response = await axios.get(
-      `/api/sessions/${sessionId}/actionsAndRecommendations`
-    );
-    console.log('Actions and Recommendations API Response:', response.data);
-    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-  } catch (error) {
-    console.error('Error fetching actions and recommendations:', error.message);
-    setError('Failed to fetch actions and recommendations.');
-  }
-};
-
+useEffect(() => {
+  const fetchAR = async () => {
+    try {
+      const response = await axios.get(
+        `/api/sessions/${sessionId}/actionsAndRecommendations`
+      );
+      console.log('Actions and Recommendations API Response:', response.data);
+      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+    } catch (error) {
+      console.error('Error fetching actions and recommendations:', error.message);
+      setError('Failed to fetch actions and recommendations.');
+    }
+  };
+  
 
   fetchAR();
 }, [sessionId]);
@@ -994,6 +995,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     <td colSpan="4">No actions or recommendations available.</td>
   </tr>
 )}
+
 
 
     </tbody>
