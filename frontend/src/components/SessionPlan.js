@@ -122,6 +122,7 @@ useEffect(() => {
 
 
 
+
 // Function to generate lesson plan for A and R
 const handleGenerateARLessonPlan = async (arId) => {
   try {
@@ -970,38 +971,35 @@ const handleGenerateARLessonPlan = async (arId) => {
       <tr>
         <th>Type</th>
         <th>Topic</th>
-        <th>Concepts</th>
+        <th>Concept</th>
         <th>Concept Details</th>
       </tr>
     </thead>
     <tbody>
-      {actionsAndRecommendations.length > 0 ? (
-        actionsAndRecommendations.map((ar) => (
-          <tr key={ar.id}>
-            <td>{ar.type}</td>
-            <td>{ar.topicName}</td>
-            <td>
-              {ar.conceptDetails?.map((concept, index) => (
-                <div key={index}>
-                  <strong>{concept.name}:</strong> {concept.detailing || "No details provided"}
-                </div>
-              ))}
-            </td>
-            <td>
-              {ar.conceptDetails?.map((concept, index) => (
-                <div key={index}>{concept.detailing || "No details provided"}</div>
-              ))}
-            </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="4">No actions or recommendations available.</td>
-        </tr>
-      )}
+    {actionsAndRecommendations.length > 0 ? (
+  actionsAndRecommendations.map((ar) => {
+    console.log('Rendering:', ar);
+    return (
+      <tr key={ar.id}>
+        <td>{ar.type}</td>
+        <td>{ar.topicName || "No Topic Name"}</td>
+        <td>{ar.conceptName || "No Concept Name"}</td>
+        <td>{ar.conceptDetailing || "No details provided"}</td>
+      </tr>
+    );
+  })
+) : (
+  <tr>
+    <td colSpan="4">No actions or recommendations available.</td>
+  </tr>
+)}
+
+
     </tbody>
   </table>
 </div>
+
+
 
 
       {/* A and R Modal */}
