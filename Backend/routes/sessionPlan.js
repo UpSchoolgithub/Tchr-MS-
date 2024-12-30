@@ -18,6 +18,7 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 
 // Fetch topics for a session of post learning
+// Fetch topics for a session with concepts
 router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
@@ -28,16 +29,28 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
         {
           model: Topic,
           as: 'Topics',
-          attributes: ['id', 'topicName'], // Fetch only relevant fields
+          attributes: ['id', 'topicName'],
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts',
+              attributes: ['id', 'conceptName'],
+            },
+          ],
         },
       ],
     });
 
-    // Extract topics from session plans
-    const topics = sessionPlans.flatMap(plan => plan.Topics.map(topic => ({
-      id: topic.id,
-      name: topic.topicName,
-    })));
+    const topics = sessionPlans.flatMap((plan) =>
+      plan.Topics.map((topic) => ({
+        id: topic.id,
+        name: topic.topicName,
+        concepts: topic.Concepts.map((concept) => ({
+          id: concept.id,
+          name: concept.conceptName,
+        })),
+      }))
+    );
 
     res.status(200).json({ topics });
   } catch (error) {

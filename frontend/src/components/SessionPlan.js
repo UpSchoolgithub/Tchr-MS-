@@ -244,37 +244,89 @@ const handleGenerateARLessonPlan = async (arId) => {
       <Form.Control
         as="select"
         value={selectedTopic}
-        onChange={(e) => setSelectedTopic(e.target.value)}
+        onChange={(e) => {
+          const selected = e.target.value;
+          const topic = existingTopics.find((t) => t.id === selected);
+          setSelectedTopic(selected);
+          setSelectedConcepts((prev) => ({
+            ...prev,
+            [selected]: topic?.concepts || [],
+          }));
+        }}
       >
         <option value="">Choose a topic</option>
-        {existingTopics.map((topic) => (
-          <option key={topic.id} value={topic.id}>
-            {topic.name}
-          </option>
-        ))}
+        {existingTopics
+          .filter((topic) => !Object.keys(selectedConcepts).includes(topic.id))
+          .map((topic) => (
+            <option key={topic.id} value={topic.id}>
+              {topic.name}
+            </option>
+          ))}
       </Form.Control>
     </Form.Group>
-    <Form.Group>
-      <Form.Label>Select Concepts</Form.Label>
-      {existingTopics
-        .find((topic) => topic.id === selectedTopic)
-        ?.concepts.map((concept) => (
-          <Form.Check
-            key={concept.id}
-            type="checkbox"
-            label={concept.name}
-            value={concept.id}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSelectedConcepts((prev) =>
-                prev.includes(value)
-                  ? prev.filter((id) => id !== value)
-                  : [...prev, value]
-              );
-            }}
-          />
-        ))}
-    </Form.Group>
+    {selectedTopic && (
+      <Form.Group>
+        <Form.Label>Choose Concepts</Form.Label>
+        {existingTopics
+          .find((topic) => topic.id === selectedTopic)
+          ?.concepts.map((concept) => (
+            <Form.Check
+              key={concept.id}
+              type="checkbox"
+              label={concept.name}
+              value={concept.id}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedConcepts((prev) => ({
+                  ...prev,
+                  [selectedTopic]: prev[selectedTopic].includes(value)
+                    ? prev[selectedTopic].filter((id) => id !== value)
+                    : [...prev[selectedTopic], value],
+                }));
+              }}
+            />
+          ))}
+      </Form.Group>
+    )}
+    <Button
+      variant="success"
+      className="mt-2"
+      onClick={() => {
+        setAddedTopics((prev) => [
+          ...prev,
+          {
+            topicId: selectedTopic,
+            topicName: existingTopics.find((t) => t.id === selectedTopic)?.name,
+            concepts: selectedConcepts[selectedTopic] || [],
+          },
+        ]);
+        setSelectedTopic(""); // Clear selected topic
+        setSelectedConcepts((prev) => {
+          const updated = { ...prev };
+          delete updated[selectedTopic];
+          return updated;
+        });
+      }}
+    >
+      + Add Topic
+    </Button>
+    <div className="added-topics">
+      <h5>Added Topics</h5>
+      {addedTopics.map((topic, index) => (
+        <div key={index} className="added-topic">
+          <strong>{topic.topicName}</strong>
+          <ul>
+            {topic.concepts.map((conceptId) => (
+              <li key={conceptId}>
+                {existingTopics
+                  .find((t) => t.id === topic.topicId)
+                  ?.concepts.find((c) => c.id === conceptId)?.name || ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   </>
 )}
 
