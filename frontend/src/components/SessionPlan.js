@@ -984,22 +984,22 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-    {actionsAndRecommendations.length > 0 ? (
-  actionsAndRecommendations.map((ar) => (
-    <tr key={ar.id}>
-      <td>{ar.type || "Unknown Type"}</td>
-      <td>{ar.topicName || "Unnamed Topic"}</td>
-      <td>{ar.conceptName || "Unnamed Concept"}</td>
-      <td>{ar.conceptDetailing || "No Detailing"}</td>
+  {actionsAndRecommendations.length > 0 ? (
+    actionsAndRecommendations.map((ar) => (
+      <tr key={ar.id}>
+        <td>{ar.type || "Unknown Type"}</td>
+        <td>{ar.topicName || "Unnamed Topic"}</td>
+        <td>{ar.conceptName || "Unnamed Concept"}</td>
+        <td>{ar.conceptDetailing || "No Detailing"}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="4">No actions or recommendations available.</td>
     </tr>
-  ))
-) : (
-  <tr>
-    <td colSpan="4">No actions or recommendations available.</td>
-  </tr>
-)}
-
+  )}
 </tbody>
+
 
 
 
