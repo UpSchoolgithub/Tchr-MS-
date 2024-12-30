@@ -17,8 +17,7 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 
-// Fetch topics for a session of post learning
-// Fetch topics for a session with concepts
+// Fetch topics for a session with concepts post learning
 router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
