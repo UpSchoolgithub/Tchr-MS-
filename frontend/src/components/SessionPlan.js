@@ -81,23 +81,28 @@ const handleOpenARModal = async (type) => {
 
 
 // Save Action and Recommendation
-const handleSaveAR = async (topicId, concepts) => {
+const handleSaveAR = async () => {
   const payload = {
     type: arType,
     topicName: arTopicName,
-    conceptDetails: concepts,
+    conceptDetails: arConcepts.map((concept) => ({
+      name: concept.name.trim(),
+      detailing: concept.detailing.trim(),
+    })),
   };
 
   try {
+    console.log(`Payload:`, payload);
     const response = await axios.post(
-      `/api/sessions/${sessionId}/actionsAndRecommendations`,
-      payload
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+      payload,
+      { withCredentials: true } // Include credentials if needed
     );
     setSuccessMessage('Pre-learning topic saved successfully!');
     setShowARModal(false);
   } catch (error) {
-    console.error('Error saving pre-learning topic:', error.message);
-    setError('Failed to save pre-learning topic.');
+    console.error('Error:', error.response?.data || error.message);
+    setError(error.response?.data?.message || 'Failed to save pre-learning topic.');
   }
 };
 
