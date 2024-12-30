@@ -67,8 +67,10 @@ const handleOpenARModal = async (type) => {
 
   if (type === 'post-learning') {
     try {
-      const response = await axios.get(`/api/sessions/${sessionId}/topics`);
-      const topics = response.data.topics || [];
+      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, {
+        withCredentials: true, // Include credentials if necessary
+      });
+            const topics = response.data.topics || [];
 
       // Filter out already added topics for Post-learning
       const filteredTopics = topics.filter(
