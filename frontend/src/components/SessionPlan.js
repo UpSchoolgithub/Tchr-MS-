@@ -105,14 +105,14 @@ const handleSaveAR = async (topicId, concepts) => {
 useEffect(() => {
   const fetchAR = async () => {
     try {
-      const response = await axios.get(`/api/sessions/${sessionId}/actionsAndRecommendations`);
-      console.log("Fetched Actions and Recommendations:", response.data);
+      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`);
       setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
     } catch (error) {
       console.error("Error fetching actions and recommendations:", error.message);
       setError("Failed to fetch actions and recommendations.");
     }
   };
+  
   
   fetchAR();
 }, [sessionId]);
