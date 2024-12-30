@@ -52,27 +52,28 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 //Create Actions And Recommendations
 router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
   const { sessionId } = req.params;
-  const { type, topicName, conceptName, conceptDetailing } = req.body;
+  const { type, topicName, conceptDetails } = req.body;
 
   try {
     // Validate inputs
-    if (!sessionId || !type || !topicName) {
-      return res.status(400).json({
-        message: 'Session ID, type, and topic name are required.',
-      });
+    if (!sessionId || !type || !topicName || !Array.isArray(conceptDetails)) {
+      return res.status(400).json({ message: 'Invalid input data.' });
     }
 
-    if (!['pre-learning', 'post-learning'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid type provided.' });
+    // Ensure each concept has a name and detailing
+    for (const concept of conceptDetails) {
+      if (!concept.name || !concept.detailing) {
+        return res.status(400).json({ message: 'Each concept must have a name and detailing.' });
+      }
     }
 
-    // Create a new action or recommendation
+    // Save action/recommendation
     const actionOrRecommendation = await ActionsAndRecommendations.create({
       sessionId,
       type,
       topicName,
-      conceptName,
-      conceptDetailing,
+      conceptName: conceptDetails.map((c) => c.name).join('; '), // Store as a delimited string if necessary
+      conceptDetailing: conceptDetails.map((c) => c.detailing).join('; '), // Store as a delimited string if necessary
     });
 
     res.status(201).json({
@@ -81,12 +82,10 @@ router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =
     });
   } catch (error) {
     console.error('Error adding action or recommendation:', error.message);
-    res.status(500).json({
-      message: 'Internal server error.',
-      error: error.message,
-    });
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
 });
+
 
 
 

@@ -90,6 +90,7 @@ const handleSaveAR = async () => {
       detailing: concept.detailing.trim(),
     })),
   };
+  
 
   try {
     console.log(`Payload:`, payload);
@@ -989,8 +990,16 @@ const handleGenerateARLessonPlan = async (arId) => {
       <tr key={ar.id}>
         <td>{ar.type || "Unknown Type"}</td>
         <td>{ar.topicName || "Unnamed Topic"}</td>
-        <td>{ar.conceptName || "Unnamed Concept"}</td>
-        <td>{ar.conceptDetailing || "No Detailing"}</td>
+        <td>
+          {ar.conceptName
+            ? ar.conceptName.split('; ').map((concept, index) => <div key={index}>{concept}</div>)
+            : "Unnamed Concept"}
+        </td>
+        <td>
+          {ar.conceptDetailing
+            ? ar.conceptDetailing.split('; ').map((detail, index) => <div key={index}>{detail}</div>)
+            : "No Detailing"}
+        </td>
       </tr>
     ))
   ) : (
@@ -999,6 +1008,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </tr>
   )}
 </tbody>
+
 
 
 
