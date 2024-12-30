@@ -106,13 +106,14 @@ useEffect(() => {
   const fetchAR = async () => {
     try {
       const response = await axios.get(`/api/sessions/${sessionId}/actionsAndRecommendations`);
-      console.log("Fetched Actions and Recommendations:", response.data); // Debug log
+      console.log("Fetched Actions and Recommendations:", response.data);
       setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
     } catch (error) {
       console.error("Error fetching actions and recommendations:", error.message);
       setError("Failed to fetch actions and recommendations.");
     }
   };
+  
   fetchAR();
 }, [sessionId]);
 
@@ -978,23 +979,21 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-  {actionsAndRecommendations.length > 0 ? (
-    actionsAndRecommendations.map((ar) => {
-      console.log("Rendering AR:", ar); // Debugging log
-      return (
-        <tr key={ar.id}>
-          <td>{ar.type || "Unknown Type"}</td>
-          <td>{ar.topicName || "Unnamed Topic"}</td>
-          <td>{ar.conceptName || "Unnamed Concept"}</td>
-          <td>{ar.conceptDetailing || "No Detailing"}</td>
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td colSpan="4">No actions or recommendations available.</td>
+    {actionsAndRecommendations.length > 0 ? (
+  actionsAndRecommendations.map((ar) => (
+    <tr key={ar.id}>
+      <td>{ar.type || "Unknown Type"}</td>
+      <td>{ar.topicName || "Unnamed Topic"}</td>
+      <td>{ar.conceptName || "Unnamed Concept"}</td>
+      <td>{ar.conceptDetailing || "No Detailing"}</td>
     </tr>
-  )}
+  ))
+) : (
+  <tr>
+    <td colSpan="4">No actions or recommendations available.</td>
+  </tr>
+)}
+
 </tbody>
 
 
