@@ -152,6 +152,7 @@ router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =>
   try {
     const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
       where: { sessionId },
+      attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing', 'createdAt'],
       order: [['createdAt', 'ASC']],
     });
 
@@ -164,6 +165,7 @@ router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =>
     });
   }
 });
+
 
 
 
