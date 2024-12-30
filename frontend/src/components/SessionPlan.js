@@ -68,7 +68,14 @@ const handleOpenARModal = async (type) => {
   if (type === 'post-learning') {
     try {
       const response = await axios.get(`/api/sessions/${sessionId}/topics`);
-      setExistingTopics(response.data.topics || []);
+      const topics = response.data.topics || [];
+
+      // Filter out already added topics for Post-learning
+      const filteredTopics = topics.filter(
+        (topic) => !addedTopics.some((added) => added.topicId === topic.id)
+      );
+
+      setExistingTopics(filteredTopics);
       setError('');
     } catch (error) {
       console.error('Error fetching topics:', error);
@@ -76,6 +83,7 @@ const handleOpenARModal = async (type) => {
     }
   }
 };
+
 
 
 
@@ -247,7 +255,7 @@ const handleGenerateARLessonPlan = async (arId) => {
         value={selectedTopic}
         onChange={(e) => {
           const selected = e.target.value;
-          const topic = existingTopics.find((t) => t.id === selected);
+          const topic = existingTopics.find((t) => t.id === parseInt(selected));
           setSelectedTopic(selected);
           setSelectedConcepts((prev) => ({
             ...prev,
@@ -256,20 +264,18 @@ const handleGenerateARLessonPlan = async (arId) => {
         }}
       >
         <option value="">Choose a topic</option>
-        {existingTopics
-          .filter((topic) => !Object.keys(selectedConcepts).includes(topic.id))
-          .map((topic) => (
-            <option key={topic.id} value={topic.id}>
-              {topic.name}
-            </option>
-          ))}
+        {existingTopics.map((topic) => (
+          <option key={topic.id} value={topic.id}>
+            {topic.name}
+          </option>
+        ))}
       </Form.Control>
     </Form.Group>
     {selectedTopic && (
       <Form.Group>
         <Form.Label>Choose Concepts</Form.Label>
         {existingTopics
-          .find((topic) => topic.id === selectedTopic)
+          .find((topic) => topic.id === parseInt(selectedTopic))
           ?.concepts.map((concept) => (
             <Form.Check
               key={concept.id}
@@ -297,10 +303,16 @@ const handleGenerateARLessonPlan = async (arId) => {
           ...prev,
           {
             topicId: selectedTopic,
-            topicName: existingTopics.find((t) => t.id === selectedTopic)?.name,
+            topicName: existingTopics.find((t) => t.id === parseInt(selectedTopic))?.name,
             concepts: selectedConcepts[selectedTopic] || [],
           },
         ]);
+
+        // Remove the added topic from the dropdown
+        setExistingTopics((prev) =>
+          prev.filter((topic) => topic.id !== parseInt(selectedTopic))
+        );
+
         setSelectedTopic(""); // Clear selected topic
         setSelectedConcepts((prev) => {
           const updated = { ...prev };
@@ -330,6 +342,17 @@ const handleGenerateARLessonPlan = async (arId) => {
     </div>
   </>
 )}
+
+<Button
+  variant="primary"
+  onClick={() =>
+    arType === "post-learning"
+      ? handleSaveAR(selectedTopic, selectedConcepts) // Save post-learning with selected concepts
+      : handleSaveAR(null, arConcepts) // Leave Pre-learning unchanged
+  }
+>
+  Save
+</Button>
 
     </Form>
   </Modal.Body>
