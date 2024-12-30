@@ -121,6 +121,7 @@ useEffect(() => {
 
 
 
+
 // Function to generate lesson plan for A and R
 const handleGenerateARLessonPlan = async (arId) => {
   try {
@@ -962,7 +963,7 @@ const handleGenerateARLessonPlan = async (arId) => {
         </table>
       </div>
   
-  <div className="actions-recommendations-table">
+      <div className="actions-recommendations-table">
   <h3>Actions and Recommendations</h3>
   <table>
     <thead>
@@ -970,6 +971,7 @@ const handleGenerateARLessonPlan = async (arId) => {
         <th>Type</th>
         <th>Topic</th>
         <th>Concepts</th>
+        <th>Concept Details</th>
       </tr>
     </thead>
     <tbody>
@@ -979,22 +981,28 @@ const handleGenerateARLessonPlan = async (arId) => {
             <td>{ar.type}</td>
             <td>{ar.topicName}</td>
             <td>
-              {ar.Concepts.map((concept) => (
-                <div key={concept.id}>
-                  <strong>{concept.conceptName}:</strong> {concept.conceptDetailing}
+              {ar.conceptDetails?.map((concept, index) => (
+                <div key={index}>
+                  <strong>{concept.name}:</strong> {concept.detailing || "No details provided"}
                 </div>
+              ))}
+            </td>
+            <td>
+              {ar.conceptDetails?.map((concept, index) => (
+                <div key={index}>{concept.detailing || "No details provided"}</div>
               ))}
             </td>
           </tr>
         ))
       ) : (
         <tr>
-          <td colSpan="3">No actions or recommendations available.</td>
+          <td colSpan="4">No actions or recommendations available.</td>
         </tr>
       )}
     </tbody>
   </table>
 </div>
+
 
       {/* A and R Modal */}
       <Modal show={showARModal} onHide={() => setShowARModal(false)}>
