@@ -59,24 +59,23 @@ const SessionPlans = () => {
   }, [boardName, location]);
   
 // A & R starts
-// Function to handle opening the modal
+// Function to handle opening the modal for post learning
 const handleOpenARModal = async (type) => {
-  console.log('Opening Modal:', type);
   setShowARModal(true);
   setARType(type);
 
   if (type === 'post-learning') {
     try {
-      const response = await axios.get(`/api/sessions/${sessionId}/existingTopics`);
-      console.log('Fetched Topics:', response.data);
-      setExistingTopics(response.data || []);
+      const response = await axios.get(`/api/sessions/${sessionId}/topics`);
+      setExistingTopics(response.data.topics || []);
       setError('');
     } catch (error) {
-      console.error('Error fetching existing topics:', error);
-      setError('Failed to fetch existing topics for post-learning.');
+      console.error('Error fetching topics:', error);
+      setError('Failed to fetch topics for post-learning.');
     }
   }
 };
+
 
 
 
@@ -239,45 +238,46 @@ const handleGenerateARLessonPlan = async (arId) => {
 
       {/* For Post-learning */}
       {arType === "post-learning" && (
-        <>
-          <Form.Group>
-            <Form.Label>Select Topic</Form.Label>
-            <Form.Control
-              as="select"
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-            >
-              <option value="">Choose a topic</option>
-              {existingTopics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.name}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Select Concepts</Form.Label>
-            {existingTopics
-              .find((topic) => topic.id === selectedTopic)
-              ?.concepts.map((concept) => (
-                <Form.Check
-                  key={concept.id}
-                  type="checkbox"
-                  label={concept.name}
-                  value={concept.id}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedConcepts((prev) =>
-                      prev.includes(value)
-                        ? prev.filter((id) => id !== value)
-                        : [...prev, value]
-                    );
-                  }}
-                />
-              ))}
-          </Form.Group>
-        </>
-      )}
+  <>
+    <Form.Group>
+      <Form.Label>Select Topic</Form.Label>
+      <Form.Control
+        as="select"
+        value={selectedTopic}
+        onChange={(e) => setSelectedTopic(e.target.value)}
+      >
+        <option value="">Choose a topic</option>
+        {existingTopics.map((topic) => (
+          <option key={topic.id} value={topic.id}>
+            {topic.name}
+          </option>
+        ))}
+      </Form.Control>
+    </Form.Group>
+    <Form.Group>
+      <Form.Label>Select Concepts</Form.Label>
+      {existingTopics
+        .find((topic) => topic.id === selectedTopic)
+        ?.concepts.map((concept) => (
+          <Form.Check
+            key={concept.id}
+            type="checkbox"
+            label={concept.name}
+            value={concept.id}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedConcepts((prev) =>
+                prev.includes(value)
+                  ? prev.filter((id) => id !== value)
+                  : [...prev, value]
+              );
+            }}
+          />
+        ))}
+    </Form.Group>
+  </>
+)}
+
     </Form>
   </Modal.Body>
   <Modal.Footer>

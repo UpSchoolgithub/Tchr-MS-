@@ -17,7 +17,37 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 
-// Endpoint for Fetching Topics and Concepts
+// Fetch topics for a session of post learning
+router.get('/sessions/:sessionId/topics', async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+      include: [
+        {
+          model: Topic,
+          as: 'Topics',
+          attributes: ['id', 'topicName'], // Fetch only relevant fields
+        },
+      ],
+    });
+
+    // Extract topics from session plans
+    const topics = sessionPlans.flatMap(plan => plan.Topics.map(topic => ({
+      id: topic.id,
+      name: topic.topicName,
+    })));
+
+    res.status(200).json({ topics });
+  } catch (error) {
+    console.error('Error fetching topics:', error.message);
+    res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
+  }
+});
+
+
+// Endpoint for Fetching Topics and Concepts for prelearning 
 router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
   const { type, topicName, conceptDetails } = req.body;
 
