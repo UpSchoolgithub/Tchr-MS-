@@ -102,18 +102,19 @@ const handleSaveAR = async (topicId, concepts) => {
 };
 
 
-useEffect(() => {
-  const fetchAR = async () => {
-    try {
-      const response = await axios.get(
-        `/api/sessions/${sessionId}/actionsAndRecommendations`
-      );
-      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-    } catch (error) {
-      console.error('Error fetching actions and recommendations:', error.message);
-      setError('Failed to fetch actions and recommendations.');
-    }
-  };
+const fetchAR = async () => {
+  try {
+    const response = await axios.get(
+      `/api/sessions/${sessionId}/actionsAndRecommendations`
+    );
+    console.log('Actions and Recommendations API Response:', response.data);
+    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+  } catch (error) {
+    console.error('Error fetching actions and recommendations:', error.message);
+    setError('Failed to fetch actions and recommendations.');
+  }
+};
+
 
   fetchAR();
 }, [sessionId]);
