@@ -126,35 +126,72 @@ const handleAddTopic = () => {
 };
 
 
-// Save Action and Recommendation
 const handleSaveAR = async () => {
-  const payload = {
-    type: arType,
-    topicName: arTopicName,
-    conceptDetails: arConcepts.map((concept) => ({
-      name: concept.name.trim(),
-      detailing: concept.detailing.trim(),
-    })),
-  };
+  if (arType === "pre-learning") {
+    // Handle pre-learning save
+    const payload = {
+      type: arType,
+      topicName: arTopicName,
+      conceptDetails: arConcepts.map((concept) => ({
+        name: concept.name.trim(),
+        detailing: concept.detailing.trim(),
+      })),
+    };
 
-  try {
-    console.log(`Payload:`, payload);
-    const response = await axios.post(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
-      payload,
-      { withCredentials: true } // Include credentials if needed
-    );
+    try {
+      console.log(`Payload (Pre-learning):`, payload);
+      const response = await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+        payload,
+        { withCredentials: true } // Include credentials if needed
+      );
 
-    setSuccessMessage("Pre-learning topic saved successfully!");
-    setShowARModal(false);
-    setARTopicName(""); // Reset topic name
-    setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
+      setSuccessMessage("Pre-learning topic saved successfully!");
+      setShowARModal(false);
+      setARTopicName(""); // Reset topic name
+      setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
 
-    // Re-fetch updated data
-    await fetchAR();
-  } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    setError(error.response?.data?.message || "Failed to save pre-learning topic.");
+      // Re-fetch updated data
+      await fetchAR();
+    } catch (error) {
+      console.error("Error saving pre-learning topic:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save pre-learning topic.");
+    }
+  } else if (arType === "post-learning") {
+    // Handle post-learning save with multiple topics
+    try {
+      if (selectedTopics.length === 0) {
+        setError("Please select at least one topic and its concepts.");
+        return;
+      }
+
+      for (const topic of selectedTopics) {
+        const payload = {
+          type: arType,
+          topicName: topic.name, // Topic name
+          conceptDetails: topic.concepts.map((concept) => ({
+            name: concept.name.trim(),
+            detailing: concept.detailing.trim(),
+          })),
+        };
+
+        console.log("Payload (Post-learning):", payload);
+
+        await axios.post(
+          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+          payload,
+          { withCredentials: true } // Include credentials if needed
+        );
+      }
+
+      setSuccessMessage("Post-learning topics saved successfully!");
+      setShowARModal(false);
+      setSelectedTopics([]); // Reset selected topics
+      await fetchAR(); // Re-fetch updated data
+    } catch (error) {
+      console.error("Error saving post-learning topics:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save post-learning topics.");
+    }
   }
 };
 
