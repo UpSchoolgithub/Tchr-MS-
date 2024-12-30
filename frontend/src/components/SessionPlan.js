@@ -157,44 +157,44 @@ const handleSaveAR = async () => {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
-  } else if (arType === "post-learning") {
-    // Handle post-learning save with multiple topics
-    try {
-      if (selectedTopics.length === 0) {
-        setError("Please select at least one topic and its concepts.");
-        return;
-      }
+  } else if 
+  if (arType === "post-learning") {
+    if (selectedTopics.length === 0) {
+      setError("Please select at least one topic and its concepts.");
+      return;
+    }
 
+    try {
       for (const topic of selectedTopics) {
         const payload = {
           type: arType,
-          topicName: topic.name, // Topic name
+          topicName: topic.name,
           conceptDetails: topic.concepts.map((concept) => ({
             name: concept.name.trim(),
             detailing: concept.detailing.trim(),
           })),
         };
 
-        console.log("Payload (Post-learning):", payload);
+        console.log("Payload for topic:", payload);
 
+        // Send payload for each topic
         await axios.post(
           `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
           payload,
-          { withCredentials: true } // Include credentials if needed
+          { withCredentials: true }
         );
       }
 
       setSuccessMessage("Post-learning topics saved successfully!");
       setShowARModal(false);
-      setSelectedTopics([]); // Reset selected topics
-      await fetchAR(); // Re-fetch updated data
+      setSelectedTopics([]); // Clear selected topics
+      await fetchAR(); // Refresh actions and recommendations
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
     }
   }
 };
-
 
 useEffect(() => {
   const fetchAR = async () => {
