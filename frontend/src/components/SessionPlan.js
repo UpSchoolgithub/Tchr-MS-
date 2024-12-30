@@ -33,6 +33,7 @@ const SessionPlans = () => {
   const [arConcepts, setARConcepts] = useState([{ name: "", detailing: "" }]);
   const [preLearningTopics, setPreLearningTopics] = useState([]);
   const [actionsAndRecommendations, setActionsAndRecommendations] = useState([]);
+  const [addedTopics, setAddedTopics] = useState([]); // Store added topics and concepts
 
   const {
     schoolName = "School Name Not Available",
