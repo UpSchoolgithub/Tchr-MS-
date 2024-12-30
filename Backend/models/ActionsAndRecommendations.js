@@ -3,12 +3,6 @@ const sequelize = require('../config/db'); // Ensure correct path
 
 class ActionsAndRecommendations extends Model {
   static associate(models) {
-    ActionsAndRecommendations.belongsTo(models.SessionPlan, {
-      foreignKey: 'sessionPlanId',
-      as: 'SessionPlan',
-      onDelete: 'CASCADE',
-    });
-
     ActionsAndRecommendations.belongsTo(models.Session, {
       foreignKey: 'sessionId',
       as: 'Session',
@@ -19,14 +13,6 @@ class ActionsAndRecommendations extends Model {
 
 ActionsAndRecommendations.init(
   {
-    sessionPlanId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'SessionPlans',
-        key: 'id',
-      },
-    },
     sessionId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -45,6 +31,10 @@ ActionsAndRecommendations.init(
     },
     conceptName: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    conceptDetailing: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
   },

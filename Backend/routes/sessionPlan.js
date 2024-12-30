@@ -50,30 +50,29 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 
 
 //Create Actions And Recommendations
-router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
-  const { sessionPlanId } = req.params;
-  const { sessionId, type, topicName, conceptName } = req.body;
+router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+  const { sessionId } = req.params;
+  const { type, topicName, conceptName, conceptDetailing } = req.body;
 
   try {
     // Validate inputs
     if (!sessionId || !type || !topicName) {
       return res.status(400).json({
-        message: 'Session ID, type, and topic name are required.',
+        message: 'Session ID, type, topic name, and concept name are required.',
       });
     }
 
-    // Validate type
     if (!['pre-learning', 'post-learning'].includes(type)) {
       return res.status(400).json({ message: 'Invalid type provided.' });
     }
 
     // Create a new action or recommendation
     const actionOrRecommendation = await ActionsAndRecommendations.create({
-      sessionPlanId,
       sessionId,
       type,
       topicName,
       conceptName,
+      conceptDetailing,
     });
 
     res.status(201).json({
@@ -88,6 +87,7 @@ router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req
     });
   }
 });
+
 
 
 // Generate Lesson Plan for A and R
@@ -146,13 +146,13 @@ router.post(
 );
 
 // Fetching All Actions and Recommendations
-router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
-  const { sessionPlanId } = req.params;
+router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+  const { sessionId } = req.params;
 
   try {
     const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
-      where: { sessionPlanId },
-      order: [['createdAt', 'ASC']], // Optional ordering
+      where: { sessionId },
+      order: [['createdAt', 'ASC']],
     });
 
     res.status(200).json({ actionsAndRecommendations });
@@ -164,6 +164,7 @@ router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req,
     });
   }
 });
+
 
 
 // Fetch Generated Lesson Plan for A and R
