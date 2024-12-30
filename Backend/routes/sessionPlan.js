@@ -58,7 +58,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =
     // Validate inputs
     if (!sessionId || !type || !topicName) {
       return res.status(400).json({
-        message: 'Session ID, type, topic name, and concept name are required.',
+        message: 'Session ID, type, and topic name are required.',
       });
     }
 
@@ -87,6 +87,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =
     });
   }
 });
+
 
 
 

@@ -85,10 +85,8 @@ const handleSaveAR = async () => {
   const payload = {
     type: "pre-learning", // Fixed type for pre-learning
     topicName: arTopicName,
-    conceptDetails: arConcepts.map((concept) => ({
-      name: concept.name,
-      detailing: concept.detailing,
-    })),
+    conceptName: arConcepts[0]?.name, // Assume the first concept for simplicity
+    conceptDetailing: arConcepts[0]?.detailing, // Assume the first concept's detailing
   };
 
   try {
@@ -105,6 +103,7 @@ const handleSaveAR = async () => {
     setError("Failed to save pre-learning topic.");
   }
 };
+
 
 
 
