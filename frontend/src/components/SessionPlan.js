@@ -981,7 +981,8 @@ const handleGenerateARLessonPlan = async (arId) => {
         </table>
       </div>
   
-      <div className="actions-recommendations-table">
+      {/* Actions and Recommendations Table */}
+<div className="actions-recommendations-table">
   <h3>Actions and Recommendations</h3>
   <table>
     <thead>
@@ -993,31 +994,34 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-  {actionsAndRecommendations.length > 0 ? (
-    actionsAndRecommendations.map((ar) => (
-      <tr key={ar.id}>
-        <td>{ar.type || "Unknown Type"}</td>
-        <td>{ar.topicName || "Unnamed Topic"}</td>
-        <td>
-          {ar.conceptName
-            ? ar.conceptName.split("; ").map((concept, index) => <div key={index}>{concept}</div>)
-            : "Unnamed Concept"}
-        </td>
-        <td>
-          {ar.conceptDetailing
-            ? ar.conceptDetailing.split("; ").map((detail, index) => <div key={index}>{detail}</div>)
-            : "No Detailing"}
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="4">No actions or recommendations available.</td>
-    </tr>
-  )}
-</tbody>
+      {actionsAndRecommendations.length > 0 ? (
+        actionsAndRecommendations.flatMap((ar, arIndex) => {
+          // Split concepts and details into arrays for rendering
+          const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
+          const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
 
+          // Ensure concepts and details are aligned
+          const maxRows = Math.max(concepts.length, details.length);
 
+          return Array.from({ length: maxRows }).map((_, rowIndex) => (
+            <tr key={`${ar.id}-${rowIndex}`}>
+              {rowIndex === 0 && (
+                <>
+                  <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+                  <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
+                </>
+              )}
+              <td>{concepts[rowIndex] || ""}</td>
+              <td>{details[rowIndex] || ""}</td>
+            </tr>
+          ));
+        })
+      ) : (
+        <tr>
+          <td colSpan="4">No actions or recommendations available.</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 </div>
 
