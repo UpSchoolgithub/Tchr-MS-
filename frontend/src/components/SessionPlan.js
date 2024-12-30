@@ -994,34 +994,28 @@ const handleGenerateARLessonPlan = async (arId) => {
     </thead>
     <tbody>
   {actionsAndRecommendations.length > 0 ? (
-    actionsAndRecommendations.reduce((acc, ar, index, arr) => {
-      // Check if the topic has already been rendered
-      const isFirstOccurrence = !arr
-        .slice(0, index)
-        .some((prevAr) => prevAr.topicName === ar.topicName);
-
-      acc.push(
-        <tr key={`${ar.id}-${index}`}>
-          {isFirstOccurrence && (
-            <td
-              rowSpan={arr.filter((a) => a.topicName === ar.topicName).length}
-            >
-              {ar.topicName || "Unnamed Topic"}
-            </td>
-          )}
-          <td>{ar.conceptName || "Unnamed Concept"}</td>
-          <td>{ar.conceptDetailing || "No Detailing"}</td>
-        </tr>
-      );
-      return acc;
-    }, [])
+    actionsAndRecommendations.map((ar) => (
+      <tr key={ar.id}>
+        <td>{ar.type || "Unknown Type"}</td>
+        <td>{ar.topicName || "Unnamed Topic"}</td>
+        <td>
+          {ar.conceptName
+            ? ar.conceptName.split("; ").map((concept, index) => <div key={index}>{concept}</div>)
+            : "Unnamed Concept"}
+        </td>
+        <td>
+          {ar.conceptDetailing
+            ? ar.conceptDetailing.split("; ").map((detail, index) => <div key={index}>{detail}</div>)
+            : "No Detailing"}
+        </td>
+      </tr>
+    ))
   ) : (
     <tr>
-      <td colSpan="3">No actions or recommendations available.</td>
+      <td colSpan="4">No actions or recommendations available.</td>
     </tr>
   )}
 </tbody>
-
 
 
   </table>
