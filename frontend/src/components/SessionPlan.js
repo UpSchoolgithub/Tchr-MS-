@@ -90,7 +90,6 @@ const handleSaveAR = async () => {
       detailing: concept.detailing.trim(),
     })),
   };
-  
 
   try {
     console.log(`Payload:`, payload);
@@ -99,11 +98,17 @@ const handleSaveAR = async () => {
       payload,
       { withCredentials: true } // Include credentials if needed
     );
-    setSuccessMessage('Pre-learning topic saved successfully!');
+
+    setSuccessMessage("Pre-learning topic saved successfully!");
     setShowARModal(false);
+    setARTopicName(""); // Reset topic name
+    setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
+
+    // Re-fetch updated data
+    await fetchAR();
   } catch (error) {
-    console.error('Error:', error.response?.data || error.message);
-    setError(error.response?.data?.message || 'Failed to save pre-learning topic.');
+    console.error("Error:", error.response?.data || error.message);
+    setError(error.response?.data?.message || "Failed to save pre-learning topic.");
   }
 };
 
@@ -111,13 +116,16 @@ const handleSaveAR = async () => {
 useEffect(() => {
   const fetchAR = async () => {
     try {
-      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`);
+      const response = await axios.get(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
+      );
       setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
     } catch (error) {
       console.error("Error fetching actions and recommendations:", error.message);
       setError("Failed to fetch actions and recommendations.");
     }
   };
+  
   
   
   fetchAR();
@@ -992,12 +1000,12 @@ const handleGenerateARLessonPlan = async (arId) => {
         <td>{ar.topicName || "Unnamed Topic"}</td>
         <td>
           {ar.conceptName
-            ? ar.conceptName.split('; ').map((concept, index) => <div key={index}>{concept}</div>)
+            ? ar.conceptName.split("; ").map((concept, index) => <div key={index}>{concept}</div>)
             : "Unnamed Concept"}
         </td>
         <td>
           {ar.conceptDetailing
-            ? ar.conceptDetailing.split('; ').map((detail, index) => <div key={index}>{detail}</div>)
+            ? ar.conceptDetailing.split("; ").map((detail, index) => <div key={index}>{detail}</div>)
             : "No Detailing"}
         </td>
       </tr>
@@ -1008,9 +1016,6 @@ const handleGenerateARLessonPlan = async (arId) => {
     </tr>
   )}
 </tbody>
-
-
-
 
 
   </table>
