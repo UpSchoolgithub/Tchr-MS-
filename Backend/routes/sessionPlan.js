@@ -31,9 +31,9 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
           attributes: ['id', 'topicName'],
           include: [
             {
-              model: Concept,
+              model: concept,
               as: 'Concepts',
-              attributes: ['id', 'conceptName'],
+              attributes: ['id', 'concept'],
             },
           ],
         },
