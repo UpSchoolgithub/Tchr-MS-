@@ -28,12 +28,12 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
         {
           model: Topic,
           as: 'Topics',
-          attributes: ['id', 'topicName'],
+          attributes: ['id', 'topicName'], // Topic attributes
           include: [
             {
-              model: concept,
+              model: Concept,
               as: 'Concepts',
-              attributes: ['id', 'concept'],
+              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
             },
           ],
         },
@@ -46,7 +46,8 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
         name: topic.topicName,
         concepts: topic.Concepts.map((concept) => ({
           id: concept.id,
-          name: concept.conceptName,
+          name: concept.concept, // Correct column name
+          detailing: concept.conceptDetailing,
         })),
       }))
     );
@@ -57,6 +58,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
   }
 });
+
 
 
 // Endpoint for Fetching Topics and Concepts for prelearning 
