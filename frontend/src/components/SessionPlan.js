@@ -158,7 +158,7 @@ const handleSaveAR = async () => {
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   } else if 
-  if (arType === "post-learning") {
+  (arType === "post-learning") {
     if (selectedTopics.length === 0) {
       setError("Please select at least one topic and its concepts.");
       return;
