@@ -15,6 +15,7 @@ const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
+const { ActionsAndRecommendations } = require('../models');
 
 // Endpoint for Fetching Topics and Concepts
 router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
@@ -51,54 +52,40 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 //Create Actions And Recommendations
 router.post('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req, res) => {
   const { sessionPlanId } = req.params;
-  const { type, topicName, conceptName, sessionId, chapterId, unitId, order } = req.body;
+  const { sessionId, type, topicName, conceptName } = req.body;
 
   try {
-    if (!['pre-learning', 'post-learning'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid type. Must be "pre-learning" or "post-learning".' });
-    }
-
-    if (!topicName || !conceptName) {
-      return res.status(400).json({ message: 'Topic name and concept name are required.' });
-    }
-
-    const transaction = await sequelize.transaction();
-    try {
-      // Adjust session numbers for "pre-learning"
-      if (type === 'pre-learning') {
-        await SessionPlan.increment('sessionNumber', {
-          where: { id: sessionPlanId },
-          transaction,
-        });
-      }
-
-      // Insert the action or recommendation
-      const actionOrRecommendation = await ActionsAndRecommendations.create(
-        {
-          sessionPlanId,
-          sessionId,
-          chapterId,
-          unitId,
-          type,
-          topicName,
-          conceptName,
-          order,
-        },
-        { transaction }
-      );
-
-      await transaction.commit();
-      res.status(201).json({
-        message: `${type} topic added successfully`,
-        actionOrRecommendation,
+    // Validate inputs
+    if (!sessionId || !type || !topicName) {
+      return res.status(400).json({
+        message: 'Session ID, type, and topic name are required.',
       });
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
     }
+
+    // Validate type
+    if (!['pre-learning', 'post-learning'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid type provided.' });
+    }
+
+    // Create a new action or recommendation
+    const actionOrRecommendation = await ActionsAndRecommendations.create({
+      sessionPlanId,
+      sessionId,
+      type,
+      topicName,
+      conceptName,
+    });
+
+    res.status(201).json({
+      message: 'Action or recommendation added successfully.',
+      actionOrRecommendation,
+    });
   } catch (error) {
     console.error('Error adding action or recommendation:', error.message);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({
+      message: 'Internal server error.',
+      error: error.message,
+    });
   }
 });
 
@@ -165,15 +152,19 @@ router.get('/sessionPlans/:sessionPlanId/actionsAndRecommendations', async (req,
   try {
     const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
       where: { sessionPlanId },
-      order: [['order', 'ASC']],
+      order: [['createdAt', 'ASC']], // Optional ordering
     });
 
     res.status(200).json({ actionsAndRecommendations });
   } catch (error) {
     console.error('Error fetching actions and recommendations:', error.message);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({
+      message: 'Internal server error.',
+      error: error.message,
+    });
   }
 });
+
 
 // Fetch Generated Lesson Plan for A and R
 router.get('/actionsAndRecommendations/:id/lessonPlan', async (req, res) => {
