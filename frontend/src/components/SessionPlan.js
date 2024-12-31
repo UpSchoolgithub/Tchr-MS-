@@ -1134,6 +1134,7 @@ const handleGenerateARLessonPlan = async (arId) => {
       // Ensure concepts and details are aligned
       const maxRows = Math.max(concepts.length, details.length);
 
+      // Generate rows for the current A&R entry
       return Array.from({ length: maxRows }).map((_, rowIndex) => (
         <tr key={`${ar.id}-${rowIndex}`}>
           {rowIndex === 0 && (
