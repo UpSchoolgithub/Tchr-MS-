@@ -41,7 +41,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
     });
 
     const topics = sessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => ({
+      (plan.Topics || []).map((topic) => ({
         id: topic.id,
         name: topic.topicName,
         concepts: topic.Concepts.map((concept) => ({
