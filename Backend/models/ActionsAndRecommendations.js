@@ -13,11 +13,6 @@ class ActionsAndRecommendations extends Model {
 
 ActionsAndRecommendations.init(
   {
-    arNumber: { // Adding the A&R Number column
-      type: DataTypes.INTEGER,
-      autoIncrement: true, // Automatically increments for each new record
-      primaryKey: true, // Setting it as the primary key
-    },
     sessionId: {
       type: DataTypes.INTEGER,
       allowNull: false,
