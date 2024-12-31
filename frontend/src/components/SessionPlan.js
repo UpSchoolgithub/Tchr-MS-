@@ -1113,11 +1113,12 @@ const handleGenerateARLessonPlan = async (arId) => {
       </div>
   
       {/* Actions and Recommendations Table */}
-<div className="actions-recommendations-table">
+      <div className="actions-recommendations-table">
   <h3>Actions and Recommendations</h3>
   <table>
     <thead>
       <tr>
+        <th>A&R Number</th>
         <th>Type</th>
         <th>Topic</th>
         <th>Concept</th>
@@ -1138,6 +1139,7 @@ const handleGenerateARLessonPlan = async (arId) => {
             <tr key={`${ar.id}-${rowIndex}`}>
               {rowIndex === 0 && (
                 <>
+                  <td rowSpan={maxRows}>{ar.arNumber || "N/A"}</td> {/* Display A&R Number */}
                   <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
                   <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
                 </>
@@ -1149,12 +1151,13 @@ const handleGenerateARLessonPlan = async (arId) => {
         })
       ) : (
         <tr>
-          <td colSpan="4">No actions or recommendations available.</td>
+          <td colSpan="5">No actions or recommendations available.</td>
         </tr>
       )}
     </tbody>
   </table>
 </div>
+
 
 
 
