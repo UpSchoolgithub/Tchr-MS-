@@ -94,40 +94,53 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 
 
 
-//Create Actions And Recommendations
-router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
-  const { sessionId } = req.params;
+//Create Actions And Recommendations for postlearning
+router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
   const { type, topicName, conceptDetails } = req.body;
 
+  console.log("Received Payload:", { type, topicName, conceptDetails });
+
+  // Validate `type`
+  if (!type || !['pre-learning', 'post-learning'].includes(type)) {
+    return res.status(400).json({ message: "Invalid or missing type." });
+  }
+
+  // Validate `topicName`
+  if (!topicName || typeof topicName !== "string" || topicName.trim() === "") {
+    return res.status(400).json({ message: "Topic name is required." });
+  }
+
+  // Validate `conceptDetails`
+  if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
+    return res.status(400).json({ message: "Concept details must be a non-empty array." });
+  }
+
+  for (const concept of conceptDetails) {
+    if (!concept.name || typeof concept.name !== "string" || concept.name.trim() === "") {
+      return res.status(400).json({ message: "Each concept must have a valid name." });
+    }
+    if (!concept.detailing || typeof concept.detailing !== "string" || concept.detailing.trim() === "") {
+      return res.status(400).json({ message: "Each concept must have valid detailing." });
+    }
+  }
+
   try {
-    // Validate inputs
-    if (!sessionId || !type || !topicName || !Array.isArray(conceptDetails)) {
-      return res.status(400).json({ message: 'Invalid input data.' });
-    }
-
-    // Ensure each concept has a name and detailing
-    for (const concept of conceptDetails) {
-      if (!concept.name || !concept.detailing) {
-        return res.status(400).json({ message: 'Each concept must have a name and detailing.' });
-      }
-    }
-
-    // Save action/recommendation
+    // Save the action or recommendation in the database
     const actionOrRecommendation = await ActionsAndRecommendations.create({
-      sessionId,
+      sessionId: req.params.sessionId,
       type,
       topicName,
-      conceptName: conceptDetails.map((c) => c.name).join('; '), // Store as a delimited string if necessary
-      conceptDetailing: conceptDetails.map((c) => c.detailing).join('; '), // Store as a delimited string if necessary
+      conceptName: conceptDetails.map((c) => c.name).join("; "),
+      conceptDetailing: conceptDetails.map((c) => c.detailing).join("; "),
     });
 
     res.status(201).json({
-      message: 'Action or recommendation added successfully.',
+      message: "Action or recommendation added successfully.",
       actionOrRecommendation,
     });
   } catch (error) {
-    console.error('Error adding action or recommendation:', error.message);
-    res.status(500).json({ message: 'Internal server error.', error: error.message });
+    console.error("Error saving action or recommendation:", error.message);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 

@@ -158,7 +158,8 @@ const handleSaveAR = async () => {
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   } else if 
-  (arType === "post-learning") {
+ (arType === "post-learning") {
+    // Ensure selected topics and concepts are valid
     if (selectedTopics.length === 0) {
       setError("Please select at least one topic and its concepts.");
       return;
@@ -168,16 +169,16 @@ const handleSaveAR = async () => {
       for (const topic of selectedTopics) {
         const payload = {
           type: arType,
-          topicName: topic.name,
-          conceptDetails: topic.concepts.map((concept) => ({
+          topicName: topic.topicName, // Use topic name
+          conceptDetails: topic.selectedConcepts.map((concept) => ({
             name: concept.name.trim(),
             detailing: concept.detailing.trim(),
           })),
         };
 
-        console.log("Payload for topic:", payload);
+        console.log("Payload for post-learning:", payload);
 
-        // Send payload for each topic
+        // Send payload to the backend
         await axios.post(
           `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
           payload,
