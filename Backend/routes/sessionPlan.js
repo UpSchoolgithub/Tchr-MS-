@@ -22,6 +22,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
+    // Fetch session plans and include topics and concepts
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
@@ -40,18 +41,18 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
       ],
     });
 
+    // Process topics and concepts into a usable structure
     const topics = sessionPlans.flatMap((plan) =>
       (plan.Topics || []).map((topic) => ({
-        id: topic.id,
-        name: topic.topicName,
+        topicId: topic.id,
+        topicName: topic.topicName,
         concepts: (topic.Concepts || []).map((concept) => ({
-          id: concept.id,
-          name: concept.concept,
-          detailing: concept.conceptDetailing,
+          conceptId: concept.id,
+          conceptName: concept.concept,
+          conceptDetailing: concept.conceptDetailing,
         })),
       }))
     );
-    
 
     res.status(200).json({ topics });
   } catch (error) {
@@ -59,6 +60,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
   }
 });
+
 
 
 
@@ -88,59 +90,6 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
   } catch (error) {
     console.error("Error:", error.message);
     res.status(500).send({ error: "Failed to save topic and concepts." });
-  }
-});
-
-
-
-
-//Create Actions And Recommendations for postlearning
-router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
-  const { type, topicName, conceptDetails } = req.body;
-
-  console.log("Received Payload:", { type, topicName, conceptDetails });
-
-  // Validate `type`
-  if (!type || !['pre-learning', 'post-learning'].includes(type)) {
-    return res.status(400).json({ message: "Invalid or missing type." });
-  }
-
-  // Validate `topicName`
-  if (!topicName || typeof topicName !== "string" || topicName.trim() === "") {
-    return res.status(400).json({ message: "Topic name is required." });
-  }
-
-  // Validate `conceptDetails`
-  if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
-    return res.status(400).json({ message: "Concept details must be a non-empty array." });
-  }
-
-  for (const concept of conceptDetails) {
-    if (!concept.name || typeof concept.name !== "string" || concept.name.trim() === "") {
-      return res.status(400).json({ message: "Each concept must have a valid name." });
-    }
-    if (!concept.detailing || typeof concept.detailing !== "string" || concept.detailing.trim() === "") {
-      return res.status(400).json({ message: "Each concept must have valid detailing." });
-    }
-  }
-
-  try {
-    // Save the action or recommendation in the database
-    const actionOrRecommendation = await ActionsAndRecommendations.create({
-      sessionId: req.params.sessionId,
-      type,
-      topicName,
-      conceptName: conceptDetails.map((c) => c.name).join("; "),
-      conceptDetailing: conceptDetails.map((c) => c.detailing).join("; "),
-    });
-
-    res.status(201).json({
-      message: "Action or recommendation added successfully.",
-      actionOrRecommendation,
-    });
-  } catch (error) {
-    console.error("Error saving action or recommendation:", error.message);
-    res.status(500).json({ message: "Internal server error." });
   }
 });
 
