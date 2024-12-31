@@ -1138,8 +1138,8 @@ const handleGenerateARLessonPlan = async (arId) => {
             <tr key={`${ar.id}-${rowIndex}`}>
               {rowIndex === 0 && (
                 <>
-                  <td rowSpan={maxRows}>{ar.arNumber || "N/A"}</td> {/* Display A&R Number */}
-                  <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+<td rowSpan={maxRows}>{ar.id || "N/A"}</td>
+<td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
                   <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
                 </>
               )}
