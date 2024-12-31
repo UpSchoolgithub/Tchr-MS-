@@ -1125,35 +1125,36 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-      {actionsAndRecommendations.length > 0 ? (
-        actionsAndRecommendations.flatMap((ar, arIndex) => {
-          // Split concepts and details into arrays for rendering
-          const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
-          const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
+  {actionsAndRecommendations.length > 0 ? (
+    actionsAndRecommendations.flatMap((ar, arIndex) => {
+      // Split concepts and details into arrays for rendering
+      const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
+      const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
 
-          // Ensure concepts and details are aligned
-          const maxRows = Math.max(concepts.length, details.length);
+      // Ensure concepts and details are aligned
+      const maxRows = Math.max(concepts.length, details.length);
 
-          return Array.from({ length: maxRows }).map((_, rowIndex) => (
-            <tr key={`${ar.id}-${rowIndex}`}>
-              {rowIndex === 0 && (
-                <>
-<td rowSpan={maxRows}>{ar.id || "N/A"}</td>
-<td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
-                  <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
-                </>
-              )}
-              <td>{concepts[rowIndex] || ""}</td>
-              <td>{details[rowIndex] || ""}</td>
-            </tr>
-          ));
-        })
-      ) : (
-        <tr>
-          <td colSpan="5">No actions or recommendations available.</td>
+      return Array.from({ length: maxRows }).map((_, rowIndex) => (
+        <tr key={`${ar.id}-${rowIndex}`}>
+          {rowIndex === 0 && (
+            <>
+              <td rowSpan={maxRows}>{arIndex + 1}</td> {/* Sequential numbering */}
+              <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+              <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
+            </>
+          )}
+          <td>{concepts[rowIndex] || ""}</td>
+          <td>{details[rowIndex] || ""}</td>
         </tr>
-      )}
-    </tbody>
+      ));
+    })
+  ) : (
+    <tr>
+      <td colSpan="5">No actions or recommendations available.</td>
+    </tr>
+  )}
+</tbody>
+
   </table>
 </div>
 
