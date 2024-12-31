@@ -31,7 +31,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
           attributes: ['id', 'topicName'], // Topic attributes
           include: [
             {
-              model: Concept,
+              model: concept,
               as: 'Concepts',
               attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
             },
@@ -44,13 +44,14 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
       (plan.Topics || []).map((topic) => ({
         id: topic.id,
         name: topic.topicName,
-        concepts: topic.Concepts.map((concept) => ({
+        concepts: (topic.Concepts || []).map((concept) => ({
           id: concept.id,
-          name: concept.concept, // Correct column name
+          name: concept.concept,
           detailing: concept.conceptDetailing,
         })),
       }))
     );
+    
 
     res.status(200).json({ topics });
   } catch (error) {
