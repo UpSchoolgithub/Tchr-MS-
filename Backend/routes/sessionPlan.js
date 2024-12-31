@@ -118,7 +118,6 @@ router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =
       topicName,
       conceptName: conceptDetails.map((c) => c.name).join('; '), // Store as a delimited string if necessary
       conceptDetailing: conceptDetails.map((c) => c.detailing).join('; '), // Store as a delimited string if necessary
-      arNumber: `AR-${sessionId}-${Date.now()}`, // Example unique A&R number
     });
 
     res.status(201).json({
