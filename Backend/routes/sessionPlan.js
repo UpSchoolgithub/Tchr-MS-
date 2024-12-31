@@ -31,7 +31,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
           attributes: ['id', 'topicName'], // Topic attributes
           include: [
             {
-              model: concept,
+              model: Concept,
               as: 'Concepts',
               attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
             },
