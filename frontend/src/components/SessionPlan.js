@@ -202,17 +202,16 @@ useEffect(() => {
       const response = await axios.get(
         `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
       );
-      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+      setActionsAndRecommendations(response.data.actionsAndRecommendations || []); // Ensure arNumber is in the response
     } catch (error) {
       console.error("Error fetching actions and recommendations:", error.message);
       setError("Failed to fetch actions and recommendations.");
     }
   };
-  
-  
-  
+
   fetchAR();
 }, [sessionId]);
+
 
 
 
