@@ -207,14 +207,6 @@ useEffect(() => {
 }, [sessionId]);
 
 
-
-
-
-
-
-
-
-
 // Function to generate lesson plan for A and R
 const handleGenerateARLessonPlan = async (arId) => {
   try {

@@ -96,28 +96,26 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
       const existingAction = await ActionsAndRecommendations.findOne({
         where: { sessionId, topicName: topic.topicName, type: 'post-learning' },
       });
-
+      
       if (existingAction) {
         console.log(`Skipping duplicate action for topicId: ${topicId}`);
         continue; // Skip duplicates
       }
 
       // Save the action/recommendation for the session
-      await ActionsAndRecommendations.create(
-        {
-          sessionId,
-          topicName: topic.topicName,
-          type: 'post-learning', // Example type
-          conceptDetails: JSON.stringify(
-            topic.Concepts.map((concept) => ({
-              id: concept.id,
-              name: concept.concept,
-              detailing: concept.conceptDetailing,
-            }))
-          ),
-        },
-        { transaction } // Use transaction
-      );
+      await ActionsAndRecommendations.create({
+        sessionId,
+        topicName: topic.topicName,
+        type: 'post-learning',
+        conceptDetails: JSON.stringify(
+          topic.Concepts.map((concept) => ({
+            id: concept.id,
+            name: concept.concept,
+            detailing: concept.conceptDetailing,
+          }))
+        ),
+      }, { transaction });
+      
     }
 
     // Commit the transaction
