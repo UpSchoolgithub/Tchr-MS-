@@ -160,34 +160,40 @@ const handleSaveAR = async () => {
       setError("Please select at least one topic and its concepts.");
       return;
     }
-  
+
     try {
-      const payload = {
-        selectedTopics: selectedTopics.map((topic) => topic.topicId), // Send only topic IDs
-      };
-  
-      console.log("Payload for post-learning:", payload); // Debugging
-  
-      await axios.post(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-        payload,
-        { withCredentials: true }
-      );
-  
+      const promises = selectedTopics.map((topic) => {
+        const payload = {
+          type: arType,
+          topicName: topic.topicName,
+          conceptDetails: topic.selectedConcepts.map((concept) => ({
+            name: concept.name.trim(),
+            detailing: concept.detailing.trim(),
+          })),
+        };
+
+        return axios.post(
+          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+          payload,
+          { withCredentials: true }
+        );
+      });
+
+      await Promise.all(promises);
       setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]); // Clear selected topics
-      await fetchAR(); // Refresh actions and recommendations
+      setSelectedTopics([]);
+
+      // Call fetchAR after saving
+      await fetchAR();
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
     }
   }
-  
-  setShowARModal(false);
-  
-}
 
-useEffect(() => {
+  setShowARModal(false);
+};
+
   const fetchAR = async () => {
     try {
       const response = await axios.get(
@@ -200,11 +206,11 @@ useEffect(() => {
     }
   };
   
+  // Call fetchAR in useEffect
+  useEffect(() => {
+    fetchAR();
+  }, [sessionId]);
   
-  
-  
-  fetchAR();
-}, [sessionId]);
 
 
 // Function to generate lesson plan for A and R
