@@ -63,73 +63,47 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
 
 // save postleanring in A&R
 router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
-  console.log("Received payload in backend:", req.body); // Log the incoming payload
-
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
-  // Validate the request body
   if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
     return res.status(400).json({ message: 'No topics selected.' });
   }
 
-  const transaction = await sequelize.transaction(); // Start transaction
+  const transaction = await sequelize.transaction();
   try {
-    // Loop through selected topics and associate them with the session
-    for (const topicId of selectedTopics) {
-      // Fetch the topic along with its concepts
-      const topic = await Topic.findByPk(topicId, {
-        include: [
-          {
-            model: Concept,
-            as: 'Concepts',
-            attributes: ['id', 'concept', 'conceptDetailing'],
-          },
-        ],
-      });
-
-      if (!topic) {
-        throw new Error(`Topic with ID ${topicId} not found.`);
+    for (const topic of selectedTopics) {
+      if (!topic.topicName || !Array.isArray(topic.concepts)) {
+        throw new Error("Invalid topic structure in request payload.");
       }
 
-      // Check if the action/recommendation already exists
       const existingAction = await ActionsAndRecommendations.findOne({
         where: { sessionId, topicName: topic.topicName, type: 'post-learning' },
-        attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing', 'createdAt', 'updatedAt'], // No sessionPlanId
       });
-      
-      
-      if (existingAction) {
-        console.log(`Skipping duplicate action for topicId: ${topicId}`);
-        continue; // Skip duplicates
-      }
 
-      // Save the action/recommendation for the session
-      await ActionsAndRecommendations.create({
-        sessionId,
-        topicName: topic.topicName,
-        type: 'post-learning',
-        conceptDetails: JSON.stringify(
-          topic.Concepts.map((concept) => ({
-            id: concept.id,
-            name: concept.concept,
-            detailing: concept.conceptDetailing,
-          }))
-        ),
-      }, { transaction });
-      
+      if (existingAction) continue;
+
+      await ActionsAndRecommendations.create(
+        {
+          sessionId,
+          topicName: topic.topicName,
+          type: 'post-learning',
+          conceptName: topic.concepts.map((c) => c.name).join("; "),
+          conceptDetailing: topic.concepts.map((c) => c.detailing).join("; "),
+        },
+        { transaction }
+      );
     }
 
-    // Commit the transaction
     await transaction.commit();
-
     res.status(201).json({ message: 'Actions and recommendations saved successfully.' });
   } catch (error) {
+    await transaction.rollback();
     console.error('Error saving actions and recommendations:', error.message);
-    await transaction.rollback(); // Rollback on error
     res.status(500).json({ message: 'Failed to save actions and recommendations.', error: error.message });
   }
 });
+
 
 // Endpoint for Fetching Topics and Concepts for prelearning 
 router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
@@ -227,18 +201,21 @@ router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =>
     const actionsAndRecommendations = await ActionsAndRecommendations.findAll({
       where: { sessionId },
       attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing', 'createdAt'],
-      order: [['createdAt', 'ASC']],
     });
 
-    res.status(200).json({ actionsAndRecommendations });
+    const parsedAR = actionsAndRecommendations.map((ar) => ({
+      ...ar.toJSON(),
+      conceptName: ar.conceptName.split("; "),
+      conceptDetailing: ar.conceptDetailing.split("; "),
+    }));
+
+    res.status(200).json({ actionsAndRecommendations: parsedAR });
   } catch (error) {
     console.error('Error fetching actions and recommendations:', error.message);
-    res.status(500).json({
-      message: 'Internal server error.',
-      error: error.message,
-    });
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
 });
+
 
 
 
