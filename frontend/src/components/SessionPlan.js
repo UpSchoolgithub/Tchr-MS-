@@ -194,22 +194,22 @@ const handleSaveAR = async () => {
   setShowARModal(false);
 };
 
-  const fetchAR = async () => {
-    try {
-      const response = await axios.get(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
-      );
-      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-    } catch (error) {
-      console.error("Error fetching actions and recommendations:", error.message);
-      setError("Failed to fetch actions and recommendations.");
-    }
-  };
-  
-  // Call fetchAR in useEffect
-  useEffect(() => {
-    fetchAR();
-  }, [sessionId]);
+const fetchAR = async () => {
+  try {
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
+    );
+    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+  } catch (error) {
+    console.error("Error fetching actions and recommendations:", error.message);
+    setError("Failed to fetch actions and recommendations.");
+  }
+};
+
+useEffect(() => {
+  fetchAR();
+}, [sessionId]);
+
   
 
 
