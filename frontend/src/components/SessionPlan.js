@@ -181,10 +181,11 @@ const handleSaveAR = async () => {
   
         // Send payload to the backend
         await axios.post(
-          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
           payload,
           { withCredentials: true }
         );
+        
       }
   
       setSuccessMessage("Post-learning topics saved successfully!");
