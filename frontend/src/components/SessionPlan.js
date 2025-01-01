@@ -171,6 +171,7 @@ const handleSaveAR = async () => {
             detailing: concept.detailing.trim(),
           })),
         };
+        console.log("Payload for post-learning:", payload); // Debugging
 
         return axios.post(
           `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
@@ -181,10 +182,8 @@ const handleSaveAR = async () => {
 
       await Promise.all(promises);
       setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]);
-
-      // Call fetchAR after saving
-      await fetchAR();
+      setSelectedTopics([]); // Clear selected topics
+      await fetchAR(); // Refresh actions and recommendations
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
