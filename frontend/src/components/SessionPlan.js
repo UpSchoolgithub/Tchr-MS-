@@ -161,36 +161,24 @@ const handleSaveAR = async () => {
       return;
     }
 
+    const payload = {
+      selectedTopics: selectedTopics.map((topic) => topic.topicId), // Extract IDs
+    };
+
     try {
-      const promises = selectedTopics.map((topic) => {
-        const payload = {
-          type: arType,
-          topicName: topic.topicName,
-          conceptDetails: topic.selectedConcepts.map((concept) => ({
-            name: concept.name.trim(),
-            detailing: concept.detailing.trim(),
-          })),
-        };
-        console.log("Payload for post-learning:", payload); // Debugging
-
-        return axios.post(
-          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-          payload,
-          { withCredentials: true }
-        );
-      });
-
-      await Promise.all(promises);
+      await axios.post(
+        `/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+        payload,
+        { withCredentials: true }
+      );
       setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]); // Clear selected topics
-      await fetchAR(); // Refresh actions and recommendations
+      setSelectedTopics([]);
+      await fetchAR();
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
     }
   }
-
-  setShowARModal(false);
 };
 
 const fetchAR = async () => {
