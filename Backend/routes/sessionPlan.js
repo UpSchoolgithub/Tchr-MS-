@@ -95,7 +95,9 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
       // Check if the action/recommendation already exists
       const existingAction = await ActionsAndRecommendations.findOne({
         where: { sessionId, topicName: topic.topicName, type: 'post-learning' },
+        attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing', 'createdAt', 'updatedAt'], // No sessionPlanId
       });
+      
       
       if (existingAction) {
         console.log(`Skipping duplicate action for topicId: ${topicId}`);
