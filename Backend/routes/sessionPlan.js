@@ -17,52 +17,45 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 
-router.post('/api/sessions/:sessionId/actionsAndRecommendations/postLearning', async (req, res) => {
+router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
-  const { topics } = req.body;
-
-  if (!Array.isArray(topics) || topics.length === 0) {
-    return res.status(400).json({ message: 'Topics must be a non-empty array.' });
-  }
 
   try {
-    const recommendations = [];
-
-    for (const topic of topics) {
-      const { topicId, topicName, concepts } = topic;
-
-      if (!topicId || !topicName || !Array.isArray(concepts) || concepts.length === 0) {
-        return res.status(400).json({ message: 'Invalid topic or concept details.' });
-      }
-
-      for (const concept of concepts) {
-        const { conceptId, conceptName, conceptDetailing } = concept;
-
-        if (!conceptId || !conceptName || !conceptDetailing) {
-          return res.status(400).json({ message: 'Invalid concept details.' });
-        }
-
-        const recommendation = await ActionsAndRecommendations.create({
-          sessionId,
-          type: 'post-learning', // Fixed type for post-learning
-          topicId,
-          topicName,
-          conceptId,
-          conceptName,
-          conceptDetailing,
-        });
-
-        recommendations.push(recommendation);
-      }
-    }
-
-    res.status(201).json({
-      message: 'Post-learning actions and recommendations saved successfully.',
-      data: recommendations,
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+      include: [
+        {
+          model: Topic,
+          as: 'Topics',
+          attributes: ['id', 'topicName'], // Topic attributes
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts',
+              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
+            },
+          ],
+        },
+      ],
     });
+
+    const topics = sessionPlans.flatMap((plan) =>
+      (plan.Topics || []).map((topic) => ({
+        id: topic.id,
+        name: topic.topicName,
+        concepts: (topic.Concepts || []).map((concept) => ({
+          id: concept.id,
+          name: concept.concept,
+          detailing: concept.conceptDetailing,
+        })),
+      }))
+    );
+    
+
+    res.status(200).json({ topics });
   } catch (error) {
-    console.error('Error saving post-learning actions and recommendations:', error.message);
-    res.status(500).json({ message: 'Failed to save post-learning actions and recommendations.', error: error.message });
+    console.error('Error fetching topics:', error.message);
+    res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
   }
 });
 
