@@ -63,6 +63,8 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
 
 // save postleanring in A&R
 router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
+  console.log("Received payload in backend:", req.body); // Log the incoming payload
+
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
