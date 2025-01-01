@@ -128,7 +128,6 @@ const handleAddTopic = () => {
 
 
 
-
 const handleSaveAR = async () => {
   if (arType === "pre-learning") {
     // Payload for pre-learning
@@ -162,25 +161,37 @@ const handleSaveAR = async () => {
       return;
     }
 
-    const payload = {
-      selectedTopics: selectedTopics.map((topic) => topic.topicId), // Extract IDs
-    };
-
     try {
-      await axios.post(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-        payload,
-        { withCredentials: true }
-    );
-    
+      const promises = selectedTopics.map((topic) => {
+        const payload = {
+          type: arType,
+          topicName: topic.topicName,
+          conceptDetails: topic.selectedConcepts.map((concept) => ({
+            name: concept.name.trim(),
+            detailing: concept.detailing.trim(),
+          })),
+        };
+
+        return axios.post(
+          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+          payload,
+          { withCredentials: true }
+        );
+      });
+
+      await Promise.all(promises);
       setSuccessMessage("Post-learning topics saved successfully!");
       setSelectedTopics([]);
+
+      // Call fetchAR after saving
       await fetchAR();
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
     }
   }
+
+  setShowARModal(false);
 };
 
 const fetchAR = async () => {
