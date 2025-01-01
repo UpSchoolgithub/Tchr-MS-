@@ -156,7 +156,6 @@ const handleSaveAR = async () => {
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   } else if (arType === "post-learning") {
-    // Ensure selected topics and concepts are valid
     if (selectedTopics.length === 0) {
       setError("Please select at least one topic and its concepts.");
       return;
@@ -173,9 +172,6 @@ const handleSaveAR = async () => {
           })),
         };
 
-        console.log("Payload for post-learning:", payload);
-
-        // Send payload to the backend
         return axios.post(
           `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
           payload,
@@ -184,9 +180,9 @@ const handleSaveAR = async () => {
       });
 
       await Promise.all(promises);
-
       setSuccessMessage("Post-learning topics saved successfully!");
       setSelectedTopics([]); // Clear selected topics
+      await fetchAR(); // Refresh actions and recommendations
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
@@ -194,7 +190,6 @@ const handleSaveAR = async () => {
   }
 
   setShowARModal(false);
-  await fetchAR(); // Refresh actions and recommendations
 };
 
 
@@ -210,6 +205,7 @@ useEffect(() => {
       setError("Failed to fetch actions and recommendations.");
     }
   };
+  
   
   
   
