@@ -17,6 +17,7 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 
+// Add post leanring topics fetching
 router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
@@ -60,6 +61,73 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
 });
 
 
+// save postleanring in A&R
+router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
+  const { sessionId } = req.params;
+  const { selectedTopics } = req.body;
+
+  // Validate the request body
+  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
+    return res.status(400).json({ message: 'No topics selected.' });
+  }
+
+  const transaction = await sequelize.transaction(); // Start transaction
+  try {
+    // Loop through selected topics and associate them with the session
+    for (const topicId of selectedTopics) {
+      // Fetch the topic along with its concepts
+      const topic = await Topic.findByPk(topicId, {
+        include: [
+          {
+            model: Concept,
+            as: 'Concepts',
+            attributes: ['id', 'concept', 'conceptDetailing'],
+          },
+        ],
+      });
+
+      if (!topic) {
+        throw new Error(`Topic with ID ${topicId} not found.`);
+      }
+
+      // Check if the action/recommendation already exists
+      const existingAction = await ActionsAndRecommendations.findOne({
+        where: { sessionId, topicName: topic.topicName, type: 'post-learning' },
+      });
+
+      if (existingAction) {
+        console.log(`Skipping duplicate action for topicId: ${topicId}`);
+        continue; // Skip duplicates
+      }
+
+      // Save the action/recommendation for the session
+      await ActionsAndRecommendations.create(
+        {
+          sessionId,
+          topicName: topic.topicName,
+          type: 'post-learning', // Example type
+          conceptDetails: JSON.stringify(
+            topic.Concepts.map((concept) => ({
+              id: concept.id,
+              name: concept.concept,
+              detailing: concept.conceptDetailing,
+            }))
+          ),
+        },
+        { transaction } // Use transaction
+      );
+    }
+
+    // Commit the transaction
+    await transaction.commit();
+
+    res.status(201).json({ message: 'Actions and recommendations saved successfully.' });
+  } catch (error) {
+    console.error('Error saving actions and recommendations:', error.message);
+    await transaction.rollback(); // Rollback on error
+    res.status(500).json({ message: 'Failed to save actions and recommendations.', error: error.message });
+  }
+});
 
 // Endpoint for Fetching Topics and Concepts for prelearning 
 router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
