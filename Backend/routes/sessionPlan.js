@@ -67,43 +67,37 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
 
 router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
   const { sessionId } = req.params;
-  console.log("Request Headers:", req.headers);
-  console.log("Received Payload:", req.body);
   const { selectedTopics } = req.body;
 
-  // Log the received payload for debugging
   console.log("Received Payload:", JSON.stringify(req.body, null, 2));
 
-  // Validate the payload
-  if (
-      !Array.isArray(selectedTopics) ||
-      selectedTopics.length === 0 ||
-      selectedTopics.some(topic => !topic.id || !Array.isArray(topic.concepts) || topic.concepts.length === 0)
-  ) {
-      console.log("Invalid Payload Structure or Empty Topics:", JSON.stringify(selectedTopics, null, 2));
+  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
       return res.status(400).json({ message: 'No topics selected.' });
   }
 
   const transaction = await sequelize.transaction();
 
   try {
-    for (const topic of selectedTopics) {
-      if (!Array.isArray(topic.concepts)) {
-          console.error(`Invalid concepts for topic ${topic.id}:`, topic.concepts);
-          return res.status(400).json({ message: `Invalid concepts for topic ${topic.id}.` });
+      for (const topic of selectedTopics) {
+          console.log(`Processing topic with id: ${topic.id}`);
+          console.log(`Concepts:`, topic.concepts);
+          console.log(`Type of concepts:`, typeof topic.concepts);
+
+          if (!topic.concepts || !Array.isArray(topic.concepts)) {
+              console.error(`Invalid concepts for topic ${topic.id}:`, topic.concepts);
+              return res.status(400).json({ message: `Invalid concepts for topic ${topic.id}.` });
+          }
+
+          const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
+
+          await PostLearningActions.create({
+              sessionId,
+              topicId: topic.id,
+              conceptIds,
+              type: 'post-learning'
+          }, { transaction });
       }
-  
-      const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
-  
-      // Insert into PostLearningActions
-      await PostLearningActions.create({
-          sessionId,
-          topicId: topic.id,
-          conceptIds,
-          type: 'post-learning'
-      }, { transaction });
-  }
-  
+
       await transaction.commit();
       res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
@@ -112,6 +106,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
       res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
+
 
 
 //Fetching Post-Learning Actions
