@@ -71,24 +71,33 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
   console.log("Received Payload:", JSON.stringify(req.body, null, 2));
 
+  // Validate that selectedTopics is an array
   if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-      return res.status(400).json({ message: 'No topics selected.' });
+      return res.status(400).json({ message: 'No topics selected or invalid format.' });
   }
 
   const transaction = await sequelize.transaction();
 
   try {
       for (const topic of selectedTopics) {
-          console.log(`Processing topic with id: ${topic.id}`);
-          console.log(`Concepts before validation:`, topic.concepts);
+          // Validate topic structure
+          if (!topic || !topic.id || !Array.isArray(topic.concepts)) {
+              console.error(`Invalid topic format: ${JSON.stringify(topic)}`);
+              throw new Error(`Invalid topic format for topic: ${JSON.stringify(topic)}`);
+          }
 
-          // Ensure concepts is an array
-          const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
-          console.log(`Validated concepts array for topic ${topic.id}:`, concepts);
+          // Map concept IDs after validation
+          const conceptIds = topic.concepts.map(concept => {
+              if (!concept.id) {
+                  console.error(`Invalid concept format: ${JSON.stringify(concept)}`);
+                  throw new Error(`Invalid concept format for concept: ${JSON.stringify(concept)}`);
+              }
+              return concept.id;
+          });
 
-          const conceptIds = concepts.map(concept => concept.id);
-          console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
+          console.log(`Processed topic ${topic.id} with conceptIds:`, conceptIds);
 
+          // Save post-learning action
           await PostLearningActions.create({
               sessionId,
               topicId: topic.id,
