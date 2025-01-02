@@ -67,6 +67,8 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
 
 router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
   const { sessionId } = req.params;
+  console.log("Request Headers:", req.headers);
+  console.log("Received Payload:", req.body);
   const { selectedTopics } = req.body;
 
   // Log the received payload for debugging
@@ -109,6 +111,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
 //Fetching Post-Learning Actions
 router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
+  
   const { sessionId } = req.params;
 
   try {
