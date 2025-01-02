@@ -16,52 +16,55 @@ const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
+const PostLearningAction = require('../models/PostLearningAction'); // Import the model
 
 // Add post leanring topics fetching
-router.get('/sessions/:sessionId/topics', async (req, res) => {
+router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    const sessionPlans = await SessionPlan.findAll({
+    const postLearningActions = await PostLearningAction.findAll({
       where: { sessionId },
       include: [
         {
           model: Topic,
-          as: 'Topics',
-          attributes: ['id', 'topicName'], // Topic attributes
+          as: 'Topic',
+          attributes: ['id', 'topicName'],
           include: [
             {
               model: Concept,
               as: 'Concepts',
-              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
+              attributes: ['id', 'concept', 'conceptDetailing'],
             },
           ],
         },
       ],
     });
 
-    const topics = sessionPlans.flatMap((plan) =>
-      (plan.Topics || []).map((topic) => ({
-        id: topic.id,
-        name: topic.topicName,
-        concepts: (topic.Concepts || []).map((concept) => ({
-          id: concept.id,
-          name: concept.concept,
-          detailing: concept.conceptDetailing,
-        })),
-      }))
-    );
-    
+    const response = postLearningActions.map((action) => ({
+      id: action.id,
+      sessionId: action.sessionId,
+      topic: {
+        id: action.topicId,
+        name: action.Topic.topicName,
+        concepts: action.conceptIds.map((id) =>
+          action.Topic.Concepts.find((concept) => concept.id === id)
+        ),
+      },
+      type: action.type,
+    }));
 
-    res.status(200).json({ topics });
+    res.status(200).json({ postLearningActions: response });
   } catch (error) {
-    console.error('Error fetching topics:', error.message);
-    res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
+    console.error('Error fetching post-learning actions:', error.message);
+    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
   }
 });
 
 
+
 // save postleanring in A&R
+
 router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
@@ -73,34 +76,30 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const transaction = await sequelize.transaction();
   try {
     for (const topic of selectedTopics) {
-      if (!topic.topicName || !Array.isArray(topic.concepts)) {
-        throw new Error("Invalid topic structure in request payload.");
+      if (!topic.id || !Array.isArray(topic.concepts)) {
+        throw new Error('Invalid topic structure in request payload.');
       }
 
-      const existingAction = await ActionsAndRecommendations.findOne({
-        where: { sessionId, topicName: topic.topicName, type: 'post-learning' },
-      });
+      const conceptIds = topic.concepts.map((concept) => concept.id);
 
-      if (existingAction) continue;
-
-      await ActionsAndRecommendations.create(
+      // Create a new post-learning action record
+      await PostLearningAction.create(
         {
           sessionId,
-          topicName: topic.topicName,
+          topicId: topic.id,
+          conceptIds,
           type: 'post-learning',
-          conceptName: topic.concepts.map((c) => c.name).join("; "),
-          conceptDetailing: topic.concepts.map((c) => c.detailing).join("; "),
         },
         { transaction }
       );
     }
 
     await transaction.commit();
-    res.status(201).json({ message: 'Actions and recommendations saved successfully.' });
+    res.status(201).json({ message: 'Post-learning actions and recommendations saved successfully.' });
   } catch (error) {
     await transaction.rollback();
-    console.error('Error saving actions and recommendations:', error.message);
-    res.status(500).json({ message: 'Failed to save actions and recommendations.', error: error.message });
+    console.error('Error saving post-learning actions:', error.message);
+    res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
 
