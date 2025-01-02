@@ -1105,6 +1105,7 @@ const handleGenerateARLessonPlan = async (arId) => {
       </div>
   
       {/* Actions and Recommendations Table */}
+{/* Actions and Recommendations Table */}
 <div className="actions-recommendations-table">
   <h3>Actions and Recommendations</h3>
   <table>
@@ -1117,21 +1118,32 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-  {actionsAndRecommendations.length > 0 ? (
-    actionsAndRecommendations.map((ar, index) => (
-      <tr key={index}>
-        <td>{ar.type || "Unknown Type"}</td>
-        <td>{ar.topicName || "No Topic Name"}</td>
-        <td>{ar.conceptName || "No Concept"}</td>
-        <td>{ar.conceptDetailing || "No Details"}</td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="4">No actions or recommendations available.</td>
-    </tr>
-  )}
-</tbody>
+      {actionsAndRecommendations.length > 0 ? (
+        actionsAndRecommendations.map((ar, index) => (
+          <tr key={index}>
+            <td>{ar.type || "Unknown Type"}</td>
+            <td>{ar.topicName || "No Topic Name"}</td>
+            <td>
+              {Array.isArray(ar.conceptName)
+                ? ar.conceptName.join(", ")
+                : ar.conceptName || "No Concept"}
+            </td>
+            <td>
+              {Array.isArray(ar.conceptDetailing)
+                ? ar.conceptDetailing.join("; ")
+                : ar.conceptDetailing || "No Details"}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="4">No actions or recommendations available.</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
 
   </table>
 </div>
