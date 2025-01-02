@@ -80,10 +80,10 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   try {
       for (const topic of selectedTopics) {
           console.log(`Processing topic with id: ${topic.id}`);
-          console.log(`Concepts:`, topic.concepts);
+          console.log('Concepts:', topic.concepts);
 
           if (!Array.isArray(topic.concepts)) {
-              console.error("Concepts is not an array. Converting to empty array.");
+              console.error("Concepts is not an array. Converting to an empty array.");
               topic.concepts = [];
           }
 
@@ -94,7 +94,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
           await PostLearningActions.create({
               sessionId,
               topicId: topic.id,
-              conceptIds: JSON.stringify(conceptIds), // Ensure JSON serialization
+              conceptIds: JSON.stringify(conceptIds), // Store as JSON string
               type: 'post-learning',
           }, { transaction });
       }
