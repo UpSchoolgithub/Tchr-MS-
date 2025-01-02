@@ -83,18 +83,22 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
           console.log(`Concepts:`, topic.concepts);
           console.log(`Type of concepts:`, typeof topic.concepts);
 
-          if (!topic.concepts || !Array.isArray(topic.concepts)) {
-              console.error(`Invalid concepts for topic ${topic.id}:`, topic.concepts);
-              return res.status(400).json({ message: `Invalid concepts for topic ${topic.id}.` });
+          if (!Array.isArray(topic.concepts)) {
+              console.error("Concepts is not an array, forcing conversion:", topic.concepts);
+              topic.concepts = Object.values(topic.concepts); // Fallback conversion
           }
 
-          const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
+          const conceptIds = JSON.stringify(
+              Array.isArray(topic.concepts) ? topic.concepts.map(concept => concept.id) : []
+          );
+
+          console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
 
           await PostLearningActions.create({
               sessionId,
               topicId: topic.id,
               conceptIds,
-              type: 'post-learning'
+              type: 'post-learning',
           }, { transaction });
       }
 
