@@ -161,18 +161,18 @@ const handleSaveAR = async () => {
       return;
     }
 
+    // Corrected payload structure
     const payload = selectedTopics.map((topic) => ({
-      topicName: topic.topicName,
+      id: topic.topicId, // Use topic ID
       concepts: topic.selectedConcepts.map((c) => ({
-        name: c.name,
-        detailing: c.detailing,
+        id: c.id, // Use concept ID
       })),
     }));
 
     try {
       await axios.post(
         `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-        { selectedTopics: payload },
+        { selectedTopics: payload }, // Pass the corrected payload
         { withCredentials: true }
       );
       setSuccessMessage("Post-learning topics saved successfully!");
@@ -184,9 +184,9 @@ const handleSaveAR = async () => {
     }
   }
 
-
   setShowARModal(false);
 };
+
 
 const fetchAR = async () => {
   try {
