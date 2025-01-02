@@ -69,32 +69,34 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
-  if (
-  !Array.isArray(selectedTopics) ||
-  selectedTopics.length === 0 ||
-  selectedTopics.some(topic => !topic.id || !Array.isArray(topic.concepts) || topic.concepts.length === 0)
-) {
-  return res.status(400).json({ message: 'No topics selected.' });
-}
+  // Validate the payload
+  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
+      return res.status(400).json({ message: 'No topics selected.' });
+  }
+
+  // Ensure each topic has an ID and valid concepts
+  const isValid = selectedTopics.every(topic => 
+      topic.id && Array.isArray(topic.concepts) && topic.concepts.length > 0
+  );
+
+  if (!isValid) {
+      return res.status(400).json({ message: 'Invalid topics structure.' });
+  }
 
   const transaction = await sequelize.transaction();
+
   try {
-    for (const topic of selectedTopics) {
-      if (!topic.id || !Array.isArray(topic.concepts)) {
-          throw new Error(`Invalid topic structure: ${JSON.stringify(topic, null, 2)}`);
+      for (const topic of selectedTopics) {
+          const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
+
+          // Insert into PostLearningActions
+          await PostLearningActions.create({
+              sessionId,
+              topicId: topic.id,
+              conceptIds,
+              type: 'post-learning'
+          }, { transaction });
       }
-  
-      const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
-  
-      // Insert into PostLearningActions
-      await PostLearningActions.create({
-          sessionId,
-          topicId: topic.id,
-          conceptIds,
-          type: 'post-learning',
-      }, { transaction });
-  }
-  
 
       await transaction.commit();
       res.status(201).json({ message: 'Post-learning actions saved successfully.' });
@@ -104,6 +106,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
       res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
+
 
 //Fetching Post-Learning Actions
 router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
