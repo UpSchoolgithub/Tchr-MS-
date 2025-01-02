@@ -111,6 +111,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 // Endpoint for Fetching Topics and Concepts for prelearning 
 router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, res) => {
   const { type, topicName, conceptDetails } = req.body;
+  console.log('POST Payload:', JSON.stringify(selectedTopics, null, 2));
 
   console.log("Received Data:", {
     type,
@@ -134,6 +135,8 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
   } catch (error) {
     console.error("Error:", error.message);
     res.status(500).send({ error: "Failed to save topic and concepts." });
+    console.log('POST Payload:', JSON.stringify(selectedTopics, null, 2));
+
   }
 });
 
