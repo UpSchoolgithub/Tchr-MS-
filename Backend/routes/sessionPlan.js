@@ -19,45 +19,45 @@ const { ActionsAndRecommendations } = require('../models');
 const PostLearningAction = require('../models/PostLearningAction'); // Import the model
 
 // Add post leanring topics fetching
-router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
+router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    const postLearningActions = await PostLearningAction.findAll({
+    const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
         {
           model: Topic,
-          as: 'Topic',
-          attributes: ['id', 'topicName'],
+          as: 'Topics',
+          attributes: ['id', 'topicName'], // Topic attributes
           include: [
             {
               model: Concept,
               as: 'Concepts',
-              attributes: ['id', 'concept', 'conceptDetailing'],
+              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
             },
           ],
         },
       ],
     });
 
-    const response = postLearningActions.map((action) => ({
-      id: action.id,
-      sessionId: action.sessionId,
-      topic: {
-        id: action.topicId,
-        name: action.Topic.topicName,
-        concepts: action.conceptIds.map((id) =>
-          action.Topic.Concepts.find((concept) => concept.id === id)
-        ),
-      },
-      type: action.type,
-    }));
+    const topics = sessionPlans.flatMap((plan) =>
+      (plan.Topics || []).map((topic) => ({
+        id: topic.id,
+        name: topic.topicName,
+        concepts: (topic.Concepts || []).map((concept) => ({
+          id: concept.id,
+          name: concept.concept,
+          detailing: concept.conceptDetailing,
+        })),
+      }))
+    );
+    
 
-    res.status(200).json({ postLearningActions: response });
+    res.status(200).json({ topics });
   } catch (error) {
-    console.error('Error fetching post-learning actions:', error.message);
-    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
+    console.error('Error fetching topics:', error.message);
+    res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
   }
 });
 
