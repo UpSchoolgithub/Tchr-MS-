@@ -33,7 +33,11 @@ const SessionPlans = () => {
   const [arConcepts, setARConcepts] = useState([{ name: "", detailing: "" }]);
   const [preLearningTopics, setPreLearningTopics] = useState([]);
   const [actionsAndRecommendations, setActionsAndRecommendations] = useState([]);
-
+  const [addedTopics, setAddedTopics] = useState([]); // Store added topics and concepts
+  const [selectedTopics, setSelectedTopics] = useState([]); // Store selected topics and concepts
+  const [currentTopic, setCurrentTopic] = useState(''); // Currently selected topic
+  const [currentConcepts, setCurrentConcepts] = useState([]); // Concepts of the selected topic
+  
   const {
     schoolName = "School Name Not Available",
     schoolId,
@@ -59,71 +63,148 @@ const SessionPlans = () => {
   }, [boardName, location]);
   
 // A & R starts
-// Function to handle opening the modal
+// Function to handle opening the modal for post learning
 const handleOpenARModal = async (type) => {
-  console.log('Opening Modal:', type);
   setShowARModal(true);
   setARType(type);
 
-  if (type === 'post-learning') {
+  try {
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/topics`,
+      { withCredentials: true }
+    );
+    const topics = response.data.topics || [];
+
+    if (type === "post-learning") {
+      const filteredTopics = topics.filter(
+        (topic) => !selectedTopics.some((added) => added.topicId === topic.id)
+      );
+      setExistingTopics(filteredTopics);
+    } else {
+      setExistingTopics(topics);
+    }
+  } catch (error) {
+    console.error("Error fetching topics:", error);
+    setError("Failed to fetch topics.");
+  }
+};
+
+
+
+// Function to handle topic selection
+const handleSelectTopic = (topicId) => {
+  const selectedTopic = existingTopics.find((topic) => topic.id === topicId);
+  setCurrentTopic(selectedTopic);
+  setCurrentConcepts(selectedTopic.concepts || []);
+};
+
+// Function to handle checkbox toggle
+const handleToggleConcept = (conceptId) => {
+  setCurrentConcepts((prev) =>
+    prev.map((concept) =>
+      concept.id === conceptId ? { ...concept, selected: !concept.selected } : concept
+    )
+  );
+};
+
+// Function to add the current topic and its selected concepts
+const handleAddTopic = () => {
+  if (currentTopic && currentConcepts.some((concept) => concept.selected)) {
+    setSelectedTopics((prev) => [
+      ...prev,
+      {
+        topicId: currentTopic.id,
+        topicName: currentTopic.name,
+        selectedConcepts: currentConcepts.filter((concept) => concept.selected),
+      },
+    ]);
+    // Reset current topic and concepts
+    setCurrentTopic(null);
+    setCurrentConcepts([]);
+  } else {
+    setError("Please select a topic and at least one concept.");
+  }
+};
+
+
+
+const handleSaveAR = async () => {
+  if (arType === "pre-learning") {
+    // Payload for pre-learning
+    const payload = {
+      type: arType,
+      topicName: arTopicName,
+      conceptDetails: arConcepts.map((concept) => ({
+        name: concept.name.trim(),
+        detailing: concept.detailing.trim(),
+      })),
+    };
+
     try {
-      const response = await axios.get(`/api/sessions/${sessionId}/existingTopics`);
-      console.log('Fetched Topics:', response.data);
-      setExistingTopics(response.data || []);
-      setError('');
+      console.log(`Payload (Pre-learning):`, payload);
+      await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+        payload,
+        { withCredentials: true }
+      );
+
+      setSuccessMessage("Pre-learning topic saved successfully!");
+      setARTopicName(""); // Reset topic name
+      setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
     } catch (error) {
-      console.error('Error fetching existing topics:', error);
-      setError('Failed to fetch existing topics for post-learning.');
+      console.error("Error saving pre-learning topic:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save pre-learning topic.");
+    }
+  } else if (arType === "post-learning") {
+    if (selectedTopics.length === 0) {
+      setError("Please select at least one topic and its concepts.");
+      return;
+    }
+
+    const payload = selectedTopics.map((topic) => ({
+      topicName: topic.topicName,
+      concepts: topic.selectedConcepts.map((c) => ({
+        name: c.name,
+        detailing: c.detailing,
+      })),
+    }));
+
+    try {
+      await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+        { selectedTopics: payload },
+        { withCredentials: true }
+      );
+      setSuccessMessage("Post-learning topics saved successfully!");
+      setSelectedTopics([]);
+      await fetchAR();
+    } catch (error) {
+      console.error("Error saving post-learning topics:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save post-learning topics.");
     }
   }
+
+
+  setShowARModal(false);
 };
 
-
-
-// Save Action and Recommendation
-const handleSaveAR = async (topicId, concepts) => {
-  const payload = {
-    type: arType,
-    topicName: arTopicName,
-    conceptDetails: concepts,
-  };
-
+const fetchAR = async () => {
   try {
-    const response = await axios.post(
-      `/api/sessions/${sessionId}/actionsAndRecommendations`,
-      payload
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
     );
-    setSuccessMessage('Pre-learning topic saved successfully!');
-    setShowARModal(false);
+    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
   } catch (error) {
-    console.error('Error saving pre-learning topic:', error.message);
-    setError('Failed to save pre-learning topic.');
+    console.error("Error fetching actions and recommendations:", error.message);
+    setError("Failed to fetch actions and recommendations.");
   }
 };
-
 
 useEffect(() => {
-  const fetchAR = async () => {
-    try {
-      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`);
-      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-    } catch (error) {
-      console.error("Error fetching actions and recommendations:", error.message);
-      setError("Failed to fetch actions and recommendations.");
-    }
-  };
-  
-  
   fetchAR();
 }, [sessionId]);
 
-
-
-
-
-
-
-
+  
 
 
 // Function to generate lesson plan for A and R
@@ -225,45 +306,113 @@ const handleGenerateARLessonPlan = async (arId) => {
 
       {/* For Post-learning */}
       {arType === "post-learning" && (
-        <>
-          <Form.Group>
-            <Form.Label>Select Topic</Form.Label>
-            <Form.Control
-              as="select"
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-            >
-              <option value="">Choose a topic</option>
-              {existingTopics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.name}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Select Concepts</Form.Label>
-            {existingTopics
-              .find((topic) => topic.id === selectedTopic)
-              ?.concepts.map((concept) => (
-                <Form.Check
-                  key={concept.id}
-                  type="checkbox"
-                  label={concept.name}
-                  value={concept.id}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedConcepts((prev) =>
-                      prev.includes(value)
-                        ? prev.filter((id) => id !== value)
-                        : [...prev, value]
-                    );
-                  }}
-                />
-              ))}
-          </Form.Group>
-        </>
-      )}
+  <>
+    <Form.Group>
+      <Form.Label>Select Topic</Form.Label>
+      <Form.Control
+        as="select"
+        value={selectedTopic}
+        onChange={(e) => {
+          const selected = e.target.value;
+          const topic = existingTopics.find((t) => t.id === parseInt(selected));
+          setSelectedTopic(selected);
+          setSelectedConcepts((prev) => ({
+            ...prev,
+            [selected]: topic?.concepts || [],
+          }));
+        }}
+      >
+        <option value="">Choose a topic</option>
+        {existingTopics.map((topic) => (
+          <option key={topic.id} value={topic.id}>
+            {topic.name}
+          </option>
+        ))}
+      </Form.Control>
+    </Form.Group>
+    {selectedTopic && (
+      <Form.Group>
+        <Form.Label>Choose Concepts</Form.Label>
+        {existingTopics
+          .find((topic) => topic.id === parseInt(selectedTopic))
+          ?.concepts.map((concept) => (
+            <Form.Check
+              key={concept.id}
+              type="checkbox"
+              label={concept.name}
+              value={concept.id}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedConcepts((prev) => ({
+                  ...prev,
+                  [selectedTopic]: prev[selectedTopic].includes(value)
+                    ? prev[selectedTopic].filter((id) => id !== value)
+                    : [...prev[selectedTopic], value],
+                }));
+              }}
+            />
+          ))}
+      </Form.Group>
+    )}
+    <Button
+      variant="success"
+      className="mt-2"
+      onClick={() => {
+        setAddedTopics((prev) => [
+          ...prev,
+          {
+            topicId: selectedTopic,
+            topicName: existingTopics.find((t) => t.id === parseInt(selectedTopic))?.name,
+            concepts: selectedConcepts[selectedTopic] || [],
+          },
+        ]);
+
+        // Remove the added topic from the dropdown
+        setExistingTopics((prev) =>
+          prev.filter((topic) => topic.id !== parseInt(selectedTopic))
+        );
+
+        setSelectedTopic(""); // Clear selected topic
+        setSelectedConcepts((prev) => {
+          const updated = { ...prev };
+          delete updated[selectedTopic];
+          return updated;
+        });
+      }}
+    >
+      + Add Topic
+    </Button>
+    <div className="added-topics">
+      <h5>Added Topics</h5>
+      {addedTopics.map((topic, index) => (
+        <div key={index} className="added-topic">
+          <strong>{topic.topicName}</strong>
+          <ul>
+            {topic.concepts.map((conceptId) => (
+              <li key={conceptId}>
+                {existingTopics
+                  .find((t) => t.id === topic.topicId)
+                  ?.concepts.find((c) => c.id === conceptId)?.name || ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </>
+)}
+
+<Button
+  variant="primary"
+  onClick={() =>
+    arType === "post-learning"
+      ? handleSaveAR(selectedTopic, selectedConcepts) // Save post-learning with selected concepts
+      : handleSaveAR(null, arConcepts) // Leave Pre-learning unchanged
+  }
+>
+  Save
+</Button>
+
     </Form>
   </Modal.Body>
   <Modal.Footer>
@@ -380,27 +529,7 @@ const handleGenerateARLessonPlan = async (arId) => {
   
   
 
-  // Add a new topic to a session
-  const handleAddTopic = (sessionNumber) => {
-    setTopicsWithConcepts((prev) => {
-      if (!prev[sessionNumber]) {
-        prev[sessionNumber] = [];
-      }
   
-      return {
-        ...prev,
-        [sessionNumber]: [
-          ...prev[sessionNumber],
-          {
-            name: "New Topic",
-            concepts: ["New Concept"], // Ensure at least one concept
-            conceptDetailing: ["Provide details here"], // Ensure at least one detailing
-            lessonPlan: "",
-          },
-        ],
-      };
-    });
-  };
   
   
 
@@ -967,7 +1096,8 @@ const handleGenerateARLessonPlan = async (arId) => {
         </table>
       </div>
   
-      <div className="actions-recommendations-table">
+      {/* Actions and Recommendations Table */}
+<div className="actions-recommendations-table">
   <h3>Actions and Recommendations</h3>
   <table>
     <thead>
@@ -979,25 +1109,34 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-    {actionsAndRecommendations.length > 0 ? (
-  actionsAndRecommendations.map((ar) => (
-    <tr key={ar.id}>
-      <td>{ar.type || "Unknown Type"}</td>
-      <td>{ar.topicName || "Unnamed Topic"}</td>
-      <td>{ar.conceptName || "Unnamed Concept"}</td>
-      <td>{ar.conceptDetailing || "No Detailing"}</td>
-    </tr>
-  ))
-) : (
-  <tr>
-    <td colSpan="4">No actions or recommendations available.</td>
-  </tr>
-)}
+      {actionsAndRecommendations.length > 0 ? (
+        actionsAndRecommendations.flatMap((ar, arIndex) => {
+          // Split concepts and details into arrays for rendering
+          const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
+          const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
 
-</tbody>
+          // Ensure concepts and details are aligned
+          const maxRows = Math.max(concepts.length, details.length);
 
-
-
+          return Array.from({ length: maxRows }).map((_, rowIndex) => (
+            <tr key={`${ar.id}-${rowIndex}`}>
+              {rowIndex === 0 && (
+                <>
+                  <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+                  <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
+                </>
+              )}
+              <td>{concepts[rowIndex] || ""}</td>
+              <td>{details[rowIndex] || ""}</td>
+            </tr>
+          ));
+        })
+      ) : (
+        <tr>
+          <td colSpan="4">No actions or recommendations available.</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 </div>
 
@@ -1065,45 +1204,97 @@ const handleGenerateARLessonPlan = async (arId) => {
         </>
       )}
       {arType === "post-learning" && (
-        <>
-          <Form.Group>
-            <Form.Label>Select Topic</Form.Label>
-            <Form.Control
-              as="select"
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-            >
-              <option value="">Choose a topic</option>
-              {existingTopics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.name}
-                </option>
+  <>
+    {/* Select Topic Dropdown */}
+    <Form.Group>
+      <Form.Label>Select Topic</Form.Label>
+      <Form.Control
+        as="select"
+        value={currentTopic?.id || ""}
+        onChange={(e) => {
+          const topicId = Number(e.target.value);
+          const selectedTopic = existingTopics.find((topic) => topic.id === topicId);
+          setCurrentTopic(selectedTopic || null);
+          setCurrentConcepts(selectedTopic?.concepts.map((c) => ({ ...c, selected: false })) || []);
+        }}
+      >
+        <option value="">Choose a topic</option>
+        {existingTopics
+          .filter((topic) => !selectedTopics.some((selected) => selected.topicId === topic.id))
+          .map((topic) => (
+            <option key={topic.id} value={topic.id}>
+              {topic.name}
+            </option>
+          ))}
+      </Form.Control>
+    </Form.Group>
+
+    {/* Concepts as Checkboxes */}
+    {currentConcepts.length > 0 && (
+      <Form.Group>
+        <Form.Label>Select Concepts</Form.Label>
+        {currentConcepts.map((concept) => (
+          <Form.Check
+            key={concept.id}
+            type="checkbox"
+            label={concept.name}
+            value={concept.id}
+            checked={concept.selected}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              setCurrentConcepts((prev) =>
+                prev.map((c) =>
+                  c.id === value ? { ...c, selected: !c.selected } : c
+                )
+              );
+            }}
+          />
+        ))}
+      </Form.Group>
+    )}
+
+    {/* Add Topic Button */}
+    <Button
+      variant="secondary"
+      className="mt-3"
+      onClick={() => {
+        if (currentTopic) {
+          setSelectedTopics((prev) => [
+            ...prev,
+            {
+              topicId: currentTopic.id,
+              topicName: currentTopic.name,
+              selectedConcepts: currentConcepts.filter((c) => c.selected),
+            },
+          ]);
+          setCurrentTopic(null);
+          setCurrentConcepts([]);
+        }
+      }}
+      disabled={!currentTopic || !currentConcepts.some((c) => c.selected)}
+    >
+      + Add Another Topic
+    </Button>
+
+    {/* Display Added Topics */}
+    {selectedTopics.length > 0 && (
+      <div className="mt-3">
+        <h5>Selected Topics</h5>
+        {selectedTopics.map((topic, index) => (
+          <div key={index}>
+            <strong>{topic.topicName}</strong>
+            <ul>
+              {topic.selectedConcepts.map((concept) => (
+                <li key={concept.id}>{concept.name}</li>
               ))}
-            </Form.Control>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Select Concepts</Form.Label>
-            {existingTopics
-              .find((topic) => topic.id === selectedTopic)
-              ?.concepts.map((concept) => (
-                <Form.Check
-                  key={concept.id}
-                  type="checkbox"
-                  label={concept.name}
-                  value={concept.id}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedConcepts((prev) =>
-                      prev.includes(value)
-                        ? prev.filter((id) => id !== value)
-                        : [...prev, value]
-                    );
-                  }}
-                />
-              ))}
-          </Form.Group>
-        </>
-      )}
+            </ul>
+          </div>
+        ))}
+      </div>
+    )}
+  </>
+)}
+
     </Form>
   </Modal.Body>
   <Modal.Footer>
