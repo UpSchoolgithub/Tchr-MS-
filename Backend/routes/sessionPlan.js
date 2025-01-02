@@ -75,22 +75,22 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
   const transaction = await sequelize.transaction();
   try {
-      for (const topic of selectedTopics) {
-          if (!topic.id || !Array.isArray(topic.concepts)) {
-              throw new Error(`Invalid topic structure: ${JSON.stringify(topic, null, 2)}`);
-          }
-
-          const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
-
-          // Insert into PostLearningActions
-          await PostLearningActions.create({
-              sessionId,
-              topicId: topic.id,
-              conceptIds,
-              type: 'post-learning',
-              additionalDetails: topic.additionalDetails || null, // Add if there's any additional data
-          }, { transaction });
+    for (const topic of selectedTopics) {
+      if (!topic.id || !Array.isArray(topic.concepts)) {
+          throw new Error(`Invalid topic structure: ${JSON.stringify(topic, null, 2)}`);
       }
+  
+      const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
+  
+      // Insert into PostLearningActions
+      await PostLearningActions.create({
+          sessionId,
+          topicId: topic.id,
+          conceptIds,
+          type: 'post-learning',
+      }, { transaction });
+  }
+  
 
       await transaction.commit();
       res.status(201).json({ message: 'Post-learning actions saved successfully.' });
