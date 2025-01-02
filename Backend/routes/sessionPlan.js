@@ -70,9 +70,15 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { selectedTopics } = req.body;
 
   // Validate the payload
-  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-      return res.status(400).json({ message: 'No topics selected.' });
+  if (
+    !Array.isArray(selectedTopics) || 
+    selectedTopics.length === 0 || 
+    selectedTopics.some(topic => !topic.id || !Array.isArray(topic.concepts) || topic.concepts.length === 0)
+  ) {
+    console.log("Invalid Payload:", JSON.stringify(selectedTopics, null, 2)); // Log the invalid payload
+    return res.status(400).json({ message: 'No topics selected.' });
   }
+  
 
   // Ensure each topic has an ID and valid concepts
   const isValid = selectedTopics.every(topic => 
