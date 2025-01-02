@@ -135,19 +135,23 @@ const handleAddTopic = () => {
 };
 
 
-const fetchAR = async () => {
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
-      { withCredentials: true }
-    );
-    console.log("Fetched Actions and Recommendations:", response.data); // Debugging
-    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-  } catch (error) {
-    console.error("Error fetching actions and recommendations:", error.message);
-    setError("Failed to fetch actions and recommendations.");
-  }
-};
+useEffect(() => {
+  const fetchAR = async () => {
+    try {
+      const response = await axios.get(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
+      );
+      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+    } catch (error) {
+      console.error("Error fetching actions and recommendations:", error.message);
+      setError("Failed to fetch actions and recommendations.");
+    }
+  };
+  
+  
+  
+  fetchAR();
+}, [sessionId]);
 
 
 const fetchPostLearningActions = async () => {
@@ -1094,22 +1098,27 @@ const handleGenerateARLessonPlan = async (arId) => {
     </thead>
     <tbody>
       {actionsAndRecommendations.length > 0 ? (
-        actionsAndRecommendations.map((ar, index) => (
-          <tr key={index}>
-            <td>{ar.type || "Unknown Type"}</td>
-            <td>{ar.topicName || "No Topic Name"}</td>
-            <td>
-              {Array.isArray(ar.conceptDetails)
-                ? ar.conceptDetails.map((concept) => concept.name).join(", ")
-                : "No Concept"}
-            </td>
-            <td>
-              {Array.isArray(ar.conceptDetails)
-                ? ar.conceptDetails.map((concept) => concept.detailing).join("; ")
-                : "No Details"}
-            </td>
-          </tr>
-        ))
+        actionsAndRecommendations.flatMap((ar, arIndex) => {
+          // Split concepts and details into arrays for rendering
+          const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
+          const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
+
+          // Ensure concepts and details are aligned
+          const maxRows = Math.max(concepts.length, details.length);
+
+          return Array.from({ length: maxRows }).map((_, rowIndex) => (
+            <tr key={`${ar.id}-${rowIndex}`}>
+              {rowIndex === 0 && (
+                <>
+                  <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+                  <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
+                </>
+              )}
+              <td>{concepts[rowIndex] || ""}</td>
+              <td>{details[rowIndex] || ""}</td>
+            </tr>
+          ));
+        })
       ) : (
         <tr>
           <td colSpan="4">No actions or recommendations available.</td>
@@ -1118,6 +1127,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </tbody>
   </table>
 </div>
+
 
 
       {/* Post Learning Actions and Recommendations Table */}
