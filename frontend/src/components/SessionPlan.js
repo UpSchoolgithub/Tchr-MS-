@@ -68,27 +68,26 @@ const handleOpenARModal = async (type) => {
   setShowARModal(true);
   setARType(type);
 
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/topics`,
-      { withCredentials: true }
-    );
-    const topics = response.data.topics || [];
+  if (type === 'post-learning') {
+    try {
+      const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, {
+        withCredentials: true, // Include credentials if necessary
+      });
+            const topics = response.data.topics || [];
 
-    if (type === "post-learning") {
+      // Filter out already added topics for Post-learning
       const filteredTopics = topics.filter(
-        (topic) => !selectedTopics.some((added) => added.topicId === topic.id)
+        (topic) => !addedTopics.some((added) => added.topicId === topic.id)
       );
+
       setExistingTopics(filteredTopics);
-    } else {
-      setExistingTopics(topics);
+      setError('');
+    } catch (error) {
+      console.error('Error fetching topics:', error);
+      setError('Failed to fetch topics for post-learning.');
     }
-  } catch (error) {
-    console.error("Error fetching topics:", error);
-    setError("Failed to fetch topics.");
   }
 };
-
 
 
 // Function to handle topic selection
@@ -118,20 +117,18 @@ const handleAddTopic = () => {
         selectedConcepts: currentConcepts.filter((concept) => concept.selected),
       },
     ]);
-    // Reset current topic and concepts
-    setCurrentTopic(null);
+
+    // Remove the selected topic from the dropdown
+    setExistingTopics((prev) => prev.filter((topic) => topic.id !== currentTopic.id));
+    setCurrentTopic('');
     setCurrentConcepts([]);
-  } else {
-    setError("Please select a topic and at least one concept.");
   }
 };
 
 
-
-
 const handleSaveAR = async () => {
   if (arType === "pre-learning") {
-    // Payload for pre-learning
+    // Handle pre-learning save
     const payload = {
       type: arType,
       topicName: arTopicName,
@@ -143,38 +140,55 @@ const handleSaveAR = async () => {
 
     try {
       console.log(`Payload (Pre-learning):`, payload);
-      await axios.post(
+      const response = await axios.post(
         `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
         payload,
-        { withCredentials: true }
+        { withCredentials: true } // Include credentials if needed
       );
 
       setSuccessMessage("Pre-learning topic saved successfully!");
+      setShowARModal(false);
       setARTopicName(""); // Reset topic name
       setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
+
+      // Re-fetch updated data
+      await fetchAR();
     } catch (error) {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
-  } else if (arType === "post-learning") {
+  } else if 
+  (arType === "post-learning") {
     if (selectedTopics.length === 0) {
       setError("Please select at least one topic and its concepts.");
       return;
     }
 
-    const payload = {
-      selectedTopics: selectedTopics.map((topic) => topic.topicId), // Extract IDs
-    };
-
     try {
-      await axios.post(
-        `/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-        payload,
-        { withCredentials: true }
-      );
+      for (const topic of selectedTopics) {
+        const payload = {
+          type: arType,
+          topicName: topic.name,
+          conceptDetails: topic.concepts.map((concept) => ({
+            name: concept.name.trim(),
+            detailing: concept.detailing.trim(),
+          })),
+        };
+
+        console.log("Payload for topic:", payload);
+
+        // Send payload for each topic
+        await axios.post(
+          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+          payload,
+          { withCredentials: true }
+        );
+      }
+
       setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]);
-      await fetchAR();
+      setShowARModal(false);
+      setSelectedTopics([]); // Clear selected topics
+      await fetchAR(); // Refresh actions and recommendations
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
@@ -182,23 +196,31 @@ const handleSaveAR = async () => {
   }
 };
 
-const fetchAR = async () => {
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
-    );
-    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-  } catch (error) {
-    console.error("Error fetching actions and recommendations:", error.message);
-    setError("Failed to fetch actions and recommendations.");
-  }
-};
-
 useEffect(() => {
+  const fetchAR = async () => {
+    try {
+      const response = await axios.get(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
+      );
+      setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+    } catch (error) {
+      console.error("Error fetching actions and recommendations:", error.message);
+      setError("Failed to fetch actions and recommendations.");
+    }
+  };
+  
+  
+  
   fetchAR();
 }, [sessionId]);
 
-  
+
+
+
+
+
+
+
 
 
 // Function to generate lesson plan for A and R
