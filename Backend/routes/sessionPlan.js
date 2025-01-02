@@ -16,7 +16,7 @@ const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
-const PostLearningAction = require('../models/PostLearningAction'); // Import the model
+const PostLearningActions = require('../models/PostLearningAction');
 
 // Add post leanring topics fetching
 router.get('/sessions/:sessionId/topics', async (req, res) => {
@@ -221,9 +221,10 @@ router.get('/sessions/:sessionId/actionsAndRecommendations', async (req, res) =>
 
     const parsedAR = actionsAndRecommendations.map((ar) => ({
       ...ar.toJSON(),
-      conceptName: ar.conceptName.split("; "),
-      conceptDetailing: ar.conceptDetailing.split("; "),
+      conceptName: ar.conceptName ? ar.conceptName.split("; ") : [],
+      conceptDetailing: ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [],
     }));
+    
 
     res.status(200).json({ actionsAndRecommendations: parsedAR });
   } catch (error) {
