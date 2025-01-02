@@ -69,33 +69,22 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
-  // Validate payload structure
-  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-    console.error('No topics selected or invalid payload structure.');
-    return res.status(400).json({ message: 'No topics selected or invalid payload structure.' });
-  }
+  console.log('Received Payload:', JSON.stringify(selectedTopics, null, 2));
 
-  console.log('Received payload:', JSON.stringify(selectedTopics, null, 2)); // Log the entire payload
+  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
+    return res.status(400).json({ message: 'No topics selected.' });
+  }
 
   const transaction = await sequelize.transaction();
   try {
     for (const topic of selectedTopics) {
       if (!topic.id || !Array.isArray(topic.concepts)) {
-        console.error('Invalid topic structure:', JSON.stringify(topic, null, 2)); // Log invalid topic structure
-        throw new Error('Invalid topic structure in request payload.');
+        throw new Error(`Invalid topic structure: ${JSON.stringify(topic, null, 2)}`);
       }
 
-      const conceptIds = topic.concepts.map((concept) => {
-        if (!concept.id) {
-          console.error(`Missing concept ID in topic ${topic.id}`); // Log missing concept ID
-          throw new Error(`Concept ID is required for topic ${topic.id}`);
-        }
-        return concept.id;
-      });
+      const conceptIds = topic.concepts.map((concept) => concept.id);
 
-      console.log(`Saving PostLearningAction for topicId ${topic.id} with concepts:`, conceptIds);
-
-      // Create a new post-learning action record
+      // Insert into PostLearningActions
       await PostLearningAction.create(
         {
           sessionId,
@@ -108,13 +97,14 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
     }
 
     await transaction.commit();
-    res.status(201).json({ message: 'Post-learning actions and recommendations saved successfully.' });
+    res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
-    console.error('Error saving post-learning actions:', error.message);
     await transaction.rollback();
+    console.error('Error saving post-learning actions:', error.message);
     res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
+
 
 
 
