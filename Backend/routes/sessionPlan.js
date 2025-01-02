@@ -160,50 +160,43 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
 // Restore General Actions and Recommendations Route
 router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
   const { sessionId } = req.params;
-  const { type, topicName, conceptDetails } = req.body;
-
-  console.log("Received Data:", {
-    sessionId,
-    type,
-    topicName,
-    conceptDetails,
-  });
-
-  // Validate input fields
-  if (!type || type !== 'pre-learning') {
-    return res.status(400).json({ message: 'Only pre-learning type is allowed for this endpoint.' });
-  }
-
-  if (!topicName || typeof topicName !== 'string' || topicName.trim() === '') {
-    return res.status(400).json({ message: 'Topic name is required.' });
-  }
-
-  if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
-    return res.status(400).json({ message: 'Concept details must be a non-empty array.' });
-  }
+  const { type, topicName, conceptName, conceptDetailing } = req.body;
 
   try {
-    // Create a new pre-learning action or recommendation
+    // Validate inputs
+    if (!sessionId || !type || !topicName) {
+      return res.status(400).json({
+        message: 'Session ID, type, topic name, and concept name are required.',
+      });
+    }
+
+    if (!['pre-learning', 'post-learning'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid type provided.' });
+    }
+
+    // Create a new action or recommendation
     const actionOrRecommendation = await ActionsAndRecommendations.create({
       sessionId,
       type,
       topicName,
-      conceptName: conceptDetails.map((c) => c.name).join('; '), // Join concept names with a separator
-      conceptDetailing: conceptDetails.map((c) => c.detailing).join('; '), // Join concept details
+      conceptName,
+      conceptDetailing,
     });
 
     res.status(201).json({
-      message: 'Pre-learning action or recommendation added successfully.',
+      message: 'Action or recommendation added successfully.',
       actionOrRecommendation,
     });
   } catch (error) {
-    console.error('Error adding pre-learning action or recommendation:', error.message);
+    console.error('Error adding action or recommendation:', error.message);
     res.status(500).json({
       message: 'Internal server error.',
       error: error.message,
     });
   }
 });
+
+
 
 
 
