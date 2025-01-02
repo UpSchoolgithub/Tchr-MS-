@@ -69,24 +69,17 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
+  // Log the received payload for debugging
+  console.log("Received Payload:", JSON.stringify(req.body, null, 2));
+
   // Validate the payload
   if (
-    !Array.isArray(selectedTopics) || 
-    selectedTopics.length === 0 || 
-    selectedTopics.some(topic => !topic.id || !Array.isArray(topic.concepts) || topic.concepts.length === 0)
+      !Array.isArray(selectedTopics) ||
+      selectedTopics.length === 0 ||
+      selectedTopics.some(topic => !topic.id || !Array.isArray(topic.concepts) || topic.concepts.length === 0)
   ) {
-    console.log("Invalid Payload:", JSON.stringify(selectedTopics, null, 2)); // Log the invalid payload
-    return res.status(400).json({ message: 'No topics selected.' });
-  }
-  
-
-  // Ensure each topic has an ID and valid concepts
-  const isValid = selectedTopics.every(topic => 
-      topic.id && Array.isArray(topic.concepts) && topic.concepts.length > 0
-  );
-
-  if (!isValid) {
-      return res.status(400).json({ message: 'Invalid topics structure.' });
+      console.log("Invalid Payload Structure or Empty Topics:", JSON.stringify(selectedTopics, null, 2));
+      return res.status(400).json({ message: 'No topics selected.' });
   }
 
   const transaction = await sequelize.transaction();
