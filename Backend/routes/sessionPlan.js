@@ -71,7 +71,6 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
   console.log("Received Payload:", JSON.stringify(req.body, null, 2));
 
-  // Validate that selectedTopics is an array
   if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
       return res.status(400).json({ message: 'No topics selected or invalid format.' });
   }
@@ -80,28 +79,26 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
   try {
       for (const topic of selectedTopics) {
-          // Validate topic structure
-          if (!topic || !topic.id || !Array.isArray(topic.concepts)) {
-              console.error(`Invalid topic format: ${JSON.stringify(topic)}`);
-              throw new Error(`Invalid topic format for topic: ${JSON.stringify(topic)}`);
-          }
+          console.log(`Processing topic with id: ${topic.id}`);
+          console.log(`Type of concepts: ${typeof topic.concepts}, Value:`, topic.concepts);
 
-          // Map concept IDs after validation
-          const conceptIds = topic.concepts.map(concept => {
+          // Validate `concepts` is an array
+          const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
+          console.log(`Validated concepts array for topic ${topic.id}:`, concepts);
+
+          const conceptIds = concepts.map(concept => {
               if (!concept.id) {
-                  console.error(`Invalid concept format: ${JSON.stringify(concept)}`);
-                  throw new Error(`Invalid concept format for concept: ${JSON.stringify(concept)}`);
+                  throw new Error(`Invalid concept format: ${JSON.stringify(concept)}`);
               }
               return concept.id;
           });
 
-          console.log(`Processed topic ${topic.id} with conceptIds:`, conceptIds);
+          console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
 
-          // Save post-learning action
           await PostLearningActions.create({
               sessionId,
               topicId: topic.id,
-              conceptIds: JSON.stringify(conceptIds),
+              conceptIds: JSON.stringify(conceptIds), // Ensure valid JSON format
               type: 'post-learning',
           }, { transaction });
       }
@@ -110,7 +107,7 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
       res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
       await transaction.rollback();
-      console.error('Error saving post-learning actions:', error.message);
+      console.error('Error saving post-learning actions:', error.stack);
       res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
