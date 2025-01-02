@@ -1337,5 +1337,4 @@ const handleGenerateARLessonPlan = async (arId) => {
   );
   
 }; 
-
 export default SessionPlans;
