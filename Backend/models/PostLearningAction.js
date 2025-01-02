@@ -28,7 +28,7 @@ PostLearningAction.init(
   {
     sequelize,
     modelName: 'PostLearningAction',
-    tableName: 'post_learning_actions',
+    tableName: 'PostLearningActions',
     timestamps: true,
   }
 );
