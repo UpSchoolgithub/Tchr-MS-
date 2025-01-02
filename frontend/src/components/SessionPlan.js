@@ -1141,9 +1141,7 @@ const handleGenerateARLessonPlan = async (arId) => {
         </tr>
       )}
     </tbody>
-  </table>
-</div>
-
+ 
 
   </table>
 </div>
