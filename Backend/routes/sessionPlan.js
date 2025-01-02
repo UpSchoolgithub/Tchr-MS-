@@ -87,18 +87,23 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const transaction = await sequelize.transaction();
 
   try {
-      for (const topic of selectedTopics) {
-          const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
-
-          // Insert into PostLearningActions
-          await PostLearningActions.create({
-              sessionId,
-              topicId: topic.id,
-              conceptIds,
-              type: 'post-learning'
-          }, { transaction });
+    for (const topic of selectedTopics) {
+      if (!Array.isArray(topic.concepts)) {
+          console.error(`Invalid concepts for topic ${topic.id}:`, topic.concepts);
+          return res.status(400).json({ message: `Invalid concepts for topic ${topic.id}.` });
       }
-
+  
+      const conceptIds = JSON.stringify(topic.concepts.map(concept => concept.id));
+  
+      // Insert into PostLearningActions
+      await PostLearningActions.create({
+          sessionId,
+          topicId: topic.id,
+          conceptIds,
+          type: 'post-learning'
+      }, { transaction });
+  }
+  
       await transaction.commit();
       res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
