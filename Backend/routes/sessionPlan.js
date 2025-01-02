@@ -83,12 +83,10 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
           console.log(`Concepts before validation:`, topic.concepts);
 
           // Ensure concepts is an array
-          if (!Array.isArray(topic.concepts)) {
-              console.error("Concepts is not an array. Converting to empty array.");
-              topic.concepts = [];
-          }
+          const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
+          console.log(`Validated concepts array for topic ${topic.id}:`, concepts);
 
-          const conceptIds = topic.concepts.map(concept => concept.id);
+          const conceptIds = concepts.map(concept => concept.id);
           console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
 
           await PostLearningActions.create({
@@ -107,7 +105,6 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
       res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
-
 
 
 //Fetching Post-Learning Actions
