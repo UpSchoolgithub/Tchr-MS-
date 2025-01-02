@@ -80,11 +80,12 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   try {
       for (const topic of selectedTopics) {
           console.log(`Processing topic with id: ${topic.id}`);
-          console.log(`Concepts:`, topic.concepts);
+          console.log(`Concepts before validation:`, topic.concepts);
 
+          // Ensure concepts is an array
           if (!Array.isArray(topic.concepts)) {
-              console.error("Concepts is not an array. Received:", topic.concepts);
-              return res.status(500).json({ message: 'Internal server error: Concepts data structure issue.' });
+              console.error("Concepts is not an array. Converting to empty array.");
+              topic.concepts = [];
           }
 
           const conceptIds = topic.concepts.map(concept => concept.id);
