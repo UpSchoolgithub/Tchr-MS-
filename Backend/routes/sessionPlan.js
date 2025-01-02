@@ -82,23 +82,17 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
           console.log(`Processing topic with id: ${topic.id}`);
           console.log(`Type of concepts: ${typeof topic.concepts}, Value:`, topic.concepts);
 
-          // Validate `concepts` is an array
+          // Validate concepts array
           const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
-          console.log(`Validated concepts array for topic ${topic.id}:`, concepts);
-
-          const conceptIds = concepts.map(concept => {
-              if (!concept.id) {
-                  throw new Error(`Invalid concept format: ${JSON.stringify(concept)}`);
-              }
-              return concept.id;
-          });
+          const conceptIds = concepts.map(concept => concept.id);
 
           console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
 
+          // Create PostLearningAction
           await PostLearningActions.create({
               sessionId,
               topicId: topic.id,
-              conceptIds: JSON.stringify(conceptIds), // Ensure valid JSON format
+              conceptIds, // Ensure it's a valid array
               type: 'post-learning',
           }, { transaction });
       }
