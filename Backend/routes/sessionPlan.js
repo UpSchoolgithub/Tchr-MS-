@@ -157,6 +157,53 @@ router.post("/api/sessions/:sessionId/actionsAndRecommendations", async (req, re
   }
 });
 
+// Restore General Actions and Recommendations Route
+router.post('/sessions/:sessionId/actionsAndRecommendations', async (req, res) => {
+  const { sessionId } = req.params;
+  const { type, topicName, conceptDetails } = req.body;
+
+  console.log("Received Data:", {
+    sessionId,
+    type,
+    topicName,
+    conceptDetails,
+  });
+
+  // Validate input fields
+  if (!type || type !== 'pre-learning') {
+    return res.status(400).json({ message: 'Only pre-learning type is allowed for this endpoint.' });
+  }
+
+  if (!topicName || typeof topicName !== 'string' || topicName.trim() === '') {
+    return res.status(400).json({ message: 'Topic name is required.' });
+  }
+
+  if (!Array.isArray(conceptDetails) || conceptDetails.length === 0) {
+    return res.status(400).json({ message: 'Concept details must be a non-empty array.' });
+  }
+
+  try {
+    // Create a new pre-learning action or recommendation
+    const actionOrRecommendation = await ActionsAndRecommendations.create({
+      sessionId,
+      type,
+      topicName,
+      conceptName: conceptDetails.map((c) => c.name).join('; '), // Join concept names with a separator
+      conceptDetailing: conceptDetails.map((c) => c.detailing).join('; '), // Join concept details
+    });
+
+    res.status(201).json({
+      message: 'Pre-learning action or recommendation added successfully.',
+      actionOrRecommendation,
+    });
+  } catch (error) {
+    console.error('Error adding pre-learning action or recommendation:', error.message);
+    res.status(500).json({
+      message: 'Internal server error.',
+      error: error.message,
+    });
+  }
+});
 
 
 
