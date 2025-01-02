@@ -69,9 +69,13 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
-  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-      return res.status(400).json({ message: 'No topics selected.' });
-  }
+  if (
+  !Array.isArray(selectedTopics) ||
+  selectedTopics.length === 0 ||
+  selectedTopics.some(topic => !topic.id || !Array.isArray(topic.concepts) || topic.concepts.length === 0)
+) {
+  return res.status(400).json({ message: 'No topics selected.' });
+}
 
   const transaction = await sequelize.transaction();
   try {
