@@ -1118,6 +1118,46 @@ const handleGenerateARLessonPlan = async (arId) => {
   </table>
 </div>
 
+      {/* Post Learning Actions and Recommendations Table */}
+{/* Post-Learning Actions Table */}
+<div className="post-learning-actions-table">
+  <h3>Post-Learning Actions</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Topic</th>
+        <th>Concepts</th>
+        <th>Details</th>
+        <th>Additional Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {postLearningActions.length > 0 ? (
+        postLearningActions.map((action, index) => {
+          const concepts = JSON.parse(action.conceptIds || "[]");
+          return (
+            <tr key={index}>
+              <td>{action.topicName || "Unnamed Topic"}</td>
+              <td>
+                <ul>
+                  {concepts.map((conceptId, idx) => (
+                    <li key={idx}>Concept ID: {conceptId}</li>
+                  ))}
+                </ul>
+              </td>
+              <td>{action.additionalDetails || "No Details"}</td>
+              <td>{action.additionalDetails || "N/A"}</td>
+            </tr>
+          );
+        })
+      ) : (
+        <tr>
+          <td colSpan="4">No post-learning actions available.</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
 
 
