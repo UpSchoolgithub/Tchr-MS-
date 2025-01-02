@@ -165,54 +165,40 @@ const handleSaveAR = async () => {
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   } else if (arType === "post-learning") {
-    if (selectedTopics.length === 0) {
-      setError("Please select at least one topic and its concepts.");
-      return;
-    }
-
-    // Construct the payload for post-learning
-    const payload = {
-      selectedTopics: selectedTopics.map((topic) => ({
-        id: topic.topicId,
-        concepts: topic.selectedConcepts.map((concept) => ({
-          id: concept.id,
+      if (selectedTopics.length === 0) {
+        setError("Please select at least one topic and its concepts.");
+        return;
+      }
+  
+      const payload = {
+        selectedTopics: selectedTopics.map((topic) => ({
+          id: topic.topicId,
+          concepts: topic.selectedConcepts.map((concept) => ({
+            id: concept.id,
+          })),
         })),
-      })),
-    };
-
-    try {
-      // Make the POST request to save post-learning topics
-      await axios.post(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-        payload,
-        { withCredentials: true }
-      );
-
-      setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]); // Clear selected topics
-      setShowARModal(false); // Close modal
-      await fetchAR(); // Refresh actions and recommendations
-    } catch (error) {
-      console.error("Error saving post-learning topics:", error.response?.data || error.message);
-      setError(error.response?.data?.message || "Failed to save post-learning topics.");
+      };
+  
+      setSaving(true); // Start spinner
+      try {
+        await axios.post(
+          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+          payload,
+          { withCredentials: true }
+        );
+  
+        setSuccessMessage("Post-learning topics saved successfully!");
+        setSelectedTopics([]);
+        setShowARModal(false);
+        await fetchAR();
+      } catch (error) {
+        console.error("Error saving post-learning topics:", error.response?.data || error.message);
+        setError(error.response?.data?.message || "Failed to save post-learning topics.");
+      } finally {
+        setSaving(false); // Stop spinner
+      }
     }
-  }
-
-  setShowARModal(false);
-};
-
-
-const fetchAR = async () => {
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
-    );
-    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-  } catch (error) {
-    console.error("Error fetching actions and recommendations:", error.message);
-    setError("Failed to fetch actions and recommendations.");
-  }
-};
+  };
 
 useEffect(() => {
   fetchAR();
