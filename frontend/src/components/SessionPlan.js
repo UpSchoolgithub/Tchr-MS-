@@ -135,34 +135,6 @@ const handleAddTopic = () => {
 };
 
 
-const fetchAR = async () => {
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
-      { withCredentials: true }
-    );
-    console.log("Actions and Recommendations API Response:", response.data);
-    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
-  } catch (error) {
-    console.error("Error fetching actions and recommendations:", error.message);
-    setError("Failed to fetch actions and recommendations.");
-  }
-};
-
-const fetchPostLearningActions = async () => {
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/postLearningActions`,
-      { withCredentials: true }
-    );
-    console.log("Post-Learning Actions API Response:", response.data);
-    setPostLearningActions(response.data.postLearningActions || []);
-  } catch (error) {
-    console.error("Error fetching post-learning actions:", error.message);
-    setError("Failed to fetch post-learning actions.");
-  }
-};
-
 
 
 const handleSaveAR = async () => {
@@ -193,46 +165,58 @@ const handleSaveAR = async () => {
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   } else if (arType === "post-learning") {
-      if (selectedTopics.length === 0) {
-        setError("Please select at least one topic and its concepts.");
-        return;
-      }
-  
-      const payload = {
-        selectedTopics: selectedTopics.map((topic) => ({
-          id: topic.topicId,
-          concepts: topic.selectedConcepts.map((concept) => ({
-            id: concept.id,
-          })),
-        })),
-      };
-  
-      setSaving(true); // Start spinner
-      try {
-        await axios.post(
-          `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-          payload,
-          { withCredentials: true }
-        );
-  
-        setSuccessMessage("Post-learning topics saved successfully!");
-        setSelectedTopics([]);
-        setShowARModal(false);
-        await fetchAR();
-      } catch (error) {
-        console.error("Error saving post-learning topics:", error.response?.data || error.message);
-        setError(error.response?.data?.message || "Failed to save post-learning topics.");
-      } finally {
-        setSaving(false); // Stop spinner
-      }
+    if (selectedTopics.length === 0) {
+      setError("Please select at least one topic and its concepts.");
+      return;
     }
-  };
 
-  useEffect(() => {
-    fetchAR();
-    fetchPostLearningActions();
-  }, [sessionId]);
-  
+    // Construct the payload for post-learning
+    const payload = {
+      selectedTopics: selectedTopics.map((topic) => ({
+        id: topic.topicId,
+        concepts: topic.selectedConcepts.map((concept) => ({
+          id: concept.id,
+        })),
+      })),
+    };
+
+    try {
+      // Make the POST request to save post-learning topics
+      await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+        payload,
+        { withCredentials: true }
+      );
+
+      setSuccessMessage("Post-learning topics saved successfully!");
+      setSelectedTopics([]); // Clear selected topics
+      setShowARModal(false); // Close modal
+      await fetchAR(); // Refresh actions and recommendations
+    } catch (error) {
+      console.error("Error saving post-learning topics:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save post-learning topics.");
+    }
+  }
+
+  setShowARModal(false);
+};
+
+
+const fetchAR = async () => {
+  try {
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
+    );
+    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+  } catch (error) {
+    console.error("Error fetching actions and recommendations:", error.message);
+    setError("Failed to fetch actions and recommendations.");
+  }
+};
+
+useEffect(() => {
+  fetchAR();
+}, [sessionId]);
 
   
 
@@ -1104,22 +1088,34 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-  {actionsAndRecommendations.length > 0 ? (
-    actionsAndRecommendations.map((ar, index) => (
-      <tr key={index}>
-        <td>{ar.type || "Unknown Type"}</td>
-        <td>{ar.topicName || "No Topic Name"}</td>
-        <td>{ar.conceptName || "No Concept"}</td>
-        <td>{ar.conceptDetailing || "No Details"}</td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="4">No actions or recommendations available.</td>
-    </tr>
-  )}
-</tbody>
+      {actionsAndRecommendations.length > 0 ? (
+        actionsAndRecommendations.flatMap((ar, arIndex) => {
+          // Split concepts and details into arrays for rendering
+          const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
+          const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
 
+          // Ensure concepts and details are aligned
+          const maxRows = Math.max(concepts.length, details.length);
+
+          return Array.from({ length: maxRows }).map((_, rowIndex) => (
+            <tr key={`${ar.id}-${rowIndex}`}>
+              {rowIndex === 0 && (
+                <>
+                  <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+                  <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
+                </>
+              )}
+              <td>{concepts[rowIndex] || ""}</td>
+              <td>{details[rowIndex] || ""}</td>
+            </tr>
+          ));
+        })
+      ) : (
+        <tr>
+          <td colSpan="4">No actions or recommendations available.</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 </div>
 
@@ -1137,29 +1133,30 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-  {postLearningActions.length > 0 ? (
-    postLearningActions.map((action, index) => (
-      <tr key={index}>
-        <td>{action.topicName || "Unnamed Topic"}</td>
-        <td>
-          <ul>
-            {JSON.parse(action.conceptIds || "[]").map((conceptId, idx) => (
-              <li key={idx}>Concept ID: {conceptId}</li>
-            ))}
-          </ul>
-        </td>
-        <td>{action.additionalDetails || "No Details"}</td>
-        <td>{action.additionalDetails || "N/A"}</td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="4">No post-learning actions available.</td>
-    </tr>
-  )}
-</tbody>
-
-
+      {postLearningActions.length > 0 ? (
+        postLearningActions.map((action, index) => {
+          const concepts = JSON.parse(action.conceptIds || "[]");
+          return (
+            <tr key={index}>
+              <td>{action.topicName || "Unnamed Topic"}</td>
+              <td>
+                <ul>
+                  {concepts.map((conceptId, idx) => (
+                    <li key={idx}>Concept ID: {conceptId}</li>
+                  ))}
+                </ul>
+              </td>
+              <td>{action.additionalDetails || "No Details"}</td>
+              <td>{action.additionalDetails || "N/A"}</td>
+            </tr>
+          );
+        })
+      ) : (
+        <tr>
+          <td colSpan="4">No post-learning actions available.</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 </div>
 
