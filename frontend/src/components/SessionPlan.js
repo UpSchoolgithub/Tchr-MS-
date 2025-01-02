@@ -163,11 +163,26 @@ const fetchPostLearningActions = async () => {
 
 const handleSaveAR = async () => {
   if (arType === "pre-learning") {
+    // Validate inputs
+    if (!arTopicName.trim()) {
+      setError("Topic name is required for pre-learning.");
+      return;
+    }
+
+    const validConcepts = arConcepts.filter(
+      (concept) => concept.name.trim() && concept.detailing.trim()
+    );
+
+    if (validConcepts.length === 0) {
+      setError("Please provide at least one valid concept with details.");
+      return;
+    }
+
     // Payload for pre-learning
     const payload = {
       type: arType,
-      topicName: arTopicName,
-      conceptDetails: arConcepts.map((concept) => ({
+      topicName: arTopicName.trim(),
+      conceptDetails: validConcepts.map((concept) => ({
         name: concept.name.trim(),
         detailing: concept.detailing.trim(),
       })),
@@ -184,11 +199,13 @@ const handleSaveAR = async () => {
       setSuccessMessage("Pre-learning topic saved successfully!");
       setARTopicName(""); // Reset topic name
       setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
+      setShowARModal(false); // Close modal
+      await fetchAR(); // Refresh actions and recommendations
     } catch (error) {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
-  } else if (arType === "post-learning") {
+    } else if (arType === "post-learning") {
       if (selectedTopics.length === 0) {
         setError("Please select at least one topic and its concepts.");
         return;
