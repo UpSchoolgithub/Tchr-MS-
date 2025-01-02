@@ -37,8 +37,7 @@ const SessionPlans = () => {
   const [selectedTopics, setSelectedTopics] = useState([]); // Store selected topics and concepts
   const [currentTopic, setCurrentTopic] = useState(''); // Currently selected topic
   const [currentConcepts, setCurrentConcepts] = useState([]); // Concepts of the selected topic
-  const [postLearningActions, setPostLearningActions] = useState([]);
-
+  
   const {
     schoolName = "School Name Not Available",
     schoolId,
@@ -92,19 +91,14 @@ const handleOpenARModal = async (type) => {
 
 
 
-// Handle topic selection
+// Function to handle topic selection
 const handleSelectTopic = (topicId) => {
-  const selectedTopic = existingTopics.find((topic) => topic.id === parseInt(topicId));
+  const selectedTopic = existingTopics.find((topic) => topic.id === topicId);
   setCurrentTopic(selectedTopic);
-  setCurrentConcepts(
-    selectedTopic?.concepts.map((concept) => ({
-      ...concept,
-      selected: false, // Add selected property
-    })) || []
-  );
+  setCurrentConcepts(selectedTopic.concepts || []);
 };
 
-// Handle concept checkbox toggle
+// Function to handle checkbox toggle
 const handleToggleConcept = (conceptId) => {
   setCurrentConcepts((prev) =>
     prev.map((concept) =>
@@ -113,27 +107,24 @@ const handleToggleConcept = (conceptId) => {
   );
 };
 
-// Add selected topic and concepts to the list
+// Function to add the current topic and its selected concepts
 const handleAddTopic = () => {
-  if (!currentTopic || !currentConcepts.some((concept) => concept.selected)) {
+  if (currentTopic && currentConcepts.some((concept) => concept.selected)) {
+    setSelectedTopics((prev) => [
+      ...prev,
+      {
+        topicId: currentTopic.id,
+        topicName: currentTopic.name,
+        selectedConcepts: currentConcepts.filter((concept) => concept.selected),
+      },
+    ]);
+    // Reset current topic and concepts
+    setCurrentTopic(null);
+    setCurrentConcepts([]);
+  } else {
     setError("Please select a topic and at least one concept.");
-    return;
   }
-
-  setSelectedTopics((prev) => [
-    ...prev,
-    {
-      topicId: currentTopic.id,
-      topicName: currentTopic.name,
-      selectedConcepts: currentConcepts.filter((concept) => concept.selected),
-    },
-  ]);
-
-  setExistingTopics((prev) => prev.filter((topic) => topic.id !== currentTopic.id)); // Remove added topic
-  setCurrentTopic(null); // Reset current topic
-  setCurrentConcepts([]); // Reset concepts
 };
-
 
 
 
@@ -170,37 +161,32 @@ const handleSaveAR = async () => {
       return;
     }
 
-    // Construct the payload for post-learning
-    const payload = {
-      selectedTopics: selectedTopics.map((topic) => ({
-        id: topic.topicId,
-        concepts: topic.selectedConcepts.map((concept) => ({
-          id: concept.id,
-        })),
+    const payload = selectedTopics.map((topic) => ({
+      topicName: topic.topicName,
+      concepts: topic.selectedConcepts.map((c) => ({
+        name: c.name,
+        detailing: c.detailing,
       })),
-    };
+    }));
 
     try {
-      // Make the POST request to save post-learning topics
       await axios.post(
         `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-        payload,
+        { selectedTopics: payload },
         { withCredentials: true }
       );
-
       setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]); // Clear selected topics
-      setShowARModal(false); // Close modal
-      await fetchAR(); // Refresh actions and recommendations
+      setSelectedTopics([]);
+      await fetchAR();
     } catch (error) {
       console.error("Error saving post-learning topics:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save post-learning topics.");
     }
   }
 
+
   setShowARModal(false);
 };
-
 
 const fetchAR = async () => {
   try {
@@ -325,8 +311,16 @@ const handleGenerateARLessonPlan = async (arId) => {
       <Form.Label>Select Topic</Form.Label>
       <Form.Control
         as="select"
-        value={currentTopic?.id || ""}
-        onChange={(e) => handleSelectTopic(e.target.value)}
+        value={selectedTopic}
+        onChange={(e) => {
+          const selected = e.target.value;
+          const topic = existingTopics.find((t) => t.id === parseInt(selected));
+          setSelectedTopic(selected);
+          setSelectedConcepts((prev) => ({
+            ...prev,
+            [selected]: topic?.concepts || [],
+          }));
+        }}
       >
         <option value="">Choose a topic</option>
         {existingTopics.map((topic) => (
@@ -336,50 +330,77 @@ const handleGenerateARLessonPlan = async (arId) => {
         ))}
       </Form.Control>
     </Form.Group>
-
-    {currentConcepts.length > 0 && (
+    {selectedTopic && (
       <Form.Group>
-        <Form.Label>Select Concepts</Form.Label>
-        {currentConcepts.map((concept) => (
-          <Form.Check
-            key={concept.id}
-            type="checkbox"
-            label={concept.name}
-            value={concept.id}
-            checked={concept.selected}
-            onChange={() => handleToggleConcept(concept.id)}
-          />
-        ))}
+        <Form.Label>Choose Concepts</Form.Label>
+        {existingTopics
+          .find((topic) => topic.id === parseInt(selectedTopic))
+          ?.concepts.map((concept) => (
+            <Form.Check
+              key={concept.id}
+              type="checkbox"
+              label={concept.name}
+              value={concept.id}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedConcepts((prev) => ({
+                  ...prev,
+                  [selectedTopic]: prev[selectedTopic].includes(value)
+                    ? prev[selectedTopic].filter((id) => id !== value)
+                    : [...prev[selectedTopic], value],
+                }));
+              }}
+            />
+          ))}
       </Form.Group>
     )}
-
     <Button
-      variant="secondary"
+      variant="success"
       className="mt-2"
-      onClick={handleAddTopic}
-      disabled={!currentTopic || !currentConcepts.some((concept) => concept.selected)}
-    >
-      Add Topic
-    </Button>
+      onClick={() => {
+        setAddedTopics((prev) => [
+          ...prev,
+          {
+            topicId: selectedTopic,
+            topicName: existingTopics.find((t) => t.id === parseInt(selectedTopic))?.name,
+            concepts: selectedConcepts[selectedTopic] || [],
+          },
+        ]);
 
-    {selectedTopics.length > 0 && (
-      <div className="mt-3">
-        <h5>Selected Topics</h5>
-        {selectedTopics.map((topic, index) => (
-          <div key={index}>
-            <strong>{topic.topicName}</strong>
-            <ul>
-              {topic.selectedConcepts.map((concept) => (
-                <li key={concept.id}>{concept.name}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    )}
+        // Remove the added topic from the dropdown
+        setExistingTopics((prev) =>
+          prev.filter((topic) => topic.id !== parseInt(selectedTopic))
+        );
+
+        setSelectedTopic(""); // Clear selected topic
+        setSelectedConcepts((prev) => {
+          const updated = { ...prev };
+          delete updated[selectedTopic];
+          return updated;
+        });
+      }}
+    >
+      + Add Topic
+    </Button>
+    <div className="added-topics">
+      <h5>Added Topics</h5>
+      {addedTopics.map((topic, index) => (
+        <div key={index} className="added-topic">
+          <strong>{topic.topicName}</strong>
+          <ul>
+            {topic.concepts.map((conceptId) => (
+              <li key={conceptId}>
+                {existingTopics
+                  .find((t) => t.id === topic.topicId)
+                  ?.concepts.find((c) => c.id === conceptId)?.name || ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   </>
 )}
-
 
 <Button
   variant="primary"
@@ -1119,46 +1140,6 @@ const handleGenerateARLessonPlan = async (arId) => {
   </table>
 </div>
 
-      {/* Post Learning Actions and Recommendations Table */}
-{/* Post-Learning Actions Table */}
-<div className="post-learning-actions-table">
-  <h3>Post-Learning Actions</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Topic</th>
-        <th>Concepts</th>
-        <th>Details</th>
-        <th>Additional Details</th>
-      </tr>
-    </thead>
-    <tbody>
-      {postLearningActions.length > 0 ? (
-        postLearningActions.map((action, index) => {
-          const concepts = JSON.parse(action.conceptIds || "[]");
-          return (
-            <tr key={index}>
-              <td>{action.topicName || "Unnamed Topic"}</td>
-              <td>
-                <ul>
-                  {concepts.map((conceptId, idx) => (
-                    <li key={idx}>Concept ID: {conceptId}</li>
-                  ))}
-                </ul>
-              </td>
-              <td>{action.additionalDetails || "No Details"}</td>
-              <td>{action.additionalDetails || "N/A"}</td>
-            </tr>
-          );
-        })
-      ) : (
-        <tr>
-          <td colSpan="4">No post-learning actions available.</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
 
 
 
@@ -1337,4 +1318,5 @@ const handleGenerateARLessonPlan = async (arId) => {
   );
   
 }; 
+
 export default SessionPlans;
