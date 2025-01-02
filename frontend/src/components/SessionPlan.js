@@ -135,6 +135,18 @@ const handleAddTopic = () => {
 };
 
 
+const fetchAR = async () => {
+  try {
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+      { withCredentials: true }
+    );
+    setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
+  } catch (error) {
+    console.error("Error fetching actions and recommendations:", error.message);
+    setError("Failed to fetch actions and recommendations.");
+  }
+};
 
 
 const handleSaveAR = async () => {
