@@ -75,19 +75,19 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
     return res.status(400).json({ message: 'No topics selected or invalid payload structure.' });
   }
 
-  console.log("Received payload:", JSON.stringify(selectedTopics, null, 2));
+  console.log('Received payload:', JSON.stringify(selectedTopics, null, 2)); // Log the entire payload
 
   const transaction = await sequelize.transaction();
   try {
     for (const topic of selectedTopics) {
       if (!topic.id || !Array.isArray(topic.concepts)) {
-        console.error('Invalid topic structure:', JSON.stringify(topic, null, 2));
+        console.error('Invalid topic structure:', JSON.stringify(topic, null, 2)); // Log invalid topic structure
         throw new Error('Invalid topic structure in request payload.');
       }
 
       const conceptIds = topic.concepts.map((concept) => {
         if (!concept.id) {
-          console.error(`Missing concept ID in topic ${topic.id}`);
+          console.error(`Missing concept ID in topic ${topic.id}`); // Log missing concept ID
           throw new Error(`Concept ID is required for topic ${topic.id}`);
         }
         return concept.id;
