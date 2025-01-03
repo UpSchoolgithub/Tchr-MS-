@@ -157,13 +157,14 @@ const fetchPostLearningActions = async () => {
       `https://tms.up.school/api/sessions/${sessionId}/postLearningActions`,
       { withCredentials: true }
     );
-    console.log("Post-Learning Actions API Response:", response.data);
+    console.log("Post-Learning Actions API Response:", response.data); // Check data in console
     setPostLearningActions(response.data.postLearningActions || []);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 
 
@@ -1146,13 +1147,13 @@ const handleGenerateARLessonPlan = async (arId) => {
       <tr key={index}>
         <td>{action.topicName || "Unnamed Topic"}</td>
         <td>
-          <ul>
-            {JSON.parse(action.conceptIds || "[]").map((conceptId, idx) => (
-              <li key={idx}>Concept ID: {conceptId}</li>
-            ))}
-          </ul>
+          {action.conceptIds
+            ? JSON.parse(action.conceptIds).map((conceptId, idx) => (
+                <li key={idx}>Concept ID: {conceptId}</li>
+              ))
+            : "No Concepts"}
         </td>
-        <td>{action.additionalDetails || "No Details"}</td>
+        <td>{action.details || "No Details"}</td>
         <td>{action.additionalDetails || "N/A"}</td>
       </tr>
     ))
@@ -1162,6 +1163,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </tr>
   )}
 </tbody>
+
 
 
   </table>
