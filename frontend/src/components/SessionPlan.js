@@ -1097,7 +1097,7 @@ const handleGenerateARLessonPlan = async (arId) => {
       {actionsAndRecommendations.length > 0 ? (
         actionsAndRecommendations.flatMap((ar, arIndex) => {
           // Split concepts and details into arrays for rendering
-          const concepts = ar.conceptName ? ar.conceptName.split("; ") : [];
+          const concepts = typeof ar.conceptName === "string" ? ar.conceptName.split("; ") : [];
           const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
 
           // Ensure concepts and details are aligned
