@@ -1142,47 +1142,61 @@ const handleGenerateARLessonPlan = async (arId) => {
       {/* Post Learning Actions and Recommendations Table */}
 {/* Post-Learning Actions Table */}
 <div className="post-learning-actions-container">
-      <h3>Post-Learning Actions</h3>
-      {error && <div className="error-message">{error}</div>}
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Topic Name</th>
-            <th>Concepts</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {postLearningActions.length > 0 ? (
-            postLearningActions.map((action, index) => (
-              <tr key={index}>
-                <td>{action.topicId ? `Topic ID: ${action.topicId}` : "No Topic"}</td>
-                <td>
-                  {action.conceptIds?.length > 0 ? (
-                    <ul>
-                      {action.conceptIds.map((conceptId) => (
-                        <li key={conceptId}>Concept ID: {conceptId}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    "No Concepts"
-                  )}
-                </td>
-                <td>N/A</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="3">No post-learning actions available.</td>
+  <h3>Post-Learning Actions</h3>
+  {error && <div className="error-message">{error}</div>}
+  <table className="table">
+    <thead>
+      <tr>
+        <th>Topic Name</th>
+        <th>Concept Names</th>
+        <th>Concept Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {postLearningActions.length > 0 ? (
+        postLearningActions.map((action, index) => {
+          // Get the topic name from the topicId
+          const topic = existingTopics.find((t) => t.id === action.topicId);
+          const topicName = topic?.name || "Unknown Topic";
+
+          // Map concept IDs to their respective names and details
+          const concepts = action.conceptIds.map((conceptId) => {
+            const concept = topic?.concepts.find((c) => c.id === conceptId);
+            return {
+              name: concept?.name || "Unknown Concept",
+              detailing: concept?.detailing || "No Details Available",
+            };
+          });
+
+          return (
+            <tr key={index}>
+              <td>{topicName}</td>
+              <td>
+                <ul>
+                  {concepts.map((concept, i) => (
+                    <li key={i}>{concept.name}</li>
+                  ))}
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  {concepts.map((concept, i) => (
+                    <li key={i}>{concept.detailing}</li>
+                  ))}
+                </ul>
+              </td>
             </tr>
-          )}
-        </tbody>
-
-
-
-
+          );
+        })
+      ) : (
+        <tr>
+          <td colSpan="3">No post-learning actions available.</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 </div>
+
 
 
 
