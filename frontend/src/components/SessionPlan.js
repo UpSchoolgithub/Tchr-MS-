@@ -71,25 +71,24 @@ const handleOpenARModal = async (type) => {
 
   try {
     const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
+      `https://tms.up.school/api/sessions/${sessionId}/topics`,
       { withCredentials: true }
     );
-    const actions = response.data || [];
-    
-    // Create topics list for selection in post-learning
-    const topics = actions.map((action) => ({
-      id: action.topicId,
-      name: `Topic ID: ${action.topicId}`,
-      concepts: action.conceptIds.map((id) => ({ id, name: `Concept ${id}` }))
-    }));
+    const topics = response.data.topics || [];
 
-    setExistingTopics(topics);
+    if (type === "post-learning") {
+      const filteredTopics = topics.filter(
+        (topic) => !selectedTopics.some((added) => added.topicId === topic.id)
+      );
+      setExistingTopics(filteredTopics);
+    } else {
+      setExistingTopics(topics);
+    }
   } catch (error) {
-    console.error("Error fetching post-learning actions:", error);
-    setError("Failed to fetch post-learning actions.");
+    console.error("Error fetching topics:", error);
+    setError("Failed to fetch topics.");
   }
 };
-
 
 
 
@@ -151,43 +150,18 @@ const fetchAR = async () => {
 
 
 // Fetch Post-learning actions
-const getTopicNameById = (topicId) => {
-  const topic = availableTopics.find((t) => t.id === topicId);
-  return topic ? topic.name : `Topic ID: ${topicId}`;
-};
-
-const getConceptNameById = (conceptId) => {
-  const concept = availableTopics.flatMap((t) => t.concepts).find((c) => c.id === conceptId);
-  return concept ? concept.name : `Concept ID: ${conceptId}`;
-};
-
 const fetchPostLearningActions = async () => {
   try {
     const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
       { withCredentials: true }
     );
-
-    const postLearningActions = response.data.postLearningActions || [];
-    const topicsResponse = { data: { topics: sessionPlans.Topics || [] } }; // Fallback to Topics within sessionPlans
-    const topicsMap = new Map(topicsResponse.data.topics.map((t) => [t.id, t]));
-
-    const updatedPostLearningActions = postLearningActions.map((action) => ({
-      ...action,
-      topicName: topicsMap.get(action.topicId)?.name || `Topic ID: ${action.topicId}`,
-      concepts: topicsMap.get(action.topicId)?.concepts?.filter((c) =>
-        action.conceptIds.includes(c.id)
-      ) || [],
-    }));
-
-    setPostLearningActions(updatedPostLearningActions);
+    setPostLearningActions(response.data.postLearningActions || []);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
-
-
 
 useEffect(() => {
   fetchPostLearningActions();
@@ -243,38 +217,6 @@ const handleSaveAR = async () => {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
-  }
-};
-
-const handleSavePostLearning = async () => {
-  if (selectedTopics.length === 0) {
-    alert("Please select topics and concepts.");
-    return;
-  }
-
-  const payload = {
-    selectedTopics: selectedTopics.map((topic) => ({
-      id: topic.id,  // Topic ID
-      concepts: topic.concepts.map((concept) => ({ id: concept.id })), // Concept IDs
-    })),
-  };
-
-  console.log("Post-Learning Payload Sent:", JSON.stringify(payload, null, 2));
-
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-      payload
-    );
-    if (response.status === 201) {
-      alert("Post-learning actions saved successfully.");
-    } else {
-      console.error("Error saving post-learning actions:", response.data.message);
-      alert("Failed to save post-learning actions.");
-    }
-  } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    alert("Error while saving post-learning actions.");
   }
 };
 
@@ -450,11 +392,14 @@ const handleGenerateARLessonPlan = async (arId) => {
 
 <Button
   variant="primary"
-  onClick={handleSavePostLearning} // Directly call handleSavePostLearning
+  onClick={() =>
+    arType === "post-learning"
+      ? handleSaveAR(selectedTopic, selectedConcepts) // Save post-learning with selected concepts
+      : handleSaveAR(null, arConcepts) // Leave Pre-learning unchanged
+  }
 >
   Save
 </Button>
-
 
     </Form>
   </Modal.Body>
@@ -1208,34 +1153,32 @@ const handleGenerateARLessonPlan = async (arId) => {
           </tr>
         </thead>
         <tbody>
-  {postLearningActions.map((action, index) => (
-    <tr key={index}>
-      <td>{action.topicName}</td>
-      <td>
-        {action.concepts.length > 0 ? (
-          <ul>
-            {action.concepts.map((concept) => (
-              <li key={concept.id}>{concept.concept || "Unnamed Concept"}</li>
-            ))}
-          </ul>
-        ) : (
-          "No Concepts"
-        )}
-      </td>
-      <td>
-        {action.concepts.length > 0 ? (
-          <ul>
-            {action.concepts.map((concept) => (
-              <li key={concept.id}>{concept.conceptDetailing || "No Details"}</li>
-            ))}
-          </ul>
-        ) : (
-          "N/A"
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
+          {postLearningActions.length > 0 ? (
+            postLearningActions.map((action, index) => (
+              <tr key={index}>
+                <td>{action.topicId ? `Topic ID: ${action.topicId}` : "No Topic"}</td>
+                <td>
+                  {action.conceptIds?.length > 0 ? (
+                    <ul>
+                      {action.conceptIds.map((conceptId) => (
+                        <li key={conceptId}>Concept ID: {conceptId}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "No Concepts"
+                  )}
+                </td>
+                <td>N/A</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3">No post-learning actions available.</td>
+            </tr>
+          )}
+        </tbody>
+
+
 
 
   </table>
@@ -1398,17 +1341,20 @@ const handleGenerateARLessonPlan = async (arId) => {
     </Form>
   </Modal.Body>
   <Modal.Footer>
-  <Button variant="secondary" onClick={() => setShowARModal(false)}>
-    Close
-  </Button>
-  <Button
-    variant="primary"
-    onClick={handleSavePostLearning} // Simplified Save Button for post-learning
-  >
-    Save
-  </Button>
-</Modal.Footer>
-
+    <Button variant="secondary" onClick={() => setShowARModal(false)}>
+      Close
+    </Button>
+    <Button
+      variant="primary"
+      onClick={() =>
+        arType === "pre-learning"
+          ? handleSaveAR(null, arConcepts)
+          : handleSaveAR(selectedTopic, selectedConcepts)
+      }
+    >
+      Save
+    </Button>
+  </Modal.Footer>
 </Modal>
 
     </div>
