@@ -212,39 +212,31 @@ const handleSaveAR = async () => {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
-  } else if (arType === "post-learning") {
-    // Post-learning save
+  } else  if (arType === "post-learning") {
     if (selectedTopics.length === 0) {
       setError("Please add at least one topic and concept for post-learning.");
       return;
     }
 
-    const formattedPostLearningTopics = selectedTopics.map((topic) => ({
-      topicName: topic.topicName,
-      concepts: topic.selectedConcepts.map((concept) => ({
-        concept: concept.name.trim(),
-        detailing: concept.detailing.trim(),
-      })),
-    }));
-
     const payload = {
-      type: arType,
-      topics: formattedPostLearningTopics, // Send the topics array
+      selectedTopics: selectedTopics.map((topic) => ({
+        id: topic.topicId,
+        concepts: topic.selectedConcepts.map((concept) => ({ id: concept.id })),
+      })),
     };
 
     try {
       const response = await axios.post(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
         payload,
         { withCredentials: true }
       );
-      setSuccessMessage("Post-learning topics saved successfully!");
-      setSelectedTopics([]); // Reset selected topics
+      setSuccessMessage("Post-learning topic saved successfully!");
       setShowARModal(false); // Close modal
-      await fetchPostLearningActions(); // Refresh post-learning actions
+      await fetchPostLearningActions(); // Refresh post-learning data
     } catch (error) {
       console.error("Error saving post-learning topic:", error.response?.data || error.message);
-      setError(error.response?.data?.message || "Failed to save post-learning topics.");
+      setError(error.response?.data?.message || "Failed to save post-learning topic.");
     }
   }
 };
