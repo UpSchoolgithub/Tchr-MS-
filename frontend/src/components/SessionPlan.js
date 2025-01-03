@@ -138,7 +138,8 @@ const handleAddTopic = () => {
 const fetchAR = async () => {
   try {
     const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+      { withCredentials: true }
     );
     setActionsAndRecommendations(response.data.actionsAndRecommendations || []);
   } catch (error) {
@@ -147,23 +148,19 @@ const fetchAR = async () => {
   }
 };
 
-  
-  
-
-
 const fetchPostLearningActions = async () => {
   try {
     const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/postLearningActions`,
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
       { withCredentials: true }
     );
-    console.log("Post-Learning Actions API Response:", response.data); // Check data in console
     setPostLearningActions(response.data.postLearningActions || []);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 
 
@@ -1095,34 +1092,42 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-      {actionsAndRecommendations.length > 0 ? (
-        actionsAndRecommendations.flatMap((ar, arIndex) => {
-          // Split concepts and details into arrays for rendering
-          const concepts = typeof ar.conceptName === "string" ? ar.conceptName.split("; ") : [];
-          const details = typeof ar.conceptDetailing === "string" ? ar.conceptDetailing.split("; ") : [];
+  {actionsAndRecommendations.length > 0 ? (
+    actionsAndRecommendations.flatMap((ar, arIndex) => {
+      // Ensure conceptName and conceptDetailing are arrays
+      const concepts = Array.isArray(ar.conceptName)
+        ? ar.conceptName
+        : typeof ar.conceptName === "string"
+        ? ar.conceptName.split("; ")
+        : [];
+      const details = Array.isArray(ar.conceptDetailing)
+        ? ar.conceptDetailing
+        : typeof ar.conceptDetailing === "string"
+        ? ar.conceptDetailing.split("; ")
+        : [];
 
-          // Ensure concepts and details are aligned
-          const maxRows = Math.max(concepts.length, details.length);
+      const maxRows = Math.max(concepts.length, details.length);
 
-          return Array.from({ length: maxRows }).map((_, rowIndex) => (
-            <tr key={`${ar.id}-${rowIndex}`}>
-              {rowIndex === 0 && (
-                <>
-                  <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
-                  <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
-                </>
-              )}
-              <td>{concepts[rowIndex] || ""}</td>
-              <td>{details[rowIndex] || ""}</td>
-            </tr>
-          ));
-        })
-      ) : (
-        <tr>
-          <td colSpan="4">No actions or recommendations available.</td>
+      return Array.from({ length: maxRows }).map((_, rowIndex) => (
+        <tr key={`${ar.id}-${rowIndex}`}>
+          {rowIndex === 0 && (
+            <>
+              <td rowSpan={maxRows}>{ar.type || "Unknown Type"}</td>
+              <td rowSpan={maxRows}>{ar.topicName || "Unnamed Topic"}</td>
+            </>
+          )}
+          <td>{concepts[rowIndex] || "No Concept"}</td>
+          <td>{details[rowIndex] || "No Details"}</td>
         </tr>
-      )}
-    </tbody>
+      ));
+    })
+  ) : (
+    <tr>
+      <td colSpan="4">No actions or recommendations available.</td>
+    </tr>
+  )}
+</tbody>
+
   </table>
 </div>
 
@@ -1147,11 +1152,13 @@ const handleGenerateARLessonPlan = async (arId) => {
       <tr key={index}>
         <td>{action.topicName || "Unnamed Topic"}</td>
         <td>
-          {action.conceptIds
-            ? JSON.parse(action.conceptIds).map((conceptId, idx) => (
-                <li key={idx}>Concept ID: {conceptId}</li>
-              ))
-            : "No Concepts"}
+          {Array.isArray(action.conceptIds) && action.conceptIds.length > 0 ? (
+            action.conceptIds.map((conceptId, idx) => (
+              <li key={idx}>Concept ID: {conceptId}</li>
+            ))
+          ) : (
+            "No Concepts"
+          )}
         </td>
         <td>{action.details || "No Details"}</td>
         <td>{action.additionalDetails || "N/A"}</td>
