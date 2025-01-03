@@ -107,55 +107,21 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
 
 //Fetching Post-Learning Actions
-// Fetching Post-Learning Actions (with Topics and Concepts)
 router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
+  
   const { sessionId } = req.params;
 
   try {
-    // Fetch all post-learning actions for the session
-    const postLearningActions = await PostLearningActions.findAll({
-      where: { sessionId, type: 'post-learning' },
-      attributes: ['id', 'sessionId', 'topicId', 'conceptIds'], // Fetch only relevant fields
-    });
+      const postLearningActions = await PostLearningActions.findAll({
+          where: { sessionId, type: 'post-learning' }
+      });
 
-    // Fetch complete topic and concept details for each action
-    const detailedActions = await Promise.all(
-      postLearningActions.map(async (action) => {
-        // Fetch the topic details for the topicId
-        const topic = await Topic.findOne({
-          where: { id: action.topicId },
-          attributes: ['id', 'topicName'],
-        });
-
-        if (!topic) {
-          throw new Error(`Topic with ID ${action.topicId} not found.`);
-        }
-
-        // Fetch all concepts for the given concept IDs
-        const concepts = await Concept.findAll({
-          where: {
-            id: action.conceptIds,
-          },
-          attributes: ['id', 'concept', 'conceptDetailing'],
-        });
-
-        return {
-          ...action.toJSON(),
-          topicName: topic.topicName || 'Unknown Topic',
-          concepts: concepts.length ? concepts : [{ concept: 'No Concept Found', conceptDetailing: 'N/A' }],
-        };
-      })
-    );
-
-    res.status(200).json({ postLearningActions: detailedActions });
+      res.status(200).json({ postLearningActions });
   } catch (error) {
-    console.error('Error fetching post-learning actions:', error.message);
-    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
+      console.error('Error fetching post-learning actions:', error.message);
+      res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
   }
 });
-
-
-
 
 
 // Endpoint for Fetching Topics and Concepts for prelearning 
