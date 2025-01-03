@@ -107,21 +107,50 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
 
 //Fetching Post-Learning Actions
+// Fetching Post-Learning Actions (with Topics and Concepts)
 router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
-  
   const { sessionId } = req.params;
 
   try {
-      const postLearningActions = await PostLearningActions.findAll({
-          where: { sessionId, type: 'post-learning' }
-      });
+    const postLearningActions = await PostLearningActions.findAll({
+      where: { sessionId, type: 'post-learning' },
+      include: [
+        {
+          model: Topic,
+          as: 'topic', // Alias for relation
+          attributes: ['id', 'topicName'],
+          include: [
+            {
+              model: Concept,
+              as: 'concepts', // Alias for relation
+              attributes: ['id', 'concept', 'conceptDetailing'],
+            },
+          ],
+        },
+      ],
+    });
 
-      res.status(200).json({ postLearningActions });
+    const formattedActions = postLearningActions.map((action) => ({
+      id: action.id,
+      sessionId: action.sessionId,
+      topicId: action.topicId,
+      topicName: action.topic?.topicName || "Unknown Topic",
+      concepts: action.topic?.concepts?.map((concept) => ({
+        id: concept.id,
+        name: concept.concept,
+        detailing: concept.conceptDetailing || "No details available",
+      })) || [],
+    }));
+
+    res.status(200).json({ postLearningActions: formattedActions });
   } catch (error) {
-      console.error('Error fetching post-learning actions:', error.message);
-      res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
+    console.error('Error fetching post-learning actions:', error.message);
+    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
   }
 });
+
+
+
 
 
 // Endpoint for Fetching Topics and Concepts for prelearning 
