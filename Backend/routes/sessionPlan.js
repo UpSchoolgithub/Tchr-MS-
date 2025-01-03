@@ -112,37 +112,42 @@ router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async 
   const { sessionId } = req.params;
 
   try {
+    // Fetch all post-learning actions for the session
     const postLearningActions = await PostLearningActions.findAll({
       where: { sessionId, type: 'post-learning' },
-      include: [
-        {
-          model: Topic,
-          as: 'topic', // Alias for relation
-          attributes: ['id', 'topicName'],
-          include: [
-            {
-              model: Concept,
-              as: 'concepts', // Alias for relation
-              attributes: ['id', 'concept', 'conceptDetailing'],
-            },
-          ],
-        },
-      ],
+      attributes: ['id', 'sessionId', 'topicId', 'conceptIds'], // Fetch only relevant fields
     });
 
-    const formattedActions = postLearningActions.map((action) => ({
-      id: action.id,
-      sessionId: action.sessionId,
-      topicId: action.topicId,
-      topicName: action.topic?.topicName || "Unknown Topic",
-      concepts: action.topic?.concepts?.map((concept) => ({
-        id: concept.id,
-        name: concept.concept,
-        detailing: concept.conceptDetailing || "No details available",
-      })) || [],
-    }));
+    // Fetch complete topic and concept details for each action
+    const detailedActions = await Promise.all(
+      postLearningActions.map(async (action) => {
+        // Fetch the topic details for the topicId
+        const topic = await Topic.findOne({
+          where: { id: action.topicId },
+          attributes: ['id', 'topicName'],
+        });
 
-    res.status(200).json({ postLearningActions: formattedActions });
+        if (!topic) {
+          throw new Error(`Topic with ID ${action.topicId} not found.`);
+        }
+
+        // Fetch all concepts for the given concept IDs
+        const concepts = await Concept.findAll({
+          where: {
+            id: action.conceptIds,
+          },
+          attributes: ['id', 'concept', 'conceptDetailing'],
+        });
+
+        return {
+          ...action.toJSON(),
+          topicName: topic.topicName || 'Unknown Topic',
+          concepts: concepts.length ? concepts : [{ concept: 'No Concept Found', conceptDetailing: 'N/A' }],
+        };
+      })
+    );
+
+    res.status(200).json({ postLearningActions: detailedActions });
   } catch (error) {
     console.error('Error fetching post-learning actions:', error.message);
     res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
