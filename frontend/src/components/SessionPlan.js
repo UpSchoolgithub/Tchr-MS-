@@ -148,6 +148,8 @@ const fetchAR = async () => {
   }
 };
 
+
+// Fetch Post-learning actions
 const fetchPostLearningActions = async () => {
   try {
     const response = await axios.get(
@@ -161,6 +163,9 @@ const fetchPostLearningActions = async () => {
   }
 };
 
+useEffect(() => {
+  fetchPostLearningActions();
+}, [sessionId]);
 
 
 
@@ -1135,43 +1140,42 @@ const handleGenerateARLessonPlan = async (arId) => {
 
       {/* Post Learning Actions and Recommendations Table */}
 {/* Post-Learning Actions Table */}
-<div className="post-learning-actions-table">
-  <h3>Post-Learning Actions</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Topic</th>
-        <th>Concepts</th>
-        <th>Details</th>
-        <th>Additional Details</th>
-      </tr>
-    </thead>
-    <tbody>
-  {postLearningActions.length > 0 ? (
-    postLearningActions.map((action, index) => (
-      <tr key={index}>
-        <td>{action.topic?.topicName || "Unnamed Topic"}</td>
-        <td>
-          {action.topic?.concepts?.length > 0 ? (
-            <ul>
-              {action.topic.concepts.map((concept, idx) => (
-                <li key={idx}>{concept.concept || `Concept ID: ${concept.id}`}</li>
-              ))}
-            </ul>
+<div className="post-learning-actions-container">
+      <h3>Post-Learning Actions</h3>
+      {error && <div className="error-message">{error}</div>}
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Topic Name</th>
+            <th>Concepts</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {postLearningActions.length > 0 ? (
+            postLearningActions.map((action, index) => (
+              <tr key={index}>
+                <td>{action.topicId ? `Topic ID: ${action.topicId}` : "No Topic"}</td>
+                <td>
+                  {action.conceptIds?.length > 0 ? (
+                    <ul>
+                      {action.conceptIds.map((conceptId) => (
+                        <li key={conceptId}>Concept ID: {conceptId}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "No Concepts"
+                  )}
+                </td>
+                <td>N/A</td>
+              </tr>
+            ))
           ) : (
-            "No Concepts"
+            <tr>
+              <td colSpan="3">No post-learning actions available.</td>
+            </tr>
           )}
-        </td>
-        <td>{action.topic?.concepts?.map((c) => c.conceptDetailing).join(", ") || "No Details"}</td>
-        <td>N/A</td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="4">No post-learning actions available.</td>
-    </tr>
-  )}
-</tbody>
+        </tbody>
 
 
 
