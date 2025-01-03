@@ -1150,11 +1150,11 @@ const handleGenerateARLessonPlan = async (arId) => {
   {postLearningActions.length > 0 ? (
     postLearningActions.map((action, index) => (
       <tr key={index}>
-        <td>{action.topicName || "Unnamed Topic"}</td>
+        <td>{action.topic?.topicName || "Unnamed Topic"}</td>
         <td>
-          {Array.isArray(action.conceptIds) && action.conceptIds.length > 0 ? (
-            action.conceptIds.map((conceptId, idx) => (
-              <li key={idx}>Concept ID: {conceptId}</li>
+          {Array.isArray(action.concepts) && action.concepts.length > 0 ? (
+            action.concepts.map((concept, idx) => (
+              <li key={idx}>{concept.concept || `Concept ID: ${concept.id}`}</li>
             ))
           ) : (
             "No Concepts"
@@ -1170,6 +1170,7 @@ const handleGenerateARLessonPlan = async (arId) => {
     </tr>
   )}
 </tbody>
+
 
 
 
