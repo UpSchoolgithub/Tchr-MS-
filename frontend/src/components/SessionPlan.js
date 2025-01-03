@@ -71,7 +71,7 @@ const handleOpenARModal = async (type) => {
 
   try {
     const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/topics`,
+      `/api/sessions/${sessionId}/topics`,
       { withCredentials: true }
     );
     const topics = response.data.topics || [];
