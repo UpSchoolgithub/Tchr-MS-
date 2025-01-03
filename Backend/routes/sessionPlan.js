@@ -113,17 +113,17 @@ router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async 
   const { sessionId } = req.params;
 
   try {
-    const postLearningActions = await PostLearningActions.findAll({
+    const postLearningActions = await PostLearningAction.findAll({
       where: { sessionId, type: 'post-learning' },
       include: [
         {
           model: Topic,
-          as: 'topic',
+          as: 'topic', // Matches alias defined in the model
           attributes: ['id', 'topicName'],
           include: [
             {
               model: Concept,
-              as: 'concepts',
+              as: 'concepts', // Matches alias defined in Concept model
               attributes: ['id', 'concept', 'conceptDetailing'],
             },
           ],
@@ -131,12 +131,20 @@ router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async 
       ],
     });
 
+    if (!postLearningActions.length) {
+      return res.status(404).json({ message: 'No post-learning actions found.' });
+    }
+
     res.status(200).json({ postLearningActions });
   } catch (error) {
-    console.error('Error fetching post-learning actions:', error.message);
-    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
+    console.error('Error fetching post-learning actions:', error);
+    res.status(500).json({
+      message: 'Failed to fetch post-learning actions.',
+      error: error.message,
+    });
   }
 });
+
 
 
 // Endpoint for Fetching Topics and Concepts for prelearning 

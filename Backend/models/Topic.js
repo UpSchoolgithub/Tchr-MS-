@@ -1,10 +1,26 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db'); // Ensure the correct path
 
 class Topic extends Model {
   static associate(models) {
-    Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
-    Topic.hasMany(models.concept, { foreignKey: 'topicId', as: 'Concepts', onDelete: 'CASCADE' });
+    // Association to `SessionPlan`
+    Topic.belongsTo(models.SessionPlan, {
+      foreignKey: 'sessionPlanId',
+      as: 'SessionPlan', // Alias for SessionPlan association
+    });
+
+    // Association to `Concept`
+    Topic.hasMany(models.Concept, {
+      foreignKey: 'topicId',
+      as: 'Concepts', // Alias for Concepts association
+      onDelete: 'CASCADE', // Delete all related concepts if topic is deleted
+    });
+
+    // Association to `PostLearningAction`
+    Topic.hasOne(models.PostLearningAction, {
+      foreignKey: 'topicId',
+      as: 'PostLearningAction', // Alias for PostLearningAction
+    });
   }
 }
 
@@ -23,12 +39,11 @@ Topic.init(
       allowNull: false,
     },
   },
-  
   {
     sequelize,
     modelName: 'Topic',
     tableName: 'Topics',
-    freezeTableName: true,
+    freezeTableName: true, // Prevent automatic pluralization
   }
 );
 

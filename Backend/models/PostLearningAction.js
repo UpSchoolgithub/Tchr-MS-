@@ -1,7 +1,12 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Update the path as per your project structure
+const sequelize = require('../config/db'); // Ensure the correct path
 
-class PostLearningAction extends Model {}
+class PostLearningAction extends Model {
+  static associate(models) {
+    // Associations
+    this.belongsTo(models.Topic, { as: 'topic', foreignKey: 'topicId' });
+  }
+}
 
 PostLearningAction.init(
   {
