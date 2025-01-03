@@ -150,6 +150,16 @@ const fetchAR = async () => {
 
 
 // Fetch Post-learning actions
+const getTopicNameById = (topicId) => {
+  const topic = availableTopics.find((t) => t.id === topicId);
+  return topic ? topic.name : `Topic ID: ${topicId}`;
+};
+
+const getConceptNameById = (conceptId) => {
+  const concept = availableTopics.flatMap((t) => t.concepts).find((c) => c.id === conceptId);
+  return concept ? concept.name : `Concept ID: ${conceptId}`;
+};
+
 const fetchPostLearningActions = async () => {
   try {
     const response = await axios.get(
@@ -233,35 +243,37 @@ const handleSaveAR = async () => {
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   }
-  if (arType === "post-learning") {
-    if (selectedTopics.length === 0) {
-      setError("Please select at least one topic and concept.");
-      return;
+};
+
+const handleSavePostLearning = async () => {
+  if (selectedTopics.length === 0) {
+    alert("Please select topics and concepts.");
+    return;
+  }
+
+  const payload = {
+    selectedTopics: selectedTopics.map((topic) => ({
+      id: topic.id,  // Topic ID
+      concepts: topic.concepts.map((concept) => ({ id: concept.id })), // Concept IDs
+    })),
+  };
+
+  console.log("Post-Learning Payload Sent:", JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+      payload
+    );
+    if (response.status === 201) {
+      alert("Post-learning actions saved successfully.");
+    } else {
+      console.error("Error saving post-learning actions:", response.data.message);
+      alert("Failed to save post-learning actions.");
     }
-
-    const payload = {
-      selectedTopics: selectedTopics.map((topic) => ({
-        id: topic.topicId,
-        concepts: topic.selectedConcepts.map((concept) => ({ id: concept.id })),
-      })),
-    };
-
-    console.log("Post-learning Payload Sent:", payload); // Debugging
-
-    try {
-      const response = await axios.post(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
-        payload,
-        { withCredentials: true }
-      );
-      console.log("Response from Backend:", response.data);
-      setSuccessMessage("Post-learning action saved successfully!");
-      setShowARModal(false); // Close modal
-      await fetchPostLearningActions(); // Refresh post-learning actions table
-    } catch (error) {
-      console.error("Error saving post-learning action:", error.response?.data || error.message);
-      setError(error.response?.data?.message || "Failed to save post-learning action.");
-    }
+  } catch (error) {
+    console.error("Error:", error.response?.data || error.message);
+    alert("Error while saving post-learning actions.");
   }
 };
 
@@ -437,14 +449,11 @@ const handleGenerateARLessonPlan = async (arId) => {
 
 <Button
   variant="primary"
-  onClick={() =>
-    arType === "post-learning"
-      ? handleSaveAR(selectedTopic, selectedConcepts) // Save post-learning with selected concepts
-      : handleSaveAR(null, arConcepts) // Leave Pre-learning unchanged
-  }
+  onClick={handleSavePostLearning} // Directly call handleSavePostLearning
 >
   Save
 </Button>
+
 
     </Form>
   </Modal.Body>
@@ -1388,20 +1397,17 @@ const handleGenerateARLessonPlan = async (arId) => {
     </Form>
   </Modal.Body>
   <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowARModal(false)}>
-      Close
-    </Button>
-    <Button
-      variant="primary"
-      onClick={() =>
-        arType === "pre-learning"
-          ? handleSaveAR(null, arConcepts)
-          : handleSaveAR(selectedTopic, selectedConcepts)
-      }
-    >
-      Save
-    </Button>
-  </Modal.Footer>
+  <Button variant="secondary" onClick={() => setShowARModal(false)}>
+    Close
+  </Button>
+  <Button
+    variant="primary"
+    onClick={handleSavePostLearning} // Simplified Save Button for post-learning
+  >
+    Save
+  </Button>
+</Modal.Footer>
+
 </Modal>
 
     </div>
