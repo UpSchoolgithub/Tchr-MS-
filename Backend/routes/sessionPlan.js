@@ -18,29 +18,41 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-// Fetch topics for a session (GET /sessions/:sessionId/topics)
+
 router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
   try {
-    // Fetch topics linked to the session's session plan
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
         {
           model: Topic,
           as: 'Topics',
-          attributes: ['id', 'topicName'],
+          attributes: ['id', 'topicName'], // Topic attributes
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts',
+              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
+            },
+          ],
         },
       ],
     });
 
-    // Extract topics from the session plans
-    const topics = sessionPlans.flatMap((plan) => plan.Topics);
-
-    if (topics.length === 0) {
-      return res.status(404).json({ message: 'No topics found for this session.' });
-    }
+    const topics = sessionPlans.flatMap((plan) =>
+      (plan.Topics || []).map((topic) => ({
+        id: topic.id,
+        name: topic.topicName,
+        concepts: (topic.Concepts || []).map((concept) => ({
+          id: concept.id,
+          name: concept.concept,
+          detailing: concept.conceptDetailing,
+        })),
+      }))
+    );
+    
 
     res.status(200).json({ topics });
   } catch (error) {
