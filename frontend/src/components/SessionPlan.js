@@ -175,6 +175,7 @@ useEffect(() => {
 
 const handleSaveAR = async () => {
   if (arType === "pre-learning") {
+    // Pre-learning save
     if (!arTopicName.trim()) {
       setError("Topic name is required for pre-learning.");
       return;
@@ -189,18 +190,12 @@ const handleSaveAR = async () => {
       return;
     }
 
-    // Convert arrays to comma-separated strings
-    const conceptNames = validConcepts.map((concept) => concept.name.trim()).join(", ");
-    const conceptDetails = validConcepts.map((concept) => concept.detailing.trim()).join(", ");
-
     const payload = {
       type: arType,
       topicName: arTopicName.trim(),
-      conceptName: conceptNames,
-      conceptDetailing: conceptDetails,
+      conceptName: validConcepts.map((concept) => concept.name.trim()).join(", "),
+      conceptDetailing: validConcepts.map((concept) => concept.detailing.trim()).join(", "),
     };
-
-    console.log("Payload Sent to Backend:", payload); // Debugging
 
     try {
       const response = await axios.post(
@@ -208,9 +203,6 @@ const handleSaveAR = async () => {
         payload,
         { withCredentials: true }
       );
-
-      console.log("Response from Backend:", response.data); // Debugging
-
       setSuccessMessage("Pre-learning topic saved successfully!");
       setARTopicName(""); // Reset topic name
       setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
@@ -220,8 +212,43 @@ const handleSaveAR = async () => {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
+  } else if (arType === "post-learning") {
+    // Post-learning save
+    if (selectedTopics.length === 0) {
+      setError("Please add at least one topic and concept for post-learning.");
+      return;
+    }
+
+    const formattedPostLearningTopics = selectedTopics.map((topic) => ({
+      topicName: topic.topicName,
+      concepts: topic.selectedConcepts.map((concept) => ({
+        concept: concept.name.trim(),
+        detailing: concept.detailing.trim(),
+      })),
+    }));
+
+    const payload = {
+      type: arType,
+      topics: formattedPostLearningTopics, // Send the topics array
+    };
+
+    try {
+      const response = await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+        payload,
+        { withCredentials: true }
+      );
+      setSuccessMessage("Post-learning topics saved successfully!");
+      setSelectedTopics([]); // Reset selected topics
+      setShowARModal(false); // Close modal
+      await fetchPostLearningActions(); // Refresh post-learning actions
+    } catch (error) {
+      console.error("Error saving post-learning topic:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save post-learning topics.");
+    }
   }
 };
+
 
 
   useEffect(() => {
