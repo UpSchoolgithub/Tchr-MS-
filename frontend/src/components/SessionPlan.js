@@ -186,12 +186,18 @@ const handleSaveAR = async () => {
       return;
     }
 
+    // Convert arrays to comma-separated strings
+    const conceptNames = validConcepts.map((concept) => concept.name.trim()).join(", ");
+    const conceptDetails = validConcepts.map((concept) => concept.detailing.trim()).join(", ");
+
     const payload = {
       type: arType,
       topicName: arTopicName.trim(),
-      conceptName: validConcepts.map((concept) => concept.name.trim()),
-      conceptDetailing: validConcepts.map((concept) => concept.detailing.trim()),
+      conceptName: conceptNames,
+      conceptDetailing: conceptDetails,
     };
+
+    console.log("Payload Sent to Backend:", payload); // Debugging
 
     try {
       const response = await axios.post(
@@ -200,13 +206,13 @@ const handleSaveAR = async () => {
         { withCredentials: true }
       );
 
-      console.log("Response from Backend:", response.data);
+      console.log("Response from Backend:", response.data); // Debugging
 
       setSuccessMessage("Pre-learning topic saved successfully!");
-      setARTopicName(""); 
-      setARConcepts([{ name: "", detailing: "" }]); 
-      setShowARModal(false); 
-      await fetchAR(); // Fetch updated data
+      setARTopicName(""); // Reset topic name
+      setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
+      setShowARModal(false); // Close modal
+      await fetchAR(); // Refresh actions and recommendations
     } catch (error) {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
