@@ -169,7 +169,7 @@ const fetchPostLearningActions = async () => {
     );
 
     const postLearningActions = response.data.postLearningActions || [];
-    const topicsResponse = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, { withCredentials: true });
+    const topicsResponse = { data: { topics: sessionPlans.Topics || [] } }; // Fallback to Topics within sessionPlans
     const topicsMap = new Map(topicsResponse.data.topics.map((t) => [t.id, t]));
 
     const updatedPostLearningActions = postLearningActions.map((action) => ({
