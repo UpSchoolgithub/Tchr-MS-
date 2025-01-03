@@ -69,42 +69,42 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
-  console.log("Received Payload:", JSON.stringify(req.body, null, 2));
+  console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Debugging
 
   if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-      return res.status(400).json({ message: 'No topics selected or invalid format.' });
+    return res.status(400).json({ message: 'No topics selected or invalid format.' });
   }
 
   const transaction = await sequelize.transaction();
-
   try {
-      for (const topic of selectedTopics) {
-          console.log(`Processing topic with id: ${topic.id}`);
-          console.log(`Type of concepts: ${typeof topic.concepts}, Value:`, topic.concepts);
+    for (const topic of selectedTopics) {
+      console.log(`Processing topic with id: ${topic.id}`);
+      const concepts = Array.isArray(topic.selectedConcepts) ? topic.selectedConcepts : [];
+      const conceptIds = concepts.map((concept) => concept.id);
 
-          // Validate concepts array
-          const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
-          const conceptIds = concepts.map(concept => concept.id);
+      console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
 
-          console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
+      // Save post-learning action
+      await PostLearningActions.create(
+        {
+          sessionId,
+          topicId: topic.id,
+          conceptIds,
+          type: 'post-learning',
+        },
+        { transaction }
+      );
+    }
 
-          // Create PostLearningAction
-          await PostLearningActions.create({
-              sessionId,
-              topicId: topic.id,
-              conceptIds, // Ensure it's a valid array
-              type: 'post-learning',
-          }, { transaction });
-      }
-
-      await transaction.commit();
-      res.status(201).json({ message: 'Post-learning actions saved successfully.' });
+    await transaction.commit();
+    res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
-      await transaction.rollback();
-      console.error('Error saving post-learning actions:', error.stack);
-      res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
+    await transaction.rollback();
+    console.error('Error saving post-learning actions:', error.stack);
+    res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
+
 
 
 //Fetching Post-Learning Actions

@@ -172,7 +172,6 @@ useEffect(() => {
 
 const handleSaveAR = async () => {
   if (arType === "pre-learning") {
-    // Validate inputs
     if (!arTopicName.trim()) {
       setError("Topic name is required for pre-learning.");
       return;
@@ -187,17 +186,12 @@ const handleSaveAR = async () => {
       return;
     }
 
-    // Payload for pre-learning
     const payload = {
       type: arType,
       topicName: arTopicName.trim(),
-      conceptDetails: validConcepts.map((concept) => ({
-        name: concept.name.trim(),
-        detailing: concept.detailing.trim(),
-      })),
+      conceptName: validConcepts.map((concept) => concept.name.trim()),
+      conceptDetailing: validConcepts.map((concept) => concept.detailing.trim()),
     };
-
-    console.log("Payload Sent to Backend:", payload); // Debugging
 
     try {
       const response = await axios.post(
@@ -206,19 +200,20 @@ const handleSaveAR = async () => {
         { withCredentials: true }
       );
 
-      console.log("Response from Backend:", response.data); // Debugging
+      console.log("Response from Backend:", response.data);
 
       setSuccessMessage("Pre-learning topic saved successfully!");
-      setARTopicName(""); // Reset topic name
-      setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
-      setShowARModal(false); // Close modal
-      await fetchAR(); // Refresh actions and recommendations
+      setARTopicName(""); 
+      setARConcepts([{ name: "", detailing: "" }]); 
+      setShowARModal(false); 
+      await fetchAR(); // Fetch updated data
     } catch (error) {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
   }
 };
+
 
   useEffect(() => {
     fetchAR();
