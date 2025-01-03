@@ -1098,7 +1098,7 @@ const handleGenerateARLessonPlan = async (arId) => {
         actionsAndRecommendations.flatMap((ar, arIndex) => {
           // Split concepts and details into arrays for rendering
           const concepts = typeof ar.conceptName === "string" ? ar.conceptName.split("; ") : [];
-          const details = ar.conceptDetailing ? ar.conceptDetailing.split("; ") : [];
+          const details = typeof ar.conceptDetailing === "string" ? ar.conceptDetailing.split("; ") : [];
 
           // Ensure concepts and details are aligned
           const maxRows = Math.max(concepts.length, details.length);
