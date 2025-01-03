@@ -152,16 +152,36 @@ const fetchAR = async () => {
 // Fetch Post-learning actions
 const fetchPostLearningActions = async () => {
   try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
-      { withCredentials: true }
-    );
-    setPostLearningActions(response.data.postLearningActions || []);
+    // Fetch both post-learning actions and topics
+    const [actionsResponse, topicsResponse] = await Promise.all([
+      axios.get(`https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`, { withCredentials: true }),
+      axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, { withCredentials: true }),
+    ]);
+
+    const actions = actionsResponse.data.postLearningActions || [];
+    const topics = topicsResponse.data.topics || [];
+
+    // Merge topic names and concepts into actions
+    const mergedActions = actions.map((action) => {
+      const topic = topics.find((t) => t.id === action.topicId) || {};
+      const concepts = (action.conceptIds || []).map((conceptId) =>
+        topic.concepts?.find((c) => c.id === conceptId) || { name: `Unknown Concept (ID: ${conceptId})`, detailing: "No Details Available" }
+      );
+
+      return {
+        ...action,
+        topicName: topic.topicName || `Unknown Topic (ID: ${action.topicId})`,
+        concepts,
+      };
+    });
+
+    setPostLearningActions(mergedActions);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 useEffect(() => {
   fetchPostLearningActions();
@@ -1153,51 +1173,33 @@ const handleGenerateARLessonPlan = async (arId) => {
       </tr>
     </thead>
     <tbody>
-      {postLearningActions.length > 0 ? (
-        postLearningActions.map((action, index) => {
-          // Debug logs for verification
-          console.log("Action:", action);
-          console.log("Existing Topics:", existingTopics);
+  {postLearningActions.length > 0 ? (
+    postLearningActions.map((action, index) => (
+      <tr key={index}>
+        <td>{action.topicName}</td>
+        <td>
+          <ul>
+            {action.concepts.map((concept, i) => (
+              <li key={i}>{concept.name}</li>
+            ))}
+          </ul>
+        </td>
+        <td>
+          <ul>
+            {action.concepts.map((concept, i) => (
+              <li key={i}>{concept.detailing}</li>
+            ))}
+          </ul>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="3">No post-learning actions available.</td>
+    </tr>
+  )}
+</tbody>
 
-          // Get the topic name and concepts
-          const topic = existingTopics.find((t) => t.id === action.topicId);
-          const topicName = topic?.name || `Unknown Topic (ID: ${action.topicId})`;
-
-          // Map concept IDs to their names and details
-          const concepts = action.conceptIds.map((conceptId) => {
-            const concept = topic?.concepts?.find((c) => c.id === conceptId);
-            return {
-              name: concept?.name || `Unknown Concept (ID: ${conceptId})`,
-              detailing: concept?.detailing || "No Details Available",
-            };
-          });
-
-          return (
-            <tr key={index}>
-              <td>{topicName}</td>
-              <td>
-                <ul>
-                  {concepts.map((concept, i) => (
-                    <li key={i}>{concept.name}</li>
-                  ))}
-                </ul>
-              </td>
-              <td>
-                <ul>
-                  {concepts.map((concept, i) => (
-                    <li key={i}>{concept.detailing}</li>
-                  ))}
-                </ul>
-              </td>
-            </tr>
-          );
-        })
-      ) : (
-        <tr>
-          <td colSpan="3">No post-learning actions available.</td>
-        </tr>
-      )}
-    </tbody>
   </table>
 </div>
 
