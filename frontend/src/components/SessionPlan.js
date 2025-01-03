@@ -1152,16 +1152,18 @@ const handleGenerateARLessonPlan = async (arId) => {
       <tr key={index}>
         <td>{action.topic?.topicName || "Unnamed Topic"}</td>
         <td>
-          {Array.isArray(action.concepts) && action.concepts.length > 0 ? (
-            action.concepts.map((concept, idx) => (
-              <li key={idx}>{concept.concept || `Concept ID: ${concept.id}`}</li>
-            ))
+          {action.topic?.concepts?.length > 0 ? (
+            <ul>
+              {action.topic.concepts.map((concept, idx) => (
+                <li key={idx}>{concept.concept || `Concept ID: ${concept.id}`}</li>
+              ))}
+            </ul>
           ) : (
             "No Concepts"
           )}
         </td>
-        <td>{action.details || "No Details"}</td>
-        <td>{action.additionalDetails || "N/A"}</td>
+        <td>{action.topic?.concepts?.map((c) => c.conceptDetailing).join(", ") || "No Details"}</td>
+        <td>N/A</td>
       </tr>
     ))
   ) : (

@@ -108,19 +108,33 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
 
 
 //Fetching Post-Learning Actions
+
 router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
-  
   const { sessionId } = req.params;
 
   try {
-      const postLearningActions = await PostLearningActions.findAll({
-          where: { sessionId, type: 'post-learning' }
-      });
+    const postLearningActions = await PostLearningActions.findAll({
+      where: { sessionId, type: 'post-learning' },
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName'],
+          include: [
+            {
+              model: Concept,
+              as: 'concepts',
+              attributes: ['id', 'concept', 'conceptDetailing'],
+            },
+          ],
+        },
+      ],
+    });
 
-      res.status(200).json({ postLearningActions });
+    res.status(200).json({ postLearningActions });
   } catch (error) {
-      console.error('Error fetching post-learning actions:', error.message);
-      res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
+    console.error('Error fetching post-learning actions:', error.message);
+    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
   }
 });
 
