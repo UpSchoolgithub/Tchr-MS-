@@ -159,11 +159,14 @@ const fetchPostLearningActions = async () => {
 
     const postLearningActions = response.data.postLearningActions || [];
     const topicsResponse = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, { withCredentials: true });
-    const topicsMap = new Map(topicsResponse.data.topics.map((t) => [t.id, t.name]));
+    const topicsMap = new Map(topicsResponse.data.topics.map((t) => [t.id, t]));
 
     const updatedPostLearningActions = postLearningActions.map((action) => ({
       ...action,
-      topicName: topicsMap.get(action.topicId) || `Topic ID: ${action.topicId}`,
+      topicName: topicsMap.get(action.topicId)?.name || `Topic ID: ${action.topicId}`,
+      concepts: topicsMap.get(action.topicId)?.concepts?.filter((c) =>
+        action.conceptIds.includes(c.id)
+      ) || [],
     }));
 
     setPostLearningActions(updatedPostLearningActions);
@@ -172,6 +175,7 @@ const fetchPostLearningActions = async () => {
     setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 
 useEffect(() => {
@@ -1194,32 +1198,34 @@ const handleGenerateARLessonPlan = async (arId) => {
           </tr>
         </thead>
         <tbody>
-          {postLearningActions.length > 0 ? (
-            postLearningActions.map((action, index) => (
-              <tr key={index}>
-                <td>{action.topicId ? `Topic ID: ${action.topicId}` : "No Topic"}</td>
-                <td>
-                  {action.conceptIds?.length > 0 ? (
-                    <ul>
-                      {action.conceptIds.map((conceptId) => (
-                        <li key={conceptId}>Concept ID: {conceptId}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    "No Concepts"
-                  )}
-                </td>
-                <td>N/A</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="3">No post-learning actions available.</td>
-            </tr>
-          )}
-        </tbody>
-
-
+  {postLearningActions.map((action, index) => (
+    <tr key={index}>
+      <td>{action.topicName}</td>
+      <td>
+        {action.concepts.length > 0 ? (
+          <ul>
+            {action.concepts.map((concept) => (
+              <li key={concept.id}>{concept.concept || "Unnamed Concept"}</li>
+            ))}
+          </ul>
+        ) : (
+          "No Concepts"
+        )}
+      </td>
+      <td>
+        {action.concepts.length > 0 ? (
+          <ul>
+            {action.concepts.map((concept) => (
+              <li key={concept.id}>{concept.conceptDetailing || "No Details"}</li>
+            ))}
+          </ul>
+        ) : (
+          "N/A"
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
 
 
   </table>
