@@ -74,22 +74,22 @@ const handleOpenARModal = async (type) => {
       `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
       { withCredentials: true }
     );
+    const actions = response.data || [];
     
-    const topics = response.data.topics || [];
+    // Create topics list for selection in post-learning
+    const topics = actions.map((action) => ({
+      id: action.topicId,
+      name: `Topic ID: ${action.topicId}`,
+      concepts: action.conceptIds.map((id) => ({ id, name: `Concept ${id}` }))
+    }));
 
-    if (type === "post-learning") {
-      const filteredTopics = topics.filter(
-        (topic) => !selectedTopics.some((added) => added.topicId === topic.id)
-      );
-      setExistingTopics(filteredTopics);
-    } else {
-      setExistingTopics(topics);
-    }
+    setExistingTopics(topics);
   } catch (error) {
-    console.error("Error fetching topics:", error);
-    setError("Failed to fetch topics.");
+    console.error("Error fetching post-learning actions:", error);
+    setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 
 
