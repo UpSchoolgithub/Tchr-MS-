@@ -113,22 +113,9 @@ router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async 
   const { sessionId } = req.params;
 
   try {
-    const postLearningActions = await PostLearningActions.findAll({
-      where: { sessionId, type: 'post-learning' },
-      include: [
-        {
-          model: Topic,
-          as: 'topic', // Add the alias used in associations
-          attributes: ['topicName'],
-        },
-        {
-          model: Concept,
-          as: 'concepts', // Add the alias used in associations
-          attributes: ['concept'],
-        },
-      ],
-    });
-    
+      const postLearningActions = await PostLearningActions.findAll({
+          where: { sessionId, type: 'post-learning' }
+      });
 
       res.status(200).json({ postLearningActions });
   } catch (error) {
