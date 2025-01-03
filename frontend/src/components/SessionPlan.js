@@ -153,15 +153,26 @@ const fetchAR = async () => {
 const fetchPostLearningActions = async () => {
   try {
     const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
       { withCredentials: true }
     );
-    setPostLearningActions(response.data.postLearningActions || []);
+
+    const postLearningActions = response.data.postLearningActions || [];
+    const topicsResponse = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, { withCredentials: true });
+    const topicsMap = new Map(topicsResponse.data.topics.map((t) => [t.id, t.name]));
+
+    const updatedPostLearningActions = postLearningActions.map((action) => ({
+      ...action,
+      topicName: topicsMap.get(action.topicId) || `Topic ID: ${action.topicId}`,
+    }));
+
+    setPostLearningActions(updatedPostLearningActions);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 useEffect(() => {
   fetchPostLearningActions();
@@ -216,6 +227,36 @@ const handleSaveAR = async () => {
     } catch (error) {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
+    }
+  }
+  if (arType === "post-learning") {
+    if (selectedTopics.length === 0) {
+      setError("Please select at least one topic and concept.");
+      return;
+    }
+
+    const payload = {
+      selectedTopics: selectedTopics.map((topic) => ({
+        id: topic.topicId,
+        concepts: topic.selectedConcepts.map((concept) => ({ id: concept.id })),
+      })),
+    };
+
+    console.log("Post-learning Payload Sent:", payload); // Debugging
+
+    try {
+      const response = await axios.post(
+        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
+        payload,
+        { withCredentials: true }
+      );
+      console.log("Response from Backend:", response.data);
+      setSuccessMessage("Post-learning action saved successfully!");
+      setShowARModal(false); // Close modal
+      await fetchPostLearningActions(); // Refresh post-learning actions table
+    } catch (error) {
+      console.error("Error saving post-learning action:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save post-learning action.");
     }
   }
 };
