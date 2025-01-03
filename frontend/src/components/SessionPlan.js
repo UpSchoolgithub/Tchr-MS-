@@ -1155,19 +1155,22 @@ const handleGenerateARLessonPlan = async (arId) => {
     <tbody>
       {postLearningActions.length > 0 ? (
         postLearningActions.map((action, index) => {
-          // Get the topic from existingTopics using topicId
+          // Debug logs for verification
+          console.log("Action:", action);
+          console.log("Existing Topics:", existingTopics);
+
+          // Get the topic name and concepts
           const topic = existingTopics.find((t) => t.id === action.topicId);
-const topicName = topic?.name || `Unknown Topic (ID: ${action.topicId})`;
+          const topicName = topic?.name || `Unknown Topic (ID: ${action.topicId})`;
 
           // Map concept IDs to their names and details
           const concepts = action.conceptIds.map((conceptId) => {
-            const concept = topic?.concepts.find((c) => c.id === conceptId);
+            const concept = topic?.concepts?.find((c) => c.id === conceptId);
             return {
               name: concept?.name || `Unknown Concept (ID: ${conceptId})`,
               detailing: concept?.detailing || "No Details Available",
             };
           });
-          
 
           return (
             <tr key={index}>
@@ -1197,7 +1200,6 @@ const topicName = topic?.name || `Unknown Topic (ID: ${action.topicId})`;
     </tbody>
   </table>
 </div>
-
 
 
 
