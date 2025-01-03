@@ -152,35 +152,18 @@ const fetchAR = async () => {
 // Fetch Post-learning actions
 const fetchPostLearningActions = async () => {
   try {
-    // Fetch both post-learning actions and topics
-    const [actionsResponse, topicsResponse] = await Promise.all([
-      axios.get(`https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`, { withCredentials: true }),
-      axios.get(`https://tms.up.school/api/sessions/${sessionId}/topics`, { withCredentials: true }),
-    ]);
-
-    const actions = actionsResponse.data.postLearningActions || [];
-    const topics = topicsResponse.data.topics || [];
-
-    // Merge topic names and concepts into actions
-    const mergedActions = actions.map((action) => {
-      const topic = topics.find((t) => t.id === action.topicId) || {};
-      const concepts = (action.conceptIds || []).map((conceptId) =>
-        topic.concepts?.find((c) => c.id === conceptId) || { name: `Unknown Concept (ID: ${conceptId})`, detailing: "No Details Available" }
-      );
-
-      return {
-        ...action,
-        topicName: topic.topicName || `Unknown Topic (ID: ${action.topicId})`,
-        concepts,
-      };
-    });
-
-    setPostLearningActions(mergedActions);
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
+      { withCredentials: true }
+    );
+    console.log("Post-learning actions fetched:", response.data.postLearningActions); // Debug
+    setPostLearningActions(response.data.postLearningActions || []);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
+
 
 
 useEffect(() => {
@@ -1176,18 +1159,18 @@ const handleGenerateARLessonPlan = async (arId) => {
   {postLearningActions.length > 0 ? (
     postLearningActions.map((action, index) => (
       <tr key={index}>
-        <td>{action.topicName}</td>
+        <td>{action.topicName || "No Topic Name"}</td>
         <td>
           <ul>
             {action.concepts.map((concept, i) => (
-              <li key={i}>{concept.name}</li>
+              <li key={i}>{concept.concept || "No Concept"}</li>
             ))}
           </ul>
         </td>
         <td>
           <ul>
             {action.concepts.map((concept, i) => (
-              <li key={i}>{concept.detailing}</li>
+              <li key={i}>{concept.conceptDetailing || "No Details Available"}</li>
             ))}
           </ul>
         </td>
