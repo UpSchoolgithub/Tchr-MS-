@@ -19,47 +19,46 @@ const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
 // Add post leanring topics fetching
-router.get('/sessions/:sessionId/topics', async (req, res) => {
+router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
   const { sessionId } = req.params;
+  const { selectedTopics } = req.body;
 
+  console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Debugging
+
+  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
+    return res.status(400).json({ message: 'No topics selected or invalid format.' });
+  }
+
+  const transaction = await sequelize.transaction();
   try {
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId },
-      include: [
+    for (const topic of selectedTopics) {
+      console.log(`Processing topic with id: ${topic.id}`);
+      const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];  // Check if `concepts` exists in payload
+      const conceptIds = concepts.map((concept) => concept.id);  // Map to IDs only
+
+      console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds); // Debugging
+
+      // Save post-learning action
+      await PostLearningActions.create(
         {
-          model: Topic,
-          as: 'Topics',
-          attributes: ['id', 'topicName'], // Topic attributes
-          include: [
-            {
-              model: Concept,
-              as: 'Concepts',
-              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
-            },
-          ],
+          sessionId,
+          topicId: topic.id,
+          conceptIds,  // This is being saved
+          type: 'post-learning',
         },
-      ],
-    });
+        { transaction }
+      );
+    }
 
-    const topics = sessionPlans.flatMap((plan) =>
-      (plan.Topics || []).map((topic) => ({
-        id: topic.id,
-        name: topic.topicName,
-        concepts: (topic.Concepts || []).map((concept) => ({
-          id: concept.id,
-          name: concept.concept,
-          detailing: concept.conceptDetailing,
-        })),
-      }))
-    );
-    
-
-    res.status(200).json({ topics });
+    await transaction.commit();
+    res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
-    console.error('Error fetching topics:', error.message);
-    res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
+    await transaction.rollback();
+    console.error('Error saving post-learning actions:', error.stack);
+    res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
+
 
 
 
