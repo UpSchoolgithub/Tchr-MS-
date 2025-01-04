@@ -18,6 +18,21 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
+async function callGPTAPI(payload) {
+  try {
+    const response = await axios.post('https://your-gpt-api-url.com/generate-lesson-plan', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer YOUR_API_KEY`, // Replace with your actual key if needed
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error calling GPT API:', error.message);
+    throw new Error('Failed to call GPT API');
+  }
+}
+
 router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
   const { selectedTopics } = req.body;
 
@@ -26,48 +41,45 @@ router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, re
   }
 
   try {
-    // Fetch topics and concepts using the IDs from ActionsAndRecommendations table
     const topicsData = await Promise.all(
       selectedTopics.map(async (item) => {
         const action = await ActionsAndRecommendations.findOne({
           where: { id: item.id },
-          attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing'], // Removed 'sessionPlanId'
         });
-        
 
         if (!action) {
           throw new Error(`Action with ID ${item.id} not found.`);
         }
 
         return {
-          topic: action.topicName,  // e.g., "Colonial Administration in India"
-          concepts: action.conceptName ? action.conceptName.split(",") : [],  // Split concept names
-          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],  // Split concept details
+          topic: action.topicName,
+          concepts: action.conceptName ? action.conceptName.split(",") : [],
+          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
         };
       })
     );
 
-    // Prepare the GPT payload
     const payloadForGPT = {
-      board: req.body.board,
-      grade: req.body.grade,
-      subject: req.body.subject,
-      unit: req.body.unit,
-      chapter: req.body.chapter,
+      board: req.body.board || "Default Board",
+      grade: req.body.grade || "Default Grade",
+      subject: req.body.subject || "Default Subject",
+      unit: req.body.unit || "Default Unit",
+      chapter: req.body.chapter || "Default Chapter",
       sessionType: "Pre-Learning",
       topics: topicsData,
     };
 
     console.log("Payload for GPT API:", JSON.stringify(payloadForGPT, null, 2));
 
-    // Call external GPT API
-    const gptResponse = await callGPTAPI(payloadForGPT);
+    // Call the GPT API
+    const gptResponse = await callGPTAPI(payloadForGPT); // Make sure this function is defined/imported
     res.status(200).json(gptResponse);
   } catch (error) {
     console.error("Error generating pre-learning lesson plans:", error.message);
     res.status(500).json({ message: "Failed to generate lesson plans." });
   }
 });
+
 
 
 
