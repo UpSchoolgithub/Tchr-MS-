@@ -18,12 +18,10 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-// Pre-Learning Lesson Plan Generation Route
 router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Fetch all session plans with topics and concepts
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId: id },
       include: [
@@ -44,44 +42,23 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    // Validate topics and concepts
-    const validateTopic = (topic) => {
-      if (!topic.topicName || !Array.isArray(topic.Concepts)) {
-        return false;
-      }
-      return topic.Concepts.every((concept) => concept.concept && concept.conceptDetailing);
-    };
-
-    const validSessionPlans = sessionPlans.map((plan) => {
-      const validTopics = plan.Topics.filter((topic) => validateTopic(topic));
-      return { ...plan, Topics: validTopics };
-    });
-
-    if (validSessionPlans.every((plan) => plan.Topics.length === 0)) {
-      console.error('Validation failed. No valid topics or concepts.');
-      return res.status(400).json({ message: 'Invalid topic or concept structure.' });
-    }
-
     console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
 
-    // Split into 45-minute pre-learning sessions
     const maxDuration = 45; // minutes
-    let sessionNumber = -1; // Start from -1 for pre-learning
+    let sessionNumber = -1; // Start negative session numbers for pre-learning
     const failedConcepts = [];
 
-    for (const plan of validSessionPlans) {
+    for (const plan of sessionPlans) {
       for (const topic of plan.Topics) {
         const concepts = topic.Concepts;
-
-        // Track current session's concepts
         let currentSessionConcepts = [];
         let currentSessionDuration = 0;
 
         for (const concept of concepts) {
-          const conceptDuration = Math.ceil(concept.conceptDetailing.length / 10); // Estimate based on content length
+          const conceptDuration = Math.ceil(concept.conceptDetailing.length / 10); // Approximate duration
 
+          // If adding this concept exceeds maxDuration, create a new session
           if (currentSessionDuration + conceptDuration > maxDuration) {
-            // Send current session if it exceeds max duration
             const payload = {
               type: "pre-learning",
               board: req.body.board || "Board Not Specified",
@@ -101,28 +78,17 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
               ],
             };
 
-            console.log(`Sending payload for session number ${sessionNumber}:`, JSON.stringify(payload, null, 2));
+            console.log(`Sending payload for session ${sessionNumber}:`, JSON.stringify(payload, null, 2));
 
             try {
-              // Call external API to generate lesson plan
-              const sessionId = req.params.id;
-const response = await axios.post(
-  `https://tms.up.school/api/sessionPlans/${sessionId}/generatePreLearningLessonPlan`,
-  payload
-);
+              const response = await axios.post(
+                `https://tms.up.school/api/sessionPlans/${id}/generatePreLearningLessonPlan`,
+                payload
+              );
 
-
-              // Save lesson plan to the database
-              for (const c of currentSessionConcepts) {
-                await LessonPlan.upsert({
-                  conceptId: c.id,
-                  generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
-                });
-              }
-
-              console.log(`Saved pre-learning lesson plan for session number ${sessionNumber}`);
+              console.log(`Successfully saved session ${sessionNumber}`);
             } catch (error) {
-              console.error(`Failed for session number ${sessionNumber}:`, error.message);
+              console.error(`Failed for session ${sessionNumber}:`, error.message);
               failedConcepts.push({
                 sessionNumber,
                 reason: error.message,
@@ -130,12 +96,12 @@ const response = await axios.post(
             }
 
             // Reset for the next session
-            sessionNumber -= 1;
+            sessionNumber -= 1; // Move to the next negative session number
             currentSessionDuration = 0;
             currentSessionConcepts = [];
           }
 
-          // Add the current concept to the session
+          // Add concept to the current session
           currentSessionConcepts.push({
             id: concept.id,
             concept: concept.concept,
@@ -169,20 +135,13 @@ const response = await axios.post(
 
           try {
             const response = await axios.post(
-              "https://tms.up.school/api/sessionPlans/generatePreLearningLessonPlan",
+              `https://tms.up.school/api/sessionPlans/${sessionId}/generatePreLearningLessonPlan`,
               finalPayload
             );
 
-            for (const c of currentSessionConcepts) {
-              await LessonPlan.upsert({
-                conceptId: c.id,
-                generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
-              });
-            }
-
-            console.log(`Saved final pre-learning session for session number ${sessionNumber}`);
+            console.log(`Successfully saved final session ${sessionNumber}`);
           } catch (error) {
-            console.error(`Failed for final session number ${sessionNumber}:`, error.message);
+            console.error(`Failed for final session ${sessionNumber}:`, error.message);
             failedConcepts.push({
               sessionNumber,
               reason: error.message,
