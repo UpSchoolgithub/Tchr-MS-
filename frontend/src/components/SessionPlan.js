@@ -1169,41 +1169,43 @@ const handleGenerateARLessonPlan = async (arId) => {
   <table className="table">
     <thead>
       <tr>
+        <th>Type</th> {/* Added Type Column */}
         <th>Topic Name</th>
         <th>Concept Names</th>
         <th>Concept Details</th>
       </tr>
     </thead>
     <tbody>
-  {postLearningActions.length > 0 ? (
-    postLearningActions.map((action, index) => (
-      <tr key={index}>
-        <td>{action.topicName || "No Topic Name"}</td>
-        <td>
-          <ul>
-            {action.concepts.map((concept, i) => (
-              <li key={i}>{concept.concept || "No Concept"}</li>
-            ))}
-          </ul>
-        </td>
-        <td>
-          <ul>
-            {action.concepts.map((concept, i) => (
-              <li key={i}>{concept.conceptDetailing || "No Details Available"}</li>
-            ))}
-          </ul>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="3">No post-learning actions available.</td>
-    </tr>
-  )}
-</tbody>
-
+      {postLearningActions.length > 0 ? (
+        postLearningActions.map((action, index) => (
+          <tr key={index}>
+            <td>Post-learning</td> {/* Displaying "post-learning" explicitly */}
+            <td>{action.topicName || "No Topic Name"}</td>
+            <td>
+              <ul>
+                {action.concepts.map((concept, i) => (
+                  <li key={i}>{concept.concept || "No Concept"}</li>
+                ))}
+              </ul>
+            </td>
+            <td>
+              <ul>
+                {action.concepts.map((concept, i) => (
+                  <li key={i}>{concept.conceptDetailing || "No Details Available"}</li>
+                ))}
+              </ul>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="4">No post-learning actions available.</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 </div>
+
 
 
 
