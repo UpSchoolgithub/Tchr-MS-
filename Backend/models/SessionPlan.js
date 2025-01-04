@@ -10,8 +10,6 @@ class SessionPlan extends Model {
       as: 'ActionsAndRecommendations',
       onDelete: 'CASCADE',
     });
-    
-  
   }
 }
 
@@ -28,21 +26,31 @@ SessionPlan.init(
     sessionNumber: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      comment: "Negative values (-1, -2) for pre-learning; positive for regular sessions.",
     },
     completed: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false,
+      comment: "Indicates if the session has been completed",
     },
     endTime: {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'sessionEndTime', // Use the actual column name from the database
+      comment: "Timestamp when the session was ended.",
     },
     status: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM('in-progress', 'completed', 'pending'),
       allowNull: false,
       defaultValue: 'in-progress',
+      comment: "Tracks the status of the session.",
+    },
+    type: {
+      type: DataTypes.ENUM('pre-learning', 'post-learning', 'regular'),
+      allowNull: false,
+      defaultValue: 'regular',
+      comment: "Type of session: pre-learning, post-learning, or regular.",
     },
   },
   {

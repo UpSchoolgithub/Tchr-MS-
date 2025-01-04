@@ -1,11 +1,12 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure correct path
+const sequelize = require('../config/db'); // Import Sequelize instance
 
 class ActionsAndRecommendations extends Model {
   static associate(models) {
-    ActionsAndRecommendations.belongsTo(models.Session, {
-      foreignKey: 'sessionId',
-      as: 'Session',
+    // Each A&R belongs to a SessionPlan
+    ActionsAndRecommendations.belongsTo(models.SessionPlan, {
+      foreignKey: 'sessionPlanId',
+      as: 'SessionPlan',
       onDelete: 'CASCADE',
     });
   }
@@ -13,11 +14,11 @@ class ActionsAndRecommendations extends Model {
 
 ActionsAndRecommendations.init(
   {
-    sessionId: {
+    sessionPlanId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Sessions',
+        model: 'SessionPlans',
         key: 'id',
       },
     },

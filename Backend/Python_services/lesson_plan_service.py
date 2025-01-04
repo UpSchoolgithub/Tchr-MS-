@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException,APIRouter
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from fastapi.responses import FileResponse
@@ -170,3 +170,93 @@ async def download_pdf(data: LessonPlanRequest):
         raise HTTPException(status_code=500, detail="Failed to create PDF.")
     
     return FileResponse(pdf_path, media_type="application/pdf", filename="lesson_plan.pdf")
+
+
+#####################################################################
+# Repeat pre-learning route
+@app.post("/generate-prelearning-plan", response_model=LessonPlanResponse)
+async def generate_prelearning_plan(data: LessonPlanRequest):
+    """
+    Endpoint for generating pre-learning lesson plans.
+    Splits topics and concepts into sessions of 45 minutes,
+    assigns negative session numbers, and retries failed concepts.
+    """
+    print("Received Pre-Learning Payload:", data.dict())  # Debug
+
+    try:
+        # 1. Initialize variables
+        max_duration = 45  # max time per session (in minutes)
+        sessions = []  # Store generated sessions
+        failed_concepts = []  # Track failed concepts
+        session_number = -1  # Start with negative session numbers
+
+        for topic in data.topics:
+            topic_name = topic.topic
+            concepts = topic.concepts
+            concept_details = topic.conceptDetails
+            allocated_times = allocate_time(concept_details, max_duration)
+
+            session = {"topics": [], "duration": 0, "session_number": session_number}
+
+            # 2. Split into 45-minute sessions
+            for i, concept in enumerate(concepts):
+                if session["duration"] + allocated_times[i] > max_duration:
+                    sessions.append(session)  # Save session
+                    session_number -= 1  # Move to next negative session
+                    session = {"topics": [], "duration": 0, "session_number": session_number}
+
+                session["topics"].append({"concept": concept, "details": concept_details[i]})
+                session["duration"] += allocated_times[i]
+
+            if session["topics"]:
+                sessions.append(session)
+
+        # 3. Generate lesson plans for each session
+        for session in sessions:
+            for topic in session["topics"]:
+                concept = topic["concept"]
+                detail = topic["details"]
+
+                system_msg = {
+                    "role": "system",
+                    "content": f"""
+                    - **Board**: {data.board}
+                    - **Grade**: {data.grade}
+                    - **Subject**: {data.subject}
+                    - **Unit**: {data.unit}
+                    - **Chapter**: {data.chapter}
+                    - **Topic**: {topic_name}
+                    - **Concept**: {concept}
+                    - **Duration**: {max_duration} minutes
+
+                    **Objectives:** (Define objectives based on grade and board)
+                    **Teaching Aids:** (List materials)
+                    **Content:** {detail}
+                    **Activities:** (Interactive tasks)
+                    **Summary:** (Key takeaways)
+                    **Homework:** (Reinforcement exercises)
+                    """
+                }
+
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[system_msg]
+                    )
+                    lesson_plan = response.choices[0].message.content
+                    topic["lesson_plan"] = lesson_plan  # Store generated lesson plan
+
+                except Exception as e:
+                    print(f"Error generating lesson plan for {concept}: {e}")
+                    failed_concepts.append({"concept": concept, "reason": str(e)})
+                    topic["lesson_plan"] = "Failed to generate lesson plan."
+
+        # 4. Return generated plans and failed concepts
+        return {
+            "lesson_plan": sessions,
+            "failed_concepts": failed_concepts
+        }
+
+    except Exception as e:
+        print(f"Error generating pre-learning plan: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error.")

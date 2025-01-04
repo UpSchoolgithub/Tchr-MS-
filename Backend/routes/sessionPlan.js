@@ -19,6 +19,36 @@ const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
 
+// Route to call Python FastAPI Lesson Plan service
+router.post('/generate-prelearning-lesson-plan', async (req, res) => {
+  try {
+    // Request payload sent to Python API
+    const payload = req.body;
+
+    console.log('Sending request to Python service:', JSON.stringify(payload, null, 2));
+
+    // Call Python service
+    const pythonResponse = await axios.post('http://localhost:8000/generate-lesson-plan', payload);
+
+    // Send response back to frontend
+    res.status(200).json({
+      message: 'Pre-learning lesson plan generated successfully.',
+      lessonPlan: pythonResponse.data.lesson_plan,
+    });
+  } catch (error) {
+    console.error('Error calling Python service:', error.message);
+    if (error.response) {
+      return res.status(error.response.status).json({
+        message: 'Failed to generate pre-learning lesson plan.',
+        error: error.response.data.detail || error.message,
+      });
+    }
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
+  }
+});
+
+
+//fetch topics and concepts list for postlearning dropdown
 router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
