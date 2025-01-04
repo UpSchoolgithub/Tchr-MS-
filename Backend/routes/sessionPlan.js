@@ -30,8 +30,10 @@ router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, re
     const topicsData = await Promise.all(
       selectedTopics.map(async (item) => {
         const action = await ActionsAndRecommendations.findOne({
-          where: { id: item.id },  // Find by the ID provided in selectedTopics
+          where: { id: item.id },
+          attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing'], // Removed 'sessionPlanId'
         });
+        
 
         if (!action) {
           throw new Error(`Action with ID ${item.id} not found.`);
