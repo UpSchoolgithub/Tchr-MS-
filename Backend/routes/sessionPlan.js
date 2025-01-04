@@ -95,7 +95,7 @@ router.post('/generate-prelearning-lesson-plan', async (req, res) => {
     console.log('Sending request to Python service:', JSON.stringify(payload, null, 2));
 
     // Call Python service
-    const pythonResponse = await axios.post('http://localhost:8000/generate-lesson-plan', payload);
+    const pythonResponse = await axios.post('http://localhost:8000/generate-prelearning-plan', payload);
 
     // Send response back to frontend
     res.status(200).json({
