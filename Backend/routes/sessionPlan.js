@@ -102,7 +102,17 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
             sessionType: req.body.sessionType || "Pre-Learning",
             noOfSession: req.body.noOfSession || 1,
             duration: maxDuration,
-            topics: [{ topic: topic.topicName, concepts: [concept.concept] }],
+            topics: [
+              {
+                topic: topic.topicName, // Topic title
+                concepts: [
+                  {
+                    concept: concept.concept, // Concept name
+                    conceptDetailing: concept.conceptDetailing || "No Details Provided" // Concept details
+                  }
+                ]
+              }
+            ]
           };
 
           try {
