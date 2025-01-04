@@ -18,85 +18,44 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) => {
-  const { id } = req.params;
+router.post("/sessionPlans/:id/generatePreLearningLessonPlan", async (req, res) => {
+  const { id: sessionId } = req.params;
+  const maxDuration = 45;
 
   try {
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId: id },
-      include: [
-        {
-          model: Topic,
-          as: 'Topics',
-          include: [
-            {
-              model: Concept,
-              as: 'Concepts',
-            },
-          ],
-        },
-      ],
+    // 1. Fetch pre-learning actions for the session
+    const preLearningActions = await ActionsAndRecommendations.findAll({
+      where: { sessionId, type: "pre-learning" },
     });
 
-    if (!sessionPlans || sessionPlans.length === 0) {
-      return res.status(404).json({ message: 'Session plan not found' });
+    if (preLearningActions.length === 0) {
+      return res.status(404).json({ message: "No pre-learning actions found for this session." });
     }
 
-    console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
+    // 2. Format the data for OpenAI request
+    const topics = preLearningActions.map((ar) => ({
+      topic: ar.topicName,
+      concepts: ar.conceptName ? ar.conceptName.split(",").map((c) => c.trim()) : [],
+      conceptDetails: ar.conceptDetailing ? ar.conceptDetailing.split(",").map((d) => d.trim()) : [],
+    }));
 
-    // Prepare a single payload for OpenAI
-    const payload = {
-      type: "pre-learning",
-      board: req.body.board || "Board Not Specified",
-      grade: req.body.grade || "Grade Not Specified",
-      subject: req.body.subject || "Subject Not Specified",
-      subSubject: "Civics",
-      unit: req.body.unit || "Unit Not Specified",
-      chapter: req.body.chapter || "Chapter Not Specified",
+    // 3. Prepare the OpenAI request
+    const openAIRequestPayload = {
+      board: req.body.board,
+      grade: req.body.grade,
+      subject: req.body.subject,
+      unit: req.body.unit,
+      chapter: req.body.chapter,
       sessionType: "Pre-Learning",
-      topics: sessionPlans.flatMap(plan =>
-        plan.Topics.map(topic => ({
-          topicName: topic.topicName,
-          concepts: topic.Concepts.map(concept => ({
-            concept: concept.concept,
-            conceptDetailing: concept.conceptDetailing || "No Details Provided"
-          })),
-        }))
-      )
+      topics,
     };
 
-    console.log(`Sending payload to OpenAI:`, JSON.stringify(payload, null, 2));
-
-    try {
-      // Send the entire list of topics and concepts to OpenAI
-      const response = await axios.post(
-        `https://dynamiclp.up.school/generate-prelearning-plan`, // OpenAI endpoint
-        payload
-      );
-
-      const lessonPlans = response.data.lesson_plan; // Sessions returned by OpenAI
-      console.log(`Received lesson plans:`, JSON.stringify(lessonPlans, null, 2));
-
-      // Save each session returned by OpenAI
-      for (const session of lessonPlans) {
-        for (const topic of session.topics) {
-          for (const concept of topic.concepts) {
-            await LessonPlan.upsert({
-              conceptId: concept.id,
-              generatedLP: session.lesson_plan || "No Lesson Plan Generated",
-            });
-          }
-        }
-      }
-
-      res.status(200).json({ message: 'Pre-learning lesson plans generated successfully.', failedConcepts: [] });
-    } catch (error) {
-      console.error('Error generating lesson plans:', error.message);
-      res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
-    }
+    // 4. Send the request to the OpenAI API
+    const response = await axios.post("https://dynamiclp.up.school/generate-prelearning-plan", openAIRequestPayload);
+    res.status(200).json(response.data);
   } catch (error) {
-    console.error('Error in generating pre-learning lesson plans:', error.message);
-    res.status(500).json({ message: 'Failed to generate pre-learning lesson plans.', error: error.message });
+    console.error("Error generating pre-learning lesson plan:", error);
+    res.status(500).json({ message: "Failed to generate pre-learning lesson plan.", error: error.message });
   }
 });
 

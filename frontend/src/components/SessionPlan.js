@@ -69,13 +69,36 @@ const SessionPlans = () => {
 
 
  // Generate repeate LP Pre learning
- const handleGenerateAllPreLearning = () => {
-  const preLearningActions = actionsAndRecommendations.filter(
-    (ar) => ar.type === "pre-learning"
-  );
-  setPreLearningToGenerate(preLearningActions); // Store pre-learning actions
-  setShowGenerateModal(true); // Show modal
+ const handleGenerateAllPreLearning = async () => {
+  try {
+    const response = await axios.get(
+      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
+      { withCredentials: true }
+    );
+
+    const preLearningActions = response.data.actionsAndRecommendations.filter(
+      (ar) => ar.type === "pre-learning"
+    );
+
+    if (preLearningActions.length === 0) {
+      setError("No pre-learning actions found for this session.");
+      return;
+    }
+
+    const formattedPreLearningData = preLearningActions.map((ar) => ({
+      topicName: ar.topicName,
+      concepts: ar.conceptName ? ar.conceptName.split(",").map((c) => c.trim()) : [],
+      conceptDetails: ar.conceptDetailing ? ar.conceptDetailing.split(",").map((d) => d.trim()) : [],
+    }));
+
+    setPreLearningToGenerate(formattedPreLearningData);
+    setShowGenerateModal(true);
+  } catch (error) {
+    console.error("Error fetching pre-learning actions:", error);
+    setError("Failed to fetch pre-learning actions.");
+  }
 };
+
  
 // A & R starts
 // Function to handle opening the modal for post learning
