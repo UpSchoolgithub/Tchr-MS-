@@ -45,6 +45,7 @@ router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, re
       selectedTopics.map(async (item) => {
         const action = await ActionsAndRecommendations.findOne({
           where: { id: item.id },
+          attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing'], // Removed sessionPlanId
         });
 
         if (!action) {
@@ -71,8 +72,8 @@ router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, re
 
     console.log("Payload for GPT API:", JSON.stringify(payloadForGPT, null, 2));
 
-    // Call the GPT API
-    const gptResponse = await callGPTAPI(payloadForGPT); // Make sure this function is defined/imported
+    // Call the GPT API (ensure callGPTAPI is defined)
+    const gptResponse = await callGPTAPI(payloadForGPT);
     res.status(200).json(gptResponse);
   } catch (error) {
     console.error("Error generating pre-learning lesson plans:", error.message);
