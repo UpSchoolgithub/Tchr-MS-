@@ -4,7 +4,6 @@ import { useParams, useLocation } from "react-router-dom";
 import { Modal, Button, Form } from "react-bootstrap";
 import "../styles.css";
 import { jsPDF } from "jspdf";
-import RepeatLessonPlan from "./RepeatLessonPlan"; // Import the new component
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
@@ -39,9 +38,7 @@ const SessionPlans = () => {
   const [currentTopic, setCurrentTopic] = useState(''); // Currently selected topic
   const [currentConcepts, setCurrentConcepts] = useState([]); // Concepts of the selected topic
   const [postLearningActions, setPostLearningActions] = useState([]);
-  const [showGenerateModal, setShowGenerateModal] = useState(false); // Modal for generating lesson plans
-  const [preLearningToGenerate, setPreLearningToGenerate] = useState([]); // Pre-learning data to pass
-  
+
   const {
     schoolName = "School Name Not Available",
     schoolId,
@@ -66,17 +63,6 @@ const SessionPlans = () => {
     }
   }, [boardName, location]);
   
-
-
- // Generate repeate LP Pre learning
- const handleGenerateAllPreLearning = () => {
-  const preLearningActions = actionsAndRecommendations.filter(
-    (ar) => ar.type === "pre-learning"
-  );
-  setPreLearningToGenerate(preLearningActions); // Store pre-learning actions
-  setShowGenerateModal(true); // Show modal
-};
- 
 // A & R starts
 // Function to handle opening the modal for post learning
 const handleOpenARModal = async (type) => {
@@ -1123,17 +1109,7 @@ const handleGenerateARLessonPlan = async (arId) => {
       {/* Actions and Recommendations Table */}
 {/* Actions and Recommendations Table */}
 <div className="actions-recommendations-table">
-  <h3>Pre Learning - Actions and Recommendations</h3>
-  <div className="generate-controls">
-  <Button
-    variant="success"
-    onClick={handleGenerateAllPreLearning}
-    disabled={actionsAndRecommendations.length === 0}
-  >
-    Generate All Pre-learning Lesson Plans
-  </Button>
-</div>
-
+  <h3>Actions and Recommendations</h3>
   <table>
     <thead>
       <tr>
@@ -1181,18 +1157,6 @@ const handleGenerateARLessonPlan = async (arId) => {
 </tbody>
 
   </table>
-  <RepeatLessonPlan
-  show={showGenerateModal}
-  onHide={() => setShowGenerateModal(false)}
-  arType="pre-learning"
-  sessionId={sessionId}
-  preLearningActions={preLearningToGenerate} // Pass all pre-learning actions
-  onSuccess={() => {
-    setShowGenerateModal(false);
-    fetchSessionPlans(); // Refresh session plan table
-  }}
-/>
-
 </div>
 
 
@@ -1200,48 +1164,46 @@ const handleGenerateARLessonPlan = async (arId) => {
       {/* Post Learning Actions and Recommendations Table */}
 {/* Post-Learning Actions Table */}
 <div className="post-learning-actions-container">
-  <h3>Post Learning - Actions and Recommendations</h3>
+  <h3>Post-Learning Actions</h3>
   {error && <div className="error-message">{error}</div>}
   <table className="table">
     <thead>
       <tr>
-        <th>Type</th> {/* Added Type Column */}
         <th>Topic Name</th>
         <th>Concept Names</th>
         <th>Concept Details</th>
       </tr>
     </thead>
     <tbody>
-      {postLearningActions.length > 0 ? (
-        postLearningActions.map((action, index) => (
-          <tr key={index}>
-            <td>Post-learning</td> {/* Displaying "post-learning" explicitly */}
-            <td>{action.topicName || "No Topic Name"}</td>
-            <td>
-              <ul>
-                {action.concepts.map((concept, i) => (
-                  <li key={i}>{concept.concept || "No Concept"}</li>
-                ))}
-              </ul>
-            </td>
-            <td>
-              <ul>
-                {action.concepts.map((concept, i) => (
-                  <li key={i}>{concept.conceptDetailing || "No Details Available"}</li>
-                ))}
-              </ul>
-            </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="4">No post-learning actions available.</td>
-        </tr>
-      )}
-    </tbody>
+  {postLearningActions.length > 0 ? (
+    postLearningActions.map((action, index) => (
+      <tr key={index}>
+        <td>{action.topicName || "No Topic Name"}</td>
+        <td>
+          <ul>
+            {action.concepts.map((concept, i) => (
+              <li key={i}>{concept.concept || "No Concept"}</li>
+            ))}
+          </ul>
+        </td>
+        <td>
+          <ul>
+            {action.concepts.map((concept, i) => (
+              <li key={i}>{concept.conceptDetailing || "No Details Available"}</li>
+            ))}
+          </ul>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="3">No post-learning actions available.</td>
+    </tr>
+  )}
+</tbody>
+
   </table>
 </div>
-
 
 
 
