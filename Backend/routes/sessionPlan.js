@@ -18,7 +18,7 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-router.post("/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
+router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
   const { selectedTopics } = req.body;
 
   if (!selectedTopics || selectedTopics.length === 0) {
@@ -66,6 +66,7 @@ router.post("/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req
     res.status(500).json({ message: "Failed to generate lesson plans." });
   }
 });
+
 
 
 
