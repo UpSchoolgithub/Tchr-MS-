@@ -105,10 +105,12 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
 
             try {
               // Call external API to generate lesson plan
-              const response = await axios.post(
-                "https://tms.up.school/api/sessionPlans/generatePreLearningLessonPlan",
-                payload
-              );
+              const sessionId = req.params.id;
+const response = await axios.post(
+  `https://tms.up.school/api/sessionPlans/${sessionId}/generatePreLearningLessonPlan`,
+  payload
+);
+
 
               // Save lesson plan to the database
               for (const c of currentSessionConcepts) {
