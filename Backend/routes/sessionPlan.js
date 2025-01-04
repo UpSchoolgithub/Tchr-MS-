@@ -18,7 +18,7 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-router.post("/api/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
+router.post("/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
   const { selectedTopics } = req.body;
 
   if (!selectedTopics || selectedTopics.length === 0) {
@@ -26,26 +26,26 @@ router.post("/api/sessionPlans/:sessionId/generatePreLearningLessonPlan", async 
   }
 
   try {
-    // Fetch topics and concepts using ActionsAndRecommendations IDs
+    // Fetch topics and concepts using the IDs from ActionsAndRecommendations table
     const topicsData = await Promise.all(
-      selectedTopics.map(async (topic) => {
+      selectedTopics.map(async (item) => {
         const action = await ActionsAndRecommendations.findOne({
-          where: { id: topic.id },
+          where: { id: item.id },  // Find by the ID provided in selectedTopics
         });
 
         if (!action) {
-          throw new Error(`Action with ID ${topic.id} not found.`);
+          throw new Error(`Action with ID ${item.id} not found.`);
         }
 
         return {
-          topic: action.topicName,
-          concepts: action.conceptName ? action.conceptName.split(",") : [],
-          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
+          topic: action.topicName,  // e.g., "Colonial Administration in India"
+          concepts: action.conceptName ? action.conceptName.split(",") : [],  // Split concept names
+          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],  // Split concept details
         };
       })
     );
 
-    // Prepare payload for GPT
+    // Prepare the GPT payload
     const payloadForGPT = {
       board: req.body.board,
       grade: req.body.grade,
@@ -56,9 +56,9 @@ router.post("/api/sessionPlans/:sessionId/generatePreLearningLessonPlan", async 
       topics: topicsData,
     };
 
-    console.log("Sending Payload to GPT:", JSON.stringify(payloadForGPT, null, 2));
+    console.log("Payload for GPT API:", JSON.stringify(payloadForGPT, null, 2));
 
-    // Call GPT API
+    // Call external GPT API
     const gptResponse = await callGPTAPI(payloadForGPT);
     res.status(200).json(gptResponse);
   } catch (error) {
