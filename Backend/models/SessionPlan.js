@@ -1,3 +1,6 @@
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Ensure this points to your sequelize instance
+
 SessionPlan.init(
   {
     sessionId: {
@@ -39,3 +42,6 @@ SessionPlan.init(
     freezeTableName: true,
   }
 );
+
+
+module.exports = SessionPlan;
