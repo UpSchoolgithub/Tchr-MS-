@@ -18,7 +18,7 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-app.post("/api/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
+route.post("/api/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
   const { selectedTopics } = req.body;
 
   if (!selectedTopics || selectedTopics.length === 0) {
