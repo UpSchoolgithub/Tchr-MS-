@@ -178,83 +178,54 @@ async def download_pdf(data: LessonPlanRequest):
 async def generate_prelearning_plan(data: LessonPlanRequest):
     """
     Endpoint for generating pre-learning lesson plans.
-    Splits topics and concepts into sessions of 45 minutes,
-    assigns negative session numbers, and retries failed concepts.
+    Sends all topics and concepts at once to OpenAI and expects the split to be done automatically.
     """
-    print("Received Pre-Learning Payload:", data.dict())  # Debug
+    print("Received Pre-Learning Payload:", data.dict())  # Debug log
 
     try:
-        # 1. Initialize variables
-        max_duration = 45  # max time per session (in minutes)
-        sessions = []  # Store generated sessions
-        failed_concepts = []  # Track failed concepts
-        session_number = -1  # Start with negative session numbers
+        # 1. Prepare the OpenAI request payload
+        system_msg = {
+            "role": "system",
+            "content": f"""
+            You are a lesson planning assistant. Split the following topics and concepts into sessions of approximately 45 minutes each. Provide a structured lesson plan for each session, using the following format:
+            - **Board**: {data.board}
+            - **Grade**: {data.grade}
+            - **Subject**: {data.subject}
+            - **Unit**: {data.unit}
+            - **Chapter**: {data.chapter}
 
-        for topic in data.topics:
-            topic_name = topic.topic
-            concepts = topic.concepts
-            concept_details = topic.conceptDetails
-            allocated_times = allocate_time(concept_details, max_duration)
+            Each session should include:
+            **Objectives**: Specific learning objectives.
+            **Teaching Aids**: Any materials required.
+            **Prerequisites**: Prior knowledge needed.
+            **Content**: Explanation of the topic and key points.
+            **Activities**: Engaging activities for reinforcement.
+            **Summary**: Key takeaways.
+            **Homework**: Relevant exercises to reinforce learning.
 
-            session = {"topics": [], "duration": 0, "session_number": session_number}
+            Topics and concepts:
+            {[
+                {'topic': topic.topic, 'concepts': [{'concept': c, 'detail': d} for c, d in zip(topic.concepts, topic.conceptDetails)]}
+                for topic in data.topics
+            ]}
+            """
+        }
 
-            # 2. Split into 45-minute sessions
-            for i, concept in enumerate(concepts):
-                if session["duration"] + allocated_times[i] > max_duration:
-                    sessions.append(session)  # Save session
-                    session_number -= 1  # Move to next negative session
-                    session = {"topics": [], "duration": 0, "session_number": session_number}
+        # 2. Make OpenAI request with all topics and concepts
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[system_msg]
+        )
 
-                session["topics"].append({"concept": concept, "details": concept_details[i]})
-                session["duration"] += allocated_times[i]
+        # 3. Parse the OpenAI response to get lesson plan sessions
+        lesson_plan_content = response.choices[0].message.content
 
-            if session["topics"]:
-                sessions.append(session)
+        print("Generated Lesson Plan Content:", lesson_plan_content)
 
-        # 3. Generate lesson plans for each session
-        for session in sessions:
-            for topic in session["topics"]:
-                concept = topic["concept"]
-                detail = topic["details"]
-
-                system_msg = {
-                    "role": "system",
-                    "content": f"""
-                    - **Board**: {data.board}
-                    - **Grade**: {data.grade}
-                    - **Subject**: {data.subject}
-                    - **Unit**: {data.unit}
-                    - **Chapter**: {data.chapter}
-                    - **Topic**: {topic_name}
-                    - **Concept**: {concept}
-                    - **Duration**: {max_duration} minutes
-
-                    **Objectives:** (Define objectives based on grade and board)
-                    **Teaching Aids:** (List materials)
-                    **Content:** {detail}
-                    **Activities:** (Interactive tasks)
-                    **Summary:** (Key takeaways)
-                    **Homework:** (Reinforcement exercises)
-                    """
-                }
-
-                try:
-                    response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[system_msg]
-                    )
-                    lesson_plan = response.choices[0].message.content
-                    topic["lesson_plan"] = lesson_plan  # Store generated lesson plan
-
-                except Exception as e:
-                    print(f"Error generating lesson plan for {concept}: {e}")
-                    failed_concepts.append({"concept": concept, "reason": str(e)})
-                    topic["lesson_plan"] = "Failed to generate lesson plan."
-
-        # 4. Return generated plans and failed concepts
+        # 4. Return the structured response
         return {
-            "lesson_plan": sessions,
-            "failed_concepts": failed_concepts
+            "lesson_plan": {"pre_learning_plan": lesson_plan_content},
+            "failed_concepts": []  # No manual splitting, so fewer errors expected
         }
 
     except Exception as e:
