@@ -1,6 +1,19 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db'); // Ensure this points to your sequelize instance
 
+class SessionPlan extends Model {
+  static associate(models) {
+    // Define associations
+    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
+    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
+    SessionPlan.hasMany(models.ActionsAndRecommendations, {
+      foreignKey: 'sessionPlanId',
+      as: 'ActionsAndRecommendations',
+      onDelete: 'CASCADE',
+    });
+  }
+}
+
 SessionPlan.init(
   {
     sessionId: {
@@ -20,7 +33,7 @@ SessionPlan.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false,
-      comment: "Indicates if the session has been completed",
+      comment: "Indicates if the session has been completed.",
     },
     endTime: {
       type: DataTypes.DATE,
@@ -39,9 +52,8 @@ SessionPlan.init(
     sequelize,
     modelName: 'SessionPlan',
     tableName: 'SessionPlans',
-    freezeTableName: true,
+    freezeTableName: true, // Prevent Sequelize from renaming the table
   }
 );
-
 
 module.exports = SessionPlan;
