@@ -20,7 +20,7 @@ const PostLearningActions = require('../models/PostLearningAction');
 
 async function callGPTAPI(payload) {
   try {
-    const response = await axios.post('https://your-gpt-api-url.com/generate-lesson-plan', payload, {
+    const response = await axios.post('http://localhost:8000/generate-lesson-plan', payload, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer YOUR_API_KEY`, // Replace with your actual key if needed
