@@ -73,74 +73,118 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
       for (const topic of plan.Topics) {
         const concepts = topic.Concepts;
 
-        // Split concepts into multiple 45-minute sessions
-        let currentSession = { sessionNumber, duration: 0, topics: [] };
+        // Track current session's concepts
+        let currentSessionConcepts = [];
+        let currentSessionDuration = 0;
 
         for (const concept of concepts) {
-          const conceptDuration = concept.conceptDetailing.length / 10; // Approximate based on content length
-          if (currentSession.duration + conceptDuration > maxDuration) {
-            sessionNumber -= 1; // Move to the next session
-            currentSession = { sessionNumber, duration: 0, topics: [] };
+          const conceptDuration = Math.ceil(concept.conceptDetailing.length / 10); // Estimate based on content length
+
+          if (currentSessionDuration + conceptDuration > maxDuration) {
+            // Send current session if it exceeds max duration
+            const payload = {
+              type: "pre-learning",
+              board: req.body.board || "Board Not Specified",
+              grade: req.body.grade || "Grade Not Specified",
+              subject: req.body.subject || "Subject Not Specified",
+              subSubject: "Civics",
+              unit: req.body.unit || "Unit Not Specified",
+              chapter: topic.topicName,
+              sessionType: "Pre-Learning",
+              noOfSession: sessionNumber,
+              duration: currentSessionDuration,
+              topics: [
+                {
+                  topic: topic.topicName,
+                  concepts: currentSessionConcepts,
+                },
+              ],
+            };
+
+            console.log(`Sending payload for session number ${sessionNumber}:`, JSON.stringify(payload, null, 2));
+
+            try {
+              // Call external API to generate lesson plan
+              const response = await axios.post(
+                "https://tms.up.school/api/sessionPlans/generatePreLearningLessonPlan",
+                payload
+              );
+
+              // Save lesson plan to the database
+              for (const c of currentSessionConcepts) {
+                await LessonPlan.upsert({
+                  conceptId: c.id,
+                  generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+                });
+              }
+
+              console.log(`Saved pre-learning lesson plan for session number ${sessionNumber}`);
+            } catch (error) {
+              console.error(`Failed for session number ${sessionNumber}:`, error.message);
+              failedConcepts.push({
+                sessionNumber,
+                reason: error.message,
+              });
+            }
+
+            // Reset for the next session
+            sessionNumber -= 1;
+            currentSessionDuration = 0;
+            currentSessionConcepts = [];
           }
 
-          // Add concept to the session
-          currentSession.topics.push({
+          // Add the current concept to the session
+          currentSessionConcepts.push({
+            id: concept.id,
             concept: concept.concept,
-            details: concept.conceptDetailing,
+            conceptDetailing: concept.conceptDetailing,
           });
-          currentSession.duration += conceptDuration;
+          currentSessionDuration += conceptDuration;
+        }
 
-          console.log(`Preparing payload for concept ID ${concept.id}`);
-
-          const payload = {
+        // Handle remaining concepts (last session)
+        if (currentSessionConcepts.length > 0) {
+          const finalPayload = {
+            type: "pre-learning",
             board: req.body.board || "Board Not Specified",
             grade: req.body.grade || "Grade Not Specified",
             subject: req.body.subject || "Subject Not Specified",
             subSubject: "Civics",
             unit: req.body.unit || "Unit Not Specified",
             chapter: topic.topicName,
-            sessionType: req.body.sessionType || "Pre-Learning",
-            noOfSession: req.body.noOfSession || 1,
-            duration: maxDuration,
+            sessionType: "Pre-Learning",
+            noOfSession: sessionNumber,
+            duration: currentSessionDuration,
             topics: [
               {
-                topic: topic.topicName, // Topic title
-                concepts: [
-                  {
-                    concept: concept.concept, // Concept name
-                    conceptDetailing: concept.conceptDetailing || "No Details Provided" // Concept details
-                  }
-                ]
-              }
-            ]
+                topic: topic.topicName,
+                concepts: currentSessionConcepts,
+              },
+            ],
           };
 
+          console.log(`Sending final session payload:`, JSON.stringify(finalPayload, null, 2));
+
           try {
-            // Call external API to generate lesson plan
             const response = await axios.post(
-              "https://dynamiclp.up.school/generate-prelearning-plan",
-              payload
+              "https://tms.up.school/api/sessionPlans/generatePreLearningLessonPlan",
+              finalPayload
             );
 
-            // Save or update lesson plan using upsert
-            await LessonPlan.upsert({
-              conceptId: concept.id,
-              generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
-            });
+            for (const c of currentSessionConcepts) {
+              await LessonPlan.upsert({
+                conceptId: c.id,
+                generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+              });
+            }
 
-            console.log(`Saved pre-learning LP for concept ID: ${concept.id}`);
+            console.log(`Saved final pre-learning session for session number ${sessionNumber}`);
           } catch (error) {
-            console.error(`Failed for concept ID ${concept.id}:`, error.message);
+            console.error(`Failed for final session number ${sessionNumber}:`, error.message);
             failedConcepts.push({
-              conceptId: concept.id,
+              sessionNumber,
               reason: error.message,
             });
-            if (error.response) {
-              console.error(
-                `Error details for concept ID ${concept.id}:`,
-                JSON.stringify(error.response.data, null, 2)
-              );
-            }
           }
         }
       }
@@ -155,6 +199,7 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
     res.status(500).json({ message: 'Failed to generate pre-learning lesson plans.', error: error.message });
   }
 });
+
 
 
 
