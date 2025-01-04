@@ -173,7 +173,6 @@ async def download_pdf(data: LessonPlanRequest):
 
 
 #####################################################################
-# Repeat pre-learning route
 @app.post("/generate-prelearning-plan", response_model=LessonPlanResponse)
 async def generate_prelearning_plan(data: LessonPlanRequest):
     """
@@ -183,11 +182,23 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
     print("Received Pre-Learning Payload:", data.dict())  # Debug log
 
     try:
-        # 1. Prepare the OpenAI request payload
+        # 1. Prepare the topics and concepts as JSON
+        formatted_topics = [
+            {
+                "topic": topic.topic,
+                "concepts": [
+                    {"concept": c, "detail": d if d else "N/A"}
+                    for c, d in zip(topic.concepts, topic.conceptDetails or ["N/A"] * len(topic.concepts))
+                ]
+            }
+            for topic in data.topics
+        ]
+
+        # 2. Prepare the OpenAI request payload
         system_msg = {
             "role": "system",
             "content": f"""
-            You are a lesson planning assistant. Split the following topics and concepts into sessions of approximately 45 minutes each. Provide a structured lesson plan for each session, using the following format:
+            You are a lesson planning assistant. Split the following topics and concepts into sessions of approximately {data.duration} minutes each. Provide a structured lesson plan for each session, using the following format:
             - **Board**: {data.board}
             - **Grade**: {data.grade}
             - **Subject**: {data.subject}
@@ -203,26 +214,24 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
             **Summary**: Key takeaways.
             **Homework**: Relevant exercises to reinforce learning.
 
-            Topics and concepts:
-            {[
-                {'topic': topic.topic, 'concepts': [{'concept': c, 'detail': d} for c, d in zip(topic.concepts, topic.conceptDetails)]}
-                for topic in data.topics
-            ]}
+            Topics and concepts: {formatted_topics}
             """
         }
 
-        # 2. Make OpenAI request with all topics and concepts
+        print("Formatted OpenAI Payload:", system_msg)
+
+        # 3. Make OpenAI request with all topics and concepts
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[system_msg]
         )
 
-        # 3. Parse the OpenAI response to get lesson plan sessions
+        # 4. Parse the OpenAI response to get lesson plan sessions
         lesson_plan_content = response.choices[0].message.content
 
         print("Generated Lesson Plan Content:", lesson_plan_content)
 
-        # 4. Return the structured response
+        # 5. Return the structured response
         return {
             "lesson_plan": {"pre_learning_plan": lesson_plan_content},
             "failed_concepts": []  # No manual splitting, so fewer errors expected
