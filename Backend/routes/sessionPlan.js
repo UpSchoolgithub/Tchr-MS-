@@ -18,44 +18,52 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
-router.post("/sessionPlans/:id/generatePreLearningLessonPlan", async (req, res) => {
-  const { id: sessionId } = req.params;
-  const maxDuration = 45;
+app.post("/api/sessionPlans/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
+  const { selectedTopics } = req.body;
+
+  if (!selectedTopics || selectedTopics.length === 0) {
+    return res.status(400).json({ message: "No topics selected." });
+  }
 
   try {
-    // 1. Fetch pre-learning actions for the session
-    const preLearningActions = await ActionsAndRecommendations.findAll({
-      where: { sessionId, type: "pre-learning" },
-    });
+    // Fetch topics and concepts using ActionsAndRecommendations IDs
+    const topicsData = await Promise.all(
+      selectedTopics.map(async (topic) => {
+        const action = await ActionsAndRecommendations.findOne({
+          where: { id: topic.id },
+        });
 
-    if (preLearningActions.length === 0) {
-      return res.status(404).json({ message: "No pre-learning actions found for this session." });
-    }
+        if (!action) {
+          throw new Error(`Action with ID ${topic.id} not found.`);
+        }
 
-    // 2. Format the data for OpenAI request
-    const topics = preLearningActions.map((ar) => ({
-      topic: ar.topicName,
-      concepts: ar.conceptName ? ar.conceptName.split(",").map((c) => c.trim()) : [],
-      conceptDetails: ar.conceptDetailing ? ar.conceptDetailing.split(",").map((d) => d.trim()) : [],
-    }));
+        return {
+          topic: action.topicName,
+          concepts: action.conceptName ? action.conceptName.split(",") : [],
+          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
+        };
+      })
+    );
 
-    // 3. Prepare the OpenAI request
-    const openAIRequestPayload = {
+    // Prepare payload for GPT
+    const payloadForGPT = {
       board: req.body.board,
       grade: req.body.grade,
       subject: req.body.subject,
       unit: req.body.unit,
       chapter: req.body.chapter,
       sessionType: "Pre-Learning",
-      topics,
+      topics: topicsData,
     };
 
-    // 4. Send the request to the OpenAI API
-    const response = await axios.post("https://dynamiclp.up.school/generate-prelearning-plan", openAIRequestPayload);
-    res.status(200).json(response.data);
+    console.log("Sending Payload to GPT:", JSON.stringify(payloadForGPT, null, 2));
+
+    // Call GPT API
+    const gptResponse = await callGPTAPI(payloadForGPT);
+    res.status(200).json(gptResponse);
   } catch (error) {
-    console.error("Error generating pre-learning lesson plan:", error);
-    res.status(500).json({ message: "Failed to generate pre-learning lesson plan.", error: error.message });
+    console.error("Error generating pre-learning lesson plans:", error.message);
+    res.status(500).json({ message: "Failed to generate lesson plans." });
   }
 });
 
