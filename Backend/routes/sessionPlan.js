@@ -44,117 +44,56 @@ router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) 
 
     console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
 
-    const maxDuration = 45; // minutes
-    let sessionNumber = -1; // Start negative session numbers for pre-learning
-    const failedConcepts = [];
-
-    for (const plan of sessionPlans) {
-      for (const topic of plan.Topics) {
-        const concepts = topic.Concepts;
-        let currentSessionConcepts = [];
-        let currentSessionDuration = 0;
-
-        for (const concept of concepts) {
-          const conceptDuration = Math.ceil(concept.conceptDetailing.length / 10); // Approximate duration
-
-          // If adding this concept exceeds maxDuration, create a new session
-          if (currentSessionDuration + conceptDuration > maxDuration) {
-            const payload = {
-              type: "pre-learning",
-              board: req.body.board || "Board Not Specified",
-              grade: req.body.grade || "Grade Not Specified",
-              subject: req.body.subject || "Subject Not Specified",
-              subSubject: "Civics",
-              unit: req.body.unit || "Unit Not Specified",
-              chapter: topic.topicName,
-              sessionType: "Pre-Learning",
-              noOfSession: sessionNumber,
-              duration: currentSessionDuration,
-              topics: [
-                {
-                  topic: topic.topicName,
-                  concepts: currentSessionConcepts,
-                },
-              ],
-            };
-
-            console.log(`Sending payload for session ${sessionNumber}:`, JSON.stringify(payload, null, 2));
-
-            try {
-              const response = await axios.post(
-                `https://tms.up.school/api/sessionPlans/${id}/generatePreLearningLessonPlan`,
-                payload
-              );
-
-              console.log(`Successfully saved session ${sessionNumber}`);
-            } catch (error) {
-              console.error(`Failed for session ${sessionNumber}:`, error.message);
-              failedConcepts.push({
-                sessionNumber,
-                reason: error.message,
-              });
-            }
-
-            // Reset for the next session
-            sessionNumber -= 1; // Move to the next negative session number
-            currentSessionDuration = 0;
-            currentSessionConcepts = [];
-          }
-
-          // Add concept to the current session
-          currentSessionConcepts.push({
-            id: concept.id,
+    // Prepare a single payload for OpenAI
+    const payload = {
+      type: "pre-learning",
+      board: req.body.board || "Board Not Specified",
+      grade: req.body.grade || "Grade Not Specified",
+      subject: req.body.subject || "Subject Not Specified",
+      subSubject: "Civics",
+      unit: req.body.unit || "Unit Not Specified",
+      chapter: req.body.chapter || "Chapter Not Specified",
+      sessionType: "Pre-Learning",
+      topics: sessionPlans.flatMap(plan =>
+        plan.Topics.map(topic => ({
+          topicName: topic.topicName,
+          concepts: topic.Concepts.map(concept => ({
             concept: concept.concept,
-            conceptDetailing: concept.conceptDetailing,
-          });
-          currentSessionDuration += conceptDuration;
-        }
+            conceptDetailing: concept.conceptDetailing || "No Details Provided"
+          })),
+        }))
+      )
+    };
 
-        // Handle remaining concepts (last session)
-        if (currentSessionConcepts.length > 0) {
-          const finalPayload = {
-            type: "pre-learning",
-            board: req.body.board || "Board Not Specified",
-            grade: req.body.grade || "Grade Not Specified",
-            subject: req.body.subject || "Subject Not Specified",
-            subSubject: "Civics",
-            unit: req.body.unit || "Unit Not Specified",
-            chapter: topic.topicName,
-            sessionType: "Pre-Learning",
-            noOfSession: sessionNumber,
-            duration: currentSessionDuration,
-            topics: [
-              {
-                topic: topic.topicName,
-                concepts: currentSessionConcepts,
-              },
-            ],
-          };
+    console.log(`Sending payload to OpenAI:`, JSON.stringify(payload, null, 2));
 
-          console.log(`Sending final session payload:`, JSON.stringify(finalPayload, null, 2));
+    try {
+      // Send the entire list of topics and concepts to OpenAI
+      const response = await axios.post(
+        `https://dynamiclp.up.school/generate-prelearning-plan`, // OpenAI endpoint
+        payload
+      );
 
-          try {
-            const response = await axios.post(
-              `https://tms.up.school/api/sessionPlans/${sessionId}/generatePreLearningLessonPlan`,
-              finalPayload
-            );
+      const lessonPlans = response.data.lesson_plan; // Sessions returned by OpenAI
+      console.log(`Received lesson plans:`, JSON.stringify(lessonPlans, null, 2));
 
-            console.log(`Successfully saved final session ${sessionNumber}`);
-          } catch (error) {
-            console.error(`Failed for final session ${sessionNumber}:`, error.message);
-            failedConcepts.push({
-              sessionNumber,
-              reason: error.message,
+      // Save each session returned by OpenAI
+      for (const session of lessonPlans) {
+        for (const topic of session.topics) {
+          for (const concept of topic.concepts) {
+            await LessonPlan.upsert({
+              conceptId: concept.id,
+              generatedLP: session.lesson_plan || "No Lesson Plan Generated",
             });
           }
         }
       }
-    }
 
-    res.status(200).json({
-      message: 'Pre-learning lesson plans generated successfully.',
-      failedConcepts,
-    });
+      res.status(200).json({ message: 'Pre-learning lesson plans generated successfully.', failedConcepts: [] });
+    } catch (error) {
+      console.error('Error generating lesson plans:', error.message);
+      res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
+    }
   } catch (error) {
     console.error('Error in generating pre-learning lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate pre-learning lesson plans.', error: error.message });
