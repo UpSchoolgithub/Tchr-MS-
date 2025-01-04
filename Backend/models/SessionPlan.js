@@ -1,18 +1,3 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this points to your sequelize instance
-
-class SessionPlan extends Model {
-  static associate(models) {
-    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
-    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
-    SessionPlan.hasMany(models.ActionsAndRecommendations, {
-      foreignKey: 'sessionPlanId',
-      as: 'ActionsAndRecommendations',
-      onDelete: 'CASCADE',
-    });
-  }
-}
-
 SessionPlan.init(
   {
     sessionId: {
@@ -46,12 +31,6 @@ SessionPlan.init(
       defaultValue: 'in-progress',
       comment: "Tracks the status of the session.",
     },
-    type: {
-      type: DataTypes.ENUM('pre-learning', 'post-learning', 'regular'),
-      allowNull: false,
-      defaultValue: 'regular',
-      comment: "Type of session: pre-learning, post-learning, or regular.",
-    },
   },
   {
     sequelize,
@@ -60,5 +39,3 @@ SessionPlan.init(
     freezeTableName: true,
   }
 );
-
-module.exports = SessionPlan;
