@@ -8,6 +8,7 @@ from reportlab.pdfgen import canvas
 from openai import OpenAI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+import json
 
 load_dotenv()
 
@@ -182,59 +183,53 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
     print("Received Pre-Learning Payload:", data.dict())  # Debug log
 
     try:
-        # 1. Prepare the topics and concepts as JSON
+        # Prepare topics and ensure no missing data
         formatted_topics = [
             {
-                "topic": topic.topic,
-                "concepts": [
-                    {"concept": c, "detail": d if d else "N/A"}
-                    for c, d in zip(topic.concepts, topic.conceptDetails or ["N/A"] * len(topic.concepts))
-                ]
+                "topic": topic.topic.strip(),
+                "concepts": [{"concept": c.strip(), "detail": d.strip() if d else "N/A"}
+                             for c, d in zip(topic.concepts, topic.conceptDetails or ["N/A"] * len(topic.concepts))]
             }
             for topic in data.topics
         ]
 
-        # 2. Prepare the OpenAI request payload
+        # Separate system and user messages for better formatting
         system_msg = {
             "role": "system",
-            "content": f"""
-            You are a lesson planning assistant. Split the following topics and concepts into sessions of approximately {data.duration} minutes each. Provide a structured lesson plan for each session, using the following format:
-            - **Board**: {data.board}
-            - **Grade**: {data.grade}
-            - **Subject**: {data.subject}
-            - **Unit**: {data.unit}
-            - **Chapter**: {data.chapter}
-
-            Each session should include:
-            **Objectives**: Specific learning objectives.
-            **Teaching Aids**: Any materials required.
-            **Prerequisites**: Prior knowledge needed.
-            **Content**: Explanation of the topic and key points.
-            **Activities**: Engaging activities for reinforcement.
-            **Summary**: Key takeaways.
-            **Homework**: Relevant exercises to reinforce learning.
-
-            Topics and concepts: {formatted_topics}
-            """
+            "content": "You are a lesson planning assistant. Split the following topics and concepts into sessions of approximately 45 minutes each. Provide structured lesson plans.",
+        }
+        user_msg = {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "board": data.board,
+                    "grade": data.grade,
+                    "subject": data.subject,
+                    "unit": data.unit,
+                    "chapter": data.chapter,
+                    "topics": formatted_topics,
+                },
+                indent=2,
+            ),
         }
 
-        print("Formatted OpenAI Payload:", system_msg)
+        messages = [system_msg, user_msg]
 
-        # 3. Make OpenAI request with all topics and concepts
+        print("Formatted OpenAI Payload:", json.dumps(messages, indent=2))
+
+        # Make OpenAI request
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[system_msg]
+            messages=messages
         )
 
-        # 4. Parse the OpenAI response to get lesson plan sessions
         lesson_plan_content = response.choices[0].message.content
 
         print("Generated Lesson Plan Content:", lesson_plan_content)
 
-        # 5. Return the structured response
         return {
             "lesson_plan": {"pre_learning_plan": lesson_plan_content},
-            "failed_concepts": []  # No manual splitting, so fewer errors expected
+            "failed_concepts": [],
         }
 
     except Exception as e:
