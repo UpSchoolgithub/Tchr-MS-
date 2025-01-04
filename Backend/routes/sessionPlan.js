@@ -18,6 +18,135 @@ const axios = require('axios');
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
 
+// Pre-Learning Lesson Plan Generation Route
+router.post('/sessionPlans/:id/generatePreLearningLessonPlan', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch all session plans with topics and concepts
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId: id },
+      include: [
+        {
+          model: Topic,
+          as: 'Topics',
+          include: [
+            {
+              model: Concept,
+              as: 'Concepts',
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!sessionPlans || sessionPlans.length === 0) {
+      return res.status(404).json({ message: 'Session plan not found' });
+    }
+
+    // Validate topics and concepts
+    const validateTopic = (topic) => {
+      if (!topic.topicName || !Array.isArray(topic.Concepts)) {
+        return false;
+      }
+      return topic.Concepts.every((concept) => concept.concept && concept.conceptDetailing);
+    };
+
+    const validSessionPlans = sessionPlans.map((plan) => {
+      const validTopics = plan.Topics.filter((topic) => validateTopic(topic));
+      return { ...plan, Topics: validTopics };
+    });
+
+    if (validSessionPlans.every((plan) => plan.Topics.length === 0)) {
+      console.error('Validation failed. No valid topics or concepts.');
+      return res.status(400).json({ message: 'Invalid topic or concept structure.' });
+    }
+
+    console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
+
+    // Split into 45-minute pre-learning sessions
+    const maxDuration = 45; // minutes
+    let sessionNumber = -1; // Start from -1 for pre-learning
+    const failedConcepts = [];
+
+    for (const plan of validSessionPlans) {
+      for (const topic of plan.Topics) {
+        const concepts = topic.Concepts;
+
+        // Split concepts into multiple 45-minute sessions
+        let currentSession = { sessionNumber, duration: 0, topics: [] };
+
+        for (const concept of concepts) {
+          const conceptDuration = concept.conceptDetailing.length / 10; // Approximate based on content length
+          if (currentSession.duration + conceptDuration > maxDuration) {
+            sessionNumber -= 1; // Move to the next session
+            currentSession = { sessionNumber, duration: 0, topics: [] };
+          }
+
+          // Add concept to the session
+          currentSession.topics.push({
+            concept: concept.concept,
+            details: concept.conceptDetailing,
+          });
+          currentSession.duration += conceptDuration;
+
+          console.log(`Preparing payload for concept ID ${concept.id}`);
+
+          const payload = {
+            board: req.body.board || "Board Not Specified",
+            grade: req.body.grade || "Grade Not Specified",
+            subject: req.body.subject || "Subject Not Specified",
+            subSubject: "Civics",
+            unit: req.body.unit || "Unit Not Specified",
+            chapter: topic.topicName,
+            sessionType: req.body.sessionType || "Pre-Learning",
+            noOfSession: req.body.noOfSession || 1,
+            duration: maxDuration,
+            topics: [{ topic: topic.topicName, concepts: [concept.concept] }],
+          };
+
+          try {
+            // Call external API to generate lesson plan
+            const response = await axios.post(
+              "https://dynamiclp.up.school/generate-prelearning-plan",
+              payload
+            );
+
+            // Save or update lesson plan using upsert
+            await LessonPlan.upsert({
+              conceptId: concept.id,
+              generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+            });
+
+            console.log(`Saved pre-learning LP for concept ID: ${concept.id}`);
+          } catch (error) {
+            console.error(`Failed for concept ID ${concept.id}:`, error.message);
+            failedConcepts.push({
+              conceptId: concept.id,
+              reason: error.message,
+            });
+            if (error.response) {
+              console.error(
+                `Error details for concept ID ${concept.id}:`,
+                JSON.stringify(error.response.data, null, 2)
+              );
+            }
+          }
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: 'Pre-learning lesson plans generated successfully.',
+      failedConcepts,
+    });
+  } catch (error) {
+    console.error('Error in generating pre-learning lesson plans:', error.message);
+    res.status(500).json({ message: 'Failed to generate pre-learning lesson plans.', error: error.message });
+  }
+});
+
+
 
 // Route to call Python FastAPI Lesson Plan service
 router.post('/generate-prelearning-lesson-plan', async (req, res) => {
