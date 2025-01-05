@@ -174,7 +174,7 @@ async def download_pdf(data: LessonPlanRequest):
 
 
 #####################################################################
-@app.post("/generate-prelearning-plan", response_model=LessonPlanResponse)
+@app.post("/api/generate-prelearning-plan", response_model=LessonPlanResponse)
 async def generate_prelearning_plan(data: LessonPlanRequest):
     """
     Automatically generates a lesson plan in batches based on:

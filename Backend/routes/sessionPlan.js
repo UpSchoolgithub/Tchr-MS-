@@ -33,7 +33,7 @@ async function callGPTAPI(payload) {
   }
 }
 
-router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
+router.post('/api/generate-prelearning-lesson-plan', async (req, res) => {
   const { sessionId } = req.params;
   const { selectedTopics, board, grade, subject, unit, chapter } = req.body;
 
