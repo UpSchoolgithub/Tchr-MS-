@@ -177,13 +177,14 @@ async def download_pdf(data: LessonPlanRequest):
 @app.post("/generate-prelearning-plan", response_model=LessonPlanResponse)
 async def generate_prelearning_plan(data: LessonPlanRequest):
     """
-    Endpoint for generating pre-learning lesson plans.
-    Sends all topics and concepts at once to OpenAI and expects the split to be done automatically.
+    Automatically generates a lesson plan in batches based on:
+    - Class, Subject, Board, Chapter, Unit, Topics, and Concepts.
+    - Step 1: Ask OpenAI how many sessions are required.
+    - Step 2: Automatically fetch session plans batch-by-batch.
     """
     print("Received Pre-Learning Payload:", data.dict())  # Debug log
 
     try:
-        # Prepare topics and ensure no missing data
         formatted_topics = [
             {
                 "topic": topic.topic.strip(),
@@ -193,17 +194,24 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
             for topic in data.topics
         ]
 
-        # Separate system and user messages for better formatting
+        # **Step 1:** Ask OpenAI how many sessions are required
         system_msg = {
             "role": "system",
-            "content": "You are a lesson planning assistant. Split the following topics and concepts into sessions of approximately 45 minutes each. Provide structured lesson plans.",
+            "content": (
+                "You are an expert lesson planning assistant. Based on the following details, determine the number "
+                "of 45-minute sessions required to cover the topics and concepts listed below.\n\n"
+                "Take into account the class (grade), subject complexity, board standards, chapter content, and unit "
+                "requirements to ensure the plan aligns with educational guidelines.\n"
+                "Respond with only the number of sessions required."
+            )
         }
+
         user_msg = {
             "role": "user",
             "content": json.dumps(
                 {
+                    "class": data.grade,
                     "board": data.board,
-                    "grade": data.grade,
                     "subject": data.subject,
                     "unit": data.unit,
                     "chapter": data.chapter,
@@ -215,20 +223,59 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
 
         messages = [system_msg, user_msg]
 
-        print("Formatted OpenAI Payload:", json.dumps(messages, indent=2))
-
-        # Make OpenAI request
+        # Request OpenAI for the number of sessions required
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages
         )
 
-        lesson_plan_content = response.choices[0].message.content
+        session_count_text = response.choices[0].message.content.strip()
+        print("Session Count Response:", session_count_text)
 
-        print("Generated Lesson Plan Content:", lesson_plan_content)
+        try:
+            num_sessions = int(session_count_text)  # Convert OpenAI's response to integer
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid response for session count.")
 
+        print(f"Total Sessions Needed: {num_sessions}")
+
+        # **Step 2:** Automatically request session plans for each session
+        session_plans = {}
+        session_index = 1
+
+        while session_index <= num_sessions:
+            print(f"Requesting Session {session_index}...")
+
+            # System message to generate a specific session plan
+            session_system_msg = {
+                "role": "system",
+                "content": (
+                    "Based on the provided topics, concepts, and educational parameters, generate a detailed lesson "
+                    "plan for one session. Each session should last approximately 45 minutes. Ensure the session "
+                    "includes objectives, teaching aids, content explanation, and interactive activities."
+                )
+            }
+
+            session_user_msg = {
+                "role": "user",
+                "content": f"Please provide session {session_index} out of {num_sessions}."
+            }
+
+            # Request the session plan
+            session_response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[session_system_msg, user_msg, session_user_msg]
+            )
+
+            session_plan = session_response.choices[0].message.content.strip()
+            session_plans[f"Session_{session_index}"] = session_plan
+            session_index += 1
+
+            print(f"Generated Session {session_index - 1} Plan:", session_plan)
+
+        # **Final Response:** Return the complete lesson plan as a single response
         return {
-            "lesson_plan": {"pre_learning_plan": lesson_plan_content},
+            "lesson_plan": session_plans,
             "failed_concepts": [],
         }
 

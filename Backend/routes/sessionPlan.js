@@ -34,18 +34,20 @@ async function callGPTAPI(payload) {
 }
 
 router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, res) => {
-  const { selectedTopics } = req.body;
+  const { sessionId } = req.params;
+  const { selectedTopics, board, grade, subject, unit, chapter } = req.body;
 
   if (!selectedTopics || selectedTopics.length === 0) {
     return res.status(400).json({ message: "No topics selected." });
   }
 
   try {
+    // **Step 1:** Fetch topics and concepts from DB
     const topicsData = await Promise.all(
       selectedTopics.map(async (item) => {
         const action = await ActionsAndRecommendations.findOne({
           where: { id: item.id },
-          attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing'], // Removed sessionPlanId
+          attributes: ['id', 'sessionId', 'type', 'topicName', 'conceptName', 'conceptDetailing'],
         });
 
         if (!action) {
@@ -60,26 +62,45 @@ router.post("/sessions/:sessionId/generatePreLearningLessonPlan", async (req, re
       })
     );
 
-    const payloadForGPT = {
-      board: req.body.board || "Default Board",
-      grade: req.body.grade || "Default Grade",
-      subject: req.body.subject || "Default Subject",
-      unit: req.body.unit || "Default Unit",
-      chapter: req.body.chapter || "Default Chapter",
-      sessionType: "Pre-Learning",
+    // **Step 2:** Prepare payload for the Python API
+    const payloadForPythonAPI = {
+      board: board || "Default Board",
+      grade: grade || "Default Grade",
+      subject: subject || "Default Subject",
+      unit: unit || "Default Unit",
+      chapter: chapter || "Default Chapter",
       topics: topicsData,
     };
 
-    console.log("Payload for GPT API:", JSON.stringify(payloadForGPT, null, 2));
+    console.log("Sending Payload to Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
 
-    // Call the GPT API (ensure callGPTAPI is defined)
-    const gptResponse = await callGPTAPI(payloadForGPT);
-    res.status(200).json(gptResponse);
+    // **Step 3:** Call Python `/generate-prelearning-plan` service
+    const pythonResponse = await axios.post('http://localhost:8000/generate-prelearning-plan', payloadForPythonAPI);
+
+    const lessonPlanData = pythonResponse.data.lesson_plan; // Extract lesson plans
+
+    if (!lessonPlanData || Object.keys(lessonPlanData).length === 0) {
+      return res.status(500).json({ message: "No lesson plans generated." });
+    }
+
+    // **Step 4:** Send final response to the client
+    res.status(200).json({
+      message: "Pre-learning lesson plan generated successfully.",
+      lessonPlan: lessonPlanData, // Session-wise lesson plans
+    });
+
   } catch (error) {
     console.error("Error generating pre-learning lesson plans:", error.message);
-    res.status(500).json({ message: "Failed to generate lesson plans." });
+    if (error.response) {
+      return res.status(error.response.status).json({
+        message: 'Failed to generate pre-learning lesson plan.',
+        error: error.response.data.detail || error.message,
+      });
+    }
+    res.status(500).json({ message: "Internal server error.", error: error.message });
   }
 });
+
 
 
 
