@@ -3,6 +3,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const { Op } = require('sequelize');
 const { Model, DataTypes } = require('sequelize');
+const { Session } = require('../models'); // Import the Session model
 
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic');
