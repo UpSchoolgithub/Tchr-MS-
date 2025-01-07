@@ -92,7 +92,7 @@ router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
     console.log("Payload for Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
 
     // Call Python API to generate the pre-learning lesson plan
-    const pythonServiceUrl = "https://dynamiclp.up.school/generate-prelearning-plan"; // Updated URL
+    const pythonServiceUrl = "https://dynamiclp.up.school/generate-prelearning-plan";
     const pythonResponse = await axios.post(pythonServiceUrl, payloadForPythonAPI, { timeout: 50000 }); // Timeout of 50 seconds
 
     if (!pythonResponse.data.lesson_plan) {
@@ -122,7 +122,21 @@ router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
     res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
   } catch (error) {
     console.error("Error generating pre-learning lesson plan:", error.message);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
+
+    if (error.response) {
+      console.error("Python service response status:", error.response.status);
+      console.error("Python service error details:", JSON.stringify(error.response.data, null, 2));
+    } else {
+      console.error("Error stack:", error.stack);
+    }
+
+    console.error("Payload that caused the error:", JSON.stringify(req.body, null, 2));
+
+    res.status(500).json({
+      message: "Internal server error.",
+      error: error.message,
+      pythonError: error.response ? error.response.data : "No response from Python API",
+    });
   }
 });
 
