@@ -91,6 +91,9 @@ app.use('/api/python-service', pythonServiceRoutes);
 const dynamicLP = require('./routes/dynamicLP');
 app.use('/api', dynamicLP);
 
+const prelearningRoutes = require('./routes/prelearningLP');
+app.use('/api/sessions', prelearningRoutes); // Ensures `/prelearningLP` hits prelearningLP.js
+
 // Your existing route definitions
 app.get('/', (req, res) => {
   res.send('Hello World!');

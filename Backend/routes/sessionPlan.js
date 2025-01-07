@@ -91,8 +91,8 @@ router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
 
     console.log("Payload for Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
 
-    // Call Python API to generate the lesson plan
-    const pythonResponse = await axios.post("https://dynamiclp.up.school/generate-prelearning-plan", payloadForPythonAPI);
+    // Call Python API to generate the pre learning lesson plan
+    const pythonResponse = await axios.post("http://localhost:8000/generate-prelearning-plan", payloadForPythonAPI);
 
     if (!pythonResponse.data.lesson_plan) {
       return res.status(500).json({ message: "No lesson plans generated." });
