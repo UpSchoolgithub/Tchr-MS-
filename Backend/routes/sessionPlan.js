@@ -17,7 +17,105 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
+//cccccccccccccccccccccccccccccccc
+// Helper function to validate request payload
+function validatePreLearningFields(fields) {
+  for (const [key, value] of Object.entries(fields)) {
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      return `${key} is required and cannot be empty.`;
+    }
+  }
+  return null;
+}
 
+// POST Route for Pre-Learning Lesson Plan Generation
+// POST Route for Pre-Learning Lesson Plan Generation
+router.post("/api/prelearningLP", async (req, res) => {
+  const { board, grade, subject, unit, chapter, topics, sessionId } = req.body;
+
+  console.log("Incoming Payload:", JSON.stringify(req.body, null, 2));
+
+  const missingFieldError = validatePreLearningFields({
+    board,
+    grade,
+    subject,
+    chapter,
+    topics,
+  });
+
+  if (missingFieldError) {
+    return res.status(400).json({ message: `Invalid payload. ${missingFieldError}` });
+  }
+
+  const payloadForPythonAPI = {
+    board,
+    grade,
+    subject,
+    unit,
+    chapter,
+    topics: topics.map((topic) => ({
+      topic: topic.topicName || topic.topic,
+      concepts: Array.isArray(topic.concepts) ? topic.concepts : [],
+      conceptDetails: Array.isArray(topic.conceptDetails) ? topic.conceptDetails : [],
+    })),
+  };
+
+  try {
+    const pythonResponse = await axios.post("http://localhost:8000/generate-prelearning-plan", payloadForPythonAPI);
+    if (!pythonResponse.data.lesson_plan) {
+      return res.status(500).json({ message: "No lesson plans generated." });
+    }
+
+    const generatedPlans = Object.entries(pythonResponse.data.lesson_plan).map(([sessionKey, plan], index) => ({
+      sessionNumber: `Pre-Learning Session ${index + 1}`,
+      sessionType: "Pre-Learning",
+      sessionId,
+      lessonPlan: plan,
+    }));
+
+    // Save generated pre-learning session plans in the SessionPlan table
+    await Promise.all(
+      generatedPlans.map(async (plan) => {
+        await SessionPlan.create({
+          sessionId: plan.sessionId,
+          sessionType: plan.sessionType,
+          sessionNumber: plan.sessionNumber,
+          planDetails: plan.lessonPlan,
+        });
+      })
+    );
+
+    res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
+  } catch (error) {
+    console.error("Error generating lesson plans:", error);
+    res.status(500).json({ message: "Internal server error.", error: error.message });
+  }
+});
+
+// Fetch Pre-Learning Topics for Session
+router.get("/sessions/:sessionId/prelearning/topics", async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const actions = await ActionsAndRecommendations.findAll({
+      where: { sessionId, type: "pre-learning" },
+      attributes: ["id", "sessionId", "type", "topicName", "conceptName", "conceptDetailing"],
+    });
+
+    const topics = actions.map((action) => ({
+      id: action.id,
+      topicName: action.topicName,
+      concepts: action.conceptName ? action.conceptName.split(",") : [],
+      conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
+    }));
+
+    res.status(200).json({ topics });
+  } catch (error) {
+    console.error("Error fetching pre-learning topics:", error.message);
+    res.status(500).json({ message: "Internal server error.", error: error.message });
+  }
+});
+//ccccccccccccccccccccccccccccccccc
 async function callGPTAPI(payload) {
   try {
     const response = await axios.post('http://localhost:8000/generate-lesson-plan', payload, {

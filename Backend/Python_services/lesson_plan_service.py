@@ -179,8 +179,6 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
     """
     Automatically generates a lesson plan in batches based on:
     - Class, Subject, Board, Chapter, Unit, Topics, and Concepts.
-    - Step 1: Ask OpenAI how many sessions are required.
-    - Step 2: Automatically fetch session plans batch-by-batch.
     """
     print("Received Pre-Learning Payload:", data.dict())  # Debug log
 
@@ -200,8 +198,12 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
             "content": (
                 "You are an expert lesson planning assistant. Based on the following details, determine the number "
                 "of 45-minute sessions required to cover the topics and concepts listed below.\n\n"
-                "Take into account the class (grade), subject complexity, board standards, chapter content, and unit "
-                "requirements to ensure the plan aligns with educational guidelines.\n"
+                "Take into account the following details:\n"
+                f"- **Board**: {data.board}\n"
+                f"- **Grade**: {data.grade}\n"
+                f"- **Subject**: {data.subject}\n"
+                f"- **Unit**: {data.unit}\n"
+                f"- **Chapter**: {data.chapter}\n\n"
                 "Respond with only the number of sessions required."
             )
         }
@@ -250,21 +252,35 @@ async def generate_prelearning_plan(data: LessonPlanRequest):
             session_system_msg = {
                 "role": "system",
                 "content": (
-                    "Based on the provided topics, concepts, and educational parameters, generate a detailed lesson "
-                    "plan for one session. Each session should last approximately 45 minutes. Ensure the session "
-                    "includes objectives, teaching aids, content explanation, and interactive activities."
+                    "You are a detailed lesson planning assistant. Generate a lesson plan for a 45-minute session "
+                    "based on the educational details provided below:\n\n"
+                    f"- **Board**: {data.board}\n"
+                    f"- **Grade**: {data.grade}\n"
+                    f"- **Subject**: {data.subject}\n"
+                    f"- **Unit**: {data.unit}\n"
+                    f"- **Chapter**: {data.chapter}\n"
+                    f"- **Session**: {session_index} out of {num_sessions}.\n\n"
+                    "Include objectives, teaching aids, content explanation, interactive activities, and a summary."
                 )
             }
 
             session_user_msg = {
                 "role": "user",
-                "content": f"Please provide session {session_index} out of {num_sessions}."
+                "content": json.dumps(
+                    {
+                        "topics": formatted_topics,
+                        "current_session_index": session_index,
+                        "total_sessions": num_sessions,
+                        "session_duration": "45 minutes"
+                    },
+                    indent=2
+                ),
             }
 
             # Request the session plan
             session_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[session_system_msg, user_msg, session_user_msg]
+                messages=[session_system_msg, session_user_msg]
             )
 
             session_plan = session_response.choices[0].message.content.strip()
