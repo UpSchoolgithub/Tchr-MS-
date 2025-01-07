@@ -32,14 +32,13 @@ function validatePreLearningFields(fields) {
 // Pre-Learning Lesson Plan Generation
 router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
   const { sessionId } = req.params;
-  const { selectedTopics } = req.body; // Pre-learning topics selected by the user
+  let { selectedTopics, sessionType = "Pre-Learning", noOfSession = 1, duration = 45 } = req.body;
 
   if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
     return res.status(400).json({ message: "No topics selected." });
   }
 
   try {
-    // Fetch session metadata
     const sessionMetadata = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -59,7 +58,6 @@ router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
     const unit = sessionMetadata.unitName || "Pre-Learning Unit";
     const chapter = sessionMetadata.chapterName || "Pre-Learning Chapter";
 
-    // Fetch topic and concept details from `ActionsAndRecommendations`
     const topicsData = await Promise.all(
       selectedTopics.map(async (topic) => {
         const action = await ActionsAndRecommendations.findOne({
@@ -79,7 +77,6 @@ router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
       })
     );
 
-    // Construct payload for the Python API
     const payloadForPythonAPI = {
       board,
       grade,
@@ -87,51 +84,22 @@ router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
       unit,
       chapter,
       topics: topicsData,
+      sessionType,  // Pass sessionType
+      noOfSession,  // Pass noOfSession
+      duration,     // Pass duration
     };
 
     console.log("Payload for Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
 
-    // Call Python API to generate the pre-learning lesson plan
-    const pythonServiceUrl = "https://dynamiclp.up.school/generate-prelearning-plan";
-    const pythonResponse = await axios.post(pythonServiceUrl, payloadForPythonAPI, { timeout: 50000 }); // Timeout of 50 seconds
+    const pythonResponse = await axios.post("https://dynamiclp.up.school/generate-prelearning-plan", payloadForPythonAPI);
 
     if (!pythonResponse.data.lesson_plan) {
       return res.status(500).json({ message: "No lesson plans generated." });
     }
 
-    // Save the generated lesson plans
-    const lessonPlanData = pythonResponse.data.lesson_plan;
-    const generatedPlans = Object.entries(lessonPlanData).map(([key, plan], index) => ({
-      sessionNumber: `Pre-Learning Session ${index + 1}`,
-      sessionType: "Pre-Learning",
-      sessionId,
-      planDetails: plan,
-    }));
-
-    await Promise.all(
-      generatedPlans.map(async (plan) => {
-        await SessionPlan.create({
-          sessionId: plan.sessionId,
-          sessionType: plan.sessionType,
-          sessionNumber: plan.sessionNumber,
-          planDetails: plan.planDetails,
-        });
-      })
-    );
-
     res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
   } catch (error) {
     console.error("Error generating pre-learning lesson plan:", error.message);
-
-    if (error.response) {
-      console.error("Python service response status:", error.response.status);
-      console.error("Python service error details:", JSON.stringify(error.response.data, null, 2));
-    } else {
-      console.error("Error stack:", error.stack);
-    }
-
-    console.error("Payload that caused the error:", JSON.stringify(req.body, null, 2));
-
     res.status(500).json({
       message: "Internal server error.",
       error: error.message,
