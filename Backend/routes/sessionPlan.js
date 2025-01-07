@@ -28,47 +28,81 @@ function validatePreLearningFields(fields) {
   return null;
 }
 
-// POST Route for Pre-Learning Lesson Plan Generation
-router.post("/api/prelearningLP", async (req, res) => {
-  const { board, grade, subject, unit, chapter, topics, sessionId } = req.body;
+// POST Route for Pre-Learning Lesson Plan Generation with Session ID
+router.post("/api/sessions/:sessionId/prelearningLP", async (req, res) => {
+  const { sessionId } = req.params; // Extract sessionId from URL
+  const { selectedTopics } = req.body; // Get selected topics from the request body
 
-  const missingFieldError = validatePreLearningFields({
-    board,
-    grade,
-    subject,
-    chapter,
-    topics,
-  });
-
-  if (missingFieldError) {
-    return res.status(400).json({ message: `Invalid payload. ${missingFieldError}` });
+  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
+    return res.status(400).json({ message: "No topics selected." });
   }
 
-  const payloadForPythonAPI = {
-    board,
-    grade,
-    subject,
-    unit,
-    chapter,
-    topics: topics.map((topic) => ({
-      topic: topic.topicName || topic.topic,
-      concepts: Array.isArray(topic.concepts) ? topic.concepts : [],
-      conceptDetails: Array.isArray(topic.conceptDetails) ? topic.conceptDetails : [],
-    })),
-  };
-
   try {
+    // **Step 1:** Fetch topic and concept details from DB based on selected topic IDs
+    const topicsData = await Promise.all(
+      selectedTopics.map(async (item) => {
+        const action = await ActionsAndRecommendations.findOne({
+          where: { id: item.id, sessionId, type: "pre-learning" },
+          attributes: ["topicName", "conceptName", "conceptDetailing"],
+        });
+
+        if (!action) {
+          throw new Error(`Action with ID ${item.id} not found.`);
+        }
+
+        return {
+          topic: action.topicName,
+          concepts: action.conceptName ? action.conceptName.split(",") : [],
+          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
+        };
+      })
+    );
+
+    // **Step 2:** Fetch metadata for the session (board, grade, subject, unit, chapter)
+    const sessionMetadata = await SessionPlan.findOne({
+      where: { sessionId },
+      include: [
+        { model: ClassInfo, as: "ClassInfo", attributes: ["className", "board"] },
+        { model: Subject, as: "Subject", attributes: ["subjectName"] },
+      ],
+    });
+
+    if (!sessionMetadata) {
+      return res.status(404).json({ message: "Session metadata not found." });
+    }
+
+    const { board, subject } = sessionMetadata.ClassInfo;
+    const grade = sessionMetadata.ClassInfo.className;
+    const chapter = "Pre-Learning Chapter"; // Placeholder for the chapter name
+    const unit = "Pre-Learning Unit"; // Placeholder for the unit name
+
+    // **Step 3:** Prepare payload for the Python API
+    const payloadForPythonAPI = {
+      board,
+      grade,
+      subject,
+      unit,
+      chapter,
+      topics: topicsData,
+    };
+
+    console.log("Payload sent to Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
+
+    // **Step 4:** Call Python `/generate-prelearning-plan` service
     const pythonResponse = await axios.post("http://localhost:8000/generate-prelearning-plan", payloadForPythonAPI);
 
-    if (!pythonResponse.data.lesson_plan) {
+    const lessonPlanData = pythonResponse.data.lesson_plan; // Extract lesson plans
+
+    if (!lessonPlanData || Object.keys(lessonPlanData).length === 0) {
       return res.status(500).json({ message: "No lesson plans generated." });
     }
 
-    const generatedPlans = Object.entries(pythonResponse.data.lesson_plan).map(([sessionKey, plan], index) => ({
+    // **Step 5:** Save generated plans in the database
+    const generatedPlans = Object.entries(lessonPlanData).map(([sessionKey, plan], index) => ({
       sessionNumber: `Pre-Learning Session ${index + 1}`,
       sessionType: "Pre-Learning",
       sessionId,
-      lessonPlan: plan,
+      planDetails: plan,
     }));
 
     await Promise.all(
@@ -77,33 +111,23 @@ router.post("/api/prelearningLP", async (req, res) => {
           sessionId: plan.sessionId,
           sessionType: plan.sessionType,
           sessionNumber: plan.sessionNumber,
-          planDetails: plan.lessonPlan,
+          planDetails: plan.planDetails,
         });
       })
     );
 
-    // Send success response
-    return res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
+    res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
   } catch (error) {
-    console.error("Error generating lesson plans:", error);
-
-    // Send an error response only once
-    if (res.headersSent) {
-      console.error("Headers already sent, skipping response");
-      return;
-    }
-
+    console.error("Error generating pre-learning lesson plan:", error.message);
     if (error.response) {
       return res.status(error.response.status).json({
         message: "Failed to generate pre-learning lesson plan.",
         error: error.response.data.detail || error.message,
       });
     }
-
-    return res.status(500).json({ message: "Internal server error.", error: error.message });
+    res.status(500).json({ message: "Internal server error.", error: error.message });
   }
 });
-
 
 
 
