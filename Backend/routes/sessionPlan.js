@@ -107,7 +107,12 @@ router.post("/api/prelearningLP", async (req, res) => {
     console.error("Error generating pre-learning lesson plans:", error);
     res.status(500).json({ message: "Internal server error.", error: error.message });
   }
+  console.log('sessionPlanRoutes loaded successfully');
+  console.log('Received POST /api/prelearningLP');
+  res.status(200).json({ message: "Route is working!" });
 });
+
+
 
 
 // Fetch Pre-Learning Topics for Session
