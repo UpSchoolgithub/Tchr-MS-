@@ -30,65 +30,45 @@ function validatePreLearningFields(fields) {
 
 // POST Route for Pre-Learning Lesson Plan Generation
 router.post("/api/prelearningLP", async (req, res) => {
-  const { board, grade, subject, unit, chapter, selectedTopics, sessionId } = req.body;
+  const { board, grade, subject, unit, chapter, topics, sessionId } = req.body;
 
-  console.log("Incoming Payload:", JSON.stringify(req.body, null, 2));
+  const missingFieldError = validatePreLearningFields({
+    board,
+    grade,
+    subject,
+    chapter,
+    topics,
+  });
 
-  if (!selectedTopics || selectedTopics.length === 0) {
-    return res.status(400).json({ message: "No topics selected." });
+  if (missingFieldError) {
+    return res.status(400).json({ message: `Invalid payload. ${missingFieldError}` });
   }
 
+  const payloadForPythonAPI = {
+    board,
+    grade,
+    subject,
+    unit,
+    chapter,
+    topics: topics.map((topic) => ({
+      topic: topic.topicName || topic.topic,
+      concepts: Array.isArray(topic.concepts) ? topic.concepts : [],
+      conceptDetails: Array.isArray(topic.conceptDetails) ? topic.conceptDetails : [],
+    })),
+  };
+
   try {
-    // **Step 1:** Fetch details of selected topics
-    const topicsData = await Promise.all(
-      selectedTopics.map(async (topic) => {
-        const action = await ActionsAndRecommendations.findOne({
-          where: { id: topic.id },
-          attributes: ['id', 'topicName', 'conceptName', 'conceptDetailing'],
-        });
-
-        if (!action) {
-          throw new Error(`Action with ID ${topic.id} not found.`);
-        }
-
-        return {
-          topic: action.topicName || "Unknown Topic",
-          concepts: action.conceptName ? action.conceptName.split(",") : [],
-          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
-        };
-      })
-    );
-
-    // **Step 2:** Create payload for Python API
-    const payloadForPythonAPI = {
-      board,
-      grade,
-      subject,
-      unit,
-      chapter,
-      selectedTopics: topicsData.map((topic, index) => ({
-        id: selectedTopics[index].id, // Pass the topic ID
-        topicName: topic.topic,
-        concepts: topic.concepts,
-        conceptDetails: topic.conceptDetails,
-      })),
-    };
-
-    console.log("Payload for Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
-
-    // **Step 3:** Send request to Python API
     const pythonResponse = await axios.post("http://localhost:8000/generate-prelearning-plan", payloadForPythonAPI);
 
     if (!pythonResponse.data.lesson_plan) {
       return res.status(500).json({ message: "No lesson plans generated." });
     }
 
-    // **Step 4:** Save the generated lesson plans
-    const generatedPlans = Object.entries(pythonResponse.data.lesson_plan).map(([key, plan], index) => ({
+    const generatedPlans = Object.entries(pythonResponse.data.lesson_plan).map(([sessionKey, plan], index) => ({
       sessionNumber: `Pre-Learning Session ${index + 1}`,
       sessionType: "Pre-Learning",
       sessionId,
-      planDetails: plan,
+      lessonPlan: plan,
     }));
 
     await Promise.all(
@@ -97,19 +77,31 @@ router.post("/api/prelearningLP", async (req, res) => {
           sessionId: plan.sessionId,
           sessionType: plan.sessionType,
           sessionNumber: plan.sessionNumber,
-          planDetails: plan.planDetails,
+          planDetails: plan.lessonPlan,
         });
       })
     );
 
-    res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
+    // Send success response
+    return res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
   } catch (error) {
-    console.error("Error generating pre-learning lesson plans:", error);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
+    console.error("Error generating lesson plans:", error);
+
+    // Send an error response only once
+    if (res.headersSent) {
+      console.error("Headers already sent, skipping response");
+      return;
+    }
+
+    if (error.response) {
+      return res.status(error.response.status).json({
+        message: "Failed to generate pre-learning lesson plan.",
+        error: error.response.data.detail || error.message,
+      });
+    }
+
+    return res.status(500).json({ message: "Internal server error.", error: error.message });
   }
-  console.log('sessionPlanRoutes loaded successfully');
-  console.log('Received POST /api/prelearningLP');
-  res.status(200).json({ message: "Route is working!" });
 });
 
 
