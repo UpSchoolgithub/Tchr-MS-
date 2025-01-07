@@ -4,7 +4,6 @@ import { useParams, useLocation } from "react-router-dom";
 import { Modal, Button, Form } from "react-bootstrap";
 import "../styles.css";
 import { jsPDF } from "jspdf";
-import RepeatLessonPlan from "./RepeatLessonPlan"; // Import the new component
 
 const SessionPlans = () => {
   const { sessionId } = useParams();
@@ -39,9 +38,6 @@ const SessionPlans = () => {
   const [currentTopic, setCurrentTopic] = useState(''); // Currently selected topic
   const [currentConcepts, setCurrentConcepts] = useState([]); // Concepts of the selected topic
   const [postLearningActions, setPostLearningActions] = useState([]);
-  const [showGenerateModal, setShowGenerateModal] = useState(false); // Modal for generating lesson plans
-  const [preLearningToGenerate, setPreLearningToGenerate] = useState([]); // Pre-learning data to pass
-  const [displayedSessions, setDisplayedSessions] = useState([]); // to store combined sessions for display
 
   const {
     schoolName = "School Name Not Available",
@@ -67,44 +63,6 @@ const SessionPlans = () => {
     }
   }, [boardName, location]);
   
-
-
- // Generate repeate LP Pre learning
- const handleGenerateAllPreLearning = async () => {
-  try {
-    const response = await axios.get(
-      `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations`,
-      { withCredentials: true }
-    );
-
-    const preLearningActions = response.data.actionsAndRecommendations.filter(
-      (ar) => ar.type === "pre-learning"
-    );
-
-    if (preLearningActions.length === 0) {
-      setError("No pre-learning actions found for this session.");
-      return;
-    }
-
-    const formattedPreLearningData = preLearningActions.map((ar, index) => ({
-      sessionNumber: `Pre-${index + 1}`,
-      topicName: ar.topicName,
-      concepts: ar.conceptName ? ar.conceptName.split(",").map((c) => c.trim()) : [],
-      conceptDetailing: ar.conceptDetailing ? ar.conceptDetailing.split(",").map((d) => d.trim()) : [],
-      sessionType: "Pre-Learning"
-    }));
-
-    // Combine pre-learning sessions with regular sessions
-    setDisplayedSessions([...formattedPreLearningData, ...sessionPlans]);
-    setSuccessMessage("Pre-learning lesson plans generated and added!");
-  } catch (error) {
-    console.error("Error fetching pre-learning actions:", error);
-    setError("Failed to fetch pre-learning actions.");
-  }
-};
-
-
- 
 // A & R starts
 // Function to handle opening the modal for post learning
 const handleOpenARModal = async (type) => {
@@ -520,18 +478,18 @@ const handleGenerateARLessonPlan = async (arId) => {
           }, {});
     
           setTopicsWithConcepts(initialData);
-          const sessionsArray = Object.values(deduplicatedSessions);
-          setSessionPlans(sessionsArray);
-          setDisplayedSessions(sessionsArray); // Initially, only regular sessions are displayed
+          setSessionPlans(Object.values(deduplicatedSessions));
         }
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
-
     
-       
+    
+    
+    
+    
   
     fetchSessionPlans();
   }, [sessionId]);
@@ -1063,77 +1021,95 @@ const handleGenerateARLessonPlan = async (arId) => {
             </tr>
           </thead>
           <tbody>
-  {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
-    sessionPlans.flatMap((plan, planIndex) => {
-      // Only render pre-learning rows if available
-      const preLearningTopics =
-        plan.ActionsAndRecommendations?.filter((ar) => ar.type === "pre-learning") || [];
-      const postLearningTopics =
-        plan.ActionsAndRecommendations?.filter((ar) => ar.type === "post-learning") || [];
-
-      // Render session topics and concepts
-      const sessionRows =
-        topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
-          topic.concepts.map((concept, cIndex) => (
-            <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
-              {tIndex === 0 && cIndex === 0 && (
-                <td
-                  rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
-                    (acc, t) => acc + t.concepts.length,
-                    0
-                  )}
-                >
-                  Session {plan.sessionNumber}
-                </td>
-              )}
-              {cIndex === 0 && (
-                <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
-              )}
-              <td>{concept.name || "No Concept"}</td>
-              <td>{concept.detailing || "No Detailing"}</td>
-              <td>
-                <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
-              </td>
-            </tr>
-          ))
-        ) || [];
-
-      return [
-        <React.Fragment key={`session-${plan.id}`}>
-          {sessionRows.length > 0 ? (
-            sessionRows
-          ) : (
-            <tr>
-              <td colSpan="5">No topics or concepts available for this session.</td>
-            </tr>
-          )}
-        </React.Fragment>,
-      ];
-    })
-  ) : (
-    <tr>
-      <td colSpan="5">No session plans available. Please upload or create a new one.</td>
-    </tr>
-  )}
-</tbody>
+            {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+              sessionPlans.flatMap((plan, planIndex) => {
+                const preLearningTopics =
+                  plan.ActionsAndRecommendations?.filter((ar) => ar.type === "pre-learning") || [];
+                const postLearningTopics =
+                  plan.ActionsAndRecommendations?.filter((ar) => ar.type === "post-learning") || [];
   
+                const preLearningRows = preLearningTopics.map((ar, arIndex) => (
+                  <tr key={`pre-${plan.id}-${arIndex}`}>
+                    <td>{planIndex === 0 && arIndex === 0 ? "Pre-learning" : ""}</td>
+                    <td>{ar.topicName || "No Topic Name"}</td>
+                    <td>{ar.conceptName || "No Concept Name"}</td>
+                    <td>N/A</td>
+                    <td>
+                      <button onClick={() => handleGenerateARLessonPlan(ar.id)}>Generate</button>
+                    </td>
+                  </tr>
+                ));
+  
+                const sessionRows =
+                  topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
+                    topic.concepts.map((concept, cIndex) => (
+                      <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+                        {tIndex === 0 && cIndex === 0 && (
+                          <td
+                            rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
+                              (acc, t) => acc + t.concepts.length,
+                              0
+                            )}
+                          >
+                            {plan.sessionNumber}
+                          </td>
+                        )}
+                        {cIndex === 0 && (
+                          <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
+                        )}
+                        <td>{concept.name || "No Concept"}</td>
+                        <td>{concept.detailing || "No Detailing"}</td>
+                        <td>
+                          <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) || [];
+  
+                const postLearningRows = postLearningTopics.map((ar, arIndex) => (
+                  <tr key={`post-${plan.id}-${arIndex}`}>
+                    <td>Post-learning</td>
+                    <td>{ar.topicName || "No Topic Name"}</td>
+                    <td>{ar.conceptName || "No Concept Name"}</td>
+                    <td>N/A</td>
+                    <td>
+                      <button onClick={() => handleGenerateARLessonPlan(ar.id)}>Generate</button>
+                    </td>
+                  </tr>
+                ));
+  
+                return [
+                  ...preLearningRows,
+                  <React.Fragment key={`session-${plan.id}`}>
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: "left" }}>
+                        <strong>Session {plan.sessionNumber}</strong>
+                        <button
+                          onClick={() => handleDownloadSession(plan.sessionNumber)}
+                          className="btn btn-primary"
+                        >
+                          Download
+                        </button>
+                      </td>
+                    </tr>
+                    {sessionRows}
+                  </React.Fragment>,
+                  ...postLearningRows,
+                ];
+              })
+            ) : (
+              <tr>
+                <td colSpan="5">No session plans available. Please upload or create a new one.</td>
+              </tr>
+            )}
+          </tbody>          
         </table>
       </div>
   
       {/* Actions and Recommendations Table */}
 {/* Actions and Recommendations Table */}
 <div className="actions-recommendations-table">
-  <h3>Pre Learning - Actions and Recommendations</h3>
-  <div className="generate-controls">
-  <Button
-    variant="success"
-    onClick={handleGenerateAllPreLearning}
-    disabled={actionsAndRecommendations.length === 0}
-  >
-    Generate All Pre-learning Lesson Plans
-  </Button>
-</div>
-
+  <h3>Actions and Recommendations</h3>
   <table>
     <thead>
       <tr>
@@ -1181,7 +1157,6 @@ const handleGenerateARLessonPlan = async (arId) => {
 </tbody>
 
   </table>
-  
 </div>
 
 
@@ -1189,7 +1164,7 @@ const handleGenerateARLessonPlan = async (arId) => {
       {/* Post Learning Actions and Recommendations Table */}
 {/* Post-Learning Actions Table */}
 <div className="post-learning-actions-container">
-  <h3>Post Learning - Actions and Recommendations</h3>
+  <h3>Post-Learning Actions</h3>
   {error && <div className="error-message">{error}</div>}
   <table className="table">
     <thead>
