@@ -1063,42 +1063,52 @@ const handleGenerateARLessonPlan = async (arId) => {
             </tr>
           </thead>
           <tbody>
-  {Array.isArray(displayedSessions) && displayedSessions.length > 0 ? (
-    displayedSessions.flatMap((plan, planIndex) => {
-      const isPreLearning = plan.sessionType === "Pre-Learning";
-      return (
-        <React.Fragment key={`session-${plan.sessionNumber}`}>
-          <tr>
-            <td colSpan="5" style={{ textAlign: "left", fontWeight: "bold" }}>
-              {isPreLearning ? `Pre-Learning Session ${planIndex + 1}` : `Session ${plan.sessionNumber}`}
-              {!isPreLearning && (
-                <button
-                  onClick={() => handleDownloadSession(plan.sessionNumber)}
-                  className="btn btn-primary float-right"
+  {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+    sessionPlans.flatMap((plan, planIndex) => {
+      // Only render pre-learning rows if available
+      const preLearningTopics =
+        plan.ActionsAndRecommendations?.filter((ar) => ar.type === "pre-learning") || [];
+      const postLearningTopics =
+        plan.ActionsAndRecommendations?.filter((ar) => ar.type === "post-learning") || [];
+
+      // Render session topics and concepts
+      const sessionRows =
+        topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
+          topic.concepts.map((concept, cIndex) => (
+            <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+              {tIndex === 0 && cIndex === 0 && (
+                <td
+                  rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
+                    (acc, t) => acc + t.concepts.length,
+                    0
+                  )}
                 >
-                  Download
-                </button>
-              )}
-            </td>
-          </tr>
-          {plan.Topics?.map((topic, tIndex) =>
-            topic.Concepts?.map((concept, cIndex) => (
-              <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
-                {tIndex === 0 && cIndex === 0 && (
-                  <td rowSpan={topic.Concepts.length}>{topic.topicName || "No Topic"}</td>
-                )}
-                <td>{concept.concept || "No Concept"}</td>
-                <td>{concept.conceptDetailing || "No Details"}</td>
-                <td>
-                  <button onClick={() => handleViewLessonPlan(concept.id)} className="btn btn-danger">
-                    View
-                  </button>
+                  Session {plan.sessionNumber}
                 </td>
-              </tr>
-            ))
+              )}
+              {cIndex === 0 && (
+                <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
+              )}
+              <td>{concept.name || "No Concept"}</td>
+              <td>{concept.detailing || "No Detailing"}</td>
+              <td>
+                <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
+              </td>
+            </tr>
+          ))
+        ) || [];
+
+      return [
+        <React.Fragment key={`session-${plan.id}`}>
+          {sessionRows.length > 0 ? (
+            sessionRows
+          ) : (
+            <tr>
+              <td colSpan="5">No topics or concepts available for this session.</td>
+            </tr>
           )}
-        </React.Fragment>
-      );
+        </React.Fragment>,
+      ];
     })
   ) : (
     <tr>
