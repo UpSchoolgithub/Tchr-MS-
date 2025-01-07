@@ -29,7 +29,7 @@ function validatePreLearningFields(fields) {
 }
 
 // POST Route for Pre-Learning Lesson Plan Generation with Session ID
-router.post("/api/sessions/:sessionId/prelearningLP", async (req, res) => {
+router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
   const { sessionId } = req.params; // Extract sessionId from URL
   const { selectedTopics } = req.body; // Get selected topics from the request body
 
