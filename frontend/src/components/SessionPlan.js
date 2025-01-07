@@ -41,10 +41,7 @@ const SessionPlans = () => {
   const [postLearningActions, setPostLearningActions] = useState([]);
   const [showGenerateModal, setShowGenerateModal] = useState(false); // Modal for generating lesson plans
   const [preLearningToGenerate, setPreLearningToGenerate] = useState([]); // Pre-learning data to pass
-  const [preLearningPlans, setPreLearningPlans] = useState([]); // Store pre-learning sessions
-  const [regularPlans, setRegularPlans] = useState([]); // Store regular sessions
-
-
+  
   const {
     schoolName = "School Name Not Available",
     schoolId,
@@ -494,63 +491,48 @@ const handleGenerateARLessonPlan = async (arId) => {
   useEffect(() => {
     const fetchSessionPlans = async () => {
       try {
-        const response = await axios.get(
-          `https://tms.up.school/api/sessions/${sessionId}/sessionPlans`
-        );
-
+        const response = await axios.get(`https://tms.up.school/api/sessions/${sessionId}/sessionPlans`);
         if (response.data && Array.isArray(response.data.sessionPlans)) {
-          const allPlans = response.data.sessionPlans;
-
-          // Separate pre-learning and regular sessions
-          const preLearning = allPlans.filter((plan) => plan.sessionType === "Pre-Learning");
-          const regular = allPlans.filter((plan) => plan.sessionType !== "Pre-Learning");
-
-          setPreLearningPlans(preLearning); // Store pre-learning sessions
-          setRegularPlans(regular); // Store regular sessions
+          const deduplicatedSessions = {};
+          response.data.sessionPlans.forEach((plan) => {
+            if (!deduplicatedSessions[plan.sessionNumber]) {
+              deduplicatedSessions[plan.sessionNumber] = { ...plan, Topics: [] };
+            }
+            if (Array.isArray(plan.Topics)) {
+              deduplicatedSessions[plan.sessionNumber].Topics.push(...plan.Topics);
+            }
+          });
+    
+          const initialData = Object.values(deduplicatedSessions).reduce((acc, plan) => {
+            const topics = mergeTopics(plan.Topics || []);
+            acc[plan.sessionNumber] = topics.map((topic) => ({
+              name: topic.name || "Unnamed Topic",
+              concepts: topic.concepts || [],
+              conceptDetailing: topic.conceptDetailing || [],
+              lessonPlan: topic.lessonPlan || "",
+            }));
+            return acc;
+          }, {});
+    
+          setTopicsWithConcepts(initialData);
+          setSessionPlans(Object.values(deduplicatedSessions));
         }
       } catch (error) {
         console.error("Error fetching session plans:", error);
         setError("Failed to fetch session plans.");
       }
     };
-
+    
+    
+    
+    
+    
+  
     fetchSessionPlans();
   }, [sessionId]);
   
-  // **Render Table Row Function**
-  const renderSessionRows = (sessions, typeLabel) => {
-    return sessions.map((plan, index) => (
-      <React.Fragment key={plan.sessionNumber}>
-        <tr>
-          <td colSpan="5" style={{ textAlign: "left", fontWeight: "bold" }}>
-            {typeLabel} {index + 1}
-            <button
-              onClick={() => handleDownloadSession(plan.sessionNumber)}
-              className="btn btn-primary float-right"
-            >
-              Download
-            </button>
-          </td>
-        </tr>
-        {plan.Topics?.map((topic, tIndex) =>
-          topic.Concepts?.map((concept, cIndex) => (
-            <tr key={`${plan.sessionNumber}-${tIndex}-${cIndex}`}>
-              {tIndex === 0 && cIndex === 0 && (
-                <td rowSpan={topic.Concepts.length}>{topic.topicName || "No Topic"}</td>
-              )}
-              <td>{concept.concept || "No Concept"}</td>
-              <td>{concept.conceptDetailing || "No Details"}</td>
-              <td>
-                <button onClick={() => handleViewLessonPlan(concept.id)} className="btn btn-danger">
-                  View
-                </button>
-              </td>
-            </tr>
-          ))
-        )}
-      </React.Fragment>
-    ));
-  };
+  
+  
   
   
   // Utility to merge topics with the same name
