@@ -470,6 +470,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
 
   try {
     // Log associations to check what is available
+    console.log("Checking Model Associations...");
     console.log("Session associations:", Session.associations);
     console.log("ClassInfo associations:", ClassInfo.associations);
     console.log("Subject associations:", Subject.associations);
@@ -477,6 +478,8 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     console.log("Topic associations:", Topic.associations);
     console.log("Concept associations:", Concept.associations);
 
+    // Fetch session with its associations
+    console.log(`Fetching session with ID: ${sessionId}`);
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -484,33 +487,53 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
         { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
         {
           model: SessionPlan,
-          as: 'SessionPlans', // Ensure this matches your model association alias
+          as: 'SessionPlans',
           include: [
             {
               model: Topic,
-              as: 'Topics', // Ensure this matches your model association alias
-              include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
+              as: 'Topics',
+              include: [
+                {
+                  model: Concept,
+                  as: 'Concepts',
+                  attributes: ['id', 'concept', 'conceptDetailing'],
+                },
+              ],
             },
           ],
         },
       ],
     });
 
+    // Log the fetched session object
     if (!session) {
+      console.error(`Session with ID ${sessionId} not found.`);
       return res.status(404).json({ message: 'Session not found.' });
     }
+    console.log('Fetched session:', JSON.stringify(session, null, 2));
 
+    // Extract and log associations
     const { unitName, chapterName } = session;
     const { className, board } = session.ClassInfo || {};
     const { subjectName } = session.Subject || {};
 
+    console.log('Class Info:', session.ClassInfo);
+    console.log('Subject Info:', session.Subject);
+
+    // Log topics and concepts
     const topics = session.SessionPlans.flatMap((plan) =>
       plan.Topics.map((topic) => ({
         id: topic.id,
-        concepts: topic.Concepts.map((concept) => ({ concept: concept.concept, detail: concept.conceptDetailing })),
+        concepts: topic.Concepts.map((concept) => ({
+          concept: concept.concept,
+          detail: concept.conceptDetailing,
+        })),
       }))
     );
 
+    console.log('Extracted Topics:', JSON.stringify(topics, null, 2));
+
+    // Generate payload
     const payload = {
       board,
       grade: className || 'Unknown Grade',
@@ -523,14 +546,13 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     };
 
     console.log('Generated Payload:', JSON.stringify(payload, null, 2));
-    console.log('SessionPlan associations:', Object.keys(SessionPlan.associations));
-    console.log('Topic associations:', Object.keys(Topic.associations));
-    console.log('Concept associations:', Object.keys(Concept.associations));
-    console.log('Session associations:', Object.keys(Session.associations));
-    
+
+    // Call external service
     const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
+
     res.status(200).json({ lessonPlan: response.data.lesson_plan });
   } catch (error) {
+    // Enhanced error logging
     console.error('Error in generating lesson plan:', error.message);
     if (error.response) {
       console.error("Python service error details:", JSON.stringify(error.response.data, null, 2));
@@ -538,6 +560,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     res.status(500).json({ message: 'Failed to generate lesson plan.', error: error.message });
   }
 });
+
 
 
 
