@@ -502,7 +502,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
                 as: 'Topics',
                 include: [
                   {
-                    model: Concept, // Properly referenced
+                    model: concept, // Properly referenced
                     as: 'Concepts',
                     attributes: ['id', 'concept', 'conceptDetailing'],
                   },
