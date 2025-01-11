@@ -489,7 +489,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
             {
               model: Topic,
               as: 'Topics', // Ensure this matches your model association alias
-              include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
+              include: [{ model: concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
             },
           ],
         },
