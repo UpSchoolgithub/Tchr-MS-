@@ -463,6 +463,7 @@ router.post(
 );
 
 
+
 // Fetch Specific Topic Details
 router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   const { sessionId } = req.params;
@@ -473,8 +474,8 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
-        { model: ClassInfo, as: 'ClassInfo' },
-        { model: Subject, as: 'Subject' },
+        { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
+        { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
       ],
     });
 
@@ -483,7 +484,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     }
 
     const { unitName, chapterName, numberOfSessions } = session;
-    const { className, board } = session.ClassInfo;
+    const { className, board } = session.ClassInfo;  // Correct usage of classInfo details
     const { subjectName } = session.Subject;
 
     // Fetch session plans, topics, and concepts
@@ -493,9 +494,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
         {
           model: Topic,
           as: 'Topics',
-          include: [
-            { model: Concept, as: 'Concepts' },
-          ],
+          include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
         },
       ],
     });
@@ -505,10 +504,10 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     }
 
     // Generate the payload
-    const topics = sessionPlans.flatMap(plan =>
-      plan.Topics.map(topic => ({
+    const topics = sessionPlans.flatMap((plan) =>
+      plan.Topics.map((topic) => ({
         id: topic.id,
-        concepts: topic.Concepts.map(concept => ({
+        concepts: topic.Concepts.map((concept) => ({
           id: concept.id,
         })),
       }))
@@ -516,7 +515,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
 
     const payload = {
       board,
-      grade: className,
+      grade: className, // Using classInfoId details
       subject: subjectName,
       unit: unitName,
       chapter: chapterName,
@@ -527,7 +526,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
 
     console.log('Generated Payload:', payload);
 
-    // Call OpenAI API to generate lesson plan
+    // Call external API to generate lesson plan
     const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
 
     res.status(200).json({ lessonPlan: response.data.lesson_plan });
@@ -536,7 +535,6 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
 });
-
 
 
 
@@ -713,15 +711,15 @@ router.delete('/sessions/:sessionId/sessionPlans', async (req, res) => {
   }
 });
 
-router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/metadata', async (req, res) => {
-  const { schoolId, classId, sectionId, subjectId } = req.params;
+router.get('/schools/:schoolId/classes/:classInfoId/sections/:sectionId/subjects/:subjectId/metadata', async (req, res) => {
+  const { schoolId, classInfoId, sectionId, subjectId } = req.params;
 
   try {
     const school = await School.findByPk(schoolId, { attributes: ['name'] });
-    const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
+    const classInfo = await ClassInfo.findByPk(classInfoId, { attributes: ['className', 'board'] });
     const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
     const subject = await Subject.findByPk(subjectId, { attributes: ['subjectName'] });
-    const sessionCount = await SessionPlan.count({ where: { sectionId, subjectId } });
+    const sessionCount = await SessionPlan.count({ where: { classInfoId, subjectId } });
 
     if (!school || !classInfo || !section || !subject) {
       return res.status(404).json({ message: "One or more entities not found." });
@@ -730,14 +728,14 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
     res.json({
       schoolId,
       schoolName: school.name,
-      classId,
+      classInfoId,
       className: classInfo.className,
       board: classInfo.board,
       sectionId,
       sectionName: section.sectionName,
       subjectId,
       subjectName: subject.subjectName,
-      sessionCount, // New field for session count
+      sessionCount,
     });
   } catch (error) {
     console.error("Error fetching metadata:", error.message);
