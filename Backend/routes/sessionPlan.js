@@ -3,7 +3,6 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const { Op } = require('sequelize');
 const { Model, DataTypes } = require('sequelize');
-
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic'); // Ensure correct capitalization
 const School = require('../models/School');
@@ -14,7 +13,6 @@ const router = express.Router();
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
 const Concept = require('../models/concept'); // Ensure correct capitalization
-
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
@@ -34,7 +32,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
           attributes: ['id', 'topicName'],
           include: [
             {
-              model: Concept,
+              model: concept,
               as: 'Concepts',  // Ensure this matches your model alias
               attributes: ['id', 'concept', 'conceptDetailing'],
             },
