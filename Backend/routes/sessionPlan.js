@@ -463,117 +463,104 @@ router.post(
 
 
 // Fetch Specific Topic Details
-router.post('/sessionPlans/:sessionPlanId/generateLessonPlan', async (req, res) => {
-  const { sessionPlanId } = req.params;
+router.post('/sessions/:sessionId/generateLessonPlan', async (req, res) => {
+  const { sessionId } = req.params;
+  const { sessionNumber, conceptId } = req.body; // Optional filtering parameters
 
   try {
-    // Fetch the session plan and related details
-    const sessionPlan = await SessionPlan.findOne({
-      where: { id: sessionPlanId },
+    // Fetch session details (classInfo, subject, topics, concepts)
+    const session = await Session.findOne({
+      where: { id: sessionId },
       include: [
         {
-          model: Session,
-          as: 'Session',
-          include: [
-            {
-              model: ClassInfo,
-              as: 'ClassInfo',
-              attributes: ['className', 'board'], // Fetch className and board
-            },
-            {
-              model: Subject,
-              as: 'Subject',
-              attributes: ['subjectName'], // Fetch subjectName
-            },
-          ],
-          attributes: ['chapterName', 'unitName', 'numberOfSessions'], // Fetch chapter and unit details
+          model: ClassInfo,
+          attributes: ['className', 'board'],
         },
         {
-          model: Topic,
-          as: 'Topics',
+          model: Subject,
+          attributes: ['subjectName'],
+        },
+        {
+          model: SessionPlan,
+          as: 'SessionPlan',
+          where: sessionNumber ? { sessionNumber } : {},
           include: [
             {
-              model: Concept,
-              as: 'Concepts',
-              attributes: ['id', 'concept', 'conceptDetailing'], // Fetch concept details
+              model: Topic,
+              as: 'Topics',
+              include: [
+                {
+                  model: Concept,
+                  as: 'Concepts',
+                  attributes: ['id', 'concept', 'conceptDetailing'],
+                  where: conceptId ? { id: conceptId } : {}, // If conceptId provided, filter by it
+                },
+              ],
             },
           ],
-          attributes: ['id', 'topicName'], // Fetch topic name
         },
       ],
     });
 
-    if (!sessionPlan) {
-      return res.status(404).json({ message: 'Session plan not found' });
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found.' });
     }
 
-    const { Session } = sessionPlan;
-    const { ClassInfo, Subject } = Session;
+    // Extract session and class details
+    const { className, board } = session.ClassInfo;
+    const { subjectName } = session.Subject;
+    const { unitName, chapterName } = session;
 
-    // Extract required data for lesson plan generation
-    const board = ClassInfo.board;
-    const grade = ClassInfo.className;
-    const subject = Subject.subjectName;
-    const unit = Session.unitName;
-    const chapter = Session.chapterName;
-    const numberOfSessions = Session.numberOfSessions;
+    // Prepare the payload
+    const payload = {
+      board,
+      grade: className,
+      subject: subjectName,
+      unit: unitName,
+      chapter: chapterName,
+      topics: session.SessionPlan.flatMap((plan) =>
+        plan.Topics.map((topic) => ({
+          topicId: topic.id,
+          topicName: topic.topicName,
+          concepts: topic.Concepts.map((concept) => ({
+            id: concept.id, // Send only the concept ID in the final request
+            name: concept.concept,
+            detailing: concept.conceptDetailing,
+          })),
+        }))
+      ),
+      sessionType: req.body.sessionType || 'Theory',
+      duration: req.body.duration || 45,
+    };
 
-    console.log(`Generating lesson plans for Class: ${grade}, Board: ${board}, Subject: ${subject}, Unit: ${unit}, Chapter: ${chapter}`);
+    // Format the final payload to only send concept IDs, but include details internally
+    const requestPayload = {
+      ...payload,
+      topics: payload.topics.map((topic) => ({
+        topicId: topic.topicId,
+        concepts: topic.concepts.map((concept) => ({
+          id: concept.id, // Only send IDs in request payload
+        })),
+      })),
+    };
 
-    // Iterate over topics and generate lesson plans for each concept
-    for (const topic of sessionPlan.Topics) {
-      if (!topic.topicName) continue;
+    // Send to external API
+    const response = await axios.post(
+      'https://dynamiclp.up.school/generate-lesson-plan',
+      requestPayload
+    );
 
-      for (const concept of topic.Concepts) {
-        if (!concept.concept) continue; // Skip if no concept name
-
-        const payload = {
-          board,
-          grade,
-          subject,
-          unit,
-          chapter,
-          sessionType: req.body.sessionType || 'Default',
-          noOfSession: numberOfSessions || 1,
-          duration: req.body.duration || 45, // Default duration per session
-          topics: [
-            {
-              topic: topic.topicName,
-              concepts: [`${concept.concept}: ${concept.conceptDetailing || 'No details provided'}`],
-            },
-          ],
-        };
-
-        console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
-
-        try {
-          // Call external API to generate lesson plan
-          const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
-
-          const generatedLP = response.data.lesson_plan || 'No Lesson Plan Generated';
-
-          // Save or update the lesson plan in the database
-          await LessonPlan.upsert({
-            conceptId: concept.id,
-            generatedLP,
-          });
-
-          console.log(`Lesson plan saved for concept ID ${concept.id}`);
-        } catch (error) {
-          console.error(`Failed to generate lesson plan for concept ID ${concept.id}:`, error.message);
-          if (error.response) {
-            console.error(`Error details for concept ID ${concept.id}:`, JSON.stringify(error.response.data, null, 2));
-          }
-        }
-      }
-    }
-
-    res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
+    res.status(200).json({
+      message: 'Lesson plan generated successfully!',
+      lessonPlan: response.data,
+      internalDetails: payload, // Include full details for confirmation
+    });
   } catch (error) {
-    console.error('Error in generating lesson plans:', error.message);
-    res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
+    console.error('Error generating lesson plan:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
 });
+
 
 
 
