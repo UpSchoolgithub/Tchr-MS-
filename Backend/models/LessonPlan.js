@@ -16,7 +16,7 @@ LessonPlan.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Concepts', // Matches the table name exactly
+        model: 'concepts', // Matches the table name exactly
         key: 'id',
       },
     },
