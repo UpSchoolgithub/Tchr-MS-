@@ -463,129 +463,117 @@ router.post(
 
 
 // Fetch Specific Topic Details
-router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
-  const { id } = req.params;
+router.post('/sessionPlans/:sessionPlanId/generateLessonPlan', async (req, res) => {
+  const { sessionPlanId } = req.params;
 
   try {
-    // Fetch all session plans with topics and concepts
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId: id },
+    // Fetch the session plan and related details
+    const sessionPlan = await SessionPlan.findOne({
+      where: { id: sessionPlanId },
       include: [
         {
+          model: Session,
+          as: 'Session',
+          include: [
+            {
+              model: ClassInfo,
+              as: 'ClassInfo',
+              attributes: ['className', 'board'], // Fetch className and board
+            },
+            {
+              model: Subject,
+              as: 'Subject',
+              attributes: ['subjectName'], // Fetch subjectName
+            },
+          ],
+          attributes: ['chapterName', 'unitName', 'numberOfSessions'], // Fetch chapter and unit details
+        },
+        {
           model: Topic,
-          as: 'Topics', // Alias used in the Topic model
+          as: 'Topics',
           include: [
             {
               model: Concept,
-              as: 'Concepts', // Alias used in the Concept model
+              as: 'Concepts',
+              attributes: ['id', 'concept', 'conceptDetailing'], // Fetch concept details
             },
           ],
+          attributes: ['id', 'topicName'], // Fetch topic name
         },
       ],
     });
-    
 
-    if (!sessionPlans || sessionPlans.length === 0) {
+    if (!sessionPlan) {
       return res.status(404).json({ message: 'Session plan not found' });
     }
 
-    // Validation function for topics and concepts
-    const validateTopic = (topic) => {
-      if (!topic.topicName || !Array.isArray(topic.Concepts)) {
-        return false; // Missing topic name or concepts
-      }
-      return topic.Concepts.every(
-        (concept) => concept.concept && concept.conceptDetailing
-      );
-    };
+    const { Session } = sessionPlan;
+    const { ClassInfo, Subject } = Session;
 
-    // Filter valid topics and concepts
-    const validSessionPlans = sessionPlans.map((plan) => {
-      const validTopics = plan.Topics.filter((topic) => validateTopic(topic));
-      return { ...plan, Topics: validTopics };
-    });
+    // Extract required data for lesson plan generation
+    const board = ClassInfo.board;
+    const grade = ClassInfo.className;
+    const subject = Subject.subjectName;
+    const unit = Session.unitName;
+    const chapter = Session.chapterName;
+    const numberOfSessions = Session.numberOfSessions;
 
-    if (validSessionPlans.every((plan) => plan.Topics.length === 0)) {
-      console.error('Validation failed. No valid topics or concepts.');
-      return res.status(400).json({ message: 'Invalid topic or concept structure.' });
-    }
+    console.log(`Generating lesson plans for Class: ${grade}, Board: ${board}, Subject: ${subject}, Unit: ${unit}, Chapter: ${chapter}`);
 
-    console.log(`Found ${sessionPlans.length} session plans for sessionId ${id}`);
+    // Iterate over topics and generate lesson plans for each concept
+    for (const topic of sessionPlan.Topics) {
+      if (!topic.topicName) continue;
 
-    // Process valid topics and concepts
-    for (const plan of validSessionPlans) {
-      for (const topic of plan.Topics) {
-        for (const concept of topic.Concepts) {
-          const payload = {
-            board: req.body.board || "Board Not Specified",
-            grade: req.body.grade || "Grade Not Specified",
-            subject: req.body.subject || "Subject Not Specified",
-            subSubject: "Civics", // Hardcoded
-            unit: req.body.unit || "Unit Not Specified",
-            chapter: topic.topicName, // Keep the topic name for context
-            sessionType: req.body.sessionType || "Default",
-            noOfSession: req.body.noOfSession || 1,
-            duration: req.body.duration || 45,
-            topics: [
-              {
-                topic: topic.topicName, // Topic context
-                concepts: [
-                  `${concept.concept}: ${concept.conceptDetailing}`.trim(),
-                ], // Send only this concept
-              },
-            ],
-          };
+      for (const concept of topic.Concepts) {
+        if (!concept.concept) continue; // Skip if no concept name
 
-          console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
+        const payload = {
+          board,
+          grade,
+          subject,
+          unit,
+          chapter,
+          sessionType: req.body.sessionType || 'Default',
+          noOfSession: numberOfSessions || 1,
+          duration: req.body.duration || 45, // Default duration per session
+          topics: [
+            {
+              topic: topic.topicName,
+              concepts: [`${concept.concept}: ${concept.conceptDetailing || 'No details provided'}`],
+            },
+          ],
+        };
 
-          try {
-            // Call external API to generate lesson plan
-            const response = await axios.post(
-              "https://dynamiclp.up.school/generate-lesson-plan",
-              payload
-            );
+        console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
 
-            // Save or update lesson plan using upsert
-            try {
-              const [lessonPlan, created] = await LessonPlan.upsert({
-                conceptId: concept.id,
-                generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
-              });
-              
-            
-              console.log(
-                `LessonPlan upsert result for conceptId ${concept.id}:`,
-                created ? "Created" : "Updated"
-              );
-            } catch (error) {
-              console.error(`Failed to save lesson plan for conceptId ${concept.id}:`, error.message);
-            }
-            
+        try {
+          // Call external API to generate lesson plan
+          const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
 
-            console.log(`Saved LP for concept ID: ${concept.id}`);
-          } catch (error) {
-            console.error(`Failed for concept ID ${concept.id}:`, error.message);
+          const generatedLP = response.data.lesson_plan || 'No Lesson Plan Generated';
 
-            // Log error response if available
-            if (error.response) {
-              console.error(
-                `Error details for concept ID ${concept.id}:`,
-                JSON.stringify(error.response.data, null, 2)
-              );
-            }
+          // Save or update the lesson plan in the database
+          await LessonPlan.upsert({
+            conceptId: concept.id,
+            generatedLP,
+          });
+
+          console.log(`Lesson plan saved for concept ID ${concept.id}`);
+        } catch (error) {
+          console.error(`Failed to generate lesson plan for concept ID ${concept.id}:`, error.message);
+          if (error.response) {
+            console.error(`Error details for concept ID ${concept.id}:`, JSON.stringify(error.response.data, null, 2));
           }
         }
       }
     }
 
-    // Success response
     res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
   } catch (error) {
     console.error('Error in generating lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
 });
-
 
 
 
