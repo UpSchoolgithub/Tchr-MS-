@@ -30,7 +30,7 @@ Concept.init(
   },
   {
     sequelize,
-    modelName: 'concept',
+    modelName: 'Concept',
     tableName: 'Concepts',
   }
 );
