@@ -156,15 +156,12 @@ const fetchPostLearningActions = async () => {
       `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postlearning`,
       { withCredentials: true }
     );
-    console.log("Post-learning actions fetched:", response.data.postLearningActions); // Debug
     setPostLearningActions(response.data.postLearningActions || []);
   } catch (error) {
     console.error("Error fetching post-learning actions:", error.message);
     setError("Failed to fetch post-learning actions.");
   }
 };
-
-
 
 useEffect(() => {
   fetchPostLearningActions();
@@ -175,7 +172,6 @@ useEffect(() => {
 
 const handleSaveAR = async () => {
   if (arType === "pre-learning") {
-    // Pre-learning save
     if (!arTopicName.trim()) {
       setError("Topic name is required for pre-learning.");
       return;
@@ -190,12 +186,18 @@ const handleSaveAR = async () => {
       return;
     }
 
+    // Convert arrays to comma-separated strings
+    const conceptNames = validConcepts.map((concept) => concept.name.trim()).join(", ");
+    const conceptDetails = validConcepts.map((concept) => concept.detailing.trim()).join(", ");
+
     const payload = {
       type: arType,
       topicName: arTopicName.trim(),
-      conceptName: validConcepts.map((concept) => concept.name.trim()).join(", "),
-      conceptDetailing: validConcepts.map((concept) => concept.detailing.trim()).join(", "),
+      conceptName: conceptNames,
+      conceptDetailing: conceptDetails,
     };
+
+    console.log("Payload Sent to Backend:", payload); // Debugging
 
     try {
       const response = await axios.post(
@@ -203,6 +205,9 @@ const handleSaveAR = async () => {
         payload,
         { withCredentials: true }
       );
+
+      console.log("Response from Backend:", response.data); // Debugging
+
       setSuccessMessage("Pre-learning topic saved successfully!");
       setARTopicName(""); // Reset topic name
       setARConcepts([{ name: "", detailing: "" }]); // Reset concepts
@@ -212,35 +217,8 @@ const handleSaveAR = async () => {
       console.error("Error saving pre-learning topic:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to save pre-learning topic.");
     }
-  } else  if (arType === "post-learning") {
-    if (selectedTopics.length === 0) {
-      setError("Please add at least one topic and concept for post-learning.");
-      return;
-    }
-
-    const payload = {
-      selectedTopics: selectedTopics.map((topic) => ({
-        id: topic.topicId,
-        concepts: topic.selectedConcepts.map((concept) => ({ id: concept.id })),
-      })),
-    };
-
-    try {
-      const response = await axios.post(
-        `https://tms.up.school/api/sessions/${sessionId}/actionsAndRecommendations/postLearning`,
-        payload,
-        { withCredentials: true }
-      );
-      setSuccessMessage("Post-learning topic saved successfully!");
-      setShowARModal(false); // Close modal
-      await fetchPostLearningActions(); // Refresh post-learning data
-    } catch (error) {
-      console.error("Error saving post-learning topic:", error.response?.data || error.message);
-      setError(error.response?.data?.message || "Failed to save post-learning topic.");
-    }
   }
 };
-
 
 
   useEffect(() => {
@@ -1164,48 +1142,47 @@ const handleGenerateARLessonPlan = async (arId) => {
       {/* Post Learning Actions and Recommendations Table */}
 {/* Post-Learning Actions Table */}
 <div className="post-learning-actions-container">
-  <h3>Post-Learning Actions</h3>
-  {error && <div className="error-message">{error}</div>}
-  <table className="table">
-    <thead>
-      <tr>
-        <th>Type</th> {/* Added Type Column */}
-        <th>Topic Name</th>
-        <th>Concept Names</th>
-        <th>Concept Details</th>
-      </tr>
-    </thead>
-    <tbody>
-      {postLearningActions.length > 0 ? (
-        postLearningActions.map((action, index) => (
-          <tr key={index}>
-            <td>Post-learning</td> {/* Displaying "post-learning" explicitly */}
-            <td>{action.topicName || "No Topic Name"}</td>
-            <td>
-              <ul>
-                {action.concepts.map((concept, i) => (
-                  <li key={i}>{concept.concept || "No Concept"}</li>
-                ))}
-              </ul>
-            </td>
-            <td>
-              <ul>
-                {action.concepts.map((concept, i) => (
-                  <li key={i}>{concept.conceptDetailing || "No Details Available"}</li>
-                ))}
-              </ul>
-            </td>
+      <h3>Post-Learning Actions</h3>
+      {error && <div className="error-message">{error}</div>}
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Topic Name</th>
+            <th>Concepts</th>
+            <th>Details</th>
           </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="4">No post-learning actions available.</td>
-        </tr>
-      )}
-    </tbody>
+        </thead>
+        <tbody>
+          {postLearningActions.length > 0 ? (
+            postLearningActions.map((action, index) => (
+              <tr key={index}>
+                <td>{action.topicId ? `Topic ID: ${action.topicId}` : "No Topic"}</td>
+                <td>
+                  {action.conceptIds?.length > 0 ? (
+                    <ul>
+                      {action.conceptIds.map((conceptId) => (
+                        <li key={conceptId}>Concept ID: {conceptId}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "No Concepts"
+                  )}
+                </td>
+                <td>N/A</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3">No post-learning actions available.</td>
+            </tr>
+          )}
+        </tbody>
+
+
+
+
   </table>
 </div>
-
 
 
 
