@@ -11,23 +11,33 @@ fs.readdirSync(__dirname)
     return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file));
-    db[model.name] = model;
+    try {
+      const model = require(path.join(__dirname, file));
+      db[model.name] = model;
+      console.log(`[INFO] Model loaded: ${file} -> ${model.name}`);
+    } catch (error) {
+      console.error(`[ERROR] Failed to load model: ${file}`, error.message);
+    }
   });
 
 // Debug loaded models
-console.log('Loaded models:', Object.keys(db));
+console.log('[INFO] Loaded models:', Object.keys(db));
 
 // Set up model associations
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
-    console.log(`Associating model: ${modelName}`);
-    db[modelName].associate(db);
+    try {
+      console.log(`[INFO] Associating model: ${modelName}`);
+      db[modelName].associate(db);
+    } catch (error) {
+      console.error(`[ERROR] Failed to associate model: ${modelName}`, error.message);
+    }
   } else {
-    console.warn(`No associations defined for model: ${modelName}`);
+    console.warn(`[WARNING] No associations defined for model: ${modelName}`);
   }
 });
 
+// Add Sequelize and sequelize instance to the db object
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
