@@ -463,114 +463,75 @@ router.post(
 
 
 // Fetch Specific Topic Details
-router.post('/sessionPlans/:sessionPlanId/generateLessonPlan', async (req, res) => {
-  const { sessionPlanId } = req.params;
+router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
+  const { sessionId } = req.params;
+  const { sessionType, duration } = req.body;
 
   try {
-    // Fetch session plan and related details
-    const sessionPlan = await SessionPlan.findOne({
-      where: { id: sessionPlanId },
+    // Fetch session metadata
+    const session = await Session.findOne({
+      where: { id: sessionId },
       include: [
-        {
-          model: Session,
-          as: 'Session',
-          include: [
-            {
-              model: ClassInfo,
-              as: 'ClassInfo',
-              attributes: ['className', 'board', 'schoolId'], // Get class, board, and school details
-            },
-            {
-              model: Subject,
-              as: 'Subject',
-              attributes: ['subjectName'], // Get subject details
-            },
-          ],
-          attributes: ['chapterName', 'unitName', 'numberOfSessions'], // Fetch unit, chapter, and session count
-        },
+        { model: ClassInfo, as: 'ClassInfo' },
+        { model: Subject, as: 'Subject' },
+      ],
+    });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found.' });
+    }
+
+    const { unitName, chapterName, numberOfSessions } = session;
+    const { className, board } = session.ClassInfo;
+    const { subjectName } = session.Subject;
+
+    // Fetch session plans, topics, and concepts
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+      include: [
         {
           model: Topic,
           as: 'Topics',
           include: [
-            {
-              model: Concept,
-              as: 'Concepts',
-              attributes: ['id', 'concept', 'conceptDetailing'], // Get concepts details
-            },
+            { model: Concept, as: 'Concepts' },
           ],
-          attributes: ['id', 'topicName'], // Fetch topic name
         },
       ],
     });
 
-    if (!sessionPlan) {
-      return res.status(404).json({ message: 'Session plan not found' });
+    if (!sessionPlans || sessionPlans.length === 0) {
+      return res.status(404).json({ message: 'No session plans found.' });
     }
 
-    const { Session } = sessionPlan;
-    const { ClassInfo, Subject } = Session;
+    // Generate the payload
+    const topics = sessionPlans.flatMap(plan =>
+      plan.Topics.map(topic => ({
+        id: topic.id,
+        concepts: topic.Concepts.map(concept => ({
+          id: concept.id,
+        })),
+      }))
+    );
 
-    // Extract the required data
-    const board = ClassInfo.board;
-    const grade = ClassInfo.className;
-    const subject = Subject.subjectName;
-    const unit = Session.unitName;
-    const chapter = Session.chapterName;
-    const numberOfSessions = Session.numberOfSessions;
+    const payload = {
+      board,
+      grade: className,
+      subject: subjectName,
+      unit: unitName,
+      chapter: chapterName,
+      sessionType,
+      duration,
+      topics,
+    };
 
-    console.log(`Generating lesson plans for Class: ${grade}, Board: ${board}, Subject: ${subject}, Unit: ${unit}, Chapter: ${chapter}`);
+    console.log('Generated Payload:', payload);
 
-    // Generate lesson plans for each topic and concept
-    for (const topic of sessionPlan.Topics) {
-      if (!topic.topicName) continue;
+    // Call OpenAI API to generate lesson plan
+    const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
 
-      for (const concept of topic.Concepts) {
-        if (!concept.concept) continue; // Skip if no concept name
-
-        const payload = {
-          board,
-          grade,
-          subject,
-          unit,
-          chapter,
-          sessionType: req.body.sessionType || 'Default',
-          noOfSession: numberOfSessions || 1,
-          duration: req.body.duration || 45,
-          topics: [
-            {
-              topic: topic.topicName,
-              concepts: [`${concept.concept}: ${concept.conceptDetailing || 'N/A'}`],
-            },
-          ],
-        };
-
-        console.log(`Sending payload for concept ID ${concept.id}:`, JSON.stringify(payload, null, 2));
-
-        try {
-          // Call external API to generate the lesson plan
-          const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
-
-          const generatedLP = response.data.lesson_plan || 'No Lesson Plan Generated';
-
-          // Save or update the lesson plan
-          await LessonPlan.upsert({
-            conceptId: concept.id,
-            generatedLP,
-          });
-
-          console.log(`Lesson plan saved for concept ID ${concept.id}`);
-        } catch (error) {
-          console.error(`Failed to generate lesson plan for concept ID ${concept.id}:`, error.message);
-          if (error.response) {
-            console.error(`Error details for concept ID ${concept.id}:`, JSON.stringify(error.response.data, null, 2));
-          }
-        }
-      }
-    }
-
-    res.status(200).json({ message: 'Lesson plans generated and saved successfully.' });
+    res.status(200).json({ lessonPlan: response.data.lesson_plan });
   } catch (error) {
-    console.error('Error in generating lesson plans:', error.message);
+    console.error('Error generating lesson plans:', error.message);
     res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
   }
 });
