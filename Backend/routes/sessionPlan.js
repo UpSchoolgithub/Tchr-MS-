@@ -465,67 +465,59 @@ router.post(
 
 
 // Fetch Specific Topic Details
-// Fetch Specific Topic Details and Generate Lesson Plan
 router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   const { sessionId } = req.params;
-  const { sessionType = 'post-learning', duration = 45 } = req.body; // Default values
+  const { sessionType = 'post-learning', duration = 45 } = req.body;
 
   try {
-    // Fetch session metadata
+    // Log associations to check what is available
+    console.log("Session associations:", Session.associations);
+    console.log("ClassInfo associations:", ClassInfo.associations);
+    console.log("Subject associations:", Subject.associations);
+    console.log("SessionPlan associations:", SessionPlan.associations);
+    console.log("Topic associations:", Topic.associations);
+    console.log("Concept associations:", Concept.associations);
+
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
         { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
         { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
         {
-          model: SessionPlan, // Change this part to `SessionPlans` (as defined in the model)
-          as: 'SessionPlans',
+          model: SessionPlan,
+          as: 'SessionPlans', // Ensure this matches your model association alias
           include: [
             {
               model: Topic,
-              as: 'Topics',
+              as: 'Topics', // Ensure this matches your model association alias
               include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
             },
           ],
         },
       ],
     });
-    
+
     if (!session) {
       return res.status(404).json({ message: 'Session not found.' });
     }
 
-    const { unitName = 'General Unit', chapterName = 'General Chapter' } = session;
-    const { className = 'Unknown Grade', board = 'Unknown Board' } = session.ClassInfo || {};
-    const { subjectName = 'Unknown Subject' } = session.Subject || {};
+    const { unitName, chapterName } = session;
+    const { className, board } = session.ClassInfo || {};
+    const { subjectName } = session.Subject || {};
 
-    // Check if session plans and topics exist
-    if (!session.SessionPlans || session.SessionPlans.length === 0) {
-      return res.status(404).json({ message: 'No session plans found for this session.' });
-    }
-
-    // Prepare topics for the payload
     const topics = session.SessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => {
-        const concepts = topic.Concepts.map((concept) => ({
-          concept: concept.concept,
-          detail: concept.conceptDetailing || 'No details provided.',
-        }));
-        return { id: topic.id, concepts };
-      })
+      plan.Topics.map((topic) => ({
+        id: topic.id,
+        concepts: topic.Concepts.map((concept) => ({ concept: concept.concept, detail: concept.conceptDetailing })),
+      }))
     );
 
-    if (topics.length === 0) {
-      return res.status(400).json({ message: 'No topics with concepts found.' });
-    }
-
-    // Generate payload for the external API
     const payload = {
       board,
-      grade: className,
-      subject: subjectName,
-      unit: unitName,
-      chapter: chapterName,
+      grade: className || 'Unknown Grade',
+      subject: subjectName || 'Unknown Subject',
+      unit: unitName || 'General Unit',
+      chapter: chapterName || 'General Chapter',
       sessionType,
       duration,
       topics,
@@ -533,15 +525,12 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
 
     console.log('Generated Payload:', JSON.stringify(payload, null, 2));
 
-    // Call external API to generate the lesson plan
-    const pythonServiceUrl = 'https://dynamiclp.up.school/generate-lesson-plan';
-    const response = await axios.post(pythonServiceUrl, payload, { timeout: 50000 });
-
+    const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
     res.status(200).json({ lessonPlan: response.data.lesson_plan });
   } catch (error) {
-    console.error('Error generating lesson plans:', error.message);
+    console.error('Error in generating lesson plan:', error.message);
     if (error.response) {
-      console.error('Python service error details:', JSON.stringify(error.response.data, null, 2));
+      console.error("Python service error details:", JSON.stringify(error.response.data, null, 2));
     }
     res.status(500).json({ message: 'Failed to generate lesson plan.', error: error.message });
   }
