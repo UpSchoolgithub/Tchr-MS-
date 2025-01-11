@@ -3,7 +3,7 @@ const sequelize = require('../config/db');
 
 class LessonPlan extends Model {
   static associate(models) {
-    LessonPlan.belongsTo(models.concept, { 
+    LessonPlan.belongsTo(models.Concept, { 
       foreignKey: 'conceptId', 
       as: 'concept' // Correct association with lowercase model name
     });
