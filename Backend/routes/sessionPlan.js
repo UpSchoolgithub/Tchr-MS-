@@ -3,7 +3,6 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const { Op } = require('sequelize');
 const { Model, DataTypes } = require('sequelize');
-const { Session } = require('../models'); // Import the Session model
 
 const SessionPlan = require('../models/SessionPlan');
 const Topic = require('../models/Topic');
@@ -18,127 +17,8 @@ const Concept = require('../models/concept'); // Correct the path if needed
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
-//cccccccccccccccccccccccccccccccc
-// Helper function to validate request payload
-function validatePreLearningFields(fields) {
-  for (const [key, value] of Object.entries(fields)) {
-    if (!value || (Array.isArray(value) && value.length === 0)) {
-      return `${key} is required and cannot be empty.`;
-    }
-  }
-  return null;
-}
 
-// Pre-Learning Lesson Plan Generation
-router.post("/sessions/:sessionId/prelearningLP", async (req, res) => {
-  const { sessionId } = req.params;
-  let { selectedTopics, sessionType = "Pre-Learning", noOfSession = 1, duration = 45 } = req.body;
-
-  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-    return res.status(400).json({ message: "No topics selected." });
-  }
-
-  try {
-    const sessionMetadata = await Session.findOne({
-      where: { id: sessionId },
-      include: [
-        { model: ClassInfo, attributes: ["className", "board"] },
-        { model: Subject, attributes: ["subjectName"] },
-        { model: Section, attributes: ["sectionName"] },
-        { model: School, attributes: ["name"] },
-      ],
-    });
-
-    if (!sessionMetadata) {
-      return res.status(404).json({ message: "Session metadata not found." });
-    }
-
-    const { className: grade, board } = sessionMetadata.ClassInfo;
-    const { subjectName: subject } = sessionMetadata.Subject;
-    const unit = sessionMetadata.unitName || "Pre-Learning Unit";
-    const chapter = sessionMetadata.chapterName || "Pre-Learning Chapter";
-
-    const topicsData = await Promise.all(
-      selectedTopics.map(async (topic) => {
-        const action = await ActionsAndRecommendations.findOne({
-          where: { id: topic.id, sessionId, type: "pre-learning" },
-          attributes: ["topicName", "conceptName", "conceptDetailing"],
-        });
-
-        if (!action) {
-          throw new Error(`Action with ID ${topic.id} not found.`);
-        }
-
-        return {
-          topic: action.topicName,
-          concepts: action.conceptName ? action.conceptName.split(",") : [],
-          conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
-        };
-      })
-    );
-
-    const payloadForPythonAPI = {
-      board,
-      grade,
-      subject,
-      unit,
-      chapter,
-      topics: topicsData,
-      sessionType,  // Pass sessionType
-      noOfSession,  // Pass noOfSession
-      duration,     // Pass duration
-    };
-
-    console.log("Payload for Python API:", JSON.stringify(payloadForPythonAPI, null, 2));
-
-    const pythonResponse = await axios.post("https://dynamiclp.up.school/generate-prelearning-plan", payloadForPythonAPI);
-
-    if (!pythonResponse.data.lesson_plan) {
-      return res.status(500).json({ message: "No lesson plans generated." });
-    }
-
-    res.status(201).json({ message: "Pre-learning lesson plan saved and generated successfully." });
-  } catch (error) {
-    console.error("Error generating pre-learning lesson plan:", error.message);
-    res.status(500).json({
-      message: "Internal server error.",
-      error: error.message,
-      pythonError: error.response ? error.response.data : "No response from Python API",
-    });
-  }
-});
-
-
-
-
-
-// Fetch Pre-Learning Topics for Session
-router.get("/sessions/:sessionId/prelearning/topics", async (req, res) => {
-  const { sessionId } = req.params;
-
-  try {
-    const actions = await ActionsAndRecommendations.findAll({
-      where: { sessionId, type: "pre-learning" },
-      attributes: ["id", "sessionId", "type", "topicName", "conceptName", "conceptDetailing"],
-    });
-
-    const topics = actions.map((action) => ({
-      id: action.id,
-      topicName: action.topicName,
-      concepts: action.conceptName ? action.conceptName.split(",") : [],
-      conceptDetails: action.conceptDetailing ? action.conceptDetailing.split(",") : [],
-    }));
-
-    res.status(200).json({ topics });
-  } catch (error) {
-    console.error("Error fetching pre-learning topics:", error.message);
-    res.status(500).json({ message: "Internal server error.", error: error.message });
-  }
-});
-//ccccccccccccccccccccccccccccccccc
-
-
-//fetch topics and concepts list for postlearning dropdown
+// Add post leanring topics fetching
 router.get('/sessions/:sessionId/topics', async (req, res) => {
   const { sessionId } = req.params;
 
@@ -181,48 +61,6 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
   }
 });
 
-// Add post leanring topics fetching
-router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
-  const { sessionId } = req.params;
-  const { selectedTopics } = req.body;
-
-  console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Debugging
-
-  if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-    return res.status(400).json({ message: 'No topics selected or invalid format.' });
-  }
-
-  const transaction = await sequelize.transaction();
-  try {
-    for (const topic of selectedTopics) {
-      console.log(`Processing topic with id: ${topic.id}`);
-      const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];  // Check if `concepts` exists in payload
-      const conceptIds = concepts.map((concept) => concept.id);  // Map to IDs only
-
-      console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds); // Debugging
-
-      // Save post-learning action
-      await PostLearningActions.create(
-        {
-          sessionId,
-          topicId: topic.id,
-          conceptIds,  // This is being saved
-          type: 'post-learning',
-        },
-        { transaction }
-      );
-    }
-
-    await transaction.commit();
-    res.status(201).json({ message: 'Post-learning actions saved successfully.' });
-  } catch (error) {
-    await transaction.rollback();
-    console.error('Error saving post-learning actions:', error.stack);
-    res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
-  }
-});
-
-
 
 
 // save postleanring in A&R
@@ -231,94 +69,60 @@ router.post('/sessions/:sessionId/actionsAndRecommendations/postlearning', async
   const { sessionId } = req.params;
   const { selectedTopics } = req.body;
 
-  console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Debugging
+  console.log("Received Payload:", JSON.stringify(req.body, null, 2));
 
   if (!Array.isArray(selectedTopics) || selectedTopics.length === 0) {
-    return res.status(400).json({ message: 'No topics selected or invalid format.' });
+      return res.status(400).json({ message: 'No topics selected or invalid format.' });
   }
 
   const transaction = await sequelize.transaction();
+
   try {
-    for (const topic of selectedTopics) {
-      console.log(`Processing topic with id: ${topic.id}`);
-      const concepts = Array.isArray(topic.selectedConcepts) ? topic.selectedConcepts : [];
-      const conceptIds = concepts.map((concept) => concept.id);
+      for (const topic of selectedTopics) {
+          console.log(`Processing topic with id: ${topic.id}`);
+          console.log(`Type of concepts: ${typeof topic.concepts}, Value:`, topic.concepts);
 
-      console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
+          // Validate concepts array
+          const concepts = Array.isArray(topic.concepts) ? topic.concepts : [];
+          const conceptIds = concepts.map(concept => concept.id);
 
-      // Save post-learning action
-      await PostLearningActions.create(
-        {
-          sessionId,
-          topicId: topic.id,
-          conceptIds,
-          type: 'post-learning',
-        },
-        { transaction }
-      );
-    }
+          console.log(`Generated conceptIds for topic ${topic.id}:`, conceptIds);
 
-    await transaction.commit();
-    res.status(201).json({ message: 'Post-learning actions saved successfully.' });
+          // Create PostLearningAction
+          await PostLearningActions.create({
+              sessionId,
+              topicId: topic.id,
+              conceptIds, // Ensure it's a valid array
+              type: 'post-learning',
+          }, { transaction });
+      }
+
+      await transaction.commit();
+      res.status(201).json({ message: 'Post-learning actions saved successfully.' });
   } catch (error) {
-    await transaction.rollback();
-    console.error('Error saving post-learning actions:', error.stack);
-    res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
+      await transaction.rollback();
+      console.error('Error saving post-learning actions:', error.stack);
+      res.status(500).json({ message: 'Failed to save post-learning actions.', error: error.message });
   }
 });
-
 
 
 //Fetching Post-Learning Actions
-// Fetching Post-Learning Actions (with Topics and Concepts)
 router.get('/sessions/:sessionId/actionsAndRecommendations/postlearning', async (req, res) => {
+  
   const { sessionId } = req.params;
 
   try {
-    // Fetch all post-learning actions for the session
-    const postLearningActions = await PostLearningActions.findAll({
-      where: { sessionId, type: 'post-learning' },
-      attributes: ['id', 'sessionId', 'topicId', 'conceptIds'], // Fetch only relevant fields
-    });
+      const postLearningActions = await PostLearningActions.findAll({
+          where: { sessionId, type: 'post-learning' }
+      });
 
-    // Fetch complete topic and concept details for each action
-    const detailedActions = await Promise.all(
-      postLearningActions.map(async (action) => {
-        // Fetch the topic details for the topicId
-        const topic = await Topic.findOne({
-          where: { id: action.topicId },
-          attributes: ['id', 'topicName'],
-        });
-
-        if (!topic) {
-          throw new Error(`Topic with ID ${action.topicId} not found.`);
-        }
-
-        // Fetch all concepts for the given concept IDs
-        const concepts = await Concept.findAll({
-          where: {
-            id: action.conceptIds,
-          },
-          attributes: ['id', 'concept', 'conceptDetailing'],
-        });
-
-        return {
-          ...action.toJSON(),
-          topicName: topic.topicName || 'Unknown Topic',
-          concepts: concepts.length ? concepts : [{ concept: 'No Concept Found', conceptDetailing: 'N/A' }],
-        };
-      })
-    );
-
-    res.status(200).json({ postLearningActions: detailedActions });
+      res.status(200).json({ postLearningActions });
   } catch (error) {
-    console.error('Error fetching post-learning actions:', error.message);
-    res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
+      console.error('Error fetching post-learning actions:', error.message);
+      res.status(500).json({ message: 'Failed to fetch post-learning actions.', error: error.message });
   }
 });
-
-
-
 
 
 // Endpoint for Fetching Topics and Concepts for prelearning 
