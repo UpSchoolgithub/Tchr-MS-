@@ -63,6 +63,18 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 });
 
 
+// Function to fetch classInfoId based on sectionId
+const getClassInfoIdFromSectionId = async (sectionId) => {
+  try {
+    const section = await Section.findByPk(sectionId, {
+      attributes: ['classInfoId'],
+    });
+    return section ? section.classInfoId : null; // Return the classInfoId or null if not found
+  } catch (error) {
+    console.error('Error fetching classInfoId for sectionId:', error.message);
+    throw new Error('Failed to fetch classInfoId for section');
+  }
+};
 
 // Create a new session
 // Create a new session with classInfoId included
