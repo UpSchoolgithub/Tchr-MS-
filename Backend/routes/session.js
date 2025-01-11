@@ -47,7 +47,7 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
     res.json({
       schoolId,
       schoolName: school.name,
-      classId,
+      classInfoId,
       className: classInfo.className,
       board: classInfo.board,
       sectionId,
@@ -95,7 +95,7 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 
     const newSession = await Session.create({
       schoolId,
-      classId: classInfoId, // Use classInfoId here
+      classInfoId, // Use classInfoId here
       sectionId,
       subjectId,
       unitName,
