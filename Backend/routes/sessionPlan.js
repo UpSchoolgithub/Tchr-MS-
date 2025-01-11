@@ -478,7 +478,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
         { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
         { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
         {
-          model: SessionPlan,
+          model: SessionPlan, // Change this part to `SessionPlans` (as defined in the model)
           as: 'SessionPlans',
           include: [
             {
@@ -490,7 +490,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
         },
       ],
     });
-
+    
     if (!session) {
       return res.status(404).json({ message: 'Session not found.' });
     }
