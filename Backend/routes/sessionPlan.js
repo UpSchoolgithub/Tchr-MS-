@@ -13,7 +13,7 @@ const Subject = require('../models/Subject');
 const router = express.Router();
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
-const Concept = require('../models/Concept'); // Ensure correct capitalization
+const Concept = require('../models/concept'); // Ensure correct capitalization
 
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
