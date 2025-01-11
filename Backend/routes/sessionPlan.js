@@ -463,7 +463,7 @@ router.post(
 
 
 
-// Fetch Specific Topic Details
+// Fetch Topics and Generate Lesson Plan
 router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   const { sessionId } = req.params;
   const { sessionType = 'post-learning', duration = 45 } = req.body;
@@ -471,108 +471,70 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   try {
     console.log(`[INFO] Starting lesson plan generation for session ID: ${sessionId}`);
 
-    // Step 1: Log associations
-    try {
-      console.log("[INFO] Checking model associations...");
-      console.log("Session associations:", Object.keys(Session.associations || {}));
-      console.log("ClassInfo associations:", Object.keys(ClassInfo.associations || {}));
-      console.log("Subject associations:", Object.keys(Subject.associations || {}));
-      console.log("SessionPlan associations:", Object.keys(SessionPlan.associations || {}));
-      console.log("Topic associations:", Object.keys(Topic.associations || {}));
-      console.log("Concept associations:", Object.keys(Concept.associations || {}));
-    } catch (associationError) {
-      console.error("[ERROR] Association check failed:", associationError.message);
+    // Step 1: Log Topic associations
+    console.log("[INFO] Checking Topic associations...");
+    console.log("Topic associations:", Object.keys(Topic.associations || {}));
+    console.log("Concept associations:", Object.keys(Concept.associations || {}));
+
+    // Step 2: Fetch Topics and Concepts
+    console.log(`[INFO] Fetching Topics for session ID: ${sessionId}`);
+    const sessionPlans = await SessionPlan.findAll({
+      where: { sessionId },
+      include: [
+        {
+          model: Topic,
+          as: 'Topics', // Ensure this matches your alias in Topic model association
+          attributes: ['id', 'topicName'],
+          include: [
+            {
+              model: Concept, // Ensure the model is correctly imported
+              as: 'Concepts', // Ensure this matches your alias in Concept model association
+              attributes: ['id', 'concept', 'conceptDetailing'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!sessionPlans || sessionPlans.length === 0) {
+      console.error(`[ERROR] No Topics found for session ID ${sessionId}.`);
+      return res.status(404).json({ message: 'No topics found for the given session ID.' });
     }
 
-    // Step 2: Fetch session
-    console.log(`[INFO] Fetching session with ID: ${sessionId}`);
-    let session;
-    try {
-      session = await Session.findOne({
-        where: { id: sessionId },
-        include: [
-          { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
-          { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
-          {
-            model: SessionPlan,
-            as: 'SessionPlans',
-            include: [
-              {
-                model: Topic,
-                as: 'Topics',
-                include: [
-                  {
-                    model: concept, // Properly referenced
-                    as: 'Concepts',
-                    attributes: ['id', 'concept', 'conceptDetailing'],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-    } catch (fetchError) {
-      console.error("[ERROR] Failed to fetch session:", fetchError.message);
-      throw fetchError;
-    }
+    console.log("[INFO] Topics fetched successfully.");
 
-    if (!session) {
-      console.error(`[ERROR] Session with ID ${sessionId} not found.`);
-      return res.status(404).json({ message: 'Session not found.' });
-    }
-    console.log("[INFO] Session fetched successfully:", JSON.stringify(session, null, 2));
+    // Step 3: Extract Topics and Concepts
+    console.log("[INFO] Extracting Topics and Concepts...");
+    const topics = sessionPlans.flatMap((plan) =>
+      plan.Topics.map((topic) => ({
+        id: topic.id,
+        name: topic.topicName,
+        concepts: topic.Concepts.map((concept) => ({
+          concept: concept.concept,
+          detail: concept.conceptDetailing,
+        })),
+      }))
+    );
 
-    // Step 3: Extract session details
-    try {
-      console.log("[INFO] Extracting session details...");
-      const { unitName, chapterName } = session;
-      const { className, board } = session.ClassInfo || {};
-      const { subjectName } = session.Subject || {};
+    console.log("[DEBUG] Extracted Topics:", JSON.stringify(topics, null, 2));
 
-      console.log("[DEBUG] Class Info:", session.ClassInfo);
-      console.log("[DEBUG] Subject Info:", session.Subject);
+    // Step 4: Prepare Payload
+    console.log("[INFO] Preparing payload...");
+    const payload = {
+      sessionType,
+      duration,
+      topics,
+    };
 
-      // Extract topics and concepts
-      console.log("[INFO] Extracting topics and concepts...");
-      const topics = session.SessionPlans.flatMap((plan) =>
-        plan.Topics.map((topic) => ({
-          id: topic.id,
-          concepts: topic.Concepts.map((concept) => ({
-            concept: concept.concept,
-            detail: concept.conceptDetailing,
-          })),
-        }))
-      );
+    console.log("[DEBUG] Generated Payload:", JSON.stringify(payload, null, 2));
 
-      console.log("[DEBUG] Extracted Topics:", JSON.stringify(topics, null, 2));
+    // Step 5: Call External API
+    console.log("[INFO] Sending payload to external API...");
+    const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
 
-      // Prepare payload
-      console.log("[INFO] Preparing payload...");
-      const payload = {
-        board,
-        grade: className || 'Unknown Grade',
-        subject: subjectName || 'Unknown Subject',
-        unit: unitName || 'General Unit',
-        chapter: chapterName || 'General Chapter',
-        sessionType,
-        duration,
-        topics,
-      };
-
-      console.log("[DEBUG] Generated Payload:", JSON.stringify(payload, null, 2));
-
-      // Step 4: Call external API
-      console.log("[INFO] Sending payload to external API...");
-      const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
-      console.log("[INFO] Lesson plan generated successfully.");
-      res.status(200).json({ lessonPlan: response.data.lesson_plan });
-    } catch (processError) {
-      console.error("[ERROR] Failed during session detail extraction or payload preparation:", processError.message);
-      throw processError;
-    }
+    console.log("[INFO] Lesson plan generated successfully.");
+    res.status(200).json({ lessonPlan: response.data.lesson_plan });
   } catch (error) {
-    // General catch for unhandled errors
     console.error("[ERROR] An error occurred:", error.message);
 
     if (error.response) {
@@ -582,11 +544,6 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     res.status(500).json({ message: 'Failed to generate lesson plan. Please try again.', error: error.message });
   }
 });
-
-
-
-
-
 
 
 router.get('/sessionPlans/:id/view', async (req, res) => {
