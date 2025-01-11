@@ -471,41 +471,51 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   try {
     console.log(`[INFO] Starting lesson plan generation for session ID: ${sessionId}`);
 
-    // Log associations for debugging
-    console.log("[INFO] Checking model associations...");
-    console.log("Session associations:", Session.associations);
-    console.log("ClassInfo associations:", ClassInfo.associations);
-    console.log("Subject associations:", Subject.associations);
-    console.log("SessionPlan associations:", SessionPlan.associations);
-    console.log("Topic associations:", Topic.associations);
-    console.log("Concept associations:", Concept.associations);
+    // Step 1: Log associations
+    try {
+      console.log("[INFO] Checking model associations...");
+      console.log("Session associations:", Object.keys(Session.associations || {}));
+      console.log("ClassInfo associations:", Object.keys(ClassInfo.associations || {}));
+      console.log("Subject associations:", Object.keys(Subject.associations || {}));
+      console.log("SessionPlan associations:", Object.keys(SessionPlan.associations || {}));
+      console.log("Topic associations:", Object.keys(Topic.associations || {}));
+      console.log("Concept associations:", Object.keys(Concept.associations || {}));
+    } catch (associationError) {
+      console.error("[ERROR] Association check failed:", associationError.message);
+    }
 
-    // Step 1: Fetch the session
+    // Step 2: Fetch session
     console.log(`[INFO] Fetching session with ID: ${sessionId}`);
-    const session = await Session.findOne({
-      where: { id: sessionId },
-      include: [
-        { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
-        { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
-        {
-          model: SessionPlan,
-          as: 'SessionPlans',
-          include: [
-            {
-              model: Topic,
-              as: 'Topics',
-              include: [
-                {
-                  model: Concept, // Ensure this is properly imported and associated
-                  as: 'Concepts',
-                  attributes: ['id', 'concept', 'conceptDetailing'],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
+    let session;
+    try {
+      session = await Session.findOne({
+        where: { id: sessionId },
+        include: [
+          { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
+          { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
+          {
+            model: SessionPlan,
+            as: 'SessionPlans',
+            include: [
+              {
+                model: Topic,
+                as: 'Topics',
+                include: [
+                  {
+                    model: Concept, // Properly referenced
+                    as: 'Concepts',
+                    attributes: ['id', 'concept', 'conceptDetailing'],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+    } catch (fetchError) {
+      console.error("[ERROR] Failed to fetch session:", fetchError.message);
+      throw fetchError;
+    }
 
     if (!session) {
       console.error(`[ERROR] Session with ID ${sessionId} not found.`);
@@ -513,61 +523,60 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     }
     console.log("[INFO] Session fetched successfully:", JSON.stringify(session, null, 2));
 
-    // Step 2: Extract required data
-    console.log("[INFO] Extracting session details...");
-    const { unitName, chapterName } = session;
-    const { className, board } = session.ClassInfo || {};
-    const { subjectName } = session.Subject || {};
+    // Step 3: Extract session details
+    try {
+      console.log("[INFO] Extracting session details...");
+      const { unitName, chapterName } = session;
+      const { className, board } = session.ClassInfo || {};
+      const { subjectName } = session.Subject || {};
 
-    console.log("[DEBUG] Class Info:", session.ClassInfo);
-    console.log("[DEBUG] Subject Info:", session.Subject);
+      console.log("[DEBUG] Class Info:", session.ClassInfo);
+      console.log("[DEBUG] Subject Info:", session.Subject);
 
-    // Step 3: Extract topics and concepts
-    console.log("[INFO] Extracting topics and concepts...");
-    const topics = session.SessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => ({
-        id: topic.id,
-        concepts: topic.Concepts.map((concept) => ({
-          concept: concept.concept,
-          detail: concept.conceptDetailing,
-        })),
-      }))
-    );
+      // Extract topics and concepts
+      console.log("[INFO] Extracting topics and concepts...");
+      const topics = session.SessionPlans.flatMap((plan) =>
+        plan.Topics.map((topic) => ({
+          id: topic.id,
+          concepts: topic.Concepts.map((concept) => ({
+            concept: concept.concept,
+            detail: concept.conceptDetailing,
+          })),
+        }))
+      );
 
-    console.log("[DEBUG] Extracted Topics:", JSON.stringify(topics, null, 2));
+      console.log("[DEBUG] Extracted Topics:", JSON.stringify(topics, null, 2));
 
-    // Step 4: Prepare payload
-    console.log("[INFO] Preparing payload for lesson plan generation...");
-    const payload = {
-      board,
-      grade: className || 'Unknown Grade',
-      subject: subjectName || 'Unknown Subject',
-      unit: unitName || 'General Unit',
-      chapter: chapterName || 'General Chapter',
-      sessionType,
-      duration,
-      topics,
-    };
+      // Prepare payload
+      console.log("[INFO] Preparing payload...");
+      const payload = {
+        board,
+        grade: className || 'Unknown Grade',
+        subject: subjectName || 'Unknown Subject',
+        unit: unitName || 'General Unit',
+        chapter: chapterName || 'General Chapter',
+        sessionType,
+        duration,
+        topics,
+      };
 
-    console.log("[DEBUG] Generated Payload:", JSON.stringify(payload, null, 2));
+      console.log("[DEBUG] Generated Payload:", JSON.stringify(payload, null, 2));
 
-    // Step 5: Make external API call
-    console.log("[INFO] Sending payload to external API...");
-    const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
-
-    console.log("[INFO] Lesson plan generated successfully.");
-    res.status(200).json({ lessonPlan: response.data.lesson_plan });
-
+      // Step 4: Call external API
+      console.log("[INFO] Sending payload to external API...");
+      const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
+      console.log("[INFO] Lesson plan generated successfully.");
+      res.status(200).json({ lessonPlan: response.data.lesson_plan });
+    } catch (processError) {
+      console.error("[ERROR] Failed during session detail extraction or payload preparation:", processError.message);
+      throw processError;
+    }
   } catch (error) {
-    console.error("[ERROR] An error occurred during lesson plan generation:", error.message);
+    // General catch for unhandled errors
+    console.error("[ERROR] An error occurred:", error.message);
 
     if (error.response) {
       console.error("[ERROR] External API Error Details:", JSON.stringify(error.response.data, null, 2));
-    }
-
-    // Log additional debugging information
-    if (error instanceof TypeError) {
-      console.error("[ERROR] TypeError encountered:", error.stack);
     }
 
     res.status(500).json({ message: 'Failed to generate lesson plan. Please try again.', error: error.message });
