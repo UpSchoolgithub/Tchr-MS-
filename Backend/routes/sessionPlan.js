@@ -469,8 +469,10 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   const { sessionType = 'post-learning', duration = 45 } = req.body;
 
   try {
-    // Log associations to check what is available
-    console.log("Checking Model Associations...");
+    console.log(`[INFO] Starting lesson plan generation for session ID: ${sessionId}`);
+
+    // Log associations for debugging
+    console.log("[INFO] Checking model associations...");
     console.log("Session associations:", Session.associations);
     console.log("ClassInfo associations:", ClassInfo.associations);
     console.log("Subject associations:", Subject.associations);
@@ -478,8 +480,8 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     console.log("Topic associations:", Topic.associations);
     console.log("Concept associations:", Concept.associations);
 
-    // Fetch session with its associations
-    console.log(`Fetching session with ID: ${sessionId}`);
+    // Step 1: Fetch the session
+    console.log(`[INFO] Fetching session with ID: ${sessionId}`);
     const session = await Session.findOne({
       where: { id: sessionId },
       include: [
@@ -494,7 +496,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
               as: 'Topics',
               include: [
                 {
-                  model: Concept,
+                  model: Concept, // Ensure this is properly imported and associated
                   as: 'Concepts',
                   attributes: ['id', 'concept', 'conceptDetailing'],
                 },
@@ -505,22 +507,23 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
       ],
     });
 
-    // Log the fetched session object
     if (!session) {
-      console.error(`Session with ID ${sessionId} not found.`);
+      console.error(`[ERROR] Session with ID ${sessionId} not found.`);
       return res.status(404).json({ message: 'Session not found.' });
     }
-    console.log('Fetched session:', JSON.stringify(session, null, 2));
+    console.log("[INFO] Session fetched successfully:", JSON.stringify(session, null, 2));
 
-    // Extract and log associations
+    // Step 2: Extract required data
+    console.log("[INFO] Extracting session details...");
     const { unitName, chapterName } = session;
     const { className, board } = session.ClassInfo || {};
     const { subjectName } = session.Subject || {};
 
-    console.log('Class Info:', session.ClassInfo);
-    console.log('Subject Info:', session.Subject);
+    console.log("[DEBUG] Class Info:", session.ClassInfo);
+    console.log("[DEBUG] Subject Info:", session.Subject);
 
-    // Log topics and concepts
+    // Step 3: Extract topics and concepts
+    console.log("[INFO] Extracting topics and concepts...");
     const topics = session.SessionPlans.flatMap((plan) =>
       plan.Topics.map((topic) => ({
         id: topic.id,
@@ -531,9 +534,10 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
       }))
     );
 
-    console.log('Extracted Topics:', JSON.stringify(topics, null, 2));
+    console.log("[DEBUG] Extracted Topics:", JSON.stringify(topics, null, 2));
 
-    // Generate payload
+    // Step 4: Prepare payload
+    console.log("[INFO] Preparing payload for lesson plan generation...");
     const payload = {
       board,
       grade: className || 'Unknown Grade',
@@ -545,19 +549,28 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
       topics,
     };
 
-    console.log('Generated Payload:', JSON.stringify(payload, null, 2));
+    console.log("[DEBUG] Generated Payload:", JSON.stringify(payload, null, 2));
 
-    // Call external service
+    // Step 5: Make external API call
+    console.log("[INFO] Sending payload to external API...");
     const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
 
+    console.log("[INFO] Lesson plan generated successfully.");
     res.status(200).json({ lessonPlan: response.data.lesson_plan });
+
   } catch (error) {
-    // Enhanced error logging
-    console.error('Error in generating lesson plan:', error.message);
+    console.error("[ERROR] An error occurred during lesson plan generation:", error.message);
+
     if (error.response) {
-      console.error("Python service error details:", JSON.stringify(error.response.data, null, 2));
+      console.error("[ERROR] External API Error Details:", JSON.stringify(error.response.data, null, 2));
     }
-    res.status(500).json({ message: 'Failed to generate lesson plan.', error: error.message });
+
+    // Log additional debugging information
+    if (error instanceof TypeError) {
+      console.error("[ERROR] TypeError encountered:", error.stack);
+    }
+
+    res.status(500).json({ message: 'Failed to generate lesson plan. Please try again.', error: error.message });
   }
 });
 
