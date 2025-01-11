@@ -483,8 +483,25 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
       return res.status(404).json({ message: 'Session not found.' });
     }
 
+    // Handle missing ClassInfo or Subject
+    if (!session.ClassInfo) {
+      const classInfo = await ClassInfo.findByPk(session.classInfoId, { attributes: ['className', 'board'] });
+      if (!classInfo) {
+        return res.status(404).json({ message: 'Class information not found.' });
+      }
+      session.ClassInfo = classInfo;
+    }
+
+    if (!session.Subject) {
+      const subject = await Subject.findByPk(session.subjectId, { attributes: ['subjectName'] });
+      if (!subject) {
+        return res.status(404).json({ message: 'Subject information not found.' });
+      }
+      session.Subject = subject;
+    }
+
     const { unitName, chapterName, numberOfSessions } = session;
-    const { className, board } = session.ClassInfo;  // Correct usage of classInfo details
+    const { className, board } = session.ClassInfo;
     const { subjectName } = session.Subject;
 
     // Fetch session plans, topics, and concepts
@@ -514,11 +531,11 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     );
 
     const payload = {
-      board,
-      grade: className, // Using classInfoId details
-      subject: subjectName,
-      unit: unitName,
-      chapter: chapterName,
+      board: board || 'Unknown Board',
+      grade: className || 'Unknown Grade',
+      subject: subjectName || 'Unknown Subject',
+      unit: unitName || 'Unknown Unit',
+      chapter: chapterName || 'Unknown Chapter',
       sessionType,
       duration,
       topics,
