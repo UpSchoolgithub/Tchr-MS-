@@ -524,7 +524,11 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
     };
 
     console.log('Generated Payload:', JSON.stringify(payload, null, 2));
-
+    console.log('SessionPlan associations:', Object.keys(SessionPlan.associations));
+    console.log('Topic associations:', Object.keys(Topic.associations));
+    console.log('Concept associations:', Object.keys(Concept.associations));
+    console.log('Session associations:', Object.keys(Session.associations));
+    
     const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload, { timeout: 50000 });
     res.status(200).json({ lessonPlan: response.data.lesson_plan });
   } catch (error) {
