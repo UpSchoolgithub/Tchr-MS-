@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const Concept = require('./Concept'); // Correct import
 
 class Topic extends Model {
   static associate(models) {
