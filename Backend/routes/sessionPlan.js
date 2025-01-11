@@ -12,7 +12,7 @@ const Subject = require('../models/Subject');
 const router = express.Router();
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
-const Concept = require('../models/concept'); // Ensure correct capitalization
+const Concept = require('../models/Concept'); // Ensure the path is correct
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
@@ -489,7 +489,7 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
             {
               model: Topic,
               as: 'Topics', // Ensure this matches your model association alias
-              include: [{ model: concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
+              include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
             },
           ],
         },
