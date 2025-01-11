@@ -465,9 +465,10 @@ router.post(
 
 
 // Fetch Specific Topic Details
+// Fetch Specific Topic Details and Generate Lesson Plan
 router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
   const { sessionId } = req.params;
-  const { sessionType, duration } = req.body;
+  const { sessionType = 'post-learning', duration = 45 } = req.body; // Default values
 
   try {
     // Fetch session metadata
@@ -476,6 +477,17 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
       include: [
         { model: ClassInfo, as: 'ClassInfo', attributes: ['id', 'className', 'board'] },
         { model: Subject, as: 'Subject', attributes: ['id', 'subjectName'] },
+        {
+          model: SessionPlan,
+          as: 'SessionPlans',
+          include: [
+            {
+              model: Topic,
+              as: 'Topics',
+              include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
+            },
+          ],
+        },
       ],
     });
 
@@ -483,73 +495,55 @@ router.post('/sessionPlans/:sessionId/generateLessonPlan', async (req, res) => {
       return res.status(404).json({ message: 'Session not found.' });
     }
 
-    // Handle missing ClassInfo or Subject
-    if (!session.ClassInfo) {
-      const classInfo = await ClassInfo.findByPk(session.classInfoId, { attributes: ['className', 'board'] });
-      if (!classInfo) {
-        return res.status(404).json({ message: 'Class information not found.' });
-      }
-      session.ClassInfo = classInfo;
+    const { unitName = 'General Unit', chapterName = 'General Chapter' } = session;
+    const { className = 'Unknown Grade', board = 'Unknown Board' } = session.ClassInfo || {};
+    const { subjectName = 'Unknown Subject' } = session.Subject || {};
+
+    // Check if session plans and topics exist
+    if (!session.SessionPlans || session.SessionPlans.length === 0) {
+      return res.status(404).json({ message: 'No session plans found for this session.' });
     }
 
-    if (!session.Subject) {
-      const subject = await Subject.findByPk(session.subjectId, { attributes: ['subjectName'] });
-      if (!subject) {
-        return res.status(404).json({ message: 'Subject information not found.' });
-      }
-      session.Subject = subject;
-    }
-
-    const { unitName, chapterName, numberOfSessions } = session;
-    const { className, board } = session.ClassInfo;
-    const { subjectName } = session.Subject;
-
-    // Fetch session plans, topics, and concepts
-    const sessionPlans = await SessionPlan.findAll({
-      where: { sessionId },
-      include: [
-        {
-          model: Topic,
-          as: 'Topics',
-          include: [{ model: Concept, as: 'Concepts', attributes: ['id', 'concept', 'conceptDetailing'] }],
-        },
-      ],
-    });
-
-    if (!sessionPlans || sessionPlans.length === 0) {
-      return res.status(404).json({ message: 'No session plans found.' });
-    }
-
-    // Generate the payload
-    const topics = sessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => ({
-        id: topic.id,
-        concepts: topic.Concepts.map((concept) => ({
-          id: concept.id,
-        })),
-      }))
+    // Prepare topics for the payload
+    const topics = session.SessionPlans.flatMap((plan) =>
+      plan.Topics.map((topic) => {
+        const concepts = topic.Concepts.map((concept) => ({
+          concept: concept.concept,
+          detail: concept.conceptDetailing || 'No details provided.',
+        }));
+        return { id: topic.id, concepts };
+      })
     );
 
+    if (topics.length === 0) {
+      return res.status(400).json({ message: 'No topics with concepts found.' });
+    }
+
+    // Generate payload for the external API
     const payload = {
-      board: board || 'Unknown Board',
-      grade: className || 'Unknown Grade',
-      subject: subjectName || 'Unknown Subject',
-      unit: unitName || 'Unknown Unit',
-      chapter: chapterName || 'Unknown Chapter',
+      board,
+      grade: className,
+      subject: subjectName,
+      unit: unitName,
+      chapter: chapterName,
       sessionType,
       duration,
       topics,
     };
 
-    console.log('Generated Payload:', payload);
+    console.log('Generated Payload:', JSON.stringify(payload, null, 2));
 
-    // Call external API to generate lesson plan
-    const response = await axios.post('https://dynamiclp.up.school/generate-lesson-plan', payload);
+    // Call external API to generate the lesson plan
+    const pythonServiceUrl = 'https://dynamiclp.up.school/generate-lesson-plan';
+    const response = await axios.post(pythonServiceUrl, payload, { timeout: 50000 });
 
     res.status(200).json({ lessonPlan: response.data.lesson_plan });
   } catch (error) {
     console.error('Error generating lesson plans:', error.message);
-    res.status(500).json({ message: 'Failed to generate lesson plans.', error: error.message });
+    if (error.response) {
+      console.error('Python service error details:', JSON.stringify(error.response.data, null, 2));
+    }
+    res.status(500).json({ message: 'Failed to generate lesson plan.', error: error.message });
   }
 });
 
