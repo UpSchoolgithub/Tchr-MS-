@@ -5,7 +5,7 @@ const { Op } = require('sequelize');
 const { Model, DataTypes } = require('sequelize');
 
 const SessionPlan = require('../models/SessionPlan');
-const Topic = require('../models/Topic');
+const Topic = require('../models/Topic'); // Ensure correct capitalization
 const School = require('../models/School');
 const ClassInfo = require('../models/ClassInfo');
 const Section = require('../models/Section');
@@ -13,7 +13,7 @@ const Subject = require('../models/Subject');
 const router = express.Router();
 const LessonPlan = require('../models/LessonPlan');
 const sequelize = require('../config/db'); // Include sequelize for transactions
-const Concept = require('../models/concept'); // Correct the path if needed
+const Concept = require('../models/Concept'); // Ensure correct capitalization
 const axios = require('axios'); 
 const { ActionsAndRecommendations } = require('../models');
 const PostLearningActions = require('../models/PostLearningAction');
@@ -29,13 +29,13 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
       include: [
         {
           model: Topic,
-          as: 'Topics',
-          attributes: ['id', 'topicName'], // Topic attributes
+          as: 'Topics',  // Ensure this matches your model alias
+          attributes: ['id', 'topicName'],
           include: [
             {
               model: Concept,
-              as: 'Concepts',
-              attributes: ['id', 'concept', 'conceptDetailing'], // Correct column names
+              as: 'Concepts',  // Ensure this matches your model alias
+              attributes: ['id', 'concept', 'conceptDetailing'],
             },
           ],
         },
@@ -53,7 +53,6 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
         })),
       }))
     );
-    
 
     res.status(200).json({ topics });
   } catch (error) {
@@ -61,6 +60,7 @@ router.get('/sessions/:sessionId/topics', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch topics.', error: error.message });
   }
 });
+
 
 
 
