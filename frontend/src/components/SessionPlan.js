@@ -714,7 +714,7 @@ const handleGenerateARLessonPlan = async (arId) => {
   
       const responses = await Promise.allSettled(
         payloads.map((payload) =>
-          axios.post("https://tms.up.school/api/dynamicLP", payload)
+          axios.post("https://tms.up.school/api/sessionPlans/${sessionId}/generateLessonPla", payload)
         )
       );
   
