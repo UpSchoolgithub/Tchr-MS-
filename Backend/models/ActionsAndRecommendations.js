@@ -1,15 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure correct path
+const sequelize = require('../config/db');
 
-class ActionsAndRecommendations extends Model {
-  static associate(models) {
-    ActionsAndRecommendations.belongsTo(models.Session, {
-      foreignKey: 'sessionId',
-      as: 'Session',
-      onDelete: 'CASCADE',
-    });
-  }
-}
+class ActionsAndRecommendations extends Model {}
 
 ActionsAndRecommendations.init(
   {
@@ -17,13 +9,14 @@ ActionsAndRecommendations.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Sessions',
+        model: 'sessions',
         key: 'id',
       },
     },
     type: {
       type: DataTypes.ENUM('pre-learning', 'post-learning'),
       allowNull: false,
+      comment: 'Defines the type of action (pre/post-learning).',
     },
     topicName: {
       type: DataTypes.STRING,
@@ -34,7 +27,7 @@ ActionsAndRecommendations.init(
       allowNull: true,
     },
     conceptDetailing: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING,
       allowNull: true,
     },
   },

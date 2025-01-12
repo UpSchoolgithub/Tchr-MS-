@@ -28,7 +28,6 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
   const { schoolId, classId, sectionId, subjectId } = req.params;
 
   try {
-    // Fetch names for IDs
     const school = await School.findByPk(schoolId, { attributes: ['name'] });
     const classInfo = await ClassInfo.findByPk(classId, { attributes: ['className', 'board'] });
     const section = await Section.findByPk(sectionId, { attributes: ['sectionName'] });
@@ -38,9 +37,8 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
       return res.status(404).json({ message: 'One or more entities not found.' });
     }
 
-    // Fetch sessions for the subject in the section
     const sessions = await Session.findAll({
-      where: { sectionId, subjectId },
+      where: { sectionId, subjectId, classInfoId: classId },  // Use classId directly
       attributes: ['id', 'unitName', 'chapterName', 'numberOfSessions', 'priorityNumber'],
     });
 
@@ -64,18 +62,40 @@ router.get('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:su
 
 
 
-// Create a new session
-router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
+
+// Function to fetch classInfoId based on sectionId
+const getClassInfoIdFromSectionId = async (sectionId) => {
   try {
-    const { schoolId, classId, sectionId, subjectId } = req.params;
-    const { unitName, chapterName, numberOfSessions, priorityNumber } = req.body;
+    const section = await Section.findByPk(sectionId, {
+      attributes: ['classInfoId'],
+    });
+    return section ? section.classInfoId : null; // Return the classInfoId or null if not found
+  } catch (error) {
+    console.error('Error fetching classInfoId for sectionId:', error.message);
+    throw new Error('Failed to fetch classInfoId for section');
+  }
+};
 
-    if (!unitName || !chapterName || !numberOfSessions || !priorityNumber) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
+// Create a new session
+// Create a new session with classInfoId included
+router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions', async (req, res) => {
+  const { schoolId, classId, sectionId, subjectId } = req.params;
+  const { unitName, chapterName, numberOfSessions, priorityNumber } = req.body;
 
+  if (!unitName || !chapterName || !numberOfSessions || !priorityNumber) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
     const newSession = await Session.create({
-      schoolId, classId, sectionId, subjectId, unitName, chapterName, numberOfSessions, priorityNumber
+      schoolId,
+      classInfoId: classId,  // Use classId directly
+      sectionId,
+      subjectId,
+      unitName,
+      chapterName,
+      numberOfSessions,
+      priorityNumber,
     });
 
     res.status(201).json(newSession);
@@ -87,41 +107,32 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
 
 
 // Upload sessions in bulk from an Excel file
+// Upload sessions in bulk from an Excel file
 router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:subjectId/sessions/upload', upload.single('file'), async (req, res) => {
+  const { schoolId, classId, sectionId, subjectId } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'File is required' });
+  }
+
   try {
-    const { schoolId, classId, sectionId, subjectId } = req.params;
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'File is required' });
-    }
-
     const filePath = path.join(__dirname, '../uploads', req.file.filename);
     const workbook = XLSX.readFile(filePath);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    console.log("Parsed JSON Data:", jsonData);
-
     const sessions = jsonData
-      .filter(row => {
-        if (!row.UnitName || !row.ChapterName || !row.NumberOfSessions || !row.PriorityNumber) {
-          console.warn("Skipping row due to missing fields:", row);
-          return false;
-        }
-        return true;
-      })
+      .filter(row => row.UnitName && row.ChapterName && row.NumberOfSessions && row.PriorityNumber)
       .map(row => ({
         schoolId,
-        classId,
+        classInfoId: classId,  // Use classId directly
         sectionId,
         subjectId,
-        unitName: row.UnitName, // Extract unitName
+        unitName: row.UnitName,
         chapterName: row.ChapterName,
         numberOfSessions: row.NumberOfSessions,
         priorityNumber: row.PriorityNumber,
       }));
-
-    console.log("Sessions Ready for Bulk Insert:", sessions);
 
     if (sessions.length === 0) {
       return res.status(400).json({ error: 'No valid data to upload.' });
@@ -130,28 +141,38 @@ router.post('/schools/:schoolId/classes/:classId/sections/:sectionId/subjects/:s
     await Session.bulkCreate(sessions);
     res.status(201).json({ message: 'Sessions uploaded and created successfully' });
   } catch (error) {
-    console.error("Error during bulk insert:", error);
+    console.error('Error during bulk insert:', error);
     res.status(500).json({ error: 'Failed to upload sessions', details: error.message });
   }
 });
 
 
-// Update a session by ID
-router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const { unitName, numberOfSessions, priorityNumber } = req.body;
 
+// Update a session by ID
+// Update a session by ID and include classInfoId
+router.put('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
+  const { sessionId, classId } = req.params;
+  const { unitName, numberOfSessions, priorityNumber } = req.body;
+
+  try {
     const session = await Session.findByPk(sessionId);
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
-    await session.update({ unitName, numberOfSessions, priorityNumber });
+    await session.update({
+      unitName,
+      numberOfSessions,
+      priorityNumber,
+      classInfoId: classId,  // Update classId directly
+    });
+
     res.json(session);
   } catch (error) {
     console.error('Error updating session:', error);
     res.status(500).json({ error: 'Failed to update session' });
   }
 });
+
+
 
 // Delete a session by ID
 router.delete('/schools/:schoolId/classes/:classId/sections/:sectionId/sessions/:sessionId', async (req, res) => {
