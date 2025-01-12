@@ -18,6 +18,10 @@ const { sequelize, SessionPlan, Topic, Concept, LessonPlan } = require('./models
   const modelsToCheck = { SessionPlan, Topic, Concept, LessonPlan };
   
   for (const [modelName, model] of Object.entries(modelsToCheck)) {
+    if (!model) {
+      console.warn(`❌ Model ${modelName} is undefined. Check if the model is imported and exported correctly.`);
+      continue;
+    }
     console.log(`Checking ${modelName} associations:`);
     if (model.associations) {
       console.log(model.associations);
@@ -25,6 +29,7 @@ const { sequelize, SessionPlan, Topic, Concept, LessonPlan } = require('./models
       console.warn(`❌ No associations found for ${modelName}`);
     }
   }
+  
 
   console.log("\n--- Running Route Query Test ---\n");
 
