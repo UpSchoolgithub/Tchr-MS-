@@ -3,16 +3,17 @@ const sequelize = require('../config/db'); // Ensure this points to your sequeli
 
 class SessionPlan extends Model {
   static associate(models) {
-    // Define associations
-    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'Topics', onDelete: 'CASCADE' });
-    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
+    // Define unique aliases for associations
+    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'PlanTopics', onDelete: 'CASCADE' });
+    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'PlanSession' }); // Changed alias from 'Session' to 'PlanSession'
     SessionPlan.hasMany(models.ActionsAndRecommendations, {
       foreignKey: 'sessionPlanId',
-      as: 'ActionsAndRecommendations',
+      as: 'PlanActionsAndRecommendations',
       onDelete: 'CASCADE',
     });
   }
 }
+
 
 SessionPlan.init(
   {
