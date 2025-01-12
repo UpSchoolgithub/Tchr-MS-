@@ -637,35 +637,36 @@ const handleGenerateARLessonPlan = async (arId) => {
       }
   
       const payload = {
-        board,
-        grade: className,
-        subject: subjectName,
-        unit: unitName,
-        chapter: topic.name,
-        concepts: topic.concepts.map((concept, index) => ({
-          concept: concept.name,
-          detailing: concept.detailing || "No detailing provided.",
-        })),
+        board: board || "Board Not Specified",
+        grade: className || "Grade Not Specified",
+        subject: subjectName || "Subject Not Specified",
+        unit: unitName || "Unit Not Specified",
+        chapter: topic.name || "Chapter Not Specified",
         sessionType: "Theory",
         noOfSession: 1,
         duration: 45,
+        topics: [
+          {
+            topic: topic.name,
+            concepts: topic.concepts.map((concept) => ({
+              concept: concept.name,
+              detailing: concept.detailing || "No details provided.",
+            })),
+          },
+        ],
       };
   
       const response = await axios.post("https://tms.up.school/api/dynamicLP", payload);
   
       const generatedLessonPlan = response.data.lesson_plan;
   
-      // Update state with generated lesson plan
+      // Save the generated lesson plan in the state
       setTopicsWithConcepts((prev) => ({
         ...prev,
         [sessionNumber]: prev[sessionNumber].map((t, idx) =>
           idx === topicIndex ? { ...t, lessonPlan: generatedLessonPlan } : t
         ),
       }));
-  
-      // Call save function to save the lesson plan
-      const conceptId = topic.concepts[0]?.id; // Assuming concept ID exists
-      await handleSaveLessonPlan(conceptId, generatedLessonPlan);
   
       setSuccessMessage(`Lesson plan for topic "${topic.name}" generated and saved successfully!`);
       setError("");
@@ -681,6 +682,7 @@ const handleGenerateARLessonPlan = async (arId) => {
   
   
   
+  
 
   // Generate lesson plans for all topics
   const handleGenerateAllLessonPlans = async () => {
@@ -688,26 +690,26 @@ const handleGenerateARLessonPlan = async (arId) => {
       setSaving(true);
   
       const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.map((topic) => {
-          const formattedTopics = topic.concepts.map((concept, index) => ({
-            topic: topic.name.trim(),
-            concept: typeof concept === "string" ? concept.trim() : "",
-            detailing: topic.conceptDetailing[index]?.trim() || "No detailing provided",
-          }));
-  
-          return {
-            sessionNumber: sessionNumber.toString(),
-            board: board?.trim() || "Unknown Board",
-            grade: className?.trim() || "Unknown Grade",
-            subject: subjectName?.trim() || "Unknown Subject",
-            unit: unitName?.trim() || "Unknown Unit",
-            chapter: topic.name?.trim(),
-            topics: formattedTopics,
-            sessionType: "Theory",
-            noOfSession: 1,
-            duration: 45,
-          };
-        })
+        topics.map((topic) => ({
+          sessionNumber: sessionNumber.toString(),
+          board: board || "Board Not Specified",
+          grade: className || "Grade Not Specified",
+          subject: subjectName || "Subject Not Specified",
+          unit: unitName || "Unit Not Specified",
+          chapter: topic.name || "Chapter Not Specified",
+          sessionType: "Theory",
+          noOfSession: 1,
+          duration: 45,
+          topics: [
+            {
+              topic: topic.name,
+              concepts: topic.concepts.map((concept) => ({
+                concept: concept.name,
+                detailing: concept.detailing || "No details provided",
+              })),
+            },
+          ],
+        }))
       );
   
       const responses = await Promise.allSettled(
@@ -716,7 +718,6 @@ const handleGenerateARLessonPlan = async (arId) => {
         )
       );
   
-      // Update topicsWithConcepts state with generated lesson plans
       const updatedState = { ...topicsWithConcepts };
       responses.forEach((result, index) => {
         if (result.status === "fulfilled") {
@@ -724,9 +725,7 @@ const handleGenerateARLessonPlan = async (arId) => {
           const sessionNumber = payload.sessionNumber;
   
           updatedState[sessionNumber] = updatedState[sessionNumber].map((topic) =>
-            topic.name === payload.chapter
-              ? { ...topic, lessonPlan: result.value.data.lesson_plan }
-              : topic
+            topic.name === payload.chapter ? { ...topic, lessonPlan: result.value.data.lesson_plan } : topic
           );
         }
       });
@@ -1008,103 +1007,58 @@ const handleGenerateARLessonPlan = async (arId) => {
         </button>
       </div>
   
-      {/* Session Plans Table */}
       <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Session Number</th>
-              <th>Topic Name</th>
-              <th>Concept</th>
-              <th>Concept Detailing</th>
-              <th>Lesson Plan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
-              sessionPlans.flatMap((plan, planIndex) => {
-                const preLearningTopics =
-                  plan.ActionsAndRecommendations?.filter((ar) => ar.type === "pre-learning") || [];
-                const postLearningTopics =
-                  plan.ActionsAndRecommendations?.filter((ar) => ar.type === "post-learning") || [];
-  
-                const preLearningRows = preLearningTopics.map((ar, arIndex) => (
-                  <tr key={`pre-${plan.id}-${arIndex}`}>
-                    <td>{planIndex === 0 && arIndex === 0 ? "Pre-learning" : ""}</td>
-                    <td>{ar.topicName || "No Topic Name"}</td>
-                    <td>{ar.conceptName || "No Concept Name"}</td>
-                    <td>N/A</td>
-                    <td>
-                      <button onClick={() => handleGenerateARLessonPlan(ar.id)}>Generate</button>
+  <table>
+    <thead>
+      <tr>
+        <th>Session Number</th>
+        <th>Topic Name</th>
+        <th>Concept</th>
+        <th>Objectives</th>
+        <th>Teaching Aids</th>
+        <th>Prerequisites</th>
+        <th>Content</th>
+        <th>Activities</th>
+        <th>Summary</th>
+        <th>Homework</th>
+      </tr>
+    </thead>
+    <tbody>
+      {Array.isArray(sessionPlans) && sessionPlans.length > 0 ? (
+        sessionPlans.flatMap((plan, planIndex) =>
+          topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
+            topic.concepts.map((concept, cIndex) => {
+              const lessonPlan = concept.lessonPlan; // Ensure this is populated from the backend response
+              return (
+                <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
+                  {tIndex === 0 && cIndex === 0 && (
+                    <td rowSpan={topicsWithConcepts[plan.sessionNumber].reduce((acc, t) => acc + t.concepts.length, 0)}>
+                      {plan.sessionNumber}
                     </td>
-                  </tr>
-                ));
-  
-                const sessionRows =
-                  topicsWithConcepts[plan.sessionNumber]?.flatMap((topic, tIndex) =>
-                    topic.concepts.map((concept, cIndex) => (
-                      <tr key={`${plan.id}-${tIndex}-${cIndex}`}>
-                        {tIndex === 0 && cIndex === 0 && (
-                          <td
-                            rowSpan={topicsWithConcepts[plan.sessionNumber].reduce(
-                              (acc, t) => acc + t.concepts.length,
-                              0
-                            )}
-                          >
-                            {plan.sessionNumber}
-                          </td>
-                        )}
-                        {cIndex === 0 && (
-                          <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>
-                        )}
-                        <td>{concept.name || "No Concept"}</td>
-                        <td>{concept.detailing || "No Detailing"}</td>
-                        <td>
-                          <button onClick={() => handleViewLessonPlan(concept.id)}>View</button>
-                        </td>
-                      </tr>
-                    ))
-                  ) || [];
-  
-                const postLearningRows = postLearningTopics.map((ar, arIndex) => (
-                  <tr key={`post-${plan.id}-${arIndex}`}>
-                    <td>Post-learning</td>
-                    <td>{ar.topicName || "No Topic Name"}</td>
-                    <td>{ar.conceptName || "No Concept Name"}</td>
-                    <td>N/A</td>
-                    <td>
-                      <button onClick={() => handleGenerateARLessonPlan(ar.id)}>Generate</button>
-                    </td>
-                  </tr>
-                ));
-  
-                return [
-                  ...preLearningRows,
-                  <React.Fragment key={`session-${plan.id}`}>
-                    <tr>
-                      <td colSpan="5" style={{ textAlign: "left" }}>
-                        <strong>Session {plan.sessionNumber}</strong>
-                        <button
-                          onClick={() => handleDownloadSession(plan.sessionNumber)}
-                          className="btn btn-primary"
-                        >
-                          Download
-                        </button>
-                      </td>
-                    </tr>
-                    {sessionRows}
-                  </React.Fragment>,
-                  ...postLearningRows,
-                ];
-              })
-            ) : (
-              <tr>
-                <td colSpan="5">No session plans available. Please upload or create a new one.</td>
-              </tr>
-            )}
-          </tbody>          
-        </table>
-      </div>
+                  )}
+                  {cIndex === 0 && <td rowSpan={topic.concepts.length}>{topic.name || "No Topic Name"}</td>}
+                  <td>{concept.name || "No Concept"}</td>
+                  <td>{lessonPlan?.objectives || "No Objectives"}</td>
+                  <td>{lessonPlan?.teachingAids || "No Teaching Aids"}</td>
+                  <td>{lessonPlan?.prerequisites || "No Prerequisites"}</td>
+                  <td>{lessonPlan?.content || "No Content"}</td>
+                  <td>{lessonPlan?.activities || "No Activities"}</td>
+                  <td>{lessonPlan?.summary || "No Summary"}</td>
+                  <td>{lessonPlan?.homework || "No Homework"}</td>
+                </tr>
+              );
+            })
+          )
+        )
+      ) : (
+        <tr>
+          <td colSpan="10">No session plans available. Please upload or create a new one.</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
   
       {/* Actions and Recommendations Table */}
 {/* Actions and Recommendations Table */}
