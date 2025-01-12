@@ -3,8 +3,8 @@ const sequelize = require('../config/db');
 
 class Topic extends Model {
   static associate(models) {
-    Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'RelatedSessionPlan' });
-    Topic.hasMany(models.concept, { foreignKey: 'topicId', as: 'TopicConcepts', onDelete: 'CASCADE' });
+    Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'SessionPlan' });
+    Topic.hasMany(models.concept, { foreignKey: 'topicId', as: 'Concepts', onDelete: 'CASCADE' });
   }
 }
 
@@ -14,7 +14,7 @@ Topic.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'SessionPlans',
+        model: 'SessionPlans', // References 'SessionPlans' table
         key: 'id',
       },
     },
@@ -23,6 +23,7 @@ Topic.init(
       allowNull: false,
     },
   },
+  
   {
     sequelize,
     modelName: 'Topic',

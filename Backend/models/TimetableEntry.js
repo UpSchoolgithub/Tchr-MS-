@@ -28,12 +28,8 @@ class TimetableEntry extends Model {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
-    this.hasMany(models.Session, {
-      foreignKey: 'timetableEntryId',
-      as: 'Sessions', // Alias for association
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    });
+    this.hasMany(models.Session, { foreignKey: 'timetableEntryId', as: 'RelatedSessions' });
+
   }
 }
 
