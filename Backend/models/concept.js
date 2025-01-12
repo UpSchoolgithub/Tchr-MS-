@@ -3,11 +3,10 @@ const sequelize = require('../config/db');
 
 class Concept extends Model {
   static associate(models) {
-    this.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'RelatedTopic' }); // Changed alias
-    this.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'RelatedLessonPlan' }); // Changed alias
+    this.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'RelatedTopicConcept' });
+    this.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'ConceptLessonPlan' });
   }
 }
-
 
 Concept.init(
   {
@@ -26,7 +25,7 @@ Concept.init(
     status: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 'pending', // Default to 'pending'
+      defaultValue: 'pending',
     },
   },
   {

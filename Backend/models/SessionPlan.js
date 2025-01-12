@@ -1,11 +1,10 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ensure this points to your sequelize instance
+const sequelize = require('../config/db');
 
 class SessionPlan extends Model {
   static associate(models) {
-    // Define unique aliases for associations
-    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'PlanTopics', onDelete: 'CASCADE' });
-    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'PlanSession' }); // Changed alias from 'Session' to 'PlanSession'
+    SessionPlan.hasMany(models.Topic, { foreignKey: 'sessionPlanId', as: 'SessionPlanTopics', onDelete: 'CASCADE' });
+    SessionPlan.belongsTo(models.Session, { foreignKey: 'sessionId', as: 'Session' });
     SessionPlan.hasMany(models.ActionsAndRecommendations, {
       foreignKey: 'sessionPlanId',
       as: 'PlanActionsAndRecommendations',
@@ -13,7 +12,6 @@ class SessionPlan extends Model {
     });
   }
 }
-
 
 SessionPlan.init(
   {
@@ -28,32 +26,28 @@ SessionPlan.init(
     sessionNumber: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      comment: "Negative values (-1, -2) for pre-learning; positive for regular sessions.",
     },
     completed: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false,
-      comment: "Indicates if the session has been completed.",
     },
     endTime: {
       type: DataTypes.DATE,
       allowNull: true,
-      field: 'sessionEndTime', // Use the actual column name from the database
-      comment: "Timestamp when the session was ended.",
+      field: 'sessionEndTime',
     },
     status: {
       type: DataTypes.ENUM('in-progress', 'completed', 'pending'),
       allowNull: false,
       defaultValue: 'in-progress',
-      comment: "Tracks the status of the session.",
     },
   },
   {
     sequelize,
     modelName: 'SessionPlan',
     tableName: 'SessionPlans',
-    freezeTableName: true, // Prevent Sequelize from renaming the table
+    freezeTableName: true,
   }
 );
 

@@ -1,7 +1,11 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class ActionsAndRecommendations extends Model {}
+class ActionsAndRecommendations extends Model {
+  static associate(models) {
+    ActionsAndRecommendations.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'RelatedSessionPlan' }); // Changed alias
+  }
+}
 
 ActionsAndRecommendations.init(
   {

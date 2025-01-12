@@ -3,11 +3,10 @@ const sequelize = require('../config/db');
 
 class Topic extends Model {
   static associate(models) {
-    Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'RelatedSessionPlan' }); // Unique alias
-    Topic.hasMany(models.concept, { foreignKey: 'topicId', as: 'TopicConcepts', onDelete: 'CASCADE' }); // Changed alias
+    Topic.belongsTo(models.SessionPlan, { foreignKey: 'sessionPlanId', as: 'RelatedSessionPlan' });
+    Topic.hasMany(models.concept, { foreignKey: 'topicId', as: 'TopicConcepts', onDelete: 'CASCADE' });
   }
 }
-
 
 Topic.init(
   {
@@ -15,7 +14,7 @@ Topic.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'SessionPlans', // References 'SessionPlans' table
+        model: 'SessionPlans',
         key: 'id',
       },
     },
@@ -24,7 +23,6 @@ Topic.init(
       allowNull: false,
     },
   },
-  
   {
     sequelize,
     modelName: 'Topic',
