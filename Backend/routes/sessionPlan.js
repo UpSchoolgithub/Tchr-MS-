@@ -554,13 +554,16 @@ router.post('/sessionPlans/:id/generateLessonPlan', async (req, res) => {
             {
               model: Concept,
               as: 'Concepts', // Alias used in the Concept model
+            
             },
           ],
         },
       ],
     });
     
-
+    console.log('SessionPlan model:', SessionPlan);
+    console.log('Topic model:', Topic);
+    
     if (!sessionPlans || sessionPlans.length === 0) {
       return res.status(404).json({ message: 'Session plan not found' });
     }

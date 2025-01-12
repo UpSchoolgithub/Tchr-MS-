@@ -3,7 +3,7 @@ const sequelize = require('../config/db');
 
 class Concept extends Model {
   static associate(models) {
-    this.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'Topics' });
+    this.belongsTo(models.Topic, { foreignKey: 'topicId', as: 'Topic' });
     this.hasOne(models.LessonPlan, { foreignKey: 'conceptId', as: 'LessonPlan' });
   }
 }
