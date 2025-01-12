@@ -816,42 +816,35 @@ const handleGenerateARLessonPlan = async (arId) => {
       return;
     }
   
-    // Initialize jsPDF
     const doc = new jsPDF();
-    const lineHeight = 6; // Vertical spacing between lines
-    const boxPadding = 2; // Padding for content in the boxes
-    const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
-    let y = 20; // Starting vertical position
-
-    // Add a consistent header to all pages
-  const addHeader = () => {
-    doc.setFontSize(10);
-    doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10, { align: "left" });
-    doc.line(10, 12, 200, 12); // Horizontal line below the header
-  };
-
-  // Add the header to the first page
-  addHeader();
-
-  // Add first-page heading
-  doc.setFontSize(10);
-  doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
-  y += lineHeight;
-  doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
-  y += lineHeight * 2;
-  doc.text(`Session Type: Theory`, 10, y);
-  y += lineHeight;
-  doc.text(`Number of Sessions: 1`, 10, y);
-  y += lineHeight;
-  doc.text(`Duration per Session: 45 minutes`, 10, y);
-  y += lineHeight * 2;
+    const lineHeight = 6;
+    const pageHeight = doc.internal.pageSize.height - 20;
+    let y = 20;
   
-    // Add topics and concepts
+    const addHeader = () => {
+      doc.setFontSize(10);
+      doc.text(`Class ${className} ${subjectName} Lesson Plan`, 10, 10);
+      doc.line(10, 12, 200, 12); // Horizontal line
+    };
+  
+    addHeader();
+  
+    doc.setFontSize(10);
+    doc.text(`Unit Name: ${unitName || "N/A"}`, 10, y);
+    y += lineHeight;
+    doc.text(`Chapter Name: ${chapterName || "N/A"}`, 10, y);
+    y += lineHeight * 2;
+    doc.text(`Session Type: Theory`, 10, y);
+    y += lineHeight;
+    doc.text(`Number of Sessions: 1`, 10, y);
+    y += lineHeight;
+    doc.text(`Duration per Session: 45 minutes`, 10, y);
+    y += lineHeight * 2;
+  
     session.Topics.forEach((topic) => {
-      // Add topic title
       if (y > pageHeight) {
         doc.addPage();
-        y = 10; // Reset y position for the new page
+        y = 10;
       }
   
       doc.setFont("helvetica", "bold");
@@ -864,48 +857,113 @@ const handleGenerateARLessonPlan = async (arId) => {
           y = 10;
         }
   
-        // Add concept name
         doc.setFont("helvetica", "normal");
         doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
         y += lineHeight;
   
-        // Add concept detailing
-        if (concept.conceptDetailing) {
-          const details = doc.splitTextToSize(`Details: ${concept.conceptDetailing}`, 180); // Wrap text
-          details.forEach((line) => {
-            if (y > pageHeight) {
-              doc.addPage();
-              y = 10;
-            }
-            doc.text(line, 10, y);
-            y += lineHeight;
-          });
-        }
+        const lessonPlan = concept.LessonPlan || {};
   
-        // Add lesson plan without timings
-        if (concept.LessonPlan?.generatedLP) {
-          const filteredLessonPlan = concept.LessonPlan.generatedLP.replace(/\(\d+ minutes\)/g, "");
-          const lessonPlanLines = doc.splitTextToSize(`Lesson Plan:\n${filteredLessonPlan}`, 180);
+        // Objectives
+        doc.text(`Objectives:`, 10, y);
+        y += lineHeight;
+        const objectives = doc.splitTextToSize(lessonPlan.objectives || "N/A", 180);
+        objectives.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
   
-          lessonPlanLines.forEach((line) => {
-            if (y > pageHeight) {
-              doc.addPage();
-              y = 10;
-            }
-            doc.text(line, 10, y);
-            y += lineHeight;
-          });
-        }
+        // Teaching Aids
+        doc.text(`Teaching Aids:`, 10, y);
+        y += lineHeight;
+        const aids = doc.splitTextToSize(lessonPlan.teachingAids || "N/A", 180);
+        aids.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
   
-        y += lineHeight; // Add spacing after each concept
+        // Prerequisites
+        doc.text(`Prerequisites:`, 10, y);
+        y += lineHeight;
+        const prerequisites = doc.splitTextToSize(lessonPlan.prerequisites || "N/A", 180);
+        prerequisites.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+  
+        // Content
+        doc.text(`Content:`, 10, y);
+        y += lineHeight;
+        const content = doc.splitTextToSize(lessonPlan.content || "N/A", 180);
+        content.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+  
+        // Activities
+        doc.text(`Activities:`, 10, y);
+        y += lineHeight;
+        const activities = doc.splitTextToSize(lessonPlan.activities || "N/A", 180);
+        activities.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+  
+        // Summary
+        doc.text(`Summary:`, 10, y);
+        y += lineHeight;
+        const summary = doc.splitTextToSize(lessonPlan.summary || "N/A", 180);
+        summary.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+  
+        // Homework
+        doc.text(`Homework:`, 10, y);
+        y += lineHeight;
+        const homework = doc.splitTextToSize(lessonPlan.homework || "N/A", 180);
+        homework.forEach((line) => {
+          if (y > pageHeight) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(line, 10, y);
+          y += lineHeight;
+        });
+  
+        y += lineHeight * 2; // Add spacing between concepts
       });
   
-      y += lineHeight; // Add spacing after each topic
+      y += lineHeight; // Add spacing between topics
     });
   
     // Save the PDF file
     doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
+  
   
 
   
