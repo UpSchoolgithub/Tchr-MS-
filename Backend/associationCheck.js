@@ -1,4 +1,4 @@
-const { sequelize, SessionPlan, Topic, Concept, LessonPlan } = require('../models');
+const { sequelize, SessionPlan, Topic, Concept, LessonPlan } = require('./models');
 
 (async () => {
   console.log("\n--- Sequelize Association Diagnostics ---");
