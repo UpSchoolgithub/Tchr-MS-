@@ -13,7 +13,8 @@ const TeacherSessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [filter, setFilter] = useState({ subject: '', progress: '' }); // Add filtering options
+  const [filter, setFilter] = useState({ subject: '', progress: '' , school: ''}); // Add filtering options
+  
   const maxRetries = 3;
   let retryCount = 0;
 
@@ -92,6 +93,10 @@ const TeacherSessions = () => {
     let filtered = sessions.filter((session) => session.day === day);
 
     // Apply subject and progress filters
+    if (filter.school) {
+      filtered = filtered.filter((session) => session.schoolName === filter.school);
+    }
+  
     if (filter.subject) {
       filtered = filtered.filter((session) => session.subjectName === filter.subject);
     }
@@ -150,7 +155,16 @@ const TeacherSessions = () => {
           dateFormat="yyyy-MM-dd"
         />
 
-        {/* Filters for subject and progress */}
+        {/* Filters for school, subject and progress */}
+        <select onChange={(e) => setFilter({ ...filter, school: e.target.value })}>
+          <option value="">All Schools</option>
+          {Array.from(new Set(sessions.map((session) => session.schoolName))).map((school) => (
+            <option key={school} value={school}>
+              {school}
+            </option>
+          ))}
+        </select>
+
         <select onChange={(e) => setFilter({ ...filter, subject: e.target.value })}>
           <option value="">All Subjects</option>
           {Array.from(new Set(sessions.map((session) => session.subjectName))).map((subject) => (
