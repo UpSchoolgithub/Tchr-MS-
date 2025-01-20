@@ -416,20 +416,20 @@ return (
       {session.topics.map((topic, topicIndex) => (
   <li key={topicIndex}>
     <div className="topic-header">
-      <input
-        type="checkbox"
-        id={`topic-${sessionIndex}-${topicIndex}`}
-        checked={topic.completed}
-        onChange={() => handleTopicChange(sessionIndex, topicIndex)}
-      />
-      <label>{topic.name}</label>
-      <button
-        onClick={() => handleTopicExpand(topicIndex)}
-        className="view-lp-button"
-      >
-        {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-      </button>
-    </div>
+  <input
+    type="checkbox"
+    id={`topic-${sessionIndex}-${topicIndex}`}
+    checked={topic.completed}
+    onChange={() => handleTopicChange(sessionIndex, topicIndex)}
+  />
+  <h3 style={{ fontWeight: 'bold' }}>{topic.name}</h3>
+  <button
+    onClick={() => handleTopicExpand(topicIndex)}
+    className="view-lp-button"
+  >
+    {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+  </button>
+</div>
 
     {expandedTopic === topicIndex && topicIndex === 0 && (
       <ul className="concepts-list">
@@ -445,7 +445,7 @@ return (
             }
           />
           <label>
-          <h3> Concept 1: Electric Field Created by Positive and Negative Charges</h3> 
+          <h4> Concept 1: Electric Field Created by Positive and Negative Charges</h4> 
           </label>
         </div>
         <div>
@@ -549,7 +549,7 @@ return (
             }
           />
           <label>
-           <h3>Concept 2: Interaction Between Charges</h3> 
+           <h4>Concept 2: Interaction Between Charges</h4> 
           </label>
         </div>
         <div>
