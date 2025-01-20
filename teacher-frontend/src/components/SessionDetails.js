@@ -413,50 +413,124 @@ return (
         
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
-  {session.topics.map((topic, topicIndex) => (
-    <li key={topicIndex}>
-      <div className="topic-header">
+      {session.topics.map((topic, topicIndex) => (
+  <li key={topicIndex}>
+    <div className="topic-header">
       <input
-  type="checkbox"
-  id={`topic-${sessionIndex}-${topicIndex}`}
-  checked={topic.completed}
-  onChange={() => handleTopicChange(sessionIndex, topicIndex)}
-/>
+        type="checkbox"
+        id={`topic-${sessionIndex}-${topicIndex}`}
+        checked={topic.completed}
+        onChange={() => handleTopicChange(sessionIndex, topicIndex)}
+      />
+      <label>{topic.name}</label>
+      <button
+        onClick={() => handleTopicExpand(topicIndex)}
+        className="view-lp-button"
+      >
+        {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+      </button>
+    </div>
 
+    {expandedTopic === topicIndex && topicIndex === 0 && (
+      <ul className="concepts-list">
+        {/* Concept 1 */}
+        <li>
+          <div className="concept-header">
+            <input
+              type="checkbox"
+              id={`concept-${sessionIndex}-${topicIndex}-0`}
+              checked={false} // Initial state for Concept 1
+              onChange={() => handleConceptChange(sessionIndex, topicIndex, 0)}
+            />
+            <label>Concept 1: Electric Field Created by Positive and Negative Charges</label>
+          </div>
+          <p>
+            <strong>Lesson Objectives:</strong>
+            <ul>
+              <li>Define an electric field and its importance in understanding electric forces.</li>
+              <li>Explain the behavior of electric field lines for positive and negative charges.</li>
+              <li>Represent electric fields using diagrams for various charge configurations.</li>
+            </ul>
+            <strong>Materials Needed:</strong>
+            <ul>
+              <li>Whiteboard and markers</li>
+              <li>Diagrams illustrating electric field lines for positive and negative charges</li>
+              <li>Prepared electric field diagrams for group activity</li>
+              <li>Worksheet with practice questions</li>
+            </ul>
+            <strong>Lesson Structure:</strong>
+            <ol>
+              <li>
+                <strong>Introduction (2 minutes):</strong>
+                - Briefly introduce the concept of an electric field as the region around a charge where its influence can be felt.
+              </li>
+              <li>
+                <strong>Explanation and Discussion (8 minutes):</strong>
+                <ul>
+                  <li><strong>Definition:</strong> Electric field as a region where a force is experienced by another charge.</li>
+                  <li><strong>Electric Field Lines for Positive Charges:</strong> Radiate outward, representing repulsion from the positive charge.</li>
+                  <li><strong>Electric Field Lines for Negative Charges:</strong> Point inward, representing attraction to the negative charge.</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Recap and Quick Assessment (5 minutes):</strong>
+                Summarize key points and distribute a worksheet.
+              </li>
+            </ol>
+          </p>
+        </li>
 
-        <label>{topic.name}</label>
-        <button
-          onClick={() => handleTopicExpand(topicIndex)}
-          className="view-lp-button"
-        >
-          {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-        </button>
-      </div>
+        {/* Concept 2 */}
+        <li>
+          <div className="concept-header">
+            <input
+              type="checkbox"
+              id={`concept-${sessionIndex}-${topicIndex}-1`}
+              checked={false} // Initial state for Concept 2
+              onChange={() => handleConceptChange(sessionIndex, topicIndex, 1)}
+            />
+            <label>Concept 2: Interaction Between Charges</label>
+          </div>
+          <p>
+            <strong>Lesson Objectives:</strong>
+            <ul>
+              <li>Understand how electric field lines represent interactions between charges.</li>
+              <li>Describe the interaction of field lines between positive-positive, positive-negative, and negative-negative charges.</li>
+              <li>Illustrate the behavior of field lines for different charge configurations using diagrams.</li>
+            </ul>
+            <strong>Materials Needed:</strong>
+            <ul>
+              <li>Whiteboard and markers</li>
+              <li>Diagrams illustrating field line interactions between charges</li>
+              <li>Flashcards or colored tokens to represent charges</li>
+              <li>Worksheet with practice diagrams and questions</li>
+            </ul>
+            <strong>Lesson Structure:</strong>
+            <ol>
+              <li>
+                <strong>Introduction (2 minutes):</strong>
+                Start with a question: "What happens when two like charges or opposite charges are brought close to each other?"
+              </li>
+              <li>
+                <strong>Explanation and Discussion (8 minutes):</strong>
+                <ul>
+                  <li><strong>Positive-Positive Charges:</strong> Field lines repel each other and move outward, indicating repulsion.</li>
+                  <li><strong>Positive-Negative Charges:</strong> Field lines originate from the positive charge and terminate at the negative charge, indicating attraction.</li>
+                  <li><strong>Negative-Negative Charges:</strong> Field lines move inward toward each charge, but they repel each other.</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Recap and Quick Assessment (5 minutes):</strong>
+                Summarize the key points and distribute a worksheet.
+              </li>
+            </ol>
+          </p>
+        </li>
+      </ul>
+    )}
+  </li>
+))}
 
-      {expandedTopic === topicIndex && (
-        <ul className="concepts-list">
-          {topic.concepts.map((concept, conceptIndex) => (
-            <li key={conceptIndex}>
-              <div className="concept-header">
-              <input
-  type="checkbox"
-  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
-  checked={concept.completed}
-  onChange={() => handleConceptChange(sessionIndex, topicIndex, conceptIndex)}
-/>
-
-                <label>{concept.name}</label>
-              </div>
-              <p>{concept.detailing || 'N/A'}</p>
-              {concept.lessonPlans?.map((plan, planIndex) => (
-                <pre key={planIndex}>{plan}</pre>
-              ))}
-            </li>
-          ))}
-        </ul>
-      )}
-    </li>
-  ))}
 </ul>
 
     </div>
