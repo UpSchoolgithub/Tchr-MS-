@@ -190,6 +190,7 @@ const TeacherSessions = () => {
         <th>School</th>
         <th>Class</th>
         <th>Section</th>
+        <th>SectionId</th>
         <th>Day</th>
         <th>Period</th>
         <th>Subject</th>
