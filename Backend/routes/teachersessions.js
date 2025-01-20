@@ -420,9 +420,6 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
       }
     );
 
-    // Debugging: Log the raw sessions data
-    console.log('Raw Sessions Response:', sessions);
-
     const sessionMap = new Map();
 
     sessions.forEach((session) => {
@@ -446,39 +443,39 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
 
       const currentSession = sessionMap.get(session.sessionId);
 
-      const topicIndex = currentSession.topics.findIndex((t) => t.name === session.topicName);
+      // Filter out topics with null or empty `name`
+      if (session.topicName) {
+        const topicIndex = currentSession.topics.findIndex((t) => t.name === session.topicName);
 
-      if (topicIndex === -1) {
-        currentSession.topics.push({
-          name: session.topicName,
-          details: [
-            {
+        if (topicIndex === -1) {
+          currentSession.topics.push({
+            name: session.topicName,
+            details: [
+              {
+                concept: session.mainConcept,
+                conceptDetailing: session.conceptDetailing,
+                lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
+              },
+            ],
+          });
+        } else {
+          const topic = currentSession.topics[topicIndex];
+          const existingConcept = topic.details.find((d) => d.concept === session.mainConcept);
+
+          if (!existingConcept) {
+            topic.details.push({
               concept: session.mainConcept,
               conceptDetailing: session.conceptDetailing,
               lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
-            },
-          ],
-        });
-      } else {
-        const topic = currentSession.topics[topicIndex];
-        const existingConcept = topic.details.find((d) => d.concept === session.mainConcept);
-
-        if (!existingConcept) {
-          topic.details.push({
-            concept: session.mainConcept,
-            conceptDetailing: session.conceptDetailing,
-            lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
-          });
-        } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
-          existingConcept.lessonPlans.push(session.lessonPlan);
+            });
+          } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
+            existingConcept.lessonPlans.push(session.lessonPlan);
+          }
         }
       }
     });
 
     const formattedSessions = Array.from(sessionMap.values());
-
-    // Debugging: Log the formatted sessions before sending the response
-    console.log('Formatted Sessions Response:', formattedSessions);
 
     res.status(200).json({ sessions: formattedSessions });
   } catch (error) {
@@ -486,6 +483,7 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
     res.status(500).json({ error: 'Failed to fetch sessions.' });
   }
 });
+
 
 
 
