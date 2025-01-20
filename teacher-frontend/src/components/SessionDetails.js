@@ -398,7 +398,7 @@ return (
       <div key={sessionIndex} className="session-item">
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
       
-      <h4>Topics to Cover:</h4>
+      <h4>Topics to Cover - Pre Learning:</h4>
       <ul className="topics-list">
       {session.topics.map((topic, topicIndex) => (
   <li key={topicIndex}>
