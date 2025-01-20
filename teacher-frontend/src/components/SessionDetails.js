@@ -445,7 +445,7 @@ return (
             }
           />
           <label>
-            Concept 1: Electric Field Created by Positive and Negative Charges
+          <h3> Concept 1: Electric Field Created by Positive and Negative Charges</h3> 
           </label>
         </div>
         <div>
@@ -549,7 +549,7 @@ return (
             }
           />
           <label>
-            Concept 2: Interaction Between Charges
+           <h3>Concept 2: Interaction Between Charges</h3> 
           </label>
         </div>
         <div>
