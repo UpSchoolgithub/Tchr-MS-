@@ -14,6 +14,7 @@ import TeacherSessions from './components/TeacherSessions';
 import SessionDetails from './components/SessionDetails';
 import SessionReport from './components/SessionReport';
 import LessonPlanForm from './components/LessonPlanForm';
+import ViewSessions from './ViewSessions';
 
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
@@ -46,6 +47,7 @@ function InnerApp() {
             <Route path="/teacherportal/:teacherId/teacher-sessions" element={<PrivateRoute><TeacherSessions /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/session-details" element={<PrivateRoute><SessionDetails /></PrivateRoute>} />
             <Route path="/teacherportal/:teacherId/session-report" element={<PrivateRoute><SessionReport /></PrivateRoute>} />
+            <Route path="/view-sessions" element={<ViewSessions />} />
 
             {/* General Lesson Plan Route */}
             <Route path="/lesson-plan" element={<PrivateRoute><LessonPlanForm /></PrivateRoute>} />
