@@ -302,12 +302,12 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           endTime: session.endTime,
         });
       }
-
+    
       const currentSession = sessionMap.get(session.sessionId);
-
-      const topicIndex = currentSession.topics.findIndex((t) => t.name === session.topicName);
-
-      if (topicIndex === -1) {
+    
+      // Deduplicate topics based on name
+      const topicExists = currentSession.topics.find((t) => t.name === session.topicName);
+      if (!topicExists) {
         currentSession.topics.push({
           name: session.topicName,
           details: [
@@ -319,20 +319,24 @@ router.get('/teachers/:teacherId/sections/:sectionId/subjects/:subjectId/session
           ],
         });
       } else {
-        const topic = currentSession.topics[topicIndex];
-        const existingConcept = topic.details.find((d) => d.concept === session.mainConcept);
-
-        if (!existingConcept) {
-          topic.details.push({
+        const existingTopic = currentSession.topics.find((t) => t.name === session.topicName);
+        const conceptExists = existingTopic.details.find((d) => d.concept === session.mainConcept);
+    
+        if (!conceptExists) {
+          existingTopic.details.push({
             concept: session.mainConcept,
             conceptDetailing: session.conceptDetailing,
             lessonPlans: session.lessonPlan ? [session.lessonPlan] : [],
           });
-        } else if (session.lessonPlan && !existingConcept.lessonPlans.includes(session.lessonPlan)) {
-          existingConcept.lessonPlans.push(session.lessonPlan);
+        } else if (
+          session.lessonPlan &&
+          !conceptExists.lessonPlans.includes(session.lessonPlan)
+        ) {
+          conceptExists.lessonPlans.push(session.lessonPlan);
         }
       }
     });
+    
 
     const formattedSessions = Array.from(sessionMap.values());
 
