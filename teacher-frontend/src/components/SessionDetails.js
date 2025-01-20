@@ -403,228 +403,171 @@ return (
       {session.topics.map((topic, topicIndex) => (
   <li key={topicIndex}>
     <div className="topic-header">
-  <input
-    type="checkbox"
-    id={`topic-${sessionIndex}-${topicIndex}`}
-    checked={topic.completed}
-    onChange={() => handleTopicChange(sessionIndex, topicIndex)}
-  />
-  <h3 style={{ fontWeight: 'bold' }}>{topic.name}</h3>
-  <button
-    onClick={() => handleTopicExpand(topicIndex)}
-    className="view-lp-button"
-  >
-    {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
-  </button>
-</div>
+      <input
+        type="checkbox"
+        id={`topic-${sessionIndex}-${topicIndex}`}
+        checked={topic.completed}
+        onChange={() => handleTopicChange(sessionIndex, topicIndex)}
+      />
+      <label>{topic.name}</label>
+      <button
+        onClick={() => handleTopicExpand(topicIndex)}
+        className="view-lp-button"
+      >
+        {expandedTopic === topicIndex ? 'HIDE LP' : 'VIEW LP'}
+      </button>
+    </div>
 
     {expandedTopic === topicIndex && topicIndex === 0 && (
       <ul className="concepts-list">
-      {/* Concept 1 */}
-      <li>
-        <div className="concept-header">
-          <input
-            type="checkbox"
-            id={`concept-${sessionIndex}-${topicIndex}-0`}
-            checked={false} // Initial state for Concept 1
-            onChange={() =>
-              handleConceptChange(sessionIndex, topicIndex, 0)
-            }
-          />
-          <label>
-          <h5> Concept 1: Electric Field Created by Positive and Negative Charges</h5> 
-          </label>
-        </div>
-        <div>
+        {/* Concept 1 */}
+        <li>
+          <div className="concept-header">
+            <input
+              type="checkbox"
+              id={`concept-${sessionIndex}-${topicIndex}-0`}
+              checked={false} // Initial state for Concept 1
+              onChange={() => handleConceptChange(sessionIndex, topicIndex, 0)}
+            />
+            <label>Concept 1: Understanding Charge</label>
+          </div>
           <p>
-            <strong>Lesson Objectives:</strong>
-            <div className="shaded-box">
-              <ul>
-                <li>Define an electric field and its importance in understanding electric forces.</li>
-                <li>Explain the behavior of electric field lines for positive and negative charges.</li>
-                <li>Represent electric fields using diagrams for various charge configurations.</li>
-              </ul>
-            </div>
-          </p>
-          <p>
-            <strong>Materials Needed:</strong>
-            <div className="shaded-box">
-              <ul>
-                <li>Whiteboard and markers</li>
-                <li>Diagrams illustrating electric field lines for positive and negative charges</li>
-                <li>A set of prepared electric field diagrams for group activity</li>
-                <li>Worksheet with practice questions</li>
-              </ul>
-            </div>
-          </p>
-          <p>
-            <strong>Lesson Structure:</strong>
-            <div className="shaded-box">
-              <ol>
-                <li>
-                  <strong>Introduction (2 minutes):</strong>
-                  <ul>
-                    <li>Begin by asking students: "What do you understand by the term field in physics?"</li>
-                    <li>Briefly introduce the concept of an electric field as the region around a charge where its influence can be felt.</li>
-                  </ul>
-                </li>
-                <li>
-                  <strong>Explanation and Discussion (8 minutes):</strong>
-                  <ul>
-                    <li>
-                      <strong>Part A: Definition of Electric Field</strong>
-                      <ul>
-                        <li>Define electric field as a region around a charged particle where a force is experienced by another charge.</li>
-                        <li>Formula: Electric Field (E) = Force (F) / Charge (q) [E = F/q]</li>
-                        <li>SI Unit: Newton per Coulomb (N/C)</li>
-                      </ul>
-                    </li>
-                    <li>
-                      <strong>Part B: Electric Field Lines</strong>
-                      <ul>
-                        <li>Electric Field Lines for Positive Charges:</li>
-                        <ul>
-                          <li>Radiate outward, representing repulsion from the positive charge.</li>
-                          <li>Indicate the direction a positive test charge would move.</li>
-                        </ul>
-                        <li>Electric Field Lines for Negative Charges:</li>
-                        <ul>
-                          <li>Point inward, representing attraction to the negative charge.</li>
-                          <li>Indicate the direction a positive test charge would move toward the charge.</li>
-                        </ul>
-                        <li>Electric field lines never cross and are denser where the field is stronger.</li>
-                      </ul>
-                    </li>
-                    <li>
-                      <strong>Part C: Representation Using Diagrams</strong>
-                      <ul>
-                        <li>Draw simple diagrams on the board showing electric fields for a single positive charge and a single negative charge.</li>
-                        <li>Explain how multiple charges (e.g., dipoles) create complex electric fields.</li>
-                        <li>Encourage students to sketch basic electric field configurations.</li>
-                      </ul>
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                  <strong>Recap and Quick Assessment (5 minutes):</strong>
-                  <ul>
-                    <li>Summarize the key points.</li>
-                    <li>Distribute a worksheet or ask:</li>
+            <strong>Learning Objectives:</strong>
+            <ul>
+              <li>Understand the concept and definition of charge.</li>
+              <li>Identify the two types of charges: positive and negative.</li>
+              <li>Explain the interactions between charges (attraction and repulsion).</li>
+              <li>Understand the concept of neutrality in atoms.</li>
+            </ul>
+
+            <strong>Lesson Plan Flow:</strong>
+            <ol>
+              <li>
+                <strong>Introduction (3 minutes):</strong>
+                <ul>
+                  <li>
+                    <strong>Teacher’s Introduction:</strong> "Everything around us is made up of matter, and one of the fundamental properties of matter is charge. Today, we’ll explore what charge is and its significance."
+                  </li>
+                  <li>
+                    <strong>Engage Students:</strong> "Have you ever noticed how your hair sometimes sticks to a comb after brushing? Or how a balloon can stick to a wall after being rubbed on your clothes? These are everyday examples of charges at work."
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Explanation (10 minutes):</strong>
+                <ul>
+                  <li>
+                    <strong>Concept 01: Definition of Charge</strong>
                     <ul>
-                      <li>Define an electric field.</li>
-                      <li>Describe the behavior of electric field lines for a positive charge.</li>
-                      <li>Explain why electric field lines for negative charges point inward.</li>
-                      <li>Draw a diagram representing the electric field lines around a dipole (positive and negative charges).</li>
+                      <li>Charge is a fundamental property of matter that causes it to experience a force when placed in an electric or magnetic field.</li>
+                      <li>
+                        <strong>Teacher’s Note:</strong> Explain that charges cannot be seen but their effects can be observed through interactions.
+                      </li>
                     </ul>
-                  </ul>
-                </li>
-              </ol>
-            </div>
-          </p>
-        </div>
-      </li>
-    
-      {/* Concept 2 */}
-      <li>
-        <div className="concept-header">
-          <input
-            type="checkbox"
-            id={`concept-${sessionIndex}-${topicIndex}-1`}
-            checked={false} // Initial state for Concept 2
-            onChange={() =>
-              handleConceptChange(sessionIndex, topicIndex, 1)
-            }
-          />
-          <label>
-           <h5>Concept 2: Interaction Between Charges</h5> 
-          </label>
-        </div>
-        <div>
-          <p>
-            <strong>Lesson Objectives:</strong>
-            <div className="shaded-box">
-              <ul>
-                <li>Understand how electric field lines represent interactions between charges.</li>
-                <li>Describe the interaction of field lines between positive-positive, positive-negative, and negative-negative charges.</li>
-                <li>Illustrate the behavior of field lines for different charge configurations using diagrams.</li>
-              </ul>
-            </div>
-          </p>
-          <p>
-            <strong>Materials Needed:</strong>
-            <div className="shaded-box">
-              <ul>
-                <li>Whiteboard and markers</li>
-                <li>Diagrams illustrating field line interactions between charges</li>
-                <li>Flashcards or colored tokens to represent charges</li>
-                <li>Worksheet with practice diagrams and questions</li>
-              </ul>
-            </div>
-          </p>
-          <p>
-            <strong>Lesson Structure:</strong>
-            <div className="shaded-box">
-              <ol>
-                <li>
-                  <strong>Introduction (2 minutes):</strong>
-                  <ul>
-                    <li>Start with a question: "What happens when two like charges or opposite charges are brought close to each other?"</li>
-                    <li>Briefly explain that the interaction of charges can be visualized using electric field lines.</li>
-                  </ul>
-                </li>
-                <li>
-                  <strong>Explanation and Discussion (8 minutes):</strong>
-                  <ul>
-                    <li>
-                      <strong>Part A: Interaction Between Positive and Positive Charges (2 minutes)</strong>
-                      <ul>
-                        <li>Field lines repel each other and move outward, indicating repulsion.</li>
-                        <li>No crossing of field lines; they curve away from each other.</li>
-                        <li>Draw a diagram showing two positive charges with their field lines.</li>
-                      </ul>
-                    </li>
-                    <li>
-                      <strong>Part B: Interaction Between Positive and Negative Charges (3 minutes)</strong>
-                      <ul>
-                        <li>Field lines originate from the positive charge and terminate at the negative charge.</li>
-                        <li>Indicates attraction between the charges.</li>
-                        <li>The density of lines shows the strength of the interaction.</li>
-                        <li>Draw a diagram representing the interaction of field lines between a positive and a negative charge.</li>
-                      </ul>
-                    </li>
-                    <li>
-                      <strong>Part C: Interaction Between Negative and Negative Charges (2 minutes)</strong>
-                      <ul>
-                        <li>Field lines move inward toward each charge, but they repel each other.</li>
-                        <li>Lines curve outward between the two charges, representing repulsion.</li>
-                        <li>Draw a diagram showing two negative charges with their field lines.</li>
-                      </ul>
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                  <strong>Recap and Quick Assessment (5 minutes):</strong>
-                  <ul>
-                    <li>Summarize the key points and interactions.</li>
-                    <li>Distribute a worksheet or ask:</li>
+                  </li>
+                  <li>
+                    <strong>Concept 02: Types of Charges</strong>
                     <ul>
-                      <li>What do electric field lines indicate about the interaction between charges?</li>
-                      <li>Describe the interaction of field lines between two positive charges.</li>
-                      <li>Draw the field lines for a positive and a negative charge.</li>
-                      <li>Explain the behavior of field lines between two negative charges.</li>
+                      <li>
+                        <strong>Positive Charge:</strong> Associated with protons, found in the nucleus of an atom. Represented as (+).
+                      </li>
+                      <li>
+                        <strong>Negative Charge:</strong> Associated with electrons, which orbit around the nucleus. Represented as (-).
+                      </li>
+                      <li>
+                        <strong>Teacher’s Note:</strong> Mention that positive and negative charges are opposite in nature but equal in magnitude.
+                      </li>
                     </ul>
-                  </ul>
-                </li>
-              </ol>
-            </div>
+                  </li>
+                  <li>
+                    <strong>Concept 03: Nature of Interaction Between Charges</strong>
+                    <ul>
+                      <li>Like charges repel each other (e.g., two positive charges push away).</li>
+                      <li>Opposite charges attract each other (e.g., a positive charge and a negative charge pull toward each other).</li>
+                      <li>
+                        <strong>Analogy:</strong> Compare charges to people with magnets: "Like poles push away, but opposite poles attract."
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Concept 04: Neutrality in Atoms</strong>
+                    <ul>
+                      <li>Atoms are neutral when the number of protons equals the number of electrons.</li>
+                      <li>
+                        <strong>Example:</strong> A hydrogen atom has 1 proton and 1 electron, making it neutral.
+                      </li>
+                      <li>
+                        <strong>Teacher’s Note on Misconceptions:</strong>
+                        <ul>
+                          <li><strong>Misconception:</strong> All atoms are charged.</li>
+                          <li><strong>Correction:</strong> Atoms are neutral unless they lose or gain electrons.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Recap and Clarifications (2 minutes):</strong>
+                <ul>
+                  <li>
+                    <strong>Quick Recap Questions:</strong>
+                    <ul>
+                      <li>What is charge?</li>
+                      <li>Name the two types of charges.</li>
+                      <li>What happens when like charges come close to each other?</li>
+                      <li>Why are atoms neutral?</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Recap Points:</strong> Charge is a property of matter that causes it to experience force in an electric/magnetic field. Types: Positive (proton) and Negative (electron). Like charges repel; opposite charges attract. Atoms are neutral because protons equal electrons.
+                  </li>
+                </ul>
+              </li>
+            </ol>
+
+            <strong>Teacher Notes:</strong>
+            <ul>
+              <li>
+                <strong>Examples for Concept Reinforcement:</strong>
+                <ul>
+                  <li>Balloon sticking to the wall (negative charge on the balloon, positive on the wall).</li>
+                  <li>Combing hair (electrons transfer, leaving the comb negatively charged and the hair positively charged).</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Analogies to Simplify Concepts:</strong>
+                <ul>
+                  <li>Like charges are like two people with similar interests who can’t work together.</li>
+                  <li>Opposite charges are like two puzzle pieces that fit together perfectly.</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Addressing Misconceptions:</strong>
+                <ul>
+                  <li><strong>Misconception:</strong> Only electrons carry charge.</li>
+                  <li><strong>Correction:</strong> Both protons and electrons have charge, but only electrons move in most cases.</li>
+                  <li><strong>Misconception:</strong> Neutral objects have no charges.</li>
+                  <li><strong>Correction:</strong> Neutral objects have equal numbers of positive and negative charges.</li>
+                </ul>
+              </li>
+            </ul>
+
+            <strong>Assessment:</strong>
+            <ul>
+              <li>Ask students to answer verbally:</li>
+              <ul>
+                <li>What are the two types of charges?</li>
+                <li>What happens when a neutral atom gains an electron?</li>
+              </ul>
+            </ul>
           </p>
-        </div>
-      </li>
-    </ul>
-    
+        </li>
+      </ul>
     )}
   </li>
 ))}
+
 
 </ul>
 
