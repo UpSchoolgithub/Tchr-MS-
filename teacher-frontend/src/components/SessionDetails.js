@@ -406,7 +406,7 @@ return (
   <input
     type="checkbox"
     id={`topic-${sessionIndex}-${topicIndex}`}
-    checked={topic.completed}
+  checked={!!topic.completed} // Ensure boolean value
     onChange={() => handleTopicChange(sessionIndex, topicIndex)}
   />
   <h3 style={{ fontWeight: 'bold' }}>{topic.name}</h3>
@@ -423,14 +423,13 @@ return (
       {/* Concept 1 */}
       <li>
         <div className="concept-header">
-          <input
-            type="checkbox"
-            id={`concept-${sessionIndex}-${topicIndex}-0`}
-            checked={false} // Initial state for Concept 1
-            onChange={() =>
-              handleConceptChange(sessionIndex, topicIndex, 0)
-            }
-          />
+        <input
+  type="checkbox"
+  id={`concept-${sessionIndex}-${topicIndex}-${conceptIndex}`}
+  checked={!!concept.completed} // Ensure boolean value
+  onChange={() => handleConceptChange(sessionIndex, topicIndex, conceptIndex)}
+/>
+
           <label>
           <h5> Concept 1: Electric Field Created by Positive and Negative Charges</h5> 
           </label>
