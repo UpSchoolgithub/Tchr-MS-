@@ -390,14 +390,26 @@ const fetchSessionDetails = async () => {
 
 return (
   <div className="session-details-container">
+    <div className="session-details-header">
+      <p><strong>Class ID:</strong> {classId || 'Not Available'}</p>
+      <p><strong>Teacher ID:</strong> {teacherId || 'Not Available'}</p>
+      <p><strong>Section ID:</strong> {sectionId || 'Not Available'}</p>
+      <p><strong>Subject ID:</strong> {subjectId || 'Not Available'}</p>
+    </div>
+
     <h2>Welcome, Teacher Name!</h2>
+
     <div className="session-notes-section">
   <h3>Session Notes and Details:</h3>
   {sessionDetails && sessionDetails.length > 0 ? (
     sessionDetails.map((session, sessionIndex) => (
       <div key={sessionIndex} className="session-item">
+        <p><strong>Session ID:</strong> {session.sessionId || 'N/A'}</p>
+        <p><strong>Session Plan ID:</strong> {session.sessionPlanId || 'Missing'}</p>
+
         <p><strong>Chapter Name:</strong> {session.chapterName || 'N/A'}</p>
-      
+        <p><strong>Status:</strong> {session.status === 'completed' ? 'Completed' : 'Incomplete'}</p>
+        
       <h4>Topics to Cover:</h4>
       <ul className="topics-list">
       {session.topics.map((topic, topicIndex) => (
