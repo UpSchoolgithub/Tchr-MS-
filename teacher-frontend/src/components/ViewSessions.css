@@ -1,0 +1,112 @@
+/* General container styling */
+.view-sessions-container {
+    font-family: Arial, sans-serif;
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 800px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Page title */
+  .view-sessions-container h1 {
+    text-align: center;
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+  
+  /* Section titles */
+  .view-sessions-container h3,
+  .view-sessions-container h2 {
+    color: #007bff;
+    font-size: 1.2rem;
+    margin-top: 20px;
+  }
+  
+  /* List styling for learning objectives */
+  .view-sessions-container ul {
+    margin: 15px 0;
+    padding-left: 20px;
+    list-style-type: disc;
+  }
+  
+  .view-sessions-container ul li {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #555;
+  }
+  
+  /* Styling for lesson plan flow */
+  .view-sessions-container ol {
+    margin: 15px 0;
+    padding-left: 20px;
+    list-style-type: decimal;
+  }
+  
+  .view-sessions-container ol li {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #444;
+  }
+  
+  .view-sessions-container ol li strong {
+    color: #333;
+    font-weight: bold;
+  }
+  
+  /* Sub-details inside each step */
+  .view-sessions-container ol li ul {
+    list-style-type: circle;
+    padding-left: 20px;
+  }
+  
+  .view-sessions-container ol li ul li {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  /* Button styling */
+  .view-sessions-container button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .view-sessions-container button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .view-sessions-container {
+      padding: 15px;
+    }
+  
+    .view-sessions-container h1 {
+      font-size: 1.5rem;
+    }
+  
+    .view-sessions-container h3,
+    .view-sessions-container h2 {
+      font-size: 1rem;
+    }
+  
+    .view-sessions-container ul li,
+    .view-sessions-container ol li {
+      font-size: 0.9rem;
+    }
+  }
+  
