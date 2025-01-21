@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TeacherSessions.css';
-import ViewSessions from './ViewSessions';
 
 const TeacherSessions = () => {
   const { teacherId } = useParams();

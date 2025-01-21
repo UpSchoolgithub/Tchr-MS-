@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import './ViewSessions.css'; // Create a CSS file for styling if needed
 
 const ViewSessions = () => {
   const location = useLocation();
