@@ -7,10 +7,10 @@ const ViewSessions = () => {
   const { sessionPlans, hardcodedDetails } = location.state || {};
 
   return (
-    <div className="view-sessions-container">
+    <div>
       <h1>View Sessions</h1>
       {hardcodedDetails ? (
-        <div className="session-plan-details">
+        <div>
           <h2>{hardcodedDetails.topicName}</h2>
           <h3>Learning Objectives</h3>
           <ul>

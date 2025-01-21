@@ -44,11 +44,9 @@ const TeacherSessions = () => {
   const handleViewPlan = (sessionPlans) => {
     if (!sessionPlans || sessionPlans.length === 0) {
       alert('No session plan available for this session.');
-      console.log("No session plans found:", sessionPlans);
       return;
     }
   
-    // Hardcoded details for the session plan
     const hardcodedDetails = {
       topicName: "Concept of Charge",
       learningObjectives: [
@@ -84,8 +82,7 @@ const TeacherSessions = () => {
       ]
     };
   
-    // Navigate to the new ViewSessions component
-    navigate(`/view-sessions`, { state: { sessionPlans, hardcodedDetails } });
+    navigate('/view-sessions', { state: { sessionPlans, hardcodedDetails } });
   };
   
   
