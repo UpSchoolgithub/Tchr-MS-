@@ -293,11 +293,51 @@ const TeacherSessions = () => {
         <td>
   {session.sessionPlansForToday && session.sessionPlansForToday.length > 0 ? (
     <button
-      onClick={() => navigate(`/view-sessions`, { state: { sessionPlans, hardcodedDetails} })}
-    >
-
-      View Plan
-    </button>
+    onClick={() =>
+      navigate('/view-sessions', {
+        state: {
+          sessionPlans: session.sessionPlansForToday,
+          hardcodedDetails: {
+            topicName: "Concept of Charge",
+            learningObjectives: [
+              "Understand the concept and definition of charge.",
+              "Identify the two types of charges: positive and negative.",
+              "Explain the interactions between charges (attraction and repulsion).",
+              "Understand the concept of neutrality in atoms.",
+            ],
+            lessonPlanFlow: [
+              {
+                step: "Introduction (3 minutes)",
+                details: [
+                  "Teacher’s Introduction: 'Everything around us is made up of matter, and one of the fundamental properties of matter is charge. Today, we’ll explore what charge is and its significance.'",
+                  "Engage Students: 'Have you ever noticed how your hair sometimes sticks to a comb after brushing? Or how a balloon can stick to a wall after being rubbed on your clothes? These are everyday examples of charges at work.'",
+                ],
+              },
+              {
+                step: "Explanation (10 minutes)",
+                details: [
+                  "Concept 01: Definition of Charge - Charge is a fundamental property of matter that causes it to experience a force when placed in an electric or magnetic field.",
+                  "Concept 02: Types of Charges - Positive charge is associated with protons (+), and negative charge is associated with electrons (-).",
+                  "Concept 03: Nature of Interaction - Like charges repel; opposite charges attract.",
+                  "Concept 04: Neutrality in Atoms - Atoms are neutral when the number of protons equals the number of electrons.",
+                ],
+              },
+              {
+                step: "Recap and Clarifications (2 minutes)",
+                details: [
+                  "Quick Recap Questions: What is charge? Name the two types of charges. What happens when like charges come close to each other? Why are atoms neutral?",
+                  "Recap Points: Charge is a property of matter. Types: Positive (proton) and Negative (electron). Like charges repel; opposite charges attract. Atoms are neutral because protons equal electrons.",
+                ],
+              },
+            ],
+          },
+        },
+      })
+    }
+  >
+    View Plan
+  </button>
+  
   ) : (
     <span>No Plan</span>
   )}
