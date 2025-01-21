@@ -293,8 +293,9 @@ const TeacherSessions = () => {
         <td>
   {session.sessionPlansForToday && session.sessionPlansForToday.length > 0 ? (
     <button
-      onClick={() => navigate(`/session-plans`, { state: { sessionPlans: session.sessionPlansForToday } })}
+      onClick={() => navigate(`/view-sessions`, { state: { sessionPlans, hardcodedDetails} })}
     >
+
       View Plan
     </button>
   ) : (
