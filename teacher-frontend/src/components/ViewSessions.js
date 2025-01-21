@@ -9,7 +9,7 @@ const ViewSessions = () => {
 
   return (
     <div className="view-sessions-container">
-      <h1>View Sessions</h1>
+      <h1>Session Plan</h1>
       {hardcodedDetails ? (
         <div>
           <h2>{hardcodedDetails.topicName}</h2>
