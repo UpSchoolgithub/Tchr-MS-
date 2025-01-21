@@ -14,7 +14,7 @@ import TeacherSessions from './components/TeacherSessions';
 import SessionDetails from './components/SessionDetails';
 import SessionReport from './components/SessionReport';
 import LessonPlanForm from './components/LessonPlanForm';
-import ViewSessions from './ViewSessions';
+import ViewSessions from './components/ViewSessions';
 
 function PrivateRoute({ children }) {
   const { token } = useTeacherAuth();
