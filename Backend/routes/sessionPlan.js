@@ -676,17 +676,20 @@ router.get('/sessionPlans/:id/view', async (req, res) => {
   const { id } = req.params;
   try {
     const lessonPlan = await LessonPlan.findOne({
-      where: { conceptId: id, generatedLP: { [Op.ne]: "" } }, // Exclude empty generatedLP
+      where: { conceptId: id, generatedLP: { [Op.ne]: "" } }, // Exclude empty lesson plans
       order: [['updatedAt', 'DESC']], // Fetch the latest updated row
     });
-        if (!lessonPlan || !lessonPlan.generatedLP) {
+
+    if (!lessonPlan || !lessonPlan.generatedLP) {
       return res.status(404).json({ message: 'Lesson plan not found or not generated.' });
     }
+
     res.status(200).json({ lessonPlan: lessonPlan.generatedLP });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
 
 
 

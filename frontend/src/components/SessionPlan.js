@@ -686,67 +686,85 @@ const handleGenerateARLessonPlan = async (arId) => {
 
   // Generate lesson plans for all topics
   // Generate lesson plans for all topics
-const handleGenerateAllLessonPlans = async () => {
-  try {
-    setSaving(true);
-    setError(""); // Clear previous errors
-
-    // Prepare payloads for all topics in all session plans
-    const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-      topics.map((topic) => ({
-        sessionPlanId: sessionPlans.find((plan) => plan.sessionNumber === sessionNumber)?.id, // Get the correct session plan ID
-        board: board || "Board Not Specified",
-        grade: className || "Grade Not Specified",
-        subject: subjectName || "Subject Not Specified",
-        unit: unitName || "Unit Not Specified",
-        chapter: topic.name || "Chapter Not Specified",
-        sessionType: "Theory",
-        noOfSession: 1,
-        duration: 45,
-        topics: [
-          {
-            topic: topic.name,
-            concepts: topic.concepts.map((concept) => ({
-              concept: concept.name,
-              detailing: concept.detailing || "No details provided",
-            })),
-          },
-        ],
-      }))
-    );
-
-    // Execute API calls for each session plan
-    const responses = await Promise.allSettled(
-      payloads.map((payload) =>
-        axios.post(
-          `https://tms.up.school/api/sessionPlans/${payload.sessionPlanId}/generateLessonPlan`,
-          payload
-        )
-      )
-    );
-
-    // Update state with generated lesson plans
-    const updatedState = { ...topicsWithConcepts };
-    responses.forEach((result, index) => {
-      if (result.status === "fulfilled") {
-        const payload = payloads[index];
-        const sessionNumber = payload.sessionNumber;
-
-        updatedState[sessionNumber] = updatedState[sessionNumber].map((topic) =>
-          topic.name === payload.chapter ? { ...topic, lessonPlan: result.value.data.lesson_plan } : topic
-        );
+  const handleGenerateAllLessonPlans = async () => {
+    try {
+      setSaving(true);
+      setError(""); // Clear previous errors
+  
+      // Prepare payloads for all topics in all session plans
+      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) => {
+        const sessionPlan = sessionPlans.find((plan) => plan.sessionNumber === parseInt(sessionNumber));
+  
+        if (!sessionPlan) {
+          console.error(`Session Plan not found for session number ${sessionNumber}`);
+          return []; // Skip if sessionPlanId is missing
+        }
+  
+        return topics.map((topic) => ({
+          sessionPlanId: sessionPlan.id, // Ensure correct session plan ID
+          board: board || "Board Not Specified",
+          grade: className || "Grade Not Specified",
+          subject: subjectName || "Subject Not Specified",
+          unit: unitName || "Unit Not Specified",
+          chapter: topic.name || "Chapter Not Specified",
+          sessionType: "Theory",
+          noOfSession: 1,
+          duration: 45,
+          topics: [
+            {
+              topic: topic.name,
+              concepts: topic.concepts.map((concept) => ({
+                concept: concept.name,
+                detailing: concept.detailing || "No details provided",
+              })),
+            },
+          ],
+        }));
+      });
+  
+      // Ensure payloads exist
+      if (payloads.length === 0) {
+        setError("No valid session plans found for lesson plan generation.");
+        return;
       }
-    });
-
-    setTopicsWithConcepts(updatedState);
-    setSuccessMessage("All lesson plans generated and updated successfully!");
-  } catch (error) {
-    console.error("Error generating lesson plans:", error);
-    setError("Failed to generate all lesson plans.");
-  } finally {
-    setSaving(false);
-  }
-};
+  
+      // Execute API calls for each session plan
+      const responses = await Promise.allSettled(
+        payloads.map((payload) =>
+          axios.post(
+            `https://tms.up.school/api/sessionPlans/${payload.sessionPlanId}/generateLessonPlan`,
+            payload
+          )
+        )
+      );
+  
+      // Update state with generated lesson plans
+      const updatedState = { ...topicsWithConcepts };
+      responses.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          const payload = payloads[index];
+          const sessionNumber = payload.sessionNumber;
+  
+          updatedState[sessionNumber] = updatedState[sessionNumber].map((topic) =>
+            topic.name === payload.chapter
+              ? { ...topic, lessonPlan: result.value.data.lesson_plan || "Generated but empty" }
+              : topic
+          );
+        } else {
+          console.error(`Lesson plan generation failed for session ${index + 1}:`, result.reason);
+        }
+      });
+  
+      setTopicsWithConcepts(updatedState);
+      setSuccessMessage("All lesson plans generated and updated successfully!");
+    } catch (error) {
+      console.error("Error generating lesson plans:", error);
+      setError("Failed to generate all lesson plans.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  
 
   
   
@@ -769,18 +787,19 @@ const handleGenerateAllLessonPlans = async () => {
       return;
     }
   
-    // Proceed with API call
     try {
-      const response = await axios.get(
-        `https://tms.up.school/api/sessionPlans/${conceptId}/view`
-      );
-      console.log("Lesson Plan Fetched:", response.data);
+      const response = await axios.get(`https://tms.up.school/api/sessionPlans/${conceptId}/view`);
   
-      setLessonPlanContent(response.data.lessonPlan || "No Lesson Plan Found");
+      if (!response.data.lessonPlan || response.data.lessonPlan === "N/A") {
+        setLessonPlanContent("No Lesson Plan Found for this concept.");
+      } else {
+        setLessonPlanContent(response.data.lessonPlan);
+      }
+  
       setShowModal(true);
       setError("");
     } catch (error) {
-      console.error("Error fetching lesson plan:", error.message);
+      console.error("Error fetching lesson plan:", error);
       setLessonPlanContent("Failed to fetch lesson plan.");
       setShowModal(true);
     }
@@ -795,15 +814,16 @@ const handleGenerateAllLessonPlans = async () => {
   // Save lesson plan to the database
   const handleSaveLessonPlan = async (conceptId, generatedLessonPlan) => {
     if (!conceptId || !generatedLessonPlan) {
-      console.error("Missing conceptId or lessonPlan content");
+      console.error("Missing conceptId or lesson plan content");
       setError("Cannot save. Missing required data.");
       return;
     }
   
     try {
       // Call backend to save the generated lesson plan
-      await axios.put(`https://tms.up.school/api/sessionPlans/${conceptId}/save`, {
-        lessonPlan: generatedLessonPlan,
+      await axios.put(`https://tms.up.school/api/sessionPlans/${conceptId}/saveLessonPlan`, {
+        conceptId, // Ensure the correct field is sent
+        generatedLP: generatedLessonPlan, // Use the correct field name
       });
   
       setSuccessMessage("Lesson plan saved successfully!");
@@ -814,14 +834,15 @@ const handleGenerateAllLessonPlans = async () => {
     }
   };
   
+  
   //generate and download the lesson plan
 
 
   const handleDownloadSession = (sessionNumber) => {
     const session = sessionPlans.find((plan) => plan.sessionNumber === sessionNumber);
   
-    if (!session) {
-      console.error(`Session ${sessionNumber} not found.`);
+    if (!session || !session.Topics.length) {
+      console.error(`Session ${sessionNumber} not found or has no topics.`);
       return;
     }
   
@@ -870,91 +891,9 @@ const handleGenerateAllLessonPlans = async () => {
         doc.text(`Concept ${index + 1}: ${concept.concept}`, 10, y);
         y += lineHeight;
   
-        const lessonPlan = concept.LessonPlan || {};
-  
-        // Objectives
-        doc.text(`Objectives:`, 10, y);
-        y += lineHeight;
-        const objectives = doc.splitTextToSize(lessonPlan.objectives || "N/A", 180);
-        objectives.forEach((line) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-          }
-          doc.text(line, 10, y);
-          y += lineHeight;
-        });
-  
-        // Teaching Aids
-        doc.text(`Teaching Aids:`, 10, y);
-        y += lineHeight;
-        const aids = doc.splitTextToSize(lessonPlan.teachingAids || "N/A", 180);
-        aids.forEach((line) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-          }
-          doc.text(line, 10, y);
-          y += lineHeight;
-        });
-  
-        // Prerequisites
-        doc.text(`Prerequisites:`, 10, y);
-        y += lineHeight;
-        const prerequisites = doc.splitTextToSize(lessonPlan.prerequisites || "N/A", 180);
-        prerequisites.forEach((line) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-          }
-          doc.text(line, 10, y);
-          y += lineHeight;
-        });
-  
-        // Content
-        doc.text(`Content:`, 10, y);
-        y += lineHeight;
-        const content = doc.splitTextToSize(lessonPlan.content || "N/A", 180);
+        const lessonPlan = concept.LessonPlan?.generatedLP || "No Lesson Plan Generated";
+        const content = doc.splitTextToSize(lessonPlan, 180);
         content.forEach((line) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-          }
-          doc.text(line, 10, y);
-          y += lineHeight;
-        });
-  
-        // Activities
-        doc.text(`Activities:`, 10, y);
-        y += lineHeight;
-        const activities = doc.splitTextToSize(lessonPlan.activities || "N/A", 180);
-        activities.forEach((line) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-          }
-          doc.text(line, 10, y);
-          y += lineHeight;
-        });
-  
-        // Summary
-        doc.text(`Summary:`, 10, y);
-        y += lineHeight;
-        const summary = doc.splitTextToSize(lessonPlan.summary || "N/A", 180);
-        summary.forEach((line) => {
-          if (y > pageHeight) {
-            doc.addPage();
-            y = 10;
-          }
-          doc.text(line, 10, y);
-          y += lineHeight;
-        });
-  
-        // Homework
-        doc.text(`Homework:`, 10, y);
-        y += lineHeight;
-        const homework = doc.splitTextToSize(lessonPlan.homework || "N/A", 180);
-        homework.forEach((line) => {
           if (y > pageHeight) {
             doc.addPage();
             y = 10;
@@ -965,11 +904,8 @@ const handleGenerateAllLessonPlans = async () => {
   
         y += lineHeight * 2; // Add spacing between concepts
       });
-  
-      y += lineHeight; // Add spacing between topics
     });
   
-    // Save the PDF file
     doc.save(`Session_${sessionNumber}_LessonPlan.pdf`);
   };
   
