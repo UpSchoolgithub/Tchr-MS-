@@ -27,6 +27,8 @@ function allocateDurations(concepts, conceptDetails, totalDuration) {
 // Route to generate lesson plan automatically for a session
 router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
   const { sessionId } = req.params;
+  console.log("Received sessionId:", sessionId); // Debugging
+
   const { sessionType = "Theory", duration = 45 } = req.body; // Default values
 
   try {
@@ -42,13 +44,13 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
               model: Concept,
               as: "Concepts",
               attributes: ["id", "concept", "conceptDetailing"],
-              include: LessonPlan ? [
+              include: [
                 {
                   model: LessonPlan,
                   as: "LessonPlan",
                   attributes: ["generatedLP"],
                 },
-              ] : [],
+              ],
             },
           ],
         },
@@ -114,6 +116,7 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
     });
   }
 });
+
 
 
 module.exports = router;
