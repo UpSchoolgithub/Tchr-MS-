@@ -1,6 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const { Session, SessionPlan, Topic, Concept, ClassInfo, Subject } = require("../models"); // Import models
+const { Session, SessionPlan, Topic, Concept, ClassInfo, Subject, LessonPlan  } = require("../models"); // Import models
 const router = express.Router();
 
 // Helper function to allocate time based on word count of concept details
