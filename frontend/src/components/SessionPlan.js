@@ -685,60 +685,69 @@ const handleGenerateARLessonPlan = async (arId) => {
   
 
   // Generate lesson plans for all topics
-  const handleGenerateAllLessonPlans = async () => {
-    try {
-      setSaving(true);
-  
-      const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
-        topics.map((topic) => ({
-          sessionNumber: sessionNumber.toString(),
-          board: board || "Board Not Specified",
-          grade: className || "Grade Not Specified",
-          subject: subjectName || "Subject Not Specified",
-          unit: unitName || "Unit Not Specified",
-          chapter: topic.name || "Chapter Not Specified",
-          sessionType: "Theory",
-          noOfSession: 1,
-          duration: 45,
-          topics: [
-            {
-              topic: topic.name,
-              concepts: topic.concepts.map((concept) => ({
-                concept: concept.name,
-                detailing: concept.detailing || "No details provided",
-              })),
-            },
-          ],
-        }))
-      );
-  
-      const responses = await Promise.allSettled(
-        payloads.map((payload) =>
-          axios.post("https://tms.up.school/api/sessionPlans/${sessionId}/generateLessonPla", payload)
+  // Generate lesson plans for all topics
+const handleGenerateAllLessonPlans = async () => {
+  try {
+    setSaving(true);
+    setError(""); // Clear previous errors
+
+    // Prepare payloads for all topics in all session plans
+    const payloads = Object.entries(topicsWithConcepts).flatMap(([sessionNumber, topics]) =>
+      topics.map((topic) => ({
+        sessionPlanId: sessionPlans.find((plan) => plan.sessionNumber === sessionNumber)?.id, // Get the correct session plan ID
+        board: board || "Board Not Specified",
+        grade: className || "Grade Not Specified",
+        subject: subjectName || "Subject Not Specified",
+        unit: unitName || "Unit Not Specified",
+        chapter: topic.name || "Chapter Not Specified",
+        sessionType: "Theory",
+        noOfSession: 1,
+        duration: 45,
+        topics: [
+          {
+            topic: topic.name,
+            concepts: topic.concepts.map((concept) => ({
+              concept: concept.name,
+              detailing: concept.detailing || "No details provided",
+            })),
+          },
+        ],
+      }))
+    );
+
+    // Execute API calls for each session plan
+    const responses = await Promise.allSettled(
+      payloads.map((payload) =>
+        axios.post(
+          `https://tms.up.school/api/sessionPlans/${payload.sessionPlanId}/generateLessonPlan`,
+          payload
         )
-      );
-  
-      const updatedState = { ...topicsWithConcepts };
-      responses.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          const payload = payloads[index];
-          const sessionNumber = payload.sessionNumber;
-  
-          updatedState[sessionNumber] = updatedState[sessionNumber].map((topic) =>
-            topic.name === payload.chapter ? { ...topic, lessonPlan: result.value.data.lesson_plan } : topic
-          );
-        }
-      });
-  
-      setTopicsWithConcepts(updatedState);
-      setSuccessMessage("All lesson plans generated and updated successfully!");
-    } catch (error) {
-      console.error("Error generating lesson plans:", error);
-      setError("Failed to generate all lesson plans.");
-    } finally {
-      setSaving(false);
-    }
-  };
+      )
+    );
+
+    // Update state with generated lesson plans
+    const updatedState = { ...topicsWithConcepts };
+    responses.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        const payload = payloads[index];
+        const sessionNumber = payload.sessionNumber;
+
+        updatedState[sessionNumber] = updatedState[sessionNumber].map((topic) =>
+          topic.name === payload.chapter ? { ...topic, lessonPlan: result.value.data.lesson_plan } : topic
+        );
+      }
+    });
+
+    setTopicsWithConcepts(updatedState);
+    setSuccessMessage("All lesson plans generated and updated successfully!");
+  } catch (error) {
+    console.error("Error generating lesson plans:", error);
+    setError("Failed to generate all lesson plans.");
+  } finally {
+    setSaving(false);
+  }
+};
+
   
   
   
@@ -1060,9 +1069,10 @@ const handleGenerateARLessonPlan = async (arId) => {
   
       {/* Generate Lesson Plans Button */}
       <div className="generate-controls">
-        <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
-          {saving ? "Generating..." : "Generate All Lesson Plans"}
-        </button>
+      <button onClick={handleGenerateAllLessonPlans} disabled={saving}>
+  {saving ? "Generating..." : "Generate All Lesson Plans"}
+</button>
+
       </div>
   
       {/* Session Plans Table */}
