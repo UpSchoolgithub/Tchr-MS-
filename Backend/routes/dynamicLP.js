@@ -41,14 +41,14 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
             {
               model: Concept,
               as: "Concepts",
-              include: [
+              attributes: ["id", "concept", "conceptDetailing"],
+              include: LessonPlan ? [
                 {
                   model: LessonPlan,
                   as: "LessonPlan",
                   attributes: ["generatedLP"],
                 },
-              ],
-              attributes: ["id", "concept", "conceptDetailing"],
+              ] : [],
             },
           ],
         },
