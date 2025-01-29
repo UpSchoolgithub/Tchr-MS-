@@ -94,6 +94,10 @@ app.use('/api', dynamicLP);
 const prelearningRoutes = require('./routes/prelearningLP');
 app.use('/api/sessions', prelearningRoutes); // Ensures `/prelearningLP` hits prelearningLP.js
 
+const lessonPlanRoutes = require("./routes/lessonPlan");
+app.use("/api/lessonPlans", lessonPlanRoutes);
+
+
 // Your existing route definitions
 app.get('/', (req, res) => {
   res.send('Hello World!');
