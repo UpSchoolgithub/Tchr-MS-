@@ -1,28 +1,7 @@
 const express = require("express");
 const axios = require("axios");
-const { Session, SessionPlan, Topic, Concept, ClassInfo, Subject, LessonPlan  } = require("../models"); // Import models
+const { Session, SessionPlan, Topic, Concept, ClassInfo, Subject, LessonPlan } = require("../models"); // Import models
 const router = express.Router();
-
-// Helper function to allocate time based on word count of concept details
-function allocateDurations(concepts, conceptDetails, totalDuration) {
-  const wordCounts = conceptDetails.map((detail) => (detail ? detail.split(" ").length : 1)); // Default to 1 if no detail
-  const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
-
-  if (totalWords === 0) {
-    return Array(concepts.length).fill(Math.floor(totalDuration / concepts.length));
-  }
-
-  const durations = wordCounts.map((count) =>
-    Math.floor((count / totalWords) * totalDuration)
-  );
-
-  const allocatedTotal = durations.reduce((sum, duration) => sum + duration, 0);
-  if (allocatedTotal < totalDuration) {
-    durations[durations.length - 1] += totalDuration - allocatedTotal;
-  }
-
-  return durations;
-}
 
 // Route to generate lesson plan automatically for a session
 router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
@@ -32,7 +11,41 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
   const { sessionType = "Theory", duration = 45 } = req.body; // Default values
 
   try {
-    // Fetch session plan with associated topics and concepts
+    // ✅ **Fetch session details with related metadata**
+    const sessionInfo = await Session.findOne({
+      where: { id: sessionId },
+      include: [
+        {
+          model: ClassInfo,
+          attributes: ["className", "board"], // Class (Grade) & Board
+        },
+        {
+          model: Subject,
+          attributes: ["subjectName"], // Subject Name
+        }
+      ],
+    });
+
+    if (!sessionInfo) {
+      return res.status(404).json({ message: "Session metadata not found." });
+    }
+
+    // ✅ **Fetch Unit & Chapter separately from SessionPlan**
+    const sessionPlanInfo = await SessionPlan.findOne({
+      where: { sessionId },
+      attributes: ["unit", "chapter"],
+    });
+
+    // ✅ Extract Metadata from Database
+    const board = sessionInfo.ClassInfo?.board || "Unknown Board";
+    const grade = sessionInfo.ClassInfo?.className || "Unknown Grade";
+    const subject = sessionInfo.Subject?.subjectName || "Unknown Subject";
+    const unit = sessionPlanInfo?.unit || "Unknown Unit";
+    const chapter = sessionPlanInfo?.chapter || "Unknown Chapter";
+
+    console.log("✅ Metadata Fetched:", { board, grade, subject, unit, chapter });
+
+    // ✅ **Fetch Session Plan Topics & Concepts**
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
@@ -44,13 +57,6 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
               model: Concept,
               as: "Concepts",
               attributes: ["id", "concept", "conceptDetailing"],
-              include: [
-                {
-                  model: LessonPlan,
-                  as: "LessonPlan",
-                  attributes: ["generatedLP"],
-                },
-              ],
             },
           ],
         },
@@ -58,86 +64,59 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
     });
 
     if (!sessionPlans || sessionPlans.length === 0) {
-      return res.status(404).json({ message: "Session plans not found." });
+      return res.status(404).json({ message: "No session plan topics found." });
     }
 
-    // Prepare topics payload
+    // ✅ **Prepare Topics Payload**
     const processedTopics = sessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => {
-        const concepts = topic.Concepts.map((concept) => concept.concept);
-        const conceptDetails = topic.Concepts.map((concept) => concept.conceptDetailing || "");
-
-        return {
-          topic: topic.topicName,
-          concepts: concepts.map((concept, index) => ({
-            concept,
-            detailing: conceptDetails[index],
-          })),
-        };
-      })
+      plan.Topics.map((topic) => ({
+        topic: topic.topicName,
+        concepts: topic.Concepts.map((concept) => ({
+          concept: concept.concept,
+          detailing: concept.conceptDetailing || "",
+        })),
+      }))
     );
 
-    // Generate API payload
-    // Fetch metadata (board, grade, subject, unit, chapter)
-const sessionInfo = await Session.findOne({
-  where: { id: sessionId },
-  include: [
-    {
-      model: ClassInfo,
-      attributes: ["className", "board"], // Fetch Class Name (Grade) & Board
-    },
-    {
-      model: Subject,
-      attributes: ["subjectName"], // Fetch Subject Name
-    },
-    {
-      model: SessionPlan,
-      attributes: ["unit", "chapter"], // Fetch Unit & Chapter
-    },
-  ],
-});
+    // ✅ **Final Payload to Python API**
+    const payload = {
+      board,
+      grade,
+      subject,
+      unit,
+      chapter,
+      sessionType,
+      duration,
+      topics: processedTopics,
+    };
 
-if (!sessionInfo) {
-  return res.status(404).json({ message: "Session metadata not found." });
-}
+    console.log("🚀 Sending Payload to API:", JSON.stringify(payload, null, 2));
 
-// Extract Metadata from Database
-const board = sessionInfo.ClassInfo?.board || "Unknown Board";
-const grade = sessionInfo.ClassInfo?.className || "Unknown Grade";
-const subject = sessionInfo.Subject?.subjectName || "Unknown Subject";
-const unit = sessionInfo.SessionPlan?.unit || "Unknown Unit";
-const chapter = sessionInfo.SessionPlan?.chapter || "Unknown Chapter";
-
-console.log("✅ Metadata Fetched:", { board, grade, subject, unit, chapter });
-
-// Generate Final Payload
-const payload = {
-  board,
-  grade,
-  subject,
-  unit,
-  chapter,
-  sessionType,
-  duration,
-  topics: processedTopics,
-};
-
-console.log("🚀 Final Payload Sent to API:", JSON.stringify(payload, null, 2));
-
-
-    console.log("Generated Payload:", JSON.stringify(payload, null, 2));
-
-    // Send request to external API
+    // ✅ **Send request to Python service**
     const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
-    const response = await axios.post(pythonServiceUrl, payload, { timeout: 50000 });
+    let response;
+    try {
+      response = await axios.post(pythonServiceUrl, payload, { timeout: 50000 });
+    } catch (error) {
+      console.error("❌ Error calling Python API:", error.message);
+      return res.status(502).json({ message: "Failed to fetch lesson plan from AI service.", error: error.message });
+    }
 
-    // Save generated lesson plans
+    // ✅ **Validate Response from Python API**
+    if (!response.data || !response.data.lesson_plan) {
+      console.error("❌ Invalid response from AI API:", response.data);
+      return res.status(500).json({ message: "Invalid lesson plan response from AI API." });
+    }
+
+    console.log("✅ AI Lesson Plan Received:", JSON.stringify(response.data, null, 2));
+
+    // ✅ **Save generated lesson plan in DB**
     for (const plan of sessionPlans) {
       for (const topic of plan.Topics) {
         for (const concept of topic.Concepts) {
           await LessonPlan.upsert({
             conceptId: concept.id,
-            generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+            generatedLP: response.data.lesson_plan[topic.topicName]?.[concept.concept]?.lesson_plan || "No Lesson Plan Generated",
           });
         }
       }
@@ -145,14 +124,12 @@ console.log("🚀 Final Payload Sent to API:", JSON.stringify(payload, null, 2))
 
     res.status(200).json({ message: "Lesson plan generated and saved successfully." });
   } catch (error) {
-    console.error("Error generating lesson plan:", error.message);
+    console.error("❌ Error generating lesson plan:", error.message);
     res.status(500).json({
       message: "Failed to generate lesson plan. Please try again.",
       error: error.message,
     });
   }
 });
-
-
 
 module.exports = router;
