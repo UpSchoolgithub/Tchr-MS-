@@ -17,18 +17,18 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
       include: [
         {
           model: ClassInfo,
-          attributes: ["className", "board"], // ✅ Fetch Board and Grade
+          attributes: ["className", "board"], 
         },
         {
           model: Subject,
-          attributes: ["subjectName"], // ✅ Fetch Subject Name
+          attributes: ["subjectName"], 
         },
         {
           model: SessionPlan,
-          attributes: [] // ❌ Remove unit and chapter since they do not exist
+          as: "SessionPlan", // ✅ Fix: Add alias to match the model association
+          attributes: ["unit", "chapter"], 
         },
       ],
-      attributes: ["id"], // Only fetch valid fields
     });
     
     
