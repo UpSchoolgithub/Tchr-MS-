@@ -17,15 +17,20 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
       include: [
         {
           model: ClassInfo,
-          attributes: ["className", "board"], // Fetch Class Name (Grade) & Board
+          attributes: ["className", "board"], // ✅ Fetch Board and Grade
         },
         {
           model: Subject,
-          attributes: ["subjectName"], // Fetch Subject Name
+          attributes: ["subjectName"], // ✅ Fetch Subject Name
+        },
+        {
+          model: SessionPlan,
+          attributes: [] // ❌ Remove unit and chapter since they do not exist
         },
       ],
-      attributes: ["unit", "chapter"], // ✅ Fetch unit and chapter from Session
+      attributes: ["id"], // Only fetch valid fields
     });
+    
     
     if (!sessionInfo) {
       return res.status(404).json({ message: "Session metadata not found." });
