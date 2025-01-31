@@ -78,16 +78,52 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
     );
 
     // Generate API payload
-    const payload = {
-      board: req.body.board || "Unknown Board",
-      grade: req.body.grade || "Unknown Grade",
-      subject: req.body.subject || "Unknown Subject",
-      unit: req.body.unit || "Unknown Unit",
-      chapter: req.body.chapter || "Unknown Chapter",
-      sessionType,
-      duration,
-      topics: processedTopics,
-    };
+    // Fetch metadata (board, grade, subject, unit, chapter)
+const sessionInfo = await Session.findOne({
+  where: { id: sessionId },
+  include: [
+    {
+      model: ClassInfo,
+      attributes: ["className", "board"], // Fetch Class Name (Grade) & Board
+    },
+    {
+      model: Subject,
+      attributes: ["subjectName"], // Fetch Subject Name
+    },
+    {
+      model: SessionPlan,
+      attributes: ["unit", "chapter"], // Fetch Unit & Chapter
+    },
+  ],
+});
+
+if (!sessionInfo) {
+  return res.status(404).json({ message: "Session metadata not found." });
+}
+
+// Extract Metadata from Database
+const board = sessionInfo.ClassInfo?.board || "Unknown Board";
+const grade = sessionInfo.ClassInfo?.className || "Unknown Grade";
+const subject = sessionInfo.Subject?.subjectName || "Unknown Subject";
+const unit = sessionInfo.SessionPlan?.unit || "Unknown Unit";
+const chapter = sessionInfo.SessionPlan?.chapter || "Unknown Chapter";
+
+console.log("✅ Metadata Fetched:", { board, grade, subject, unit, chapter });
+
+// Generate Final Payload
+const payload = {
+  board,
+  grade,
+  subject,
+  unit,
+  chapter,
+  sessionType,
+  duration,
+  topics: processedTopics,
+};
+
+console.log("🚀 Final Payload Sent to API:", JSON.stringify(payload, null, 2));
+
 
     console.log("Generated Payload:", JSON.stringify(payload, null, 2));
 
