@@ -17,34 +17,29 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
       include: [
         {
           model: ClassInfo,
-          attributes: ["className", "board"], // Class (Grade) & Board
+          attributes: ["className", "board"], // Fetch Class Name (Grade) & Board
         },
         {
           model: Subject,
-          attributes: ["subjectName"], // Subject Name
-        }
+          attributes: ["subjectName"], // Fetch Subject Name
+        },
       ],
+      attributes: ["unit", "chapter"], // ✅ Fetch unit and chapter from Session
     });
-
+    
     if (!sessionInfo) {
       return res.status(404).json({ message: "Session metadata not found." });
     }
-
-    // ✅ **Fetch Unit & Chapter separately from SessionPlan**
-    const sessionPlanInfo = await SessionPlan.findOne({
-      where: { sessionId },
-      attributes: ["unit", "chapter"],
-    });
-
-    // ✅ Extract Metadata from Database
+    
+    // Extract Metadata from Database
     const board = sessionInfo.ClassInfo?.board || "Unknown Board";
     const grade = sessionInfo.ClassInfo?.className || "Unknown Grade";
     const subject = sessionInfo.Subject?.subjectName || "Unknown Subject";
-    const unit = sessionPlanInfo?.unit || "Unknown Unit";
-    const chapter = sessionPlanInfo?.chapter || "Unknown Chapter";
-
+    const unit = sessionInfo?.unit || "Unknown Unit";  // ✅ Fix here
+    const chapter = sessionInfo?.chapter || "Unknown Chapter";  // ✅ Fix here
+    
     console.log("✅ Metadata Fetched:", { board, grade, subject, unit, chapter });
-
+    
     // ✅ **Fetch Session Plan Topics & Concepts**
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
