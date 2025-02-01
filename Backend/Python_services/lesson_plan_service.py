@@ -41,7 +41,7 @@ class LessonPlanRequest(BaseModel):
     generatedPlan: Optional[str] = None  # New field to accept modified content
 
 class LessonPlanResponse(BaseModel):
-    lesson_plan: Dict[str, Dict[str, Dict[str, Any]]]
+    lesson_plan: Dict[str, str]
 
 
 def allocate_time(concept_details: List[str], total_duration: int) -> List[int]:
@@ -148,22 +148,24 @@ def create_pdf(lesson_plan: str) -> str:
 
 @app.post("/generate-lesson-plan", response_model=LessonPlanResponse)
 async def generate_lesson_plan_endpoint(data: LessonPlanRequest):
-    print("Received Payload:", data.dict())  # Log the full incoming payload
+    print("Received Payload:", data.dict())  # Debug log
+    
     try:
         lesson_plan_data = generate_lesson_plan(data)
-        print("Generated Lesson Plan:", lesson_plan_data)  # Log the generated plan
+        print("Generated Lesson Plan:", lesson_plan_data)  # Debug log
 
         if not lesson_plan_data["lesson_plan"]:
             raise HTTPException(status_code=500, detail="Failed to generate lesson plan.")
 
-        # ✅ Flattening the lesson plan content to a single string
-        flattened_plan = ""
+        # ✅ Flatten the nested lesson plan structure
+        flattened_plan = {}
         for topic, concepts in lesson_plan_data["lesson_plan"].items():
-            flattened_plan += f"### {topic} ###\n\n"
             for concept, details in concepts.items():
-                flattened_plan += f"**{concept}**:\n{details['lesson_plan']}\n\n"
+                # Combine topic and concept for uniqueness
+                key = f"{topic} - {concept}"
+                flattened_plan[key] = details['lesson_plan']
 
-        return {"lesson_plan": flattened_plan.strip()}
+        return {"lesson_plan": flattened_plan}
 
     except Exception as e:
         print(f"Error generating lesson plan: {e}")
