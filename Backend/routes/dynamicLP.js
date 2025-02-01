@@ -35,23 +35,15 @@ function allocateDurations(concepts, conceptDetails, totalDuration) {
 // Route to generate lesson plan automatically for a session
 router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
   const { sessionId } = req.params;
-  console.log("Received sessionId:", sessionId);
-
   const { sessionType = "Theory", duration = 45 } = req.body;
 
   try {
-    // ✅ Fetch session metadata (board, grade, subject, unit, chapter)
+    // ✅ Fetch Session Metadata
     const sessionInfo = await Session.findOne({
       where: { id: sessionId },
       include: [
-        {
-          model: ClassInfo,
-          attributes: ["className", "board"], // Fetch Class Name (Grade) & Board
-        },
-        {
-          model: Subject,
-          attributes: ["subjectName"], // Fetch Subject Name
-        },
+        { model: ClassInfo, attributes: ["className", "board"] },
+        { model: Subject, attributes: ["subjectName"] }
       ],
     });
 
@@ -59,23 +51,20 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
       return res.status(404).json({ message: "Session metadata not found." });
     }
 
-    // Extract Metadata
     const board = sessionInfo.ClassInfo?.board || "Unknown Board";
     const grade = sessionInfo.ClassInfo?.className || "Unknown Grade";
     const subject = sessionInfo.Subject?.subjectName || "Unknown Subject";
 
-    // ✅ Fetch session plan (unit & chapter) separately from `SessionPlan`
+    // ✅ Fetch Session Plan (Unit & Chapter)
     const sessionPlan = await SessionPlan.findOne({
       where: { sessionId },
-      attributes: ["unit", "chapter"], // Fetch Unit & Chapter
+      attributes: ["unit", "chapter"],
     });
 
     const unit = sessionPlan?.unit || "Unknown Unit";
     const chapter = sessionPlan?.chapter || "Unknown Chapter";
 
-    console.log("✅ Metadata Fetched:", { board, grade, subject, unit, chapter });
-
-    // ✅ Fetch session plan with associated topics and concepts
+    // ✅ Fetch Topics and Concepts
     const sessionPlans = await SessionPlan.findAll({
       where: { sessionId },
       include: [
@@ -87,40 +76,25 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
               model: Concept,
               as: "Concepts",
               attributes: ["id", "concept", "conceptDetailing"],
-              include: [
-                {
-                  model: LessonPlan,
-                  as: "LessonPlan",
-                  attributes: ["generatedLP"],
-                },
-              ],
             },
           ],
         },
       ],
     });
 
-    if (!sessionPlans || sessionPlans.length === 0) {
-      return res.status(404).json({ message: "Session plans not found." });
+    if (!sessionPlans.length) {
+      return res.status(404).json({ message: "No session plans found." });
     }
 
-    // ✅ Prepare topics payload
-    const processedTopics = sessionPlans.flatMap((plan) =>
-      plan.Topics.map((topic) => {
-        const concepts = topic.Concepts.map((concept) => concept.concept);
-        const conceptDetails = topic.Concepts.map((concept) => concept.conceptDetailing || "");
-
-        return {
-          topic: topic.topicName,
-          concepts: concepts.map((concept, index) => ({
-            concept,
-            detailing: conceptDetails[index],
-          })),
-        };
-      })
+    // ✅ Prepare Payload for Python API
+    const topics = sessionPlans.flatMap((plan) =>
+      plan.Topics.map((topic) => ({
+        topic: topic.topicName,
+        concepts: topic.Concepts.map((concept) => concept.concept),
+        conceptDetails: topic.Concepts.map((concept) => concept.conceptDetailing || ""),
+      }))
     );
 
-    // ✅ Final Payload for API
     const payload = {
       board,
       grade,
@@ -129,22 +103,22 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
       chapter,
       sessionType,
       duration,
-      topics: processedTopics,
+      topics,
     };
 
-    console.log("🚀 Final Payload Sent to API:", JSON.stringify(payload, null, 2));
+    console.log("🚀 Payload to Python Service:", JSON.stringify(payload, null, 2));
 
-    // ✅ Send request to external Python service
+    // ✅ Send Request to Python Lesson Plan Service
     const pythonServiceUrl = "https://dynamiclp.up.school/generate-lesson-plan";
-    const response = await axios.post(pythonServiceUrl, payload, { timeout: 50000 });
+    const response = await axios.post(pythonServiceUrl, payload, { timeout: 60000 });
 
-    // ✅ Save generated lesson plans in database
+    // ✅ Save Generated Lesson Plans to DB
     for (const plan of sessionPlans) {
       for (const topic of plan.Topics) {
         for (const concept of topic.Concepts) {
           await LessonPlan.upsert({
             conceptId: concept.id,
-            generatedLP: response.data.lesson_plan || "No Lesson Plan Generated",
+            generatedLP: response.data.lesson_plan[topic.topic]?.[concept.concept]?.lesson_plan || "No Lesson Plan Generated",
           });
         }
       }
@@ -154,7 +128,7 @@ router.post("/sessionPlans/:sessionId/generateLessonPlan", async (req, res) => {
   } catch (error) {
     console.error("❌ Error generating lesson plan:", error.stack);
     res.status(500).json({
-      message: "Failed to generate lesson plan. Please try again.",
+      message: "Failed to generate lesson plan.",
       error: error.message,
     });
   }
