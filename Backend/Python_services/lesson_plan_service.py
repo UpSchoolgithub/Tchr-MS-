@@ -41,7 +41,8 @@ class LessonPlanRequest(BaseModel):
     generatedPlan: Optional[str] = None  # New field to accept modified content
 
 class LessonPlanResponse(BaseModel):
-    lesson_plan: Dict[str, str]
+    lesson_plan: Dict[str, Dict[str, Dict[str, Any]]]
+
 
 def allocate_time(concept_details: List[str], total_duration: int) -> List[int]:
     if not concept_details or all(not d.strip() for d in concept_details):
@@ -151,10 +152,19 @@ async def generate_lesson_plan_endpoint(data: LessonPlanRequest):
     try:
         lesson_plan_data = generate_lesson_plan(data)
         print("Generated Lesson Plan:", lesson_plan_data)  # Log the generated plan
+
         if not lesson_plan_data["lesson_plan"]:
             raise HTTPException(status_code=500, detail="Failed to generate lesson plan.")
-        
-        return lesson_plan_data
+
+        # ✅ Flattening the lesson plan content to a single string
+        flattened_plan = ""
+        for topic, concepts in lesson_plan_data["lesson_plan"].items():
+            flattened_plan += f"### {topic} ###\n\n"
+            for concept, details in concepts.items():
+                flattened_plan += f"**{concept}**:\n{details['lesson_plan']}\n\n"
+
+        return {"lesson_plan": flattened_plan.strip()}
+
     except Exception as e:
         print(f"Error generating lesson plan: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
